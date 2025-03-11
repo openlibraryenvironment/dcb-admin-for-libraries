@@ -11,14 +11,70 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as SupplierRequestsImport } from './routes/supplierRequests'
+import { Route as SharedIndexImport } from './routes/sharedIndex'
+import { Route as SettingsImport } from './routes/settings'
+import { Route as ServiceImport } from './routes/service'
 import { Route as PatronRequestsImport } from './routes/patronRequests'
+import { Route as MappingsImport } from './routes/mappings'
+import { Route as LocationsImport } from './routes/locations'
+import { Route as DataChangeLogImport } from './routes/dataChangeLog'
+import { Route as ContactsImport } from './routes/contacts'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
 
+const SupplierRequestsRoute = SupplierRequestsImport.update({
+  id: '/supplierRequests',
+  path: '/supplierRequests',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SharedIndexRoute = SharedIndexImport.update({
+  id: '/sharedIndex',
+  path: '/sharedIndex',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SettingsRoute = SettingsImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ServiceRoute = ServiceImport.update({
+  id: '/service',
+  path: '/service',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const PatronRequestsRoute = PatronRequestsImport.update({
   id: '/patronRequests',
   path: '/patronRequests',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const MappingsRoute = MappingsImport.update({
+  id: '/mappings',
+  path: '/mappings',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LocationsRoute = LocationsImport.update({
+  id: '/locations',
+  path: '/locations',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const DataChangeLogRoute = DataChangeLogImport.update({
+  id: '/dataChangeLog',
+  path: '/dataChangeLog',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ContactsRoute = ContactsImport.update({
+  id: '/contacts',
+  path: '/contacts',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -39,11 +95,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/contacts': {
+      id: '/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof ContactsImport
+      parentRoute: typeof rootRoute
+    }
+    '/dataChangeLog': {
+      id: '/dataChangeLog'
+      path: '/dataChangeLog'
+      fullPath: '/dataChangeLog'
+      preLoaderRoute: typeof DataChangeLogImport
+      parentRoute: typeof rootRoute
+    }
+    '/locations': {
+      id: '/locations'
+      path: '/locations'
+      fullPath: '/locations'
+      preLoaderRoute: typeof LocationsImport
+      parentRoute: typeof rootRoute
+    }
+    '/mappings': {
+      id: '/mappings'
+      path: '/mappings'
+      fullPath: '/mappings'
+      preLoaderRoute: typeof MappingsImport
+      parentRoute: typeof rootRoute
+    }
     '/patronRequests': {
       id: '/patronRequests'
       path: '/patronRequests'
       fullPath: '/patronRequests'
       preLoaderRoute: typeof PatronRequestsImport
+      parentRoute: typeof rootRoute
+    }
+    '/service': {
+      id: '/service'
+      path: '/service'
+      fullPath: '/service'
+      preLoaderRoute: typeof ServiceImport
+      parentRoute: typeof rootRoute
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsImport
+      parentRoute: typeof rootRoute
+    }
+    '/sharedIndex': {
+      id: '/sharedIndex'
+      path: '/sharedIndex'
+      fullPath: '/sharedIndex'
+      preLoaderRoute: typeof SharedIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/supplierRequests': {
+      id: '/supplierRequests'
+      path: '/supplierRequests'
+      fullPath: '/supplierRequests'
+      preLoaderRoute: typeof SupplierRequestsImport
       parentRoute: typeof rootRoute
     }
   }
@@ -53,37 +165,108 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/contacts': typeof ContactsRoute
+  '/dataChangeLog': typeof DataChangeLogRoute
+  '/locations': typeof LocationsRoute
+  '/mappings': typeof MappingsRoute
   '/patronRequests': typeof PatronRequestsRoute
+  '/service': typeof ServiceRoute
+  '/settings': typeof SettingsRoute
+  '/sharedIndex': typeof SharedIndexRoute
+  '/supplierRequests': typeof SupplierRequestsRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/contacts': typeof ContactsRoute
+  '/dataChangeLog': typeof DataChangeLogRoute
+  '/locations': typeof LocationsRoute
+  '/mappings': typeof MappingsRoute
   '/patronRequests': typeof PatronRequestsRoute
+  '/service': typeof ServiceRoute
+  '/settings': typeof SettingsRoute
+  '/sharedIndex': typeof SharedIndexRoute
+  '/supplierRequests': typeof SupplierRequestsRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/contacts': typeof ContactsRoute
+  '/dataChangeLog': typeof DataChangeLogRoute
+  '/locations': typeof LocationsRoute
+  '/mappings': typeof MappingsRoute
   '/patronRequests': typeof PatronRequestsRoute
+  '/service': typeof ServiceRoute
+  '/settings': typeof SettingsRoute
+  '/sharedIndex': typeof SharedIndexRoute
+  '/supplierRequests': typeof SupplierRequestsRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/patronRequests'
+  fullPaths:
+    | '/'
+    | '/contacts'
+    | '/dataChangeLog'
+    | '/locations'
+    | '/mappings'
+    | '/patronRequests'
+    | '/service'
+    | '/settings'
+    | '/sharedIndex'
+    | '/supplierRequests'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/patronRequests'
-  id: '__root__' | '/' | '/patronRequests'
+  to:
+    | '/'
+    | '/contacts'
+    | '/dataChangeLog'
+    | '/locations'
+    | '/mappings'
+    | '/patronRequests'
+    | '/service'
+    | '/settings'
+    | '/sharedIndex'
+    | '/supplierRequests'
+  id:
+    | '__root__'
+    | '/'
+    | '/contacts'
+    | '/dataChangeLog'
+    | '/locations'
+    | '/mappings'
+    | '/patronRequests'
+    | '/service'
+    | '/settings'
+    | '/sharedIndex'
+    | '/supplierRequests'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ContactsRoute: typeof ContactsRoute
+  DataChangeLogRoute: typeof DataChangeLogRoute
+  LocationsRoute: typeof LocationsRoute
+  MappingsRoute: typeof MappingsRoute
   PatronRequestsRoute: typeof PatronRequestsRoute
+  ServiceRoute: typeof ServiceRoute
+  SettingsRoute: typeof SettingsRoute
+  SharedIndexRoute: typeof SharedIndexRoute
+  SupplierRequestsRoute: typeof SupplierRequestsRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ContactsRoute: ContactsRoute,
+  DataChangeLogRoute: DataChangeLogRoute,
+  LocationsRoute: LocationsRoute,
+  MappingsRoute: MappingsRoute,
   PatronRequestsRoute: PatronRequestsRoute,
+  ServiceRoute: ServiceRoute,
+  SettingsRoute: SettingsRoute,
+  SharedIndexRoute: SharedIndexRoute,
+  SupplierRequestsRoute: SupplierRequestsRoute,
 }
 
 export const routeTree = rootRoute
@@ -97,14 +280,46 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/patronRequests"
+        "/contacts",
+        "/dataChangeLog",
+        "/locations",
+        "/mappings",
+        "/patronRequests",
+        "/service",
+        "/settings",
+        "/sharedIndex",
+        "/supplierRequests"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
+    "/contacts": {
+      "filePath": "contacts.tsx"
+    },
+    "/dataChangeLog": {
+      "filePath": "dataChangeLog.tsx"
+    },
+    "/locations": {
+      "filePath": "locations.tsx"
+    },
+    "/mappings": {
+      "filePath": "mappings.tsx"
+    },
     "/patronRequests": {
       "filePath": "patronRequests.tsx"
+    },
+    "/service": {
+      "filePath": "service.tsx"
+    },
+    "/settings": {
+      "filePath": "settings.tsx"
+    },
+    "/sharedIndex": {
+      "filePath": "sharedIndex.tsx"
+    },
+    "/supplierRequests": {
+      "filePath": "supplierRequests.tsx"
     }
   }
 }

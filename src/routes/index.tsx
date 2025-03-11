@@ -3,6 +3,7 @@ import Typography from "@mui/material/Typography";
 import { DataGridPremium, GridColDef } from "@mui/x-data-grid-premium";
 import { createFileRoute } from "@tanstack/react-router";
 
+// Landing page, also library information page
 export const Route = createFileRoute("/")({
 	component: HomeComponent,
 });

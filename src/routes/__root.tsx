@@ -12,9 +12,15 @@ export const Route = createRootRoute({
 				<CustomLink to="/" className="[&.active]:font-bold">
 					Home
 				</CustomLink>
-				<CustomLink to="/patronRequests" className="[&.active]:font-bold">
-					Patron requests
-				</CustomLink>
+				<CustomLink to="/service">Service</CustomLink>
+				<CustomLink to="/settings">Settings</CustomLink>
+				<CustomLink to="/mappings">Mappings</CustomLink>
+				<CustomLink to="/patronRequests">Patron requests</CustomLink>
+				<CustomLink to="/supplierRequests">Supplier requests</CustomLink>
+				<CustomLink to="/contacts">Contacts</CustomLink>
+				<CustomLink to="/locations">Locations</CustomLink>
+				<CustomLink to="/dataChangeLog">Data change log</CustomLink>
+				<CustomLink to="/sharedIndex">Shared index</CustomLink>
 			</Stack>
 			<hr />
 			<Outlet />
