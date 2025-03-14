@@ -12,27 +12,26 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as SupplierRequestsImport } from './routes/supplierRequests'
-import { Route as SharedIndexImport } from './routes/sharedIndex'
 import { Route as SettingsImport } from './routes/settings'
 import { Route as ServiceImport } from './routes/service'
 import { Route as PatronRequestsImport } from './routes/patronRequests'
 import { Route as MappingsImport } from './routes/mappings'
+import { Route as LogoutImport } from './routes/logout'
+import { Route as LoginImport } from './routes/login'
 import { Route as LocationsImport } from './routes/locations'
 import { Route as DataChangeLogImport } from './routes/dataChangeLog'
 import { Route as ContactsImport } from './routes/contacts'
 import { Route as IndexImport } from './routes/index'
+import { Route as SharedIndexIndexImport } from './routes/sharedIndex/index'
+import { Route as SharedIndexIdItemsImport } from './routes/sharedIndex/$id/items'
+import { Route as SharedIndexIdIdentifiersImport } from './routes/sharedIndex/$id/identifiers'
+import { Route as SharedIndexIdClusterImport } from './routes/sharedIndex/$id/cluster'
 
 // Create/Update Routes
 
 const SupplierRequestsRoute = SupplierRequestsImport.update({
   id: '/supplierRequests',
   path: '/supplierRequests',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const SharedIndexRoute = SharedIndexImport.update({
-  id: '/sharedIndex',
-  path: '/sharedIndex',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -60,6 +59,18 @@ const MappingsRoute = MappingsImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const LogoutRoute = LogoutImport.update({
+  id: '/logout',
+  path: '/logout',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LoginRoute = LoginImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const LocationsRoute = LocationsImport.update({
   id: '/locations',
   path: '/locations',
@@ -81,6 +92,30 @@ const ContactsRoute = ContactsImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SharedIndexIndexRoute = SharedIndexIndexImport.update({
+  id: '/sharedIndex/',
+  path: '/sharedIndex/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SharedIndexIdItemsRoute = SharedIndexIdItemsImport.update({
+  id: '/sharedIndex/$id/items',
+  path: '/sharedIndex/$id/items',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SharedIndexIdIdentifiersRoute = SharedIndexIdIdentifiersImport.update({
+  id: '/sharedIndex/$id/identifiers',
+  path: '/sharedIndex/$id/identifiers',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SharedIndexIdClusterRoute = SharedIndexIdClusterImport.update({
+  id: '/sharedIndex/$id/cluster',
+  path: '/sharedIndex/$id/cluster',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -116,6 +151,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocationsImport
       parentRoute: typeof rootRoute
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginImport
+      parentRoute: typeof rootRoute
+    }
+    '/logout': {
+      id: '/logout'
+      path: '/logout'
+      fullPath: '/logout'
+      preLoaderRoute: typeof LogoutImport
+      parentRoute: typeof rootRoute
+    }
     '/mappings': {
       id: '/mappings'
       path: '/mappings'
@@ -144,18 +193,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsImport
       parentRoute: typeof rootRoute
     }
-    '/sharedIndex': {
-      id: '/sharedIndex'
-      path: '/sharedIndex'
-      fullPath: '/sharedIndex'
-      preLoaderRoute: typeof SharedIndexImport
-      parentRoute: typeof rootRoute
-    }
     '/supplierRequests': {
       id: '/supplierRequests'
       path: '/supplierRequests'
       fullPath: '/supplierRequests'
       preLoaderRoute: typeof SupplierRequestsImport
+      parentRoute: typeof rootRoute
+    }
+    '/sharedIndex/': {
+      id: '/sharedIndex/'
+      path: '/sharedIndex'
+      fullPath: '/sharedIndex'
+      preLoaderRoute: typeof SharedIndexIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/sharedIndex/$id/cluster': {
+      id: '/sharedIndex/$id/cluster'
+      path: '/sharedIndex/$id/cluster'
+      fullPath: '/sharedIndex/$id/cluster'
+      preLoaderRoute: typeof SharedIndexIdClusterImport
+      parentRoute: typeof rootRoute
+    }
+    '/sharedIndex/$id/identifiers': {
+      id: '/sharedIndex/$id/identifiers'
+      path: '/sharedIndex/$id/identifiers'
+      fullPath: '/sharedIndex/$id/identifiers'
+      preLoaderRoute: typeof SharedIndexIdIdentifiersImport
+      parentRoute: typeof rootRoute
+    }
+    '/sharedIndex/$id/items': {
+      id: '/sharedIndex/$id/items'
+      path: '/sharedIndex/$id/items'
+      fullPath: '/sharedIndex/$id/items'
+      preLoaderRoute: typeof SharedIndexIdItemsImport
       parentRoute: typeof rootRoute
     }
   }
@@ -168,12 +238,17 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof ContactsRoute
   '/dataChangeLog': typeof DataChangeLogRoute
   '/locations': typeof LocationsRoute
+  '/login': typeof LoginRoute
+  '/logout': typeof LogoutRoute
   '/mappings': typeof MappingsRoute
   '/patronRequests': typeof PatronRequestsRoute
   '/service': typeof ServiceRoute
   '/settings': typeof SettingsRoute
-  '/sharedIndex': typeof SharedIndexRoute
   '/supplierRequests': typeof SupplierRequestsRoute
+  '/sharedIndex': typeof SharedIndexIndexRoute
+  '/sharedIndex/$id/cluster': typeof SharedIndexIdClusterRoute
+  '/sharedIndex/$id/identifiers': typeof SharedIndexIdIdentifiersRoute
+  '/sharedIndex/$id/items': typeof SharedIndexIdItemsRoute
 }
 
 export interface FileRoutesByTo {
@@ -181,12 +256,17 @@ export interface FileRoutesByTo {
   '/contacts': typeof ContactsRoute
   '/dataChangeLog': typeof DataChangeLogRoute
   '/locations': typeof LocationsRoute
+  '/login': typeof LoginRoute
+  '/logout': typeof LogoutRoute
   '/mappings': typeof MappingsRoute
   '/patronRequests': typeof PatronRequestsRoute
   '/service': typeof ServiceRoute
   '/settings': typeof SettingsRoute
-  '/sharedIndex': typeof SharedIndexRoute
   '/supplierRequests': typeof SupplierRequestsRoute
+  '/sharedIndex': typeof SharedIndexIndexRoute
+  '/sharedIndex/$id/cluster': typeof SharedIndexIdClusterRoute
+  '/sharedIndex/$id/identifiers': typeof SharedIndexIdIdentifiersRoute
+  '/sharedIndex/$id/items': typeof SharedIndexIdItemsRoute
 }
 
 export interface FileRoutesById {
@@ -195,12 +275,17 @@ export interface FileRoutesById {
   '/contacts': typeof ContactsRoute
   '/dataChangeLog': typeof DataChangeLogRoute
   '/locations': typeof LocationsRoute
+  '/login': typeof LoginRoute
+  '/logout': typeof LogoutRoute
   '/mappings': typeof MappingsRoute
   '/patronRequests': typeof PatronRequestsRoute
   '/service': typeof ServiceRoute
   '/settings': typeof SettingsRoute
-  '/sharedIndex': typeof SharedIndexRoute
   '/supplierRequests': typeof SupplierRequestsRoute
+  '/sharedIndex/': typeof SharedIndexIndexRoute
+  '/sharedIndex/$id/cluster': typeof SharedIndexIdClusterRoute
+  '/sharedIndex/$id/identifiers': typeof SharedIndexIdIdentifiersRoute
+  '/sharedIndex/$id/items': typeof SharedIndexIdItemsRoute
 }
 
 export interface FileRouteTypes {
@@ -210,36 +295,51 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/dataChangeLog'
     | '/locations'
+    | '/login'
+    | '/logout'
     | '/mappings'
     | '/patronRequests'
     | '/service'
     | '/settings'
-    | '/sharedIndex'
     | '/supplierRequests'
+    | '/sharedIndex'
+    | '/sharedIndex/$id/cluster'
+    | '/sharedIndex/$id/identifiers'
+    | '/sharedIndex/$id/items'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/contacts'
     | '/dataChangeLog'
     | '/locations'
+    | '/login'
+    | '/logout'
     | '/mappings'
     | '/patronRequests'
     | '/service'
     | '/settings'
-    | '/sharedIndex'
     | '/supplierRequests'
+    | '/sharedIndex'
+    | '/sharedIndex/$id/cluster'
+    | '/sharedIndex/$id/identifiers'
+    | '/sharedIndex/$id/items'
   id:
     | '__root__'
     | '/'
     | '/contacts'
     | '/dataChangeLog'
     | '/locations'
+    | '/login'
+    | '/logout'
     | '/mappings'
     | '/patronRequests'
     | '/service'
     | '/settings'
-    | '/sharedIndex'
     | '/supplierRequests'
+    | '/sharedIndex/'
+    | '/sharedIndex/$id/cluster'
+    | '/sharedIndex/$id/identifiers'
+    | '/sharedIndex/$id/items'
   fileRoutesById: FileRoutesById
 }
 
@@ -248,12 +348,17 @@ export interface RootRouteChildren {
   ContactsRoute: typeof ContactsRoute
   DataChangeLogRoute: typeof DataChangeLogRoute
   LocationsRoute: typeof LocationsRoute
+  LoginRoute: typeof LoginRoute
+  LogoutRoute: typeof LogoutRoute
   MappingsRoute: typeof MappingsRoute
   PatronRequestsRoute: typeof PatronRequestsRoute
   ServiceRoute: typeof ServiceRoute
   SettingsRoute: typeof SettingsRoute
-  SharedIndexRoute: typeof SharedIndexRoute
   SupplierRequestsRoute: typeof SupplierRequestsRoute
+  SharedIndexIndexRoute: typeof SharedIndexIndexRoute
+  SharedIndexIdClusterRoute: typeof SharedIndexIdClusterRoute
+  SharedIndexIdIdentifiersRoute: typeof SharedIndexIdIdentifiersRoute
+  SharedIndexIdItemsRoute: typeof SharedIndexIdItemsRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -261,12 +366,17 @@ const rootRouteChildren: RootRouteChildren = {
   ContactsRoute: ContactsRoute,
   DataChangeLogRoute: DataChangeLogRoute,
   LocationsRoute: LocationsRoute,
+  LoginRoute: LoginRoute,
+  LogoutRoute: LogoutRoute,
   MappingsRoute: MappingsRoute,
   PatronRequestsRoute: PatronRequestsRoute,
   ServiceRoute: ServiceRoute,
   SettingsRoute: SettingsRoute,
-  SharedIndexRoute: SharedIndexRoute,
   SupplierRequestsRoute: SupplierRequestsRoute,
+  SharedIndexIndexRoute: SharedIndexIndexRoute,
+  SharedIndexIdClusterRoute: SharedIndexIdClusterRoute,
+  SharedIndexIdIdentifiersRoute: SharedIndexIdIdentifiersRoute,
+  SharedIndexIdItemsRoute: SharedIndexIdItemsRoute,
 }
 
 export const routeTree = rootRoute
@@ -283,12 +393,17 @@ export const routeTree = rootRoute
         "/contacts",
         "/dataChangeLog",
         "/locations",
+        "/login",
+        "/logout",
         "/mappings",
         "/patronRequests",
         "/service",
         "/settings",
-        "/sharedIndex",
-        "/supplierRequests"
+        "/supplierRequests",
+        "/sharedIndex/",
+        "/sharedIndex/$id/cluster",
+        "/sharedIndex/$id/identifiers",
+        "/sharedIndex/$id/items"
       ]
     },
     "/": {
@@ -303,6 +418,12 @@ export const routeTree = rootRoute
     "/locations": {
       "filePath": "locations.tsx"
     },
+    "/login": {
+      "filePath": "login.tsx"
+    },
+    "/logout": {
+      "filePath": "logout.tsx"
+    },
     "/mappings": {
       "filePath": "mappings.tsx"
     },
@@ -315,11 +436,20 @@ export const routeTree = rootRoute
     "/settings": {
       "filePath": "settings.tsx"
     },
-    "/sharedIndex": {
-      "filePath": "sharedIndex.tsx"
-    },
     "/supplierRequests": {
       "filePath": "supplierRequests.tsx"
+    },
+    "/sharedIndex/": {
+      "filePath": "sharedIndex/index.tsx"
+    },
+    "/sharedIndex/$id/cluster": {
+      "filePath": "sharedIndex/$id/cluster.tsx"
+    },
+    "/sharedIndex/$id/identifiers": {
+      "filePath": "sharedIndex/$id/identifiers.tsx"
+    },
+    "/sharedIndex/$id/items": {
+      "filePath": "sharedIndex/$id/items.tsx"
     }
   }
 }
