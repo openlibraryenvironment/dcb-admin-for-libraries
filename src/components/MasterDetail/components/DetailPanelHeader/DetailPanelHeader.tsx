@@ -8,21 +8,21 @@ import {
 	useGridApiContext,
 	GridApiPro,
 } from "@mui/x-data-grid-premium";
-import { useTranslation } from "next-i18next";
-import { MutableRefObject } from "react";
-import { MdUnfoldLess, MdUnfoldMore } from "react-icons/md";
+import { useTranslation } from "react-i18next";
+import { RefObject } from "react";
+import { UnfoldLess, UnfoldMore } from "@mui/icons-material";
 
 export default function DetailPanelHeader() {
-	const apiRef = useGridApiContext() as MutableRefObject<GridApiPro>;
+	const apiRef = useGridApiContext() as RefObject<GridApiPro>;
 	const { t } = useTranslation();
 
 	const expandedRowIds = useGridSelector(
 		apiRef,
-		gridDetailPanelExpandedRowIdsSelector,
+		gridDetailPanelExpandedRowIdsSelector
 	);
 	const rowsWithDetailPanels = useGridSelector(
 		apiRef,
-		gridDetailPanelExpandedRowsContentCacheSelector,
+		gridDetailPanelExpandedRowsContentCacheSelector
 	);
 
 	const noDetailPanelsOpen = expandedRowIds.length === 0;
@@ -30,27 +30,25 @@ export default function DetailPanelHeader() {
 	const expandOrCollapseAll = () => {
 		const dataRowIdToModelLookup = gridRowsLookupSelector(apiRef);
 		const allRowIdsWithDetailPanels: GridRowId[] = Object.keys(
-			rowsWithDetailPanels,
+			rowsWithDetailPanels
 		).map((key) => apiRef.current.getRowId(dataRowIdToModelLookup[key]));
 
 		apiRef.current.setExpandedDetailPanels(
-			noDetailPanelsOpen ? allRowIdsWithDetailPanels : [],
+			noDetailPanelsOpen ? allRowIdsWithDetailPanels : []
 		);
 	};
 
-	const Icon = noDetailPanelsOpen ? MdUnfoldMore : MdUnfoldLess;
+	const Icon = noDetailPanelsOpen ? UnfoldMore : UnfoldLess;
 
 	return (
 		<Tooltip
-			title={noDetailPanelsOpen ? t("details.expand") : t("details.collapse")}
-		>
+			title={noDetailPanelsOpen ? t("details.expand") : t("details.collapse")}>
 			<span>
 				<IconButton
 					size="small"
 					tabIndex={-1}
 					onClick={expandOrCollapseAll}
-					aria-label={noDetailPanelsOpen ? "Expand All" : "Collapse All"}
-				>
+					aria-label={noDetailPanelsOpen ? "Expand All" : "Collapse All"}>
 					<Icon fontSize="inherit" />
 				</IconButton>
 			</span>

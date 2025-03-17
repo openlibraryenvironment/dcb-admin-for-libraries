@@ -1,0 +1,16 @@
+{
+	"header": {
+		"welcome": "Bienvenido a DCB Admin para {{name}}"
+	},
+	"library": {
+		"title": "Información para {{library}}"
+	},
+	"patron_request": {
+		"title": "Solicitud de cliente"
+	},
+	"shared_index": {
+		"cluster": "Cluster",
+		"items": "items",
+		"title": "Índice compartido"
+	}
+}

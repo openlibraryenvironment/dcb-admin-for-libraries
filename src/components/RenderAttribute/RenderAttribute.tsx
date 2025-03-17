@@ -1,6 +1,6 @@
-import Link from "@components/Link/Link";
+import { CustomLink } from "../CustomLink";
 import Typography from "@mui/material/Typography";
-import { useTranslation } from "next-i18next";
+import { useTranslation } from "react-i18next";
 
 const isValidLink = (url: string): boolean => {
 	try {
@@ -54,9 +54,9 @@ export default function RenderAttribute({ attribute, title, type }: any) {
 		}
 
 		return (
-			<Link href={attribute} title={title}>
+			<CustomLink to={attribute} title={title}>
 				{attribute}
-			</Link>
+			</CustomLink>
 		);
 	}
 
@@ -86,8 +86,7 @@ export default function RenderAttribute({ attribute, title, type }: any) {
 		<Typography
 			variant="attributeText"
 			aria-hidden="true"
-			title={t("a11y.empty")}
-		>
+			title={t("a11y.empty")}>
 			-
 		</Typography>
 	);

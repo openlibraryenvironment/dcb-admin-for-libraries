@@ -11,7 +11,6 @@ import {
 	Box,
 	Typography,
 	Card,
-	CircularProgress,
 } from "@mui/material";
 import { Search as SearchIcon, Clear } from "@mui/icons-material";
 import {
@@ -19,6 +18,7 @@ import {
 	GridColDef,
 	GridPaginationModel,
 } from "@mui/x-data-grid-premium";
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/sharedIndex/")({
 	component: SharedIndexComponent,
@@ -28,6 +28,8 @@ export const Route = createFileRoute("/sharedIndex/")({
 
 function SharedIndexComponent() {
 	const auth = useAuth(); // can we handle auth in HOC
+	const { t } = useTranslation();
+
 	const [searchTerm, setSearchTerm] = useState("");
 	const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
 		page: 0,
@@ -111,8 +113,8 @@ function SharedIndexComponent() {
 			flex: 0.5,
 			renderCell: (params) => (
 				<CustomLink
-					to="/sharedIndex/$clusterId/cluster"
-					params={{ clusterId: params.row.id }}>
+					to="/sharedIndex/$id/cluster"
+					params={{ id: params.row.id }}>
 					{params.row.id}
 				</CustomLink>
 			),
@@ -123,9 +125,7 @@ function SharedIndexComponent() {
 			minWidth: 100,
 			flex: 0.3,
 			renderCell: (params) => (
-				<CustomLink
-					to="/sharedIndex/$clusterId/items"
-					params={{ clusterId: params.row.id }}>
+				<CustomLink to="/sharedIndex/$id/items" params={{ id: params.row.id }}>
 					View Items
 				</CustomLink>
 			),
@@ -137,8 +137,8 @@ function SharedIndexComponent() {
 			flex: 0.3,
 			renderCell: (params) => (
 				<CustomLink
-					to="/sharedIndex/$clusterId/identifiers"
-					params={{ clusterId: params.row.id }}>
+					to="/sharedIndex/$id/identifiers"
+					params={{ id: params.row.id }}>
 					Identifiers
 				</CustomLink>
 			),
@@ -148,8 +148,9 @@ function SharedIndexComponent() {
 	return (
 		<Box sx={{ width: "100%" }}>
 			<Typography variant="h4" component="h1" gutterBottom>
-				Shared Index
+				{t("shared_index.title")}
 			</Typography>
+			{/* <LanguageSwitcher /> */}
 
 			<TextField
 				value={searchTerm}

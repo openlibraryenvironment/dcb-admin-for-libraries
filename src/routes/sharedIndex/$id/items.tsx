@@ -189,7 +189,7 @@ function RouteComponent() {
 			</Typography>
 
 			<Box sx={{ my: 2 }}>
-				<CustomLink to="/sharedIndex/">« Back to Shared Index</CustomLink>
+				<CustomLink to="/sharedIndex">« Back to Shared Index</CustomLink>
 				{" | "}
 				<CustomLink to="/sharedIndex/$id/cluster" params={{ id: id }}>
 					View Cluster Details
