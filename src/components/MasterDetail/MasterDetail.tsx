@@ -18,7 +18,7 @@ import MasterDetailLayout from "./MasterDetailLayout";
 // import dayjs from "dayjs";
 // import { formatDuration } from "src/helpers/formatDuration";
 // import ChangesSummary from "@components/ChangesSummary/ChangesSummary";
-import { ExpandMore } from "@mui/icons-material";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 import ChangesSummary from "../ChangesSummary/ChangesSummary";
 
 interface MasterDetailType {

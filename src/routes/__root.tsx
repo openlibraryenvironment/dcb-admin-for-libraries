@@ -14,6 +14,7 @@ import Container from "@mui/material/Container";
 import CircularProgress from "@mui/material/CircularProgress";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuth } from "react-oidc-context";
+import { Header } from "../components/Header/Header";
 
 export const Route = createRootRoute({
 	component: () => {
@@ -21,12 +22,14 @@ export const Route = createRootRoute({
 		const navigate = useNavigate();
 		const [activeTab, setActiveTab] = useState("/");
 
+		const library: string = auth.user?.profile?.library as string; // properly type this
+
 		useEffect(() => {
 			// Set active tab based on current path
 			setActiveTab(window.location.pathname);
 		}, []);
 
-		// 🛠️ FIX: Move navigation logic into `useEffect`
+		// Move navigation logic into `useEffect` temporarily
 		useEffect(() => {
 			if (!auth.isAuthenticated && !auth.isLoading) {
 				navigate({ to: "/login" });
@@ -89,29 +92,7 @@ export const Route = createRootRoute({
 		// Authenticated UI
 		return (
 			<>
-				<AppBar position="static">
-					<Toolbar>
-						<Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-							DCB Admin for {auth.user?.profile?.library || "Library"}
-						</Typography>
-						{auth.isAuthenticated && auth.user && (
-							<Box sx={{ display: "flex", alignItems: "center" }}>
-								<Typography variant="body2" sx={{ mr: 2 }}>
-									{auth.user.profile?.name || "User"}
-								</Typography>
-								<Typography variant="body2" sx={{ mr: 2 }}>
-									{auth?.user.profile?.library || "User"}
-								</Typography>
-								<Button
-									color="inherit"
-									onClick={() => navigate({ to: "/logout" })}
-									startIcon={<LogoutIcon />}>
-									Logout
-								</Button>
-							</Box>
-						)}
-					</Toolbar>
-				</AppBar>
+				<Header />
 
 				{auth.isAuthenticated && (
 					<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>

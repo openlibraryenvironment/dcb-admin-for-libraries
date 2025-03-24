@@ -10,7 +10,8 @@ import {
 } from "@mui/x-data-grid-premium";
 import { useTranslation } from "react-i18next";
 import { RefObject } from "react";
-import { UnfoldLess, UnfoldMore } from "@mui/icons-material";
+import UnfoldLess from "@mui/icons-material/UnfoldLess";
+import UnfoldMore from "@mui/icons-material/UnfoldMore";
 
 export default function DetailPanelHeader() {
 	const apiRef = useGridApiContext() as RefObject<GridApiPro>;

@@ -3,6 +3,8 @@ import jsxA11y from "eslint-plugin-jsx-a11y";
 import pluginRouter from "@tanstack/eslint-plugin-router";
 import pluginQuery from "@tanstack/eslint-plugin-query";
 import { defineConfig, globalIgnores } from "eslint/config";
+import reactRefresh from "eslint-plugin-react-refresh";
+
 // export default defineConfig([
 // 	{
 // 		plugins: {
@@ -29,6 +31,7 @@ export default defineConfig(
 			pluginQuery.configs["flat/recommended"],
 			pluginRouter.configs["flat/recommended"],
 			jsxA11y.flatConfigs.recommended,
+			reactRefresh.configs.recommended,
 		],
 	},
 	{

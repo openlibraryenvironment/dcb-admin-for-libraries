@@ -12,7 +12,8 @@ import {
 	Typography,
 	Card,
 } from "@mui/material";
-import { Search as SearchIcon, Clear } from "@mui/icons-material";
+import Search from "@mui/icons-material/Search";
+import Clear from "@mui/icons-material/Clear";
 import {
 	DataGridPremium,
 	GridColDef,
@@ -159,7 +160,7 @@ function SharedIndexComponent() {
 				InputProps={{
 					startAdornment: (
 						<InputAdornment position="start">
-							<SearchIcon />
+							<Search />
 						</InputAdornment>
 					),
 					endAdornment: searchTerm && (
