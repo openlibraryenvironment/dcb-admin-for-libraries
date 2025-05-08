@@ -73,6 +73,7 @@ function HomeComponent() {
 	// skip if headers not available
 	// figure out polling intervals
 	// need a better way of handling tokens as this causes a request to be sent (almost) every time
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const { data, isError, isLoading, refetch } = useQuery({
 		queryKey: ["libraryInfo", id, headers],
 		queryFn: async () =>
@@ -194,7 +195,7 @@ function HomeComponent() {
 		handleSubmit,
 		reset,
 		formState: { errors, isDirty },
-		watch,
+		// watch,
 	} = useForm<UpdateLibraryFormData>({
 		defaultValues: {
 			fullName: library?.fullName,
@@ -204,6 +205,7 @@ function HomeComponent() {
 			backupDowntimeSchedule: library?.backupDowntimeSchedule,
 			supportHours: library?.supportHours,
 		},
+		//@ts-expect-error Until we figure this type mismatch out
 		resolver: yupResolver(validationSchema),
 		mode: "onChange",
 	});

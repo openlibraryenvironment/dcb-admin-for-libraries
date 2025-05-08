@@ -22,4 +22,7 @@ export interface Library {
 	backupDowntimeSchedule: string;
 	training: boolean;
 	contacts: Person[];
+	reason: string;
+	changeCategory?: string;
+	changeReferenceUrl?: string;
 }

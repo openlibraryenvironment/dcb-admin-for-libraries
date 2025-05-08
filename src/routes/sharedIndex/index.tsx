@@ -42,6 +42,7 @@ function SharedIndexComponent() {
 	const fetchSearchResults = useCallback(
 		async ({ queryKey }: any) => {
 			// what is this bit actually doings
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [_, query, page, pageSize] = queryKey;
 
 			if (!query) return { instances: [], totalRecords: 0 };

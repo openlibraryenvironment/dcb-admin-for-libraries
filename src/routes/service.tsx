@@ -28,7 +28,7 @@ function ServiceComponent() {
 	const id = auth.user?.profile?.libraryId;
 
 	// does this need a different key
-	const { data, isError, isLoading, refetch } = useQuery({
+	const { data } = useQuery({
 		queryKey: ["libraryInfo", id, headers],
 		queryFn: async () =>
 			request(

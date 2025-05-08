@@ -3,16 +3,12 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 // import { CustomLink } from "./components/CustomLink";
 
 import { useEffect, useState } from "react";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
+
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Container from "@mui/material/Container";
 import CircularProgress from "@mui/material/CircularProgress";
-import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuth } from "react-oidc-context";
 import { Header } from "../components/Header/Header";
 
@@ -23,7 +19,7 @@ export const Route = createRootRoute({
 		const [activeTab, setActiveTab] = useState("/");
 
 		const library: string = auth.user?.profile?.library as string; // properly type this
-
+		console.log(library);
 		useEffect(() => {
 			// Set active tab based on current path
 			setActiveTab(window.location.pathname);

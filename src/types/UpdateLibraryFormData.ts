@@ -6,4 +6,7 @@ export interface UpdateLibraryFormData {
 	backupDowntimeSchedule?: string;
 	latitude?: number;
 	longitude?: number;
+	reason?: string;
+	changeCategory?: string;
+	changeReferenceUrl?: string;
 }

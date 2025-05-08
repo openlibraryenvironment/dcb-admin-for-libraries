@@ -27,7 +27,7 @@ const Confirmation = ({
 	onConfirm,
 	editInformation,
 	action, // The action to be confirmed
-	entityType, // The type of entity being acted upon- i.e. library
+	// entityType, // The type of entity being acted upon- i.e. library
 	entityName, // The name of the entity
 	gridEdit, // boolean value for grid editing
 }: ConfirmationType) => {
