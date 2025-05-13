@@ -35,7 +35,6 @@ build:
     - export NPM_TOKEN="$NPMJS_TOKEN"
     - git config --global user.name "ianibbo"
     - git config --global user.email "ian.ibbotson@k-int.com"
-    - cd dcb-admin-for-libraries
     - pwd
     - ls -al
     - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
@@ -55,7 +54,6 @@ build-container-image:
     - echo Building container image
     - pwd
     - ls
-    - cd dcb-admin-for-libraries
     - docker info
     - docker login -u $NEXUS_USER -p $NEXUS_PASS docker.libsdev.k-int.com
     - docker build -f ./docker/production/Dockerfile -t docker.libsdev.k-int.com/knowledgeintegration/ki-dcb-admin-for-libraries:latest -t docker.libsdev.k-int.com/knowledgeintegration/ki-dcb-admin-for-libraries:v1 .
