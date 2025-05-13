@@ -1,0 +1,173 @@
+{
+	"agency": {
+		"code": "Agency code"
+	},
+	"a11y": {
+		"empty": "This field is empty"
+	},
+	"common": {
+		"error": "Error",
+		"latitude": "Latitude",
+		"longitude": "Longitude",
+		"success": "Success",
+		"updated": "Updated",
+		"update_success": "The {{entity}} {{name}} was updated successfully",
+		"update_failure": "An error occurred while updating {{entity}} {{name}}"
+	},
+	"entities": {
+		"contact": "contact",
+		"functional_setting": "functional setting",
+		"location": "location",
+		"library": "library",
+		"numeric_range_mapping": "numeric range mapping",
+		"reference_value_mapping": "reference value mapping"
+	},
+	"header": {
+		"title": "DCB Admin for {{library}}",
+		"welcome": "Welcome to DCB Admin for {{name}}"
+	},
+	"hostlms": {
+		"alert_text": "Failed to fetch HostLMS, will retry. If this error persists, please refresh the page.",
+		"bibSuppressionRulesetName": "Bib suppression ruleset",
+		"code": "Host LMS code",
+		"configuration": "Host LMS configuration",
+		"hostlms_one": "Host LMS",
+		"id": "Host LMS UUID",
+		"itemSuppressionRulesetName": "Item suppression ruleset",
+		"lms_client": "LmsClientClass",
+		"name": "Host LMS name",
+		"no_results": "No Host LMSs were found. Try changing your search terms or filters.",
+		"no_rows": "No Host LMSs are available. If you're expecting data to be here, please refresh the page.",
+		"roles": "Roles",
+		"search_placeholder": "Search by name",
+		"client_config": {
+			"title": "Client config",
+			"access_id": "Access ID",
+			"access_key": "Access key",
+			"api": "API key",
+			"barcode_prefix": "Item barcode prefix",
+			"base": "Base URL",
+			"base_application": "Base application services URL",
+			"context_hierarchy": "Context hierarchy",
+			"default_agency": "Default agency",
+			"default_agency_code": "Default agency code",
+			"domain_id": "Domain ID",
+			"fine": "Fine code ID",
+			"folio_tenant": "FOLIO tenant",
+			"ill_location_id": "ILL location ID",
+			"ingest": "Ingest",
+			"item": "Item config",
+			"history_action_id": "History action ID",
+			"hold_policy": "Hold policy",
+			"key": "Key: ",
+			"loan_id": "Loan period code ID",
+			"logon_branch_id": "Logon branch ID",
+			"logon_user_id": "Logon user ID",
+			"metadata": "Metadata prefix",
+			"page_size": "Page size",
+			"papi": "PAPI config",
+			"papi_app_id": "PAPI app ID",
+			"papi_org_id": "PAPI organisation ID",
+			"papi_lang_id": "PAPI language ID",
+			"papi_version": "PAPI version: ",
+			"record_syntax": "Record syntax",
+			"renewal_limit": "Renewal limit",
+			"roles": "Roles",
+			"secret": "Secret",
+			"services": "Services config",
+			"services_language": "Language",
+			"services_patron_barcode_prefix": "Patron barcode prefix",
+			"services_product_id": "Product ID",
+			"services_site_domain": "Site domain",
+			"services_workstation_id": "Workstation ID",
+			"services_organisation_id": "Organisation ID",
+			"services_version": "Version",
+			"shelving_scheme_id": "Shelving scheme ID",
+			"staff_password": "Staff password",
+			"staff_username": "Staff username",
+			"user_base_url": "User base URL"
+		}
+	},
+	"library": {
+		"abbreviated_name": "Abbreviated name",
+		"backup_schedule": "Backup / downtime schedule",
+		"config": {
+			"patronAuth": {
+				"auth_profile": "Authentication profile",
+				"saml": "SAML based SSO?",
+				"title": "Patron authentication"
+			}
+		},
+		"full_name": "Full name",
+		"id": "Library UUID",
+		"primary_location": {
+			"address": "Address",
+			"latitude": "Latitude",
+			"location": "Location",
+			"longitude": "Longitude",
+			"title": "Primary location"
+		},
+		"service": {
+			"environments": {
+				"api": "Host LMS API",
+				"api_key": "API key",
+				"api_secret": "API secret",
+				"backup_schedule": "Backup / downtime schedule",
+				"polaris_domain": "Polaris staff account: Domain",
+				"polaris_password": "Polaris staff account: Password",
+				"polaris_org_id": "Polaris staff account: Organisation ID",
+				"polaris_username": "Polaris staff account: Username"
+			},
+			"hostlms_title": "Host LMS - {{name}}",
+			"systems": {
+				"discovery": "Discovery system/PAC(s)",
+				"ils": "ILS",
+				"patron_site": "Patron website",
+				"title": "Systems"
+			},
+			"title": "Service for {{name}}"
+		},
+		"short_name": "Short name",
+		"site_designation": "Site designation",
+		"support_hours": "Support hours",
+		"title": "Information for {{library}}",
+		"type": "Type"
+	},
+	"patron_request": {
+		"title": "Patron request"
+	},
+	"shared_index": {
+		"cluster": "Cluster",
+		"items": "Items",
+		"title": "Shared index"
+	},
+	"tooltips": {
+		"logo": "Click this logo to go to the home page"
+	},
+	"ui": {
+		"actions": {
+			"cancel": "Cancel",
+			"edit": "Edit",
+			"login": "Login",
+			"logout": "Logout",
+			"save": "Save"
+		},
+		"validation": {
+			"locations": {
+				"lat": "Enter the latitude: a number between -90 and 90.",
+				"long": "Enter the longitude: a number between -180 and 180",
+				"local_id_folio": "FOLIO service point ID must be a valid UUID.",
+				"local_id_polaris": "Polaris org ID must be a non-negative integer",
+				"local_id_sierra": "Sierra location ID must be a non-negative integer"
+			},
+			"invalid_email": "Please supply a valid email.",
+			"max_length": "This field has a maximum length of {{length}} characters",
+			"required": "Enter the {{field}}.",
+			"case_sensitive": "{{field}} is case sensitive"
+		}
+	},
+	"welcome": {
+		"background": "DCB Admin for Libraries is an all-new part of the DCB experience, putting the power of Direct Consortial Borrowing in the hands of library staff worldwide. Tailored to the tasks library staff do every day, DCB Admin abstracts away the noise and delivers exactly the information you want, when you want it.",
+		"title": "Welcome to DCB Admin for {{library}}, {{name}}."
+	}
+}
