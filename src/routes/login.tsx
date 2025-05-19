@@ -31,6 +31,7 @@ const Login: React.FC = () => {
 
 	console.log(auth.isAuthenticated);
 	console.log(auth);
+	console.log(auth.error);
 
 	if (auth.isLoading) {
 		return (

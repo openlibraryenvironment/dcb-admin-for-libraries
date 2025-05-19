@@ -47,7 +47,7 @@ declare module "@tanstack/react-router" {
 
 const oidcConfig = {
 	authority: import.meta.env.VITE_KEYCLOAK_URL,
-	client_id: import.meta.env.VITE_KEYCLOAK_CLIENT,
+	client_id: import.meta.env.VITE_KEYCLOAK_ID,
 	redirect_uri: window.location.origin,
 	response_type: "code",
 	scope: "openid profile email",
