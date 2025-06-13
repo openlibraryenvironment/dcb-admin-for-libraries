@@ -15,6 +15,7 @@ default:
 stages:
   - build
   - container
+  - deploy
 
 cache:
   key: ${CI_COMMIT_REF_SLUG}
