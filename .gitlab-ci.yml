@@ -40,7 +40,7 @@ build:
     - ls -al
     - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
     - npm install
-    - npm build
+    - npm run build
     # - npm run semantic-release -- Commented out for now - not sure this is what is needed here?
   artifacts:
     paths:
