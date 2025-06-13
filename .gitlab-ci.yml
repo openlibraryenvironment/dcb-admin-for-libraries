@@ -40,7 +40,12 @@ build:
     - ls -al
     - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
     - npm install
-    - npm run semantic-release
+    - npm build
+    # - npm run semantic-release -- Commented out for now - not sure this is what is needed here?
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
 
 build-container-image:
   image: 
@@ -83,6 +88,8 @@ deploy_tag_to_s3:
     AWS_ACCESS_KEY_ID: $AWS_DEVOPS_AGENT_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $AWS_DEVOPS_AGENT_ACCESS_KEY_SECRET
     AWS_REGION: eu-west-1
+  dependencies: 
+    - build
 
 deploy_dev_to_s3:
   stage: deploy
@@ -103,4 +110,6 @@ deploy_dev_to_s3:
     AWS_ACCESS_KEY_ID: $AWS_DEVOPS_AGENT_ACCESS_KEY_ID      
     AWS_SECRET_ACCESS_KEY: $AWS_DEVOPS_AGENT_ACCESS_KEY_SECRET
     AWS_REGION: eu-west-1
+  dependencies: 
+    - build
 
