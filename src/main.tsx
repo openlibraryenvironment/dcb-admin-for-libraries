@@ -26,7 +26,16 @@ const queryClient = new QueryClient({
 	},
 });
 
+const getBasePath = () => {
+  const fullPath = window.location.pathname;
+  const matches = fullPath.match(/^\/[^/]+/);
+  return matches ? matches[0] : '/';
+};
+
+// basename is set this way so we can deploy this app to multiple folders and the app will
+// work relative to those folders
 const router = createRouter({
+  basename: getBasePath(),
 	routeTree,
 	defaultPreload: "intent",
 	defaultPreloadStaleTime: 0,
