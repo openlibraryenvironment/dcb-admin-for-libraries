@@ -35,8 +35,8 @@ const getBasePath = () => {
 // basename is set this way so we can deploy this app to multiple folders and the app will
 // work relative to those folders
 const router = createRouter({
-  basename: getBasePath(),
 	routeTree,
+  basepath: getBasePath(),
 	defaultPreload: "intent",
 	defaultPreloadStaleTime: 0,
 	defaultStaleTime: 5000,
