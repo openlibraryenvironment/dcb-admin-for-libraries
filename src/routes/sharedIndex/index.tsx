@@ -89,15 +89,15 @@ function SharedIndexComponent() {
 		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 
-	const debouncedSearch = useCallback((term: string) => {
+	const debouncedSearch = useCallback((term: string, type: string) => {
 		setSearchTerm(term);
 		// Reset pagination when search term changes
 		setPaginationModel((prev) => ({ ...prev, page: 0 }));
 	}, []);
 
-	const handleSearch = (qry: string) => {
-    console.log("handleSearch %s",qry);
-		debouncedSearch(qry);
+	const handleSearch = (qry: string, type: string) => {
+    console.log("handleSearch %s %s",qry,type);
+		debouncedSearch(qry,type);
 	};
 
 	const columns: GridColDef[] = [

@@ -13,7 +13,7 @@ export function SimpleTextQuerySpec({ searchTerm, handleSearch }) {
   return (
       <TextField
         value={searchTerm}
-        onChange={(e) => handleSearch(e.target.value)}
+        onChange={(e) => handleSearch(e.target.value,'default')}
         placeholder="Search"
         InputProps={{
           startAdornment: (

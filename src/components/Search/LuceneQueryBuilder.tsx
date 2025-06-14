@@ -55,7 +55,7 @@ export function LuceneQueryBuilder({ searchTerm, handleSearch }) {
   const handleBuilderChange = (newQuery) => {
     setQuery(newQuery);
     const luceneQuery = toLucene(newQuery);
-    handleSearch(luceneQuery);
+    handleSearch(luceneQuery, 'lucene');
   };
 
   return (
