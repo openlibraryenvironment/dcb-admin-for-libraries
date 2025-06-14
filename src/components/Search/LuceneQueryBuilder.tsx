@@ -14,7 +14,12 @@ import { useState } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { QueryBuilderMaterial } from '@react-querybuilder/material';
 
-export function LuceneQueryBuilder({ searchTerm, handleSearch }) {
+interface LuceneQueryBuilderProps {
+  searchTerm: string;
+  handleSearch: (q: string, qtype: string) => void;
+}
+
+export function LuceneQueryBuilder({ searchTerm, handleSearch } : LuceneQueryBuilderProps ) {
 
   const [query, setQuery] = useState({ combinator: 'and', rules: [
     { field: 'any', operator: 'contains', value: '' }
@@ -22,11 +27,11 @@ export function LuceneQueryBuilder({ searchTerm, handleSearch }) {
 
   const muiTheme = createTheme();
 
-  const visitBoolean = (query) => {
+  const visitBoolean = (query:any) => {
     return query.rules.map(toLucene).join(query.combinator);
   }
 
-  const visitTerm = (query) => {
+  const visitTerm = (query:any) => {
     switch ( query.field ) {
       case 'any':
         return query.value;
@@ -40,7 +45,7 @@ export function LuceneQueryBuilder({ searchTerm, handleSearch }) {
 	// The query is a map the root of the map can be a term of a group (Boolean)
   // Boolean nodes have the key combinator and a rules key that contains child clauses
   // Term nodes have the key field
-	const toLucene = (query) => {
+	const toLucene = (query:any) => {
     if ( query.combinator != null )
       return visitBoolean(query);
     else
@@ -52,7 +57,7 @@ export function LuceneQueryBuilder({ searchTerm, handleSearch }) {
     { name: 'title', label: 'Title', inputType:'text' }
   ]
 
-  const handleBuilderChange = (newQuery) => {
+  const handleBuilderChange = (newQuery: any) => {
     setQuery(newQuery);
     const luceneQuery = toLucene(newQuery);
     handleSearch(luceneQuery, 'lucene');

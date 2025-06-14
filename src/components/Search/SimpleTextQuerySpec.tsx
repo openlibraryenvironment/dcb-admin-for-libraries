@@ -9,7 +9,17 @@ import {
 import Search from "@mui/icons-material/Search";
 import Clear from "@mui/icons-material/Clear";
 
-export function SimpleTextQuerySpec({ searchTerm, handleSearch }) {
+interface SimpleTextQuerySpecProps {
+  searchTerm: string;
+  handleSearch: (q: string, qtype: string) => void;
+  queryType: string;
+}
+
+export function SimpleTextQuerySpec({ searchTerm, handleSearch, queryType }: SimpleTextQuerySpecProps ) {
+
+  const clearTerm = () => {
+  }
+
   return (
       <TextField
         value={searchTerm}
@@ -24,7 +34,7 @@ export function SimpleTextQuerySpec({ searchTerm, handleSearch }) {
           endAdornment: searchTerm && (
             <InputAdornment position="end">
               <IconButton
-                onClick={handleClear}
+                onClick={clearTerm}
                 edge="end"
                 aria-label="clear search">
                 <Clear />

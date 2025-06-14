@@ -33,7 +33,7 @@ function HomeComponent() {
 	const auth = useAuth();
 	const { t } = useTranslation();
 
-  const { cfg } = useRouter().options.context;
+  const { cfg } = useRouter().options.context as { cfg: any };
 
 	const headers = {
 		Authorization: `Bearer ${auth.user?.access_token}`,

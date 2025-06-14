@@ -12,7 +12,12 @@ import { SimpleTextQuerySpec } from "./SimpleTextQuerySpec";
 import { LuceneQueryBuilder } from "./LuceneQueryBuilder";
 import * as React from "react";
 
-export function UserSelectableQuerySpec({ searchTerm, handleSearch }) {
+interface UserSelectableQuerySpecProps {
+  searchTerm: string;
+  handleSearch: (q: string, qtype: string) => void;
+}
+
+export function UserSelectableQuerySpec({ searchTerm, handleSearch }: UserSelectableQuerySpecProps ) {
 
   const [tab, setTab] = React.useState(0);
 
@@ -20,16 +25,16 @@ export function UserSelectableQuerySpec({ searchTerm, handleSearch }) {
    <Box sx={{ p: 2, border: '1px solid #ccc', borderRadius: 2, mb: 2 }}>
      <Box sx={{ mb: 1 }}>
       {tab === 0 && (
-        <SimpleTextQuerySpec value={searchTerm} handleSearch={handleSearch} type="default" />
+        <SimpleTextQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} queryType="default" />
       )}
       {tab === 1 && (
-        <LuceneQueryBuilder value={searchTerm} handleSearch={handleSearch} />
+        <LuceneQueryBuilder searchTerm={searchTerm} handleSearch={handleSearch} />
       )}
       {tab === 2 && (
-        <SimpleTextQuerySpec value={searchTerm} handleSearch={handleSearch} type="Lucene" />
+        <SimpleTextQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} queryType="Lucene" />
       )}
       {tab === 3 && (
-        <SimpleTextQuerySpec value={searchTerm} handleSearch={handleSearch} type="CQL" />
+        <SimpleTextQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} queryType="CQL" />
       )}
      </Box>
      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -37,7 +42,6 @@ export function UserSelectableQuerySpec({ searchTerm, handleSearch }) {
          value={tab} 
          onChange={(_, newTab) => setTab(newTab)}
          aria-label="Query input type"
-         size="small"
          TabIndicatorProps={{
            sx: {
              top: 'unset',

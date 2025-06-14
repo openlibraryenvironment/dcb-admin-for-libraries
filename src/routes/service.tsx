@@ -20,7 +20,7 @@ export const Route = createFileRoute("/service")({
 
 function ServiceComponent() {
 	const auth = useAuth();
-  const { cfg } = useRouter().options.context;
+  const { cfg } = useRouter().options.context as { cfg: any};
 	const { t } = useTranslation();
 
 	const headers = {

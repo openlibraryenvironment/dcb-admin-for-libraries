@@ -17,7 +17,7 @@ export const Route = createFileRoute("/sharedIndex/$id/items")({
 });
 
 function RouteComponent() {
-  const { cfg } = useRouter().options.context;
+  const { cfg } = useRouter().options.context as { cfg: any};
 	const { id } = Route.useParams();
 	const auth = useAuth();
 	const [availabilityResults, setAvailabilityResults] = useState<any>({});

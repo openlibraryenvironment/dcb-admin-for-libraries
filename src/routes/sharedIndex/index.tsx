@@ -31,7 +31,7 @@ export const Route = createFileRoute("/sharedIndex/")({
 
 function SharedIndexComponent() {
 	const auth = useAuth(); // can we handle auth in HOC
-  const { cfg } = useRouter().options.context;
+  const { cfg } = useRouter().options.context as { cfg: any };
 	const { t } = useTranslation();
 
 	const [searchTerm, setSearchTerm] = useState("");
@@ -51,7 +51,7 @@ function SharedIndexComponent() {
 			if (!query) return { instances: [], totalRecords: 0 };
 
 			const response = await axios.get(
-				`${cfg.VITE_DCB_SEARCH_BASE}/search/instances`,
+				`${cfg.VITE_DCB_SEARCH_BASE}/public/search/instances`,
 				{
 					headers: {
 						Authorization: `Bearer ${auth.user?.access_token}`,
@@ -153,7 +153,7 @@ function SharedIndexComponent() {
 			</Typography>
 			{/* <LanguageSwitcher /> */}
 
-			<UserSelectableQuerySpec value={searchTerm} handleSearch={handleSearch} />
+			<UserSelectableQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} />
 
 			{isError && (
 				<Card sx={{ p: 4, textAlign: "center", my: 2 }}>
