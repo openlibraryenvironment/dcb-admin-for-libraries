@@ -21,7 +21,7 @@ interface LuceneQueryBuilderProps {
 
 export function LuceneQueryBuilder({ searchTerm, handleSearch } : LuceneQueryBuilderProps ) {
 
-  const [query, setQuery] = useState({ combinator: 'and', rules: [
+  const [query, setQuery] = useState({ combinator: 'AND', rules: [
     { field: 'any', operator: 'contains', value: '' }
   ] });
 

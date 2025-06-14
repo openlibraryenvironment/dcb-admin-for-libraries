@@ -51,7 +51,7 @@ function SharedIndexComponent() {
 
 			if (!query) return { instances: [], totalRecords: 0 };
 
-			console.log("qry: %o %s, type:%s",queryKey, query,queryType);
+			// console.log("qry: %o %s, type:%s",queryKey, query,queryType);
 
 			const response = await axios.get(
 				`${cfg.VITE_DCB_SEARCH_BASE}/public/search/instances`,
@@ -95,7 +95,7 @@ function SharedIndexComponent() {
 	});
 
 	const debouncedSearch = useCallback((term: string, type: string) => {
-    console.log("debouncedSearch %s %s",term,type);
+    // console.log("debouncedSearch %s %s",term,type);
 		setSearchType(type);
 		setSearchTerm(term);
 		// Reset pagination when search term changes
@@ -103,7 +103,7 @@ function SharedIndexComponent() {
 	}, []);
 
 	const handleSearch = (qry: string, type: string) => {
-    console.log("handleSearch %s %s",qry,type);
+    // console.log("handleSearch %s %s",qry,type);
 		debouncedSearch(qry,type);
 	};
 
@@ -113,6 +113,11 @@ function SharedIndexComponent() {
 			headerName: "Title",
 			minWidth: 300,
 			flex: 0.7,
+			renderCell: (params) => (
+				<CustomLink to="/sharedIndex/$id" params={{ id: params.row.id }}>
+					{params.row.title}
+				</CustomLink>
+      ),
 		},
 		{
 			field: "id",

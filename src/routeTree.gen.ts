@@ -24,6 +24,7 @@ import { Route as IndexImport } from './routes/index'
 import { Route as SharedIndexIndexImport } from './routes/sharedIndex/index'
 import { Route as PatronRequestsIndexImport } from './routes/patronRequests/index'
 import { Route as LocationsIndexImport } from './routes/locations/index'
+import { Route as SharedIndexIdIndexImport } from './routes/sharedIndex/$id/index'
 import { Route as PatronRequestsIdIndexImport } from './routes/patronRequests/$id/index'
 import { Route as LocationsIdIndexImport } from './routes/locations/$id/index'
 import { Route as SharedIndexIdItemsImport } from './routes/sharedIndex/$id/items'
@@ -108,6 +109,12 @@ const LocationsIndexRoute = LocationsIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LocationsRoute,
+} as any)
+
+const SharedIndexIdIndexRoute = SharedIndexIdIndexImport.update({
+  id: '/sharedIndex/$id/',
+  path: '/sharedIndex/$id/',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const PatronRequestsIdIndexRoute = PatronRequestsIdIndexImport.update({
@@ -270,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PatronRequestsIdIndexImport
       parentRoute: typeof rootRoute
     }
+    '/sharedIndex/$id/': {
+      id: '/sharedIndex/$id/'
+      path: '/sharedIndex/$id'
+      fullPath: '/sharedIndex/$id'
+      preLoaderRoute: typeof SharedIndexIdIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -308,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/sharedIndex/$id/items': typeof SharedIndexIdItemsRoute
   '/locations/$id': typeof LocationsIdIndexRoute
   '/patronRequests/$id': typeof PatronRequestsIdIndexRoute
+  '/sharedIndex/$id': typeof SharedIndexIdIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -328,6 +343,7 @@ export interface FileRoutesByTo {
   '/sharedIndex/$id/items': typeof SharedIndexIdItemsRoute
   '/locations/$id': typeof LocationsIdIndexRoute
   '/patronRequests/$id': typeof PatronRequestsIdIndexRoute
+  '/sharedIndex/$id': typeof SharedIndexIdIndexRoute
 }
 
 export interface FileRoutesById {
@@ -350,6 +366,7 @@ export interface FileRoutesById {
   '/sharedIndex/$id/items': typeof SharedIndexIdItemsRoute
   '/locations/$id/': typeof LocationsIdIndexRoute
   '/patronRequests/$id/': typeof PatronRequestsIdIndexRoute
+  '/sharedIndex/$id/': typeof SharedIndexIdIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -373,6 +390,7 @@ export interface FileRouteTypes {
     | '/sharedIndex/$id/items'
     | '/locations/$id'
     | '/patronRequests/$id'
+    | '/sharedIndex/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -392,6 +410,7 @@ export interface FileRouteTypes {
     | '/sharedIndex/$id/items'
     | '/locations/$id'
     | '/patronRequests/$id'
+    | '/sharedIndex/$id'
   id:
     | '__root__'
     | '/'
@@ -412,6 +431,7 @@ export interface FileRouteTypes {
     | '/sharedIndex/$id/items'
     | '/locations/$id/'
     | '/patronRequests/$id/'
+    | '/sharedIndex/$id/'
   fileRoutesById: FileRoutesById
 }
 
@@ -432,6 +452,7 @@ export interface RootRouteChildren {
   SharedIndexIdIdentifiersRoute: typeof SharedIndexIdIdentifiersRoute
   SharedIndexIdItemsRoute: typeof SharedIndexIdItemsRoute
   PatronRequestsIdIndexRoute: typeof PatronRequestsIdIndexRoute
+  SharedIndexIdIndexRoute: typeof SharedIndexIdIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -451,6 +472,7 @@ const rootRouteChildren: RootRouteChildren = {
   SharedIndexIdIdentifiersRoute: SharedIndexIdIdentifiersRoute,
   SharedIndexIdItemsRoute: SharedIndexIdItemsRoute,
   PatronRequestsIdIndexRoute: PatronRequestsIdIndexRoute,
+  SharedIndexIdIndexRoute: SharedIndexIdIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -478,7 +500,8 @@ export const routeTree = rootRoute
         "/sharedIndex/$id/cluster",
         "/sharedIndex/$id/identifiers",
         "/sharedIndex/$id/items",
-        "/patronRequests/$id/"
+        "/patronRequests/$id/",
+        "/sharedIndex/$id/"
       ]
     },
     "/": {
@@ -540,6 +563,9 @@ export const routeTree = rootRoute
     },
     "/patronRequests/$id/": {
       "filePath": "patronRequests/$id/index.tsx"
+    },
+    "/sharedIndex/$id/": {
+      "filePath": "sharedIndex/$id/index.tsx"
     }
   }
 }

@@ -59,8 +59,8 @@ export function UserSelectableQuerySpec({ searchTerm, handleSearch }: UserSelect
          }}
          >
          <Tab label="LuceneQL" />
-         <Tab label="Simple" />
          <Tab label="Lucene Builder" />
+         <Tab label="Simple" />
          <Tab label="CQL" />
        </Tabs>
      </Box>
