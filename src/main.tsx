@@ -103,6 +103,7 @@ async function bootstrap() {
 	const cfg = await getCfg();
 
   // Nice feature of tanstack etc - inject our config bundle into the router context
+  // Retrieve with  const { cfg } = useRouter().options.context;
   router.update({
     context: { cfg },
   });
@@ -110,8 +111,8 @@ async function bootstrap() {
   LicenseInfo.setLicenseKey(cfg.VITE_MUI_X_LICENSE_KEY);
 
   const oidcConfig = {
-  	authority: import.meta.env.VITE_KEYCLOAK_URL,
-  	client_id: import.meta.env.VITE_KEYCLOAK_ID,
+  	authority: cfg.VITE_KEYCLOAK_URL,
+  	client_id: cfg.VITE_KEYCLOAK_ID,
   	redirect_uri: window.location.origin,
   	response_type: "code",
   	scope: "openid profile email",

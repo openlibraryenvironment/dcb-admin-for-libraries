@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { CustomLink } from "../../components/CustomLink";
 import { useState, useCallback } from "react";
 import axios from "axios";
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/sharedIndex/")({
 
 function SharedIndexComponent() {
 	const auth = useAuth(); // can we handle auth in HOC
+  const { cfg } = useRouter().options.context;
 	const { t } = useTranslation();
 
 	const [searchTerm, setSearchTerm] = useState("");
@@ -48,7 +49,7 @@ function SharedIndexComponent() {
 			if (!query) return { instances: [], totalRecords: 0 };
 
 			const response = await axios.get(
-				`${import.meta.env.VITE_DCB_SEARCH_BASE}/search/instances`,
+				`${cfg.VITE_DCB_SEARCH_BASE}/search/instances`,
 				{
 					headers: {
 						Authorization: `Bearer ${auth.user?.access_token}`,

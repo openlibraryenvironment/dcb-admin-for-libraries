@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import axios from "axios";
 import { useCallback, useState } from "react";
 import { useAuth } from "react-oidc-context";
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/sharedIndex/$id/items")({
 });
 
 function RouteComponent() {
+  const { cfg } = useRouter().options.context;
 	const { id } = Route.useParams();
 	const auth = useAuth();
 	const [availabilityResults, setAvailabilityResults] = useState<any>({});
@@ -56,7 +57,7 @@ function RouteComponent() {
 		}
 
 		const response = await axios.get(
-			`${import.meta.env.VITE_DCB_API_BASE}/items/availability`,
+			`${cfg.VITE_DCB_API_BASE}/items/availability`,
 			{
 				headers: {
 					Authorization: `Bearer ${auth.user.access_token}`,
