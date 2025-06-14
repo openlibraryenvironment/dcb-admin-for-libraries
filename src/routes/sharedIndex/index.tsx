@@ -21,6 +21,8 @@ import {
 } from "@mui/x-data-grid-premium";
 import { useTranslation } from "react-i18next";
 
+import { UserSelectableQuerySpec } from "../../components/Search/UserSelectableQuerySpec";
+
 export const Route = createFileRoute("/sharedIndex/")({
 	component: SharedIndexComponent,
 });
@@ -93,13 +95,9 @@ function SharedIndexComponent() {
 		setPaginationModel((prev) => ({ ...prev, page: 0 }));
 	}, []);
 
-	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const term = e.target.value;
-		debouncedSearch(term);
-	};
-
-	const handleClear = () => {
-		setSearchTerm("");
+	const handleSearch = (qry: string) => {
+    console.log("handleSearch %s",qry);
+		debouncedSearch(qry);
 	};
 
 	const columns: GridColDef[] = [
@@ -155,32 +153,7 @@ function SharedIndexComponent() {
 			</Typography>
 			{/* <LanguageSwitcher /> */}
 
-			<TextField
-				value={searchTerm}
-				onChange={handleSearch}
-				placeholder="Search"
-				InputProps={{
-					startAdornment: (
-						<InputAdornment position="start">
-							<Search />
-						</InputAdornment>
-					),
-					endAdornment: searchTerm && (
-						<InputAdornment position="end">
-							<IconButton
-								onClick={handleClear}
-								edge="end"
-								aria-label="clear search">
-								<Clear />
-							</IconButton>
-						</InputAdornment>
-					),
-				}}
-				fullWidth
-				variant="outlined"
-				size="small"
-				sx={{ mb: 2 }}
-			/>
+			<UserSelectableQuerySpec value={searchTerm} handleSearch={handleSearch} />
 
 			{isError && (
 				<Card sx={{ p: 4, textAlign: "center", my: 2 }}>

@@ -103,6 +103,7 @@ export const Route = createRootRoute({
 							variant="scrollable"
 							scrollButtons="auto">
 							<Tab label="Home" value="/" />
+							<Tab label="Shared Index" value="/sharedIndex" />
 							<Tab label="Service" value="/service" />
 							<Tab label="Settings" value="/settings" />
 							{import.meta.env.DEV && <Tab label="Mappings" value="/mappings" />}
@@ -111,7 +112,6 @@ export const Route = createRootRoute({
 							{import.meta.env.DEV && <Tab label="Contacts" value="/contacts" />}
 							{import.meta.env.DEV && <Tab label="Locations" value="/locations" />}
 							{import.meta.env.DEV && <Tab label="Data Change Log" value="/dataChangeLog" />}
-							<Tab label="Shared Index" value="/sharedIndex" />
 						</Tabs>
 					</Box>
 				)}
