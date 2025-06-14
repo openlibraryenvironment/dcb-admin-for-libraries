@@ -25,13 +25,13 @@ export function UserSelectableQuerySpec({ searchTerm, handleSearch }: UserSelect
    <Box sx={{ p: 2, border: '1px solid #ccc', borderRadius: 2, mb: 2 }}>
      <Box sx={{ mb: 1 }}>
       {tab === 0 && (
-        <SimpleTextQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} queryType="default" />
+        <SimpleTextQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} queryType="Lucene" />
       )}
       {tab === 1 && (
         <LuceneQueryBuilder searchTerm={searchTerm} handleSearch={handleSearch} />
       )}
       {tab === 2 && (
-        <SimpleTextQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} queryType="Lucene" />
+        <SimpleTextQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} queryType="default" />
       )}
       {tab === 3 && (
         <SimpleTextQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} queryType="CQL" />
@@ -58,9 +58,9 @@ export function UserSelectableQuerySpec({ searchTerm, handleSearch }: UserSelect
            },
          }}
          >
+         <Tab label="LuceneQL" />
          <Tab label="Simple" />
          <Tab label="Lucene Builder" />
-         <Tab label="Lucene Text" />
          <Tab label="CQL" />
        </Tabs>
      </Box>

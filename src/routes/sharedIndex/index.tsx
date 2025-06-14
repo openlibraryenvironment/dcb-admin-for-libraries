@@ -35,6 +35,7 @@ function SharedIndexComponent() {
 	const { t } = useTranslation();
 
 	const [searchTerm, setSearchTerm] = useState("");
+	const [searchType, setSearchType] = useState("");
 	const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
 		page: 0,
 		pageSize: 25,
@@ -46,9 +47,11 @@ function SharedIndexComponent() {
 		async ({ queryKey }: any) => {
 			// what is this bit actually doings
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const [_, query, page, pageSize] = queryKey;
+			const [_, query, queryType, page, pageSize] = queryKey;
 
 			if (!query) return { instances: [], totalRecords: 0 };
+
+			console.log("qry: %o %s, type:%s",queryKey, query,queryType);
 
 			const response = await axios.get(
 				`${cfg.VITE_DCB_SEARCH_BASE}/public/search/instances`,
@@ -57,7 +60,8 @@ function SharedIndexComponent() {
 						Authorization: `Bearer ${auth.user?.access_token}`,
 					},
 					params: {
-						query: `@keyword all "${query}"`,
+						query: query,
+						queryType: queryType,
 						offset: page * pageSize,
 						limit: pageSize,
 					},
@@ -69,7 +73,7 @@ function SharedIndexComponent() {
 				totalRecords: response.data.totalRecords || 0,
 			};
 		},
-		[auth.user?.access_token]
+		[auth.user?.access_token, searchTerm, searchType]
 	);
 
 	const {
@@ -80,6 +84,7 @@ function SharedIndexComponent() {
 		queryKey: [
 			"searchResults",
 			searchTerm,
+			searchType,
 			paginationModel.page,
 			paginationModel.pageSize,
 		],
@@ -90,6 +95,8 @@ function SharedIndexComponent() {
 	});
 
 	const debouncedSearch = useCallback((term: string, type: string) => {
+    console.log("debouncedSearch %s %s",term,type);
+		setSearchType(type);
 		setSearchTerm(term);
 		// Reset pagination when search term changes
 		setPaginationModel((prev) => ({ ...prev, page: 0 }));

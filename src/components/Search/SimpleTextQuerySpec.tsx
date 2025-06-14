@@ -23,7 +23,7 @@ export function SimpleTextQuerySpec({ searchTerm, handleSearch, queryType }: Sim
   return (
       <TextField
         value={searchTerm}
-        onChange={(e) => handleSearch(e.target.value,'default')}
+        onChange={(e) => handleSearch(e.target.value,queryType)}
         placeholder="Search"
         InputProps={{
           startAdornment: (

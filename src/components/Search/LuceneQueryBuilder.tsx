@@ -54,7 +54,12 @@ export function LuceneQueryBuilder({ searchTerm, handleSearch } : LuceneQueryBui
 
   const fields=[
     { name: 'any', label: 'Any', inputType:'text' },
-    { name: 'title', label: 'Title', inputType:'text' }
+    { name: 'title', label: 'Title', inputType:'text' },
+    { name: 'metadata.subjects.label.keyword', label: 'Subject', inputType:'text' },
+    { name: 'publisher.keyword', label: 'Publisher', inputType:'text' },
+    { name: 'metadata.agents.label.keyword', label: 'Contributor', inputType:'text' },
+    { name: 'metadata.agents.label.keyword', label: 'Name', inputType:'text' },
+    { name: 'metadata.agents.label.keyword', label: 'Name', inputType:'text' }
   ]
 
   const handleBuilderChange = (newQuery: any) => {
