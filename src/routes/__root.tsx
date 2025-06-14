@@ -85,6 +85,10 @@ export const Route = createRootRoute({
 			);
 		}
 
+
+		// Tabs below marked with import.meta.env.DEV means that these tabs will only show up in DEV mode,
+    // remove the conditon to make then show up in prod.
+
 		// Authenticated UI
 		return (
 			<>
@@ -101,12 +105,12 @@ export const Route = createRootRoute({
 							<Tab label="Home" value="/" />
 							<Tab label="Service" value="/service" />
 							<Tab label="Settings" value="/settings" />
-							<Tab label="Mappings" value="/mappings" />
-							<Tab label="Patron Requests" value="/patronRequests" />
-							<Tab label="Supplier Requests" value="/supplierRequests" />
-							<Tab label="Contacts" value="/contacts" />
-							<Tab label="Locations" value="/locations" />
-							<Tab label="Data Change Log" value="/dataChangeLog" />
+							{import.meta.env.DEV && <Tab label="Mappings" value="/mappings" />}
+							{import.meta.env.DEV && <Tab label="Patron Requests" value="/patronRequests" />}
+							{import.meta.env.DEV && <Tab label="Supplier Requests" value="/supplierRequests" />}
+							{import.meta.env.DEV && <Tab label="Contacts" value="/contacts" />}
+							{import.meta.env.DEV && <Tab label="Locations" value="/locations" />}
+							{import.meta.env.DEV && <Tab label="Data Change Log" value="/dataChangeLog" />}
 							<Tab label="Shared Index" value="/sharedIndex" />
 						</Tabs>
 					</Box>
