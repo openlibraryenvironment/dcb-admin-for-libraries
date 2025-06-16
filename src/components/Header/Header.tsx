@@ -28,7 +28,7 @@ export const Header = () => {
 				</Tooltip>
 
 				<Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-					{t("header.title", { library: library })}
+					{t("header.title", { library: library ? library : 'Libraries' })}
 				</Typography>
 				{auth.isAuthenticated && auth.user && (
 					<Box sx={{ display: "flex", alignItems: "center" }}>

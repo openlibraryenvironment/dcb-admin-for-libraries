@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import Grid from "@mui/material/Grid2";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
@@ -20,6 +20,7 @@ export const Route = createFileRoute("/service")({
 
 function ServiceComponent() {
 	const auth = useAuth();
+  const { cfg } = useRouter().options.context as { cfg: any};
 	const { t } = useTranslation();
 
 	const headers = {
@@ -32,7 +33,7 @@ function ServiceComponent() {
 		queryKey: ["libraryInfo", id, headers],
 		queryFn: async () =>
 			request(
-				import.meta.env.VITE_DCB_API_BASE + "/graphql",
+				cfg.VITE_DCB_API_BASE + "/graphql",
 				getLibrary,
 				{
 					query: "id:" + id,
