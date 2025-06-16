@@ -1,7 +1,7 @@
 import Grid from "@mui/material/Grid2";
 import Typography from "@mui/material/Typography";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
 import { getLibrary } from "../queries/getLibrary";
 import { useAuth } from "react-oidc-context";
@@ -32,6 +32,8 @@ export const Route = createFileRoute("/")({
 function HomeComponent() {
 	const auth = useAuth();
 	const { t } = useTranslation();
+
+  const { cfg } = useRouter().options.context as { cfg: any };
 
 	const headers = {
 		Authorization: `Bearer ${auth.user?.access_token}`,
@@ -78,7 +80,7 @@ function HomeComponent() {
 		queryKey: ["libraryInfo", id, headers],
 		queryFn: async () =>
 			request(
-				import.meta.env.VITE_DCB_API_BASE + "/graphql",
+				cfg.VITE_DCB_API_BASE + "/graphql",
 				getLibrary,
 				{
 					query: "id:" + id,
@@ -96,7 +98,7 @@ function HomeComponent() {
 	const updateLibraryMutation = useMutation({
 		mutationFn: async (formData: UpdateLibraryFormData) => {
 			const response: UpdateLibraryResponse = await request(
-				import.meta.env.VITE_DCB_API_BASE + "/graphql",
+				cfg.VITE_DCB_API_BASE + "/graphql",
 				updateLibrary,
 				{
 					input: {
