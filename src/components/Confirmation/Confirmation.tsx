@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ConfirmationType } from "../../types/ConfirmationType";
+import { ConfirmationType } from "../../models/ConfirmationType";
 import { getEntityText } from "../../helpers/confirmationFunctions";
 import {
 	Autocomplete,
@@ -18,7 +18,7 @@ import ChangesSummary from "../ChangesSummary/ChangesSummary";
 import * as Yup from "yup";
 import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ConfirmationForm } from "../../types/ConfirmationForm";
+import { ConfirmationForm } from "@models/ConfirmationForm";
 import { yupResolver } from "@hookform/resolvers/yup";
 
 const Confirmation = ({

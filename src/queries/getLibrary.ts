@@ -1,5 +1,7 @@
 import { gql } from "graphql-request";
-
+// Library
+// This query fetches all information about a Library from DCB.
+// The main place this is used is the individual library page.
 export const getLibrary = gql`
 	query LoadLibrary($query: String!) {
 		libraries(query: $query) {

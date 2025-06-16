@@ -5,21 +5,21 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
 import { getLibrary } from "../queries/getLibrary";
 import { useAuth } from "react-oidc-context";
-import { Library } from "../types/Library";
+import { Library } from "@models/Library";
 import { useTranslation } from "react-i18next";
 import RenderAttribute from "../components/RenderAttribute/RenderAttribute";
 import { Button, Stack, TextField, useTheme } from "@mui/material";
 import AddressLink from "../components/Address/AddressLink";
 import { Controller, useForm } from "react-hook-form";
-import { UpdateLibraryFormData } from "../types/UpdateLibraryFormData";
+import { UpdateLibraryFormData } from "../models/UpdateLibraryFormData";
 import { updateLibrary } from "../mutations/updateLibrary";
-import { UpdateLibraryResponse } from "../types/UpdateLibraryResponse";
+import { UpdateLibraryResponse } from "../models/UpdateLibraryResponse";
 import { useRef, useState } from "react";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import TimedAlert from "../components/TimedAlert/TimedAlert";
 import { formatChangedFields } from "../helpers/confirmationFunctions";
-import { AlertObject } from "../types/AlertObject";
+import { AlertObject } from "../models/AlertObject";
 import Confirmation from "../components/Confirmation/Confirmation";
 import { Cancel, Edit, Save } from "@mui/icons-material";
 import { isEmpty } from "lodash";
@@ -40,6 +40,8 @@ function HomeComponent() {
 	};
 
 	const id = auth.user?.profile?.libraryId;
+	const libraryName = auth.user?.profile?.library;
+
 	const theme = useTheme();
 	const [editMode, setEditMode] = useState(false);
 	const [showConfirmationEdit, setConfirmationEdit] = useState(false);
@@ -77,13 +79,13 @@ function HomeComponent() {
 	// need a better way of handling tokens as this causes a request to be sent (almost) every time
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const { data, isError, isLoading, refetch } = useQuery({
-		queryKey: ["libraryInfo", id, headers],
+		queryKey: ["libraryInfo", id, headers, libraryName],
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
 				getLibrary,
 				{
-					query: "id:" + id,
+					query: libraryName ? "fullName:" + libraryName : "id:" + id, // Prefer to use the full name, but fall back to the ID if needed
 					pagesize: 10,
 					pageno: 0,
 					orderBy: "fullName",
