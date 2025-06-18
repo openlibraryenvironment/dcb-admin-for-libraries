@@ -23,7 +23,7 @@ import { useAuth } from "react-oidc-context";
 import { getRequestError } from "@helpers/getRequestError";
 import { Agency } from "../../models/Agency";
 import { LibraryGroupMember } from "@models/LibraryGroupMember";
-import { findConsortium } from "src/helpers/findConsortium";
+import { findConsortium } from "@helpers/findConsortium";
 import { Location } from "@models/Location";
 import { Item } from "@models/Item";
 import { PatronRequestFormType } from "@models/PatronRequestFormType";
@@ -39,10 +39,6 @@ import { RequestCreationStep } from "./steps/RequestCreationStep";
 import { CheckoutStep } from "./steps/CheckoutStep";
 import { successfulExpeditedCheckoutStatuses } from "@constants/statuses/successfulExpeditedCheckoutStatuses";
 import { StatusStepConnector } from "../../components/StatusStepConnector/StatusStepConnector";
-import {
-	getStepColors,
-	getStepLabelFontWeight,
-} from "src/helpers/getStepLabelStyles";
 import request from "graphql-request";
 import { Library } from "@models/Library";
 import { useNavigate } from "@tanstack/react-router";
@@ -52,6 +48,10 @@ import {
 	LibrariesQueryData,
 	PatronRequestQueryData,
 } from "@models/HelperTypes";
+import {
+	getStepColors,
+	getStepLabelFontWeight,
+} from "@helpers/getStepLabelStyles";
 
 export default function ExpeditedCheckout({
 	show,
@@ -65,9 +65,12 @@ export default function ExpeditedCheckout({
 	// Also the ID of the library of the item.
 
 	const navigate = useNavigate();
-	const headers = {
-		Authorization: `Bearer ${auth.user?.access_token}`,
-	};
+	const headers = useMemo(
+		() => ({
+			Authorization: `Bearer ${auth.user?.access_token}`,
+		}),
+		[auth.user?.access_token]
+	);
 
 	const [alert, setAlert] = useState<{
 		open: boolean;
@@ -258,8 +261,9 @@ export default function ExpeditedCheckout({
 			pickupLocationId: "",
 			requesterNote: "On-site-borrowing: ",
 			itemLocalId: "",
-			itemLocalSystemCode: "",
-			itemAgencyCode: userAgencyCode,
+			itemLocalSystemCode: staffLibrary?.agency?.hostLms?.code,
+			itemAgencyCode: userAgencyCode, // For on-site borrowing, the item agency code must match the user's.
+			// As you can only do an on-site borrowing request for your own stuff.
 		},
 		resolver: yupResolver(validationSchema),
 		mode: "onChange",

@@ -79,7 +79,7 @@ function HomeComponent() {
 	// need a better way of handling tokens as this causes a request to be sent (almost) every time
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const { data, isError, isLoading, refetch } = useQuery({
-		queryKey: ["libraryInfo", id, headers, libraryName],
+		queryKey: ["libraryInfo", id, headers, libraryName, cfg.VITE_DCB_API_BASE],
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",

@@ -1,7 +1,7 @@
 import { ApolloClient } from "@apollo/client";
 import { TFunction } from "i18next";
 import { isEmpty } from "lodash";
-import { NextRouter } from "next/router";
+import { useNavigate } from "@tanstack/react-router";
 import { Dispatch, RefObject, SetStateAction } from "react";
 
 export const handleSaveConfirmation = async (
@@ -20,7 +20,7 @@ export const handleSaveConfirmation = async (
 	changeReferenceUrl: string,
 	updateName: string,
 	entityType: string,
-	refetchQuery: string,
+	refetchQuery: string
 ) => {
 	try {
 		const { data } = await updateEntity({
@@ -57,7 +57,7 @@ export const handleSaveConfirmation = async (
 	} catch (error) {
 		console.error(
 			`Error updating ${entity.name ?? (entity.fullName ? entity.fullName : entity.id)}:`,
-			error,
+			error
 		);
 		setAlert({
 			open: true,
@@ -79,7 +79,7 @@ export const closeConfirmation = (
 	refetchQuery: string,
 	setConfirmationEdit?: Dispatch<SetStateAction<boolean>>,
 	setPickupConfirmation?: Dispatch<SetStateAction<boolean>>,
-	setConfirmationDeletion?: Dispatch<SetStateAction<boolean>>,
+	setConfirmationDeletion?: Dispatch<SetStateAction<boolean>>
 ) => {
 	// Implementation
 	setConfirmation(false);
@@ -131,7 +131,7 @@ export const updateField = (
 	value: any,
 	setEditableFields: Dispatch<SetStateAction<any>>,
 	setChangedFields: Dispatch<SetStateAction<any>>,
-	entity: any,
+	entity: any
 ) => {
 	setEditableFields((prev: any) => ({
 		...prev,
@@ -191,16 +191,16 @@ export const handleCancellation = (
 	setChangedFields: Dispatch<SetStateAction<any>>,
 	setDirty: Dispatch<SetStateAction<boolean>>,
 	setValidationError: Dispatch<SetStateAction<boolean>>,
-	setEditKey: Dispatch<SetStateAction<number>>,
+	setEditKey: Dispatch<SetStateAction<number>>
 ) => {
 	setEditMode(false);
 	// if this does not work then just pass in the editable fields manually
 	setEditableFields(
 		entity
 			? Object.fromEntries(
-					Object.entries(entity).filter(([key]) => !key.startsWith("__")),
+					Object.entries(entity).filter(([key]) => !key.startsWith("__"))
 				)
-			: {},
+			: {}
 	);
 	setChangedFields({});
 	setDirty(false);
@@ -212,14 +212,14 @@ export const handleEdit = (
 	entity: any,
 	setEditMode: Dispatch<SetStateAction<boolean>>,
 	setEditableFields: Dispatch<SetStateAction<any>>,
-	firstEditableFieldRef: RefObject<HTMLInputElement>,
+	firstEditableFieldRef: RefObject<HTMLInputElement>
 ) => {
 	setEditableFields(
 		entity
 			? Object.fromEntries(
-					Object.entries(entity).filter(([key]) => !key.startsWith("__")),
+					Object.entries(entity).filter(([key]) => !key.startsWith("__"))
 				)
-			: {},
+			: {}
 	);
 	setEditMode(true);
 	setTimeout(() => {
@@ -232,7 +232,7 @@ export const handleEdit = (
 export const handleSave = (
 	changedFields: any,
 	setEditMode: Dispatch<SetStateAction<boolean>>,
-	setConfirmationEdit: Dispatch<SetStateAction<boolean>>,
+	setConfirmationEdit: Dispatch<SetStateAction<boolean>>
 ) => {
 	// NO CHANGED FIELDS
 	if (Object.keys(changedFields).length === 0) {
@@ -253,7 +253,7 @@ export const handleDeleteEntity = async (
 	router: NextRouter,
 	name: string,
 	operationType: string,
-	redirect: string,
+	redirect: string
 ) => {
 	try {
 		const input = {
@@ -274,7 +274,7 @@ export const handleDeleteEntity = async (
 							| { locations(_: any, { DELETE }: { DELETE: any }): any };
 					}) => void;
 				},
-				{ data: mutationData }: any,
+				{ data: mutationData }: any
 			) {
 				// This will remove cached libraries if the delete is successful.
 				// Thus forcing them to be re-fetched before re-direction to the libraries page.
@@ -319,7 +319,7 @@ export const handleDeleteEntity = async (
 					});
 					console.log("Entity deleted successfully");
 					setTimeout(() => {
-						router.push(redirect);
+						navigate({ to:redirect);
 					}, 100);
 					break;
 				case "deleteLocation":
@@ -334,7 +334,7 @@ export const handleDeleteEntity = async (
 					});
 					console.log("Entity deleted successfully");
 					setTimeout(() => {
-						router.push(redirect);
+						navigate({ to:redirect);
 					}, 100);
 					break;
 			}

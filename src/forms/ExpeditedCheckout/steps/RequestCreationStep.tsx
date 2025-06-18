@@ -1,5 +1,6 @@
 import { OnSiteBorrowingFormData } from "@models/OnSiteBorrowingFormData";
 import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocompleteOption";
+import { StaffRequestFormData } from "@models/StaffRequestFormData";
 import {
 	Autocomplete,
 	Button,
@@ -19,9 +20,11 @@ import {
 
 // Step two: request creation / placing
 interface RequestCreationStepType {
-	control: Control<OnSiteBorrowingFormData, any>;
-	// itemLibraryOptions: PatronRequestAutocompleteOption[];
+	// control:
+	// 	| Control<OnSiteBorrowingFormData, any>
+	// 	| Control<StaffRequestFormData, any>; // itemLibraryOptions: PatronRequestAutocompleteOption[];
 	// itemLibrariesLoading: boolean;
+	control: Control<any, any>;
 	setValue: UseFormSetValue<OnSiteBorrowingFormData>;
 	errors: FieldErrors<OnSiteBorrowingFormData>;
 	pickupLocationOptions: PatronRequestAutocompleteOption[];
@@ -53,6 +56,7 @@ export const RequestCreationStep = ({
 	pickupLocationId,
 	t,
 }: RequestCreationStepType) => {
+	console.log(isValid, isSubmitting, pickupLocationId, errors);
 	return (
 		<>
 			<Typography>
@@ -122,7 +126,6 @@ export const RequestCreationStep = ({
 							onChange(newValue?.value || "");
 						}}
 						options={pickupLocationOptions}
-						disabled={isEmpty(itemAgencyCode)}
 						loading={pickupLocationsLoading}
 						getOptionLabel={(option: PatronRequestAutocompleteOption) =>
 							option.label
@@ -146,7 +149,6 @@ export const RequestCreationStep = ({
 			<Controller
 				name="itemLocalId"
 				control={control}
-				disabled={isEmpty(itemAgencyCode)}
 				render={({ field: { onChange, value } }) => (
 					<Autocomplete
 						value={

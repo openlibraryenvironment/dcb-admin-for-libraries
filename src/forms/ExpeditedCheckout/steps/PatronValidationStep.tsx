@@ -1,5 +1,6 @@
 import { OnSiteBorrowingFormData } from "@models/OnSiteBorrowingFormData";
 import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocompleteOption";
+import { StaffRequestFormData } from "@models/StaffRequestFormData";
 import {
 	Autocomplete,
 	Button,
@@ -12,7 +13,7 @@ import { Control, Controller, FieldErrors } from "react-hook-form";
 
 // Step 1: Patron Validation Component: this is step 1 in the expedited checkout workflow
 interface PatronValidationStepType {
-	control: Control<OnSiteBorrowingFormData, any>;
+	control: Control<any, any>;
 	errors: FieldErrors<OnSiteBorrowingFormData>;
 	patronValidated: boolean;
 	isValidatingPatron: boolean;
@@ -42,7 +43,7 @@ export const PatronValidationStep = ({
 			<Typography variant="body1">
 				{t("expedited_checkout.steps.patron_validation_instruction")}
 			</Typography>
-
+			{/* /** The library of the patron. Could be a visiting patron, so this is not restricted*/}
 			<Controller
 				name="agencyCode"
 				control={control}
@@ -60,7 +61,6 @@ export const PatronValidationStep = ({
 						options={libraryOptions}
 						loading={librariesLoading}
 						getOptionLabel={(option) => option.label}
-						disabled
 						renderInput={(params) => (
 							<TextField
 								{...params}
@@ -69,7 +69,6 @@ export const PatronValidationStep = ({
 								label={t("staff_request.patron.affiliated")}
 								error={!!errors.agencyCode}
 								helperText={errors.agencyCode?.message}
-								disabled={patronValidated}
 							/>
 						)}
 						isOptionEqualToValue={(option, value) =>

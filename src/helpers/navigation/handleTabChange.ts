@@ -1,64 +1,65 @@
-import { NextRouter } from "next/router";
+import { UseNavigateResult } from "@tanstack/react-router";
 import { Dispatch, SetStateAction } from "react";
 
 export const handleTabChange = (
 	event: React.SyntheticEvent,
 	newValue: number,
-	router: NextRouter,
 	setTabIndex: Dispatch<SetStateAction<number>>,
-	id?: string,
+	navigate: UseNavigateResult<string>,
+	id?: string
 ) => {
 	setTabIndex(newValue);
 	switch (newValue) {
 		case 0:
-			router.push(`/libraries/${id}`);
+			navigate({ to: `/libraries/${id}` });
 			break;
 		case 1:
-			router.push(`/libraries/${id}/service`);
+			navigate({ to: `/libraries/${id}/service` });
+
 			break;
 		case 2:
-			router.push(`/libraries/${id}/settings`);
+			navigate({ to: `/libraries/${id}/settings` });
 			break;
 		case 3:
-			router.push(`/libraries/${id}/referenceValueMappings/itemType`);
+			navigate({ to: `/libraries/${id}/referenceValueMappings/itemType` });
 			break;
 		case 4:
-			router.push(`/libraries/${id}/patronRequests/exception`);
+			navigate({ to: `/libraries/${id}/patronRequests/exception` });
 			break;
 		case 5:
-			router.push(`/libraries/${id}/supplierRequests/all`);
+			navigate({ to: `/libraries/${id}/supplierRequests/all` });
 			break;
 		case 6:
-			router.push(`/libraries/${id}/contacts`);
+			navigate({ to: `/libraries/${id}/contacts` });
 			break;
 		case 7:
-			router.push(`/libraries/${id}/locations`);
+			navigate({ to: `/libraries/${id}/locations` });
 	}
 };
 
 export const handlePatronRequestTabChange = (
 	event: React.SyntheticEvent,
 	newValue: number,
-	router: NextRouter,
+	navigate: UseNavigateResult<string>,
 	setTabIndex: Dispatch<SetStateAction<number>>,
-	id?: string,
+	id?: string
 ) => {
 	setTabIndex(newValue);
 	switch (newValue) {
 		case 0:
-			router.push(`/libraries/${id}/patronRequests/exception`);
+			navigate({ to: `/libraries/${id}/patronRequests/exception` });
 			break;
 		case 1:
-			router.push(`/libraries/${id}/patronRequests/outOfSequence`);
+			navigate({ to: `/libraries/${id}/patronRequests/outOfSequence` });
 			break;
 		case 2:
-			router.push(`/libraries/${id}/patronRequests/active`);
+			navigate({ to: `/libraries/${id}/patronRequests/active` });
 			break;
 		case 3:
-			router.push(`/libraries/${id}/patronRequests/completed`);
+			navigate({ to: `/libraries/${id}/patronRequests/completed` });
 			break;
 		case 4:
-			router.push(`/libraries/${id}/patronRequests/all`);
+			navigate({ to: `/libraries/${id}/patronRequests/all` });
 			break;
 	}
 };
@@ -66,14 +67,14 @@ export const handlePatronRequestTabChange = (
 export const handleSupplierRequestTabChange = (
 	event: React.SyntheticEvent,
 	newValue: number,
-	router: NextRouter,
+	navigate: UseNavigateResult<string>,
 	setTabIndex: Dispatch<SetStateAction<number>>,
-	id?: string,
+	id?: string
 ) => {
 	setTabIndex(newValue);
 	switch (newValue) {
 		case 0:
-			router.push(`/libraries/${id}/supplierRequests/all`);
+			navigate({ to: `/libraries/${id}/supplierRequests/all` });
 			break;
 	}
 };
@@ -81,32 +82,32 @@ export const handleSupplierRequestTabChange = (
 export const handleMappingsTabChange = (
 	event: React.SyntheticEvent,
 	newValue: number,
-	router: NextRouter,
+	navigate: UseNavigateResult<string>,
 	setTabIndex: Dispatch<SetStateAction<number>>,
-	id?: string,
+	id?: string
 ) => {
 	setTabIndex(newValue);
 	switch (newValue) {
 		case 0:
-			router.push(`/libraries/${id}/referenceValueMappings/itemType`);
+			navigate({ to: `/libraries/${id}/referenceValueMappings/itemType` });
 			break;
 		case 1:
-			router.push(`/libraries/${id}/numericRangeMappings/itemType`);
+			navigate({ to: `/libraries/${id}/numericRangeMappings/itemType` });
 			break;
 		case 2:
-			router.push(`/libraries/${id}/referenceValueMappings/location`);
+			navigate({ to: `/libraries/${id}/referenceValueMappings/location` });
 			break;
 		case 3:
-			router.push(`/libraries/${id}/referenceValueMappings/patronType`);
+			navigate({ to: `/libraries/${id}/referenceValueMappings/patronType` });
 			break;
 		case 4:
-			router.push(`/libraries/${id}/numericRangeMappings/patronType`);
+			navigate({ to: `/libraries/${id}/numericRangeMappings/patronType` });
 			break;
 		case 5:
-			router.push(`/libraries/${id}/referenceValueMappings/all`);
+			navigate({ to: `/libraries/${id}/referenceValueMappings/all` });
 			break;
 		case 6:
-			router.push(`/libraries/${id}/numericRangeMappings/all`);
+			navigate({ to: `/libraries/${id}/numericRangeMappings/all` });
 			break;
 	}
 };
@@ -114,25 +115,26 @@ export const handleMappingsTabChange = (
 export const handleTopLevelPatronRequestTabChange = (
 	event: React.SyntheticEvent,
 	newValue: number,
-	router: NextRouter,
-	setTabIndex: Dispatch<SetStateAction<number>>,
+	navigate: UseNavigateResult<string>,
+
+	setTabIndex: Dispatch<SetStateAction<number>>
 ) => {
 	setTabIndex(newValue);
 	switch (newValue) {
 		case 0:
-			router.push(`/patronRequests/exception`);
+			navigate({ to: `/patronRequests/exception` });
 			break;
 		case 1:
-			router.push(`/patronRequests/outOfSequence`);
+			navigate({ to: `/patronRequests/outOfSequence` });
 			break;
 		case 2:
-			router.push(`/patronRequests/active`);
+			navigate({ to: `/patronRequests/active` });
 			break;
 		case 3:
-			router.push(`/patronRequests/completed`);
+			navigate({ to: `/patronRequests/completed` });
 			break;
 		case 4:
-			router.push(`/patronRequests/all`);
+			navigate({ to: `/patronRequests/all` });
 			break;
 	}
 };
