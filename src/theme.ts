@@ -1,20 +1,128 @@
 import { createTheme } from "@mui/material/styles";
 import { red } from "@mui/material/colors";
+import type {} from "@mui/x-data-grid/themeAugmentation";
 
-// A custom theme for this app - may need to be a .ts file
+// The DCB Admin for Libraries custom theme. Make it configurable and switchable.
 const theme = createTheme({
-	cssVariables: true,
-	palette: {
-		primary: {
-			main: "#556cd6",
+	cssVariables: {
+		colorSchemeSelector: "data",
+	},
+	components: {
+		MuiAccordion: {
+			defaultProps: {
+				slotProps: { transition: { timeout: 400 } },
+			},
 		},
-		secondary: {
-			main: "#19857b",
+		MuiButton: {
+			defaultProps: {
+				disableRipple: true, // This can also be toggled on a per-variant basis
+			},
+			styleOverrides: {
+				root: {
+					"&.Mui-focusVisible": {
+						outline: "2px solid", // For keyboard focus
+					},
+				},
+			},
 		},
-		error: {
-			main: red.A400,
+		MuiIconButton: {
+			defaultProps: {
+				disableRipple: true,
+			},
+		},
+		MuiListItemButton: {
+			defaultProps: {
+				disableRipple: true,
+			},
+		},
+		MuiDataGrid: {
+			styleOverrides: {
+				// focus styles
+				cell: {
+					"&:focus": {
+						outline: "none",
+					},
+					":focus-visible": {
+						outline: "2px solid",
+					},
+				},
+				cellCheckbox: {
+					"&:focus-within": {
+						outline: "2px solid",
+						outlineOffset: "-3px",
+					},
+				},
+				columnHeaderCheckbox: {
+					"&:focus-within": {
+						outline: "2px solid",
+						outlineOffset: "-3px",
+					},
+				},
+				columnHeader: {
+					"&:focus": {
+						outline: "none",
+					},
+					":focus-visible": {
+						outline: "2px solid",
+					},
+				},
+			},
+		},
+		MuiTooltip: {
+			defaultProps: {
+				arrow: true,
+			},
+		},
+		MuiAlertTitle: {
+			styleOverrides: {
+				root: {
+					fontSize: "1.2rem",
+				},
+			},
+		},
+		MuiTab: {
+			styleOverrides: {
+				root: ({ theme }) => ({
+					"&.Mui-focusVisible": {
+						outline: "2px solid", // For keyboard focus
+						boxSizing: "border-box",
+						borderColor: theme.palette.primary.outlineColor,
+						outlineOffset: "-2px",
+					},
+				}),
+			},
 		},
 	},
+
+	colorSchemes: {
+		light: {
+			palette: {
+				primary: {
+					main: "#556cd6",
+				},
+				secondary: {
+					main: "#19857b",
+				},
+				error: {
+					main: red.A400,
+				},
+			},
+		},
+		dark: {
+			palette: {
+				primary: {
+					main: "#35B7FF",
+				},
+				secondary: {
+					main: "#75BEDB",
+				},
+				error: {
+					main: red.A400,
+				},
+			},
+		},
+	},
+
 	typography: {
 		appTitle: {
 			fontSize: 20,
