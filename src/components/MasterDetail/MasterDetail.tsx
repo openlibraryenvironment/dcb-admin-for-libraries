@@ -57,7 +57,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 						<Grid size={4} role="gridcell">
 							<Stack direction="column">
 								<Typography variant="attributeTitle">
-									{t("search.bib_record_id")}
+									{t("requesting.bib_record_id")}
 								</Typography>
 								<Typography variant="attributeText" component="div">
 									<Link
@@ -84,7 +84,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 						<Grid size={8} role="gridcell">
 							<Stack direction="column">
 								<Typography variant="attributeTitle">
-									{t("search.identifiers")}
+									{t("requesting.identifiers")}
 								</Typography>
 								<List sx={{ pl: 0, ml: 0 }} dense disablePadding>
 									{row.canonicalMetadata.identifiers.map(
@@ -148,7 +148,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 					<Grid size={4}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("search.context")}
+								{t("requesting.context")}
 							</Typography>
 							<RenderAttribute attribute={row?.owningContext} />
 						</Stack>
@@ -156,7 +156,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 					<Grid size={4}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("details.agency_code")}
+								{t("agency.code")}
 							</Typography>
 							<RenderAttribute attribute={row?.agency?.code} />
 						</Stack>
@@ -164,7 +164,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 					<Grid size={4}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("details.agency_name")}
+								{t("agency.name")}
 							</Typography>
 							<RenderAttribute attribute={row?.agency?.description} />
 						</Stack>
@@ -172,7 +172,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 					<Grid size={4}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("details.location_name")}
+								{t("location.name")}
 							</Typography>
 							<RenderAttribute attribute={row?.location?.name} />
 						</Stack>
@@ -180,7 +180,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 					<Grid size={4}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("details.location_code")}
+								{t("location.code")}
 							</Typography>
 							<RenderAttribute attribute={row?.location?.code} />
 						</Stack>
@@ -188,7 +188,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 					<Grid size={4}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("search.barcode")}
+								{t("requesting.barcode")}
 							</Typography>
 							<RenderAttribute attribute={row?.barcode} />
 						</Stack>
@@ -196,7 +196,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 					<Grid size={4}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("search.call_no")}
+								{t("requesting.call_no")}
 							</Typography>
 							<RenderAttribute attribute={row?.callNumber} />
 						</Stack>
@@ -204,7 +204,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 					<Grid size={4}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("search.local_item_type_code")}
+								{t("requesting.local_item_type_code")}
 							</Typography>
 							<RenderAttribute attribute={row?.localItemTypeCode} />
 						</Stack>
@@ -212,7 +212,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 					<Grid size={4}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("search.local_item_type_name")}
+								{t("requesting.local_item_type_name")}
 							</Typography>
 							<RenderAttribute attribute={row?.localItemType} />
 						</Stack>

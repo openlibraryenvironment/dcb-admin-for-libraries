@@ -1,5 +1,6 @@
 import { Agency } from "./Agency";
 import { HostLMS } from "./HostLMS";
+import { LibraryGroupMember } from "./LibraryGroupMember";
 import { Person } from "./Person";
 
 export interface Library {
@@ -12,7 +13,7 @@ export interface Library {
 	address: string;
 	agency: Agency;
 	secondHostLms: HostLMS;
-	membership: any;
+	membership: [LibraryGroupMember];
 	type: string;
 	latitude: number;
 	longitude: number;

@@ -1,10 +1,10 @@
-import { Circle } from "@mui/icons-material";
+import Circle from "@mui/icons-material/Circle";
 import { List, ListItem, ListItemIcon, ListItemText } from "@mui/material";
 
-type FormatArrayAsListType = {
+interface FormatArrayAsListType {
 	roles: any;
 	context?: string;
-};
+}
 export default function FormatArrayAsList({
 	roles,
 	context,

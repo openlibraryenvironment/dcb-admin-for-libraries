@@ -5,7 +5,7 @@ variables:
   CACHE_COMPRESSION_LEVEL: "fast"
 
 default:
-  image: 
+  image:
     name: node:22.12.0-bullseye
     pull_policy: if-not-present
 
@@ -27,7 +27,7 @@ cache:
 
 build:
   stage: build
-  image: 
+  image:
     name: node:22.12.0-bullseye
     pull_policy: if-not-present
   tags:
@@ -39,7 +39,7 @@ build:
     - pwd
     - ls -al
     - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
-    - npm install
+    - npm ci
     - npm run build
     # - npm run semantic-release -- Commented out for now - not sure this is what is needed here?
   artifacts:
@@ -48,7 +48,7 @@ build:
     expire_in: 1 hour
 
 build-container-image:
-  image: 
+  image:
     name: docker:stable
     pull_policy: if-not-present
   stage: build
@@ -71,7 +71,7 @@ build-container-image:
 deploy_tag_to_s3:
   stage: deploy
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v[0-9].*/'
+    - if: "$CI_COMMIT_TAG =~ /^v[0-9].*/"
       when: always
     - when: never
   tags:
@@ -88,7 +88,7 @@ deploy_tag_to_s3:
     AWS_ACCESS_KEY_ID: $AWS_DEVOPS_AGENT_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $AWS_DEVOPS_AGENT_ACCESS_KEY_SECRET
     AWS_REGION: eu-west-1
-  dependencies: 
+  dependencies:
     - build
 
 deploy_dev_to_s3:
@@ -107,9 +107,8 @@ deploy_dev_to_s3:
     - aws s3 ls
     - aws s3 sync dist/ "s3://ki-libs-spa-hosting/dcb-admin-for-libraries-dev" --delete
   variables:
-    AWS_ACCESS_KEY_ID: $AWS_DEVOPS_AGENT_ACCESS_KEY_ID      
+    AWS_ACCESS_KEY_ID: $AWS_DEVOPS_AGENT_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $AWS_DEVOPS_AGENT_ACCESS_KEY_SECRET
     AWS_REGION: eu-west-1
-  dependencies: 
+  dependencies:
     - build
-

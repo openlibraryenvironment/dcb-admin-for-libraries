@@ -40,7 +40,9 @@ export default function DetailPanelHeader() {
 
 	return (
 		<Tooltip
-			title={noDetailPanelsOpen ? t("details.expand") : t("details.collapse")}>
+			title={
+				noDetailPanelsOpen ? t("ui.actions.expand") : t("ui.actions.collapse")
+			}>
 			<span>
 				<IconButton
 					size="small"

@@ -8,25 +8,33 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import LoginIcon from "@mui/icons-material/Login";
+import { z } from "zod";
 
 const Login: React.FC = () => {
 	const auth = useAuth();
 	const navigate = useNavigate();
 
 	// If user is already authenticated, redirect to home page
+	// Retrieve the redirect path from the URL search parameters.
+	const { redirect } = Route.useSearch();
+
+	// If the user is already authenticated, redirect them to their intended page
+	// or the dashboard. This handles cases where a logged-in user navigates to /login.
 	useEffect(() => {
+		console.log(redirect);
 		if (auth.isAuthenticated) {
-			const redirectPath = sessionStorage.getItem("redirectPath") || "/";
-			navigate({ to: redirectPath });
+			console.log(redirect);
+			navigate({ to: redirect || "/" });
 		}
-	}, [auth.isAuthenticated, navigate]);
+	}, [auth.isAuthenticated, navigate, redirect]);
 
 	const handleLogin = () => {
 		// Store current location
 		console.log(window.location.pathname);
 		sessionStorage.setItem("redirectPath", "/");
-		// Trigger login redirect
-		auth.signinRedirect();
+		// Trigger login redirect - this is being lost
+		console.log(redirect);
+		auth.signinRedirect({ state: redirect || "/" });
 	};
 
 	console.log(auth.isAuthenticated);
@@ -96,5 +104,8 @@ const Login: React.FC = () => {
 	);
 };
 export const Route = createFileRoute("/login")({
+	validateSearch: z.object({
+		redirect: z.string().optional().catch(""),
+	}),
 	component: Login,
 });

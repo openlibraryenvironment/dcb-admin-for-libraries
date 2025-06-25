@@ -5,14 +5,15 @@ import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import { getLibrary } from "../queries/getLibrary";
-import { Library } from "../types/Library";
-import { HostLMS } from "../types/HostLMS";
+import { Library } from "@models/Library";
+import { HostLMS } from "@models/HostLMS";
 import { getILS } from "../helpers/getILS";
 import Typography from "@mui/material/Typography";
 import RenderAttribute from "../components/RenderAttribute/RenderAttribute";
 import { Divider, Stack } from "@mui/material";
 import FormatArrayAsList from "../components/FormatArrayAsList/FormatArrayAsList";
 import PrivateData from "../components/PrivateData/PrivateData";
+import { useMemo } from "react";
 
 export const Route = createFileRoute("/service")({
 	component: ServiceComponent,
@@ -23,14 +24,17 @@ function ServiceComponent() {
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const { t } = useTranslation();
 
-	const headers = {
-		Authorization: `Bearer ${auth.user?.access_token}`,
-	};
+	const headers = useMemo(
+		() => ({
+			Authorization: `Bearer ${auth.user?.access_token}`,
+		}),
+		[auth.user?.access_token]
+	);
 	const id = auth.user?.profile?.libraryId;
 
 	// does this need a different key
 	const { data } = useQuery({
-		queryKey: ["libraryInfo", id, headers],
+		queryKey: ["libraryInfo", id, headers, cfg.VITE_DCB_API_BASE],
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
@@ -89,9 +93,8 @@ function ServiceComponent() {
 						<RenderAttribute
 							attribute={library?.patronWebsite}
 							title="Link to patron website"
-							type="url">
-							{library?.patronWebsite}
-						</RenderAttribute>
+							type="url"
+						/>
 					) : (
 						<Typography variant="attributeText">-</Typography>
 					)}

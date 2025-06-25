@@ -1,20 +1,221 @@
 import { createTheme } from "@mui/material/styles";
 import { red } from "@mui/material/colors";
+import type {} from "@mui/x-data-grid/themeAugmentation";
 
-// A custom theme for this app - may need to be a .ts file
+// The DCB Admin for Libraries custom theme. Make it configurable and switchable.
 const theme = createTheme({
-	cssVariables: true,
-	palette: {
-		primary: {
-			main: "#556cd6",
+	cssVariables: {
+		colorSchemeSelector: "data",
+	},
+	components: {
+		MuiAccordion: {
+			defaultProps: {
+				slotProps: { transition: { timeout: 400 } },
+			},
+			variants: [
+				{
+					props: { variant: "styled" },
+					style: {
+						borderBottom: "0px",
+						borderLeft: "0px",
+						borderRight: "0px",
+						"&::before": {
+							display: "none",
+						},
+					},
+				},
+				{
+					props: { variant: "dataGrid" },
+					style: ({ theme }) => ({
+						boxShadow: "none",
+						backgroundColor: "transparent",
+						"&:before": {
+							display: "none",
+						},
+						"&:first-of-type": {
+							borderTop: `2px solid ${theme.palette.divider}`,
+						},
+					}),
+				},
+				{
+					props: { variant: "sub" },
+					style: {
+						borderBottom: "0px",
+						borderLeft: "0px",
+						borderRight: "0px",
+						marginTop: "16px",
+						"&::before": {
+							display: "none",
+						},
+					},
+				},
+			],
 		},
-		secondary: {
-			main: "#19857b",
+		MuiAccordionSummary: {
+			styleOverrides: {
+				root: {
+					variants: [
+						{
+							props: { variant: "dataGrid" },
+							style: ({ theme }) => ({
+								backgroundColor: "transparent",
+								flexDirection: "row-reverse",
+								minHeight: "auto",
+								"&.Mui-expanded": {
+									minHeight: "auto",
+								},
+								"& .MuiAccordionSummary-content": {
+									marginLeft: theme.spacing(1),
+								},
+							}),
+						},
+						{
+							props: { variant: "sub" },
+							style: {
+								backgroundColor: "transparent",
+								"&.Mui-focusVisible": {
+									outline: "2px solid", // For keyboard focus
+								},
+							},
+						},
+					],
+				},
+			},
 		},
-		error: {
-			main: red.A400,
+		MuiAccordionDetails: {
+			styleOverrides: {
+				root: {
+					variants: [
+						{
+							props: { variant: "dataGrid" },
+							style: {
+								marginTop: "16px",
+							},
+						},
+						{
+							props: { variant: "sub" },
+							style: {
+								marginTop: "0px",
+							},
+						},
+					],
+				},
+			},
+		},
+		MuiButton: {
+			defaultProps: {
+				disableRipple: true, // This can also be toggled on a per-variant basis
+			},
+			styleOverrides: {
+				root: {
+					"&.Mui-focusVisible": {
+						outline: "2px solid", // For keyboard focus
+					},
+				},
+			},
+		},
+		MuiIconButton: {
+			defaultProps: {
+				disableRipple: true,
+			},
+		},
+		MuiListItemButton: {
+			defaultProps: {
+				disableRipple: true,
+			},
+		},
+		MuiDataGrid: {
+			styleOverrides: {
+				// focus styles
+				cell: {
+					"&:focus": {
+						outline: "none",
+					},
+					":focus-visible": {
+						outline: "2px solid",
+					},
+				},
+				cellCheckbox: {
+					"&:focus-within": {
+						outline: "2px solid",
+						outlineOffset: "-3px",
+					},
+				},
+				columnHeaderCheckbox: {
+					"&:focus-within": {
+						outline: "2px solid",
+						outlineOffset: "-3px",
+					},
+				},
+				columnHeader: {
+					"&:focus": {
+						outline: "none",
+					},
+					":focus-visible": {
+						outline: "2px solid",
+					},
+				},
+			},
+		},
+		MuiTooltip: {
+			defaultProps: {
+				arrow: true,
+			},
+		},
+		MuiAlertTitle: {
+			styleOverrides: {
+				root: {
+					fontSize: "1.2rem",
+				},
+			},
+		},
+		MuiTab: {
+			styleOverrides: {
+				root: ({ theme }) => ({
+					"&.Mui-focusVisible": {
+						outline: "2px solid", // For keyboard focus
+						boxSizing: "border-box",
+						borderColor: theme.palette.primary.outlineColor,
+						outlineOffset: "-2px",
+					},
+				}),
+			},
 		},
 	},
+
+	colorSchemes: {
+		light: {
+			palette: {
+				primary: {
+					iconSymbol: "#FFFFFF",
+					inactiveBackground: "#8C8C8C",
+					main: "#556cd6",
+				},
+				secondary: {
+					main: "#19857b",
+				},
+				error: {
+					main: red.A400,
+				},
+			},
+		},
+		dark: {
+			palette: {
+				primary: {
+					iconSymbol: "#FFFFFF",
+					inactiveBackground: "#8C8C8C",
+					main: "#35B7FF",
+				},
+				secondary: {
+					main: "#75BEDB",
+				},
+				error: {
+					main: red.A400,
+				},
+			},
+		},
+	},
+
 	typography: {
 		appTitle: {
 			fontSize: 20,
@@ -108,12 +309,17 @@ declare module "@mui/material/styles" {
 		headerText?: string;
 		hover?: string;
 		hoverOnSelectedPage: string;
+		iconSymbol?: string;
+		inactiveBackground?: string;
 		link?: string;
 		linkText?: string;
 		landingBackground?: string;
 		landingCard?: string;
 		loginCard?: string;
 		loginText?: string;
+		secondary?: {
+			main?: string;
+		};
 		selectedText?: string;
 		sidebar: string;
 		titleArea?: string;
@@ -140,12 +346,17 @@ declare module "@mui/material/styles" {
 		headerText?: string;
 		hover?: string;
 		hoverOnSelectedPage?: string;
+		iconSymbol?: string;
+		inactiveBackground?: string;
 		link?: string;
 		linkText?: string;
 		landingBackground?: string;
 		landingCard?: string;
 		loginCard?: string;
 		loginText?: string;
+		secondary?: {
+			main?: string;
+		};
 		selectedText?: string;
 		sidebar?: string;
 		titleArea?: string;
@@ -194,6 +405,37 @@ declare module "@mui/material/styles" {
 		loadingText?: React.CSSProperties;
 		accordionSummary?: React.CSSProperties;
 		subTabTitle?: React.CSSProperties;
+	}
+}
+
+// Add variant declarations for the new accordion and button variants
+declare module "@mui/material/Paper" {
+	interface PaperPropsVariantOverrides {
+		styled: true;
+		dataGrid: true;
+		sub: true;
+	}
+}
+
+declare module "@mui/material/Accordion" {
+	interface AccordionPropsVariantOverrides {
+		styled: true;
+		dataGrid: true;
+		sub: true;
+	}
+}
+
+declare module "@mui/material/AccordionDetails" {
+	interface AccordionDetailsPropsOverrides {
+		sub: true;
+		dataGrid: true;
+	}
+}
+
+declare module "@mui/material/AccordionSummary" {
+	interface AccordionSummaryPropsOverrides {
+		sub: true;
+		dataGrid: true;
 	}
 }
 declare module "@mui/material/Typography" {

@@ -3,6 +3,6 @@ export interface TimedAlertProps {
 	severityType: "success" | "info" | "warning" | "error";
 	onCloseFunc: any;
 	autoHideDuration: number;
-	alertTitle: string;
-	alertText: string;
+	alertTitle?: string;
+	alertText: any;
 }

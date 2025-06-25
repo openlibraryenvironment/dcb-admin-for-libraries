@@ -6,7 +6,7 @@ import {
 } from "@mui/material";
 import { capitalize } from "@mui/material/utils";
 import { forwardRef } from "react";
-import { TimedAlertProps } from "../../types/TimedAlertProps";
+import { TimedAlertProps } from "../../models/TimedAlertProps";
 
 const SnackbarAlert = forwardRef<HTMLDivElement, AlertProps>(
 	function Alert(props, ref) {
