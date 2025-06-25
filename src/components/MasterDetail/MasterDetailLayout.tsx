@@ -1,5 +1,5 @@
 import { Box, Divider } from "@mui/material";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 
 export default function MasterDetailLayout({ children, width }: any) {
 	return (

@@ -1,4 +1,4 @@
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -33,7 +33,7 @@ function HomeComponent() {
 	const auth = useAuth();
 	const { t } = useTranslation();
 
-  const { cfg } = useRouter().options.context as { cfg: any };
+	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const headers = {
 		Authorization: `Bearer ${auth.user?.access_token}`,

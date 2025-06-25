@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/service")({
 
 function ServiceComponent() {
 	const auth = useAuth();
-  const { cfg } = useRouter().options.context as { cfg: any};
+	const { cfg } = useRouter().options.context as { cfg: any };
 	const { t } = useTranslation();
 
 	const headers = {
