@@ -3,6 +3,20 @@
 		"code": "Agency code",
 		"name": "Agency name"
 	},
+
+	"audit": {
+		"no_results": "No audits found",
+		"audit": "Audit data",
+		"data": "Audit data (JSON)",
+		"date": "Audit date",
+		"description": "Brief description",
+		"from_status": "fromStatus",
+		"uuid": "Audit UUID",
+		"log": "Audit log",
+		"no_data": "No audit log entries found.",
+		"no_rows": "Try changing your filters or search terms.",
+		"to_status": "toStatus"
+	},
 	"a11y": {
 		"empty": "This field is empty"
 	},
@@ -279,6 +293,8 @@
 			"login": "Login",
 			"logout": "Logout",
 			"save": "Save",
+			"submit": "Submit",
+			"submitting": "Submitting",
 			"title": "Actions"
 		},
 		"tooltips": {

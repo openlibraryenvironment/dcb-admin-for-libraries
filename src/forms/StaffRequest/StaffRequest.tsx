@@ -881,7 +881,7 @@ export default function StaffRequest({
 // 									}>
 // 									{placeRequestMutation.isPending
 // 										? t("ui.action.submitting")
-// 										: t("general.submit")}
+// 										: t("ui.actions.submit")}
 // 								</Button>
 // 							</>
 // 						)}

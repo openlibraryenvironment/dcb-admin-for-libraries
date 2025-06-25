@@ -1,6 +1,6 @@
 import {
-	// createRootRoute,
-	createRootRouteWithContext,
+	createRootRoute,
+	// createRootRouteWithContext,
 	Outlet,
 	useNavigate,
 } from "@tanstack/react-router";
@@ -14,13 +14,15 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Container from "@mui/material/Container";
 import CircularProgress from "@mui/material/CircularProgress";
-import { AuthContextProps, useAuth } from "react-oidc-context";
+// import { AuthContextProps, useAuth } from "react-oidc-context";
+import { useAuth } from "react-oidc-context";
 import { Header } from "../components/Header/Header";
 
-export const Route = createRootRouteWithContext<{
-	auth: AuthContextProps;
-	cfg: any;
-}>()({
+// export const Route = createRootRouteWithContext<{
+// 	auth: AuthContextProps;
+// 	cfg: any; // to be investigated as it could be a better way of handling context
+
+export const Route = createRootRoute({
 	component: () => {
 		const auth = useAuth();
 		const navigate = useNavigate();

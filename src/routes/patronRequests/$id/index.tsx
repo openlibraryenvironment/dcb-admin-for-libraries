@@ -1498,6 +1498,7 @@ function RouteComponent() {
 					disableRowGrouping={true}
 					loading={patronRequestLoading}
 					listViewEnabled={false}
+					noResultsText={t("audit.no_results")}
 					pagination
 					pivotingEnabled={false}
 					toolbarVisible

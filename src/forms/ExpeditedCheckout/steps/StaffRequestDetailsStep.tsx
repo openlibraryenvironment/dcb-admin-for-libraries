@@ -231,7 +231,7 @@ export const StaffRequestDetailsStep = ({
 					color="primary"
 					variant="contained"
 					disabled={!isValid || isSubmitting}>
-					{isSubmitting ? t("ui.action.submitting") : t("general.submit")}
+					{isSubmitting ? t("ui.action.submitting") : t("ui.actions.submit")}
 				</Button>
 			</Stack>
 		</>
