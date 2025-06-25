@@ -1,136 +1,120 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import "./i18n";
-import { ThemeProvider } from "@mui/material/styles";
-import { CssBaseline } from "@mui/material";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import theme from "./theme";
 import { LicenseInfo } from "@mui/x-license";
-import { AuthProvider, useAuth } from "react-oidc-context";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { User } from "oidc-client-ts";
+import { AuthProvider } from "react-oidc-context";
+import { QueryClient } from "@tanstack/react-query";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
-
-
-
-
-function App() {
-	const auth = useAuth();
-
-	return (
-		<QueryClientProvider client={queryClient}>
-			<ThemeProvider theme={theme}>
-				<CssBaseline />
-				<RouterProvider router={router} context={{ auth }} />
-			</ThemeProvider>
-		</QueryClientProvider>
-	);
-}
+import App from "@components/App/App";
+import { User } from "oidc-client-ts";
 
 async function getCfg() {
-  try {
-
-    // We need to support runtime configuration as well as build time config. When using
-    // build time config variables come via import.meta.env.VITE_MUI_X_LICENSE_KEY
-    // When using deploy time, cloudflare will inject inject_env.js into the deployment 
-    // to read these values.
-    const response = await fetch('/inject_env.json', { cache: 'no-store' });
+	try {
+		// We need to support runtime configuration as well as build time config. When using
+		// build time config variables come via import.meta.env.VITE_MUI_X_LICENSE_KEY
+		// When using deploy time, cloudflare will inject inject_env.js into the deployment
+		// to read these values.
+		const response = await fetch("/inject_env.json", { cache: "no-store" });
 
 		// File not supplied, OR, server helpfully returning the SPA bundle root doc
-    if (!response.ok || response.headers.get("Content-Type")?.includes("text/html")) {
-      return {
-        "VITE_MUI_X_LICENSE_KEY" : String(import.meta.env.VITE_MUI_X_LICENSE_KEY),
-        "VITE_KEYCLOAK_URL": String(import.meta.env.VITE_KEYCLOAK_URL),
-        "VITE_KEYCLOAK_ID" : String(import.meta.env.VITE_KEYCLOAK_ID),
-        "VITE_DCB_API_BASE": String(import.meta.env.VITE_DCB_API_BASE),
-        "VITE_DCB_SEARCH_BASE": String(import.meta.env.VITE_DCB_SEARCH_BASE)
-      };
-    }
+		if (
+			!response.ok ||
+			response.headers.get("Content-Type")?.includes("text/html")
+		) {
+			return {
+				VITE_MUI_X_LICENSE_KEY: String(import.meta.env.VITE_MUI_X_LICENSE_KEY),
+				VITE_KEYCLOAK_URL: String(import.meta.env.VITE_KEYCLOAK_URL),
+				VITE_KEYCLOAK_ID: String(import.meta.env.VITE_KEYCLOAK_ID),
+				VITE_DCB_API_BASE: String(import.meta.env.VITE_DCB_API_BASE),
+				VITE_DCB_SEARCH_BASE: String(import.meta.env.VITE_DCB_SEARCH_BASE),
+			};
+		}
 
-    return await response.json();
-  } catch (err) {
-    console.warn('Could not load inject_env.json:', err);
-    return {};
-  }
+		return await response.json();
+	} catch (err) {
+		console.warn("Could not load inject_env.json:", err);
+		return {};
+	}
 }
 
 const getBasePath = () => {
-  const fullPath = window.location.pathname;
-  const matches = fullPath.match(/^\/[^/]+/);
-  return matches ? matches[0] : '/';
+	const fullPath = window.location.pathname;
+	const matches = fullPath.match(/^\/[^/]+/);
+	return matches ? matches[0] : "/";
 };
-  
+
 const queryClient = new QueryClient({
 	defaultOptions: {
-	 	queries: {
+		queries: {
 			staleTime: 1000 * 60 * 5, // 5 minutes
 			retry: 1,
-	 	},
- 	},
+		},
+	},
 });
 
 // basename is set this way so we can deploy this app to multiple folders and the app will
 // work relative to those folders
 const router = createRouter({
-  routeTree,
-  basepath: getBasePath(),
-  defaultPreload: "intent",
-  defaultPreloadStaleTime: 0,
-  defaultStaleTime: 5000,
-  scrollRestoration: true,
-  context: {
-    auth: undefined!,
-    queryClient,
-  },
+	routeTree,
+	basepath: getBasePath(),
+	defaultPreload: "intent",
+	defaultPreloadStaleTime: 0,
+	defaultStaleTime: 5000,
+	scrollRestoration: true,
+	context: {
+		auth: undefined!,
+		queryClient,
+	},
 });
 
 // Register things for typesafety
 declare module "@tanstack/react-router" {
-  interface Register {
-    router: typeof router;
-  } 
+	interface Register {
+		router: typeof router;
+	}
 }
 
-
-
 async function bootstrap() {
-
-  // See if there is an injected_cfg.json, otherwise fall back to build time variables.
+	// See if there is an injected_cfg.json, otherwise fall back to build time variables.
 	const cfg = await getCfg();
 
-  // Nice feature of tanstack etc - inject our config bundle into the router context
-  // Retrieve with  const { cfg } = useRouter().options.context;
-  router.update({
-    context: { cfg },
-  });
+	// Nice feature of tanstack etc - inject our config bundle into the router context
+	// Retrieve with  const { cfg } = useRouter().options.context;
+	router.update({
+		context: { cfg },
+	});
 
-  LicenseInfo.setLicenseKey(cfg.VITE_MUI_X_LICENSE_KEY);
+	LicenseInfo.setLicenseKey(cfg.VITE_MUI_X_LICENSE_KEY);
 
-  const oidcConfig = {
-  	authority: cfg.VITE_KEYCLOAK_URL,
-  	client_id: cfg.VITE_KEYCLOAK_ID,
-  	redirect_uri: window.location.origin,
-  	response_type: "code",
-  	scope: "openid profile email",
-  	loadUserInfo: true,
-  	automaticSilentRenew: true,
-  	onSigninCallback: (_user: User | void): void => {
-  		// Remove the query parameters from the URL
-  		window.history.replaceState({}, document.title, window.location.pathname);
-  	},
-  };
-  
-  ReactDOM.createRoot(document.getElementById("root")!).render(
-  	<React.StrictMode>
-  		<AuthProvider {...oidcConfig}>
-  			<App />
-  		</AuthProvider>
-  	</React.StrictMode>
-  );
+	const oidcConfig = {
+		authority: cfg.VITE_KEYCLOAK_URL,
+		client_id: cfg.VITE_KEYCLOAK_ID,
+		redirect_uri: window.location.origin,
+		response_type: "code",
+		scope: "openid profile email",
+		loadUserInfo: true,
+		automaticSilentRenew: true,
+		onSigninCallback: (_user: User | void): void => {
+			// Remove the query parameters from the URL
+			// Can we preserve the URL on log in - to stop people being redirected to home page?
+			console.log("Sign in for ", _user);
+			window.history.replaceState({}, document.title, window.location.pathname);
+		},
+	};
+
+	ReactDOM.createRoot(document.getElementById("root")!).render(
+		<React.StrictMode>
+			<AuthProvider {...oidcConfig}>
+				<App theme={theme} queryClient={queryClient} router={router} />
+			</AuthProvider>
+		</React.StrictMode>
+	);
 }
 
 // Some reworking here to allow the app to load config from /injected_env.json before

@@ -8,11 +8,22 @@ const isValidLink = (url: string): boolean => {
 		const validProtocols = ["http:", "https:", "mailto:"];
 		return validProtocols.includes(parsedUrl.protocol);
 	} catch (error) {
+		console.log("Invalid URL", error);
 		return false;
 	}
 };
 
-export default function RenderAttribute({ attribute, title, type }: any) {
+interface RenderAttributeProps {
+	attribute: any;
+	title?: string;
+	type?: string;
+}
+
+export default function RenderAttribute({
+	attribute,
+	title,
+	type,
+}: RenderAttributeProps) {
 	const { t } = useTranslation();
 
 	// Handle booleans and make sure they are correctly displayed.

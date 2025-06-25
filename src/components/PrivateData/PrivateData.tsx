@@ -11,7 +11,8 @@ import {
 	Tooltip,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 interface PrivateDataProps {
 	hiddenTextValue: string;

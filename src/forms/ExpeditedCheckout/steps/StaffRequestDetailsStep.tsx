@@ -69,7 +69,7 @@ export const StaffRequestDetailsStep = ({
 	return (
 		<>
 			<Typography variant="body1">
-				{t("staff_request.select_pickup")}
+				{t("requesting.staff_request.select_pickup")}
 			</Typography>
 
 			<Controller
@@ -86,12 +86,13 @@ export const StaffRequestDetailsStep = ({
 						onOpen={getPickupLocations}
 						loading={pickupLocationsLoading}
 						getOptionLabel={(option) => option.label}
+						groupBy={(option) => option.agencyName || ""}
 						renderInput={(params) => (
 							<TextField
 								{...params}
 								margin="normal"
 								required
-								label={t("staff_request.patron.pickup_location")}
+								label={t("requesting.staff_request.patron.pickup_location")}
 								error={!!errors.pickupLocationId}
 								helperText={errors.pickupLocationId?.message}
 							/>
@@ -106,23 +107,29 @@ export const StaffRequestDetailsStep = ({
 				render={({ field }) => (
 					<FormControl component="fieldset" margin="normal">
 						<FormLabel component="legend">
-							{t("staff_request.patron.selection.type")}
+							{t("requesting.staff_request.patron.selection.type")}
 						</FormLabel>
 						<RadioGroup row {...field}>
 							<Tooltip
-								title={t("staff_request.patron.selection.automatic_context")}>
+								title={t(
+									"requesting.staff_request.patron.selection.automatic_context"
+								)}>
 								<FormControlLabel
 									value="automatic"
 									control={<Radio />}
-									label={t("staff_request.patron.selection.automatic")}
+									label={t(
+										"requesting.staff_request.patron.selection.automatic"
+									)}
 								/>
 							</Tooltip>
 							<Tooltip
-								title={t("staff_request.patron.selection.manual_context")}>
+								title={t(
+									"requesting.staff_request.patron.selection.manual_context"
+								)}>
 								<FormControlLabel
 									value="manual"
 									control={<Radio />}
-									label={t("staff_request.patron.selection.manual")}
+									label={t("requesting.staff_request.patron.selection.manual")}
 								/>
 							</Tooltip>
 						</RadioGroup>
@@ -154,7 +161,7 @@ export const StaffRequestDetailsStep = ({
 										margin="normal"
 										required
 										fullWidth
-										label={t("staff_request.patron.item_library")}
+										label={t("requesting.staff_request.patron.item_library")}
 										error={!!errors.itemAgencyCode}
 										helperText={errors.itemAgencyCode?.message}
 									/>
@@ -185,7 +192,7 @@ export const StaffRequestDetailsStep = ({
 										required
 										disabled={isEmpty(itemAgencyCode)}
 										fullWidth
-										label={t("staff_request.patron.item_local_id")}
+										label={t("requesting.staff_request.patron.item_local_id")}
 										error={!!errors.itemLocalId || itemsError}
 										helperText={
 											errors.itemLocalId?.message ||
@@ -207,7 +214,7 @@ export const StaffRequestDetailsStep = ({
 						{...field}
 						margin="normal"
 						fullWidth
-						label={t("staff_request.patron.requester_note")}
+						label={t("requesting.staff_request.patron.requester_note")}
 						multiline
 						rows={2}
 					/>
@@ -216,7 +223,7 @@ export const StaffRequestDetailsStep = ({
 
 			<Stack spacing={1} direction={"row"} sx={{ mt: 2 }}>
 				<Button variant="outlined" onClick={handleClose}>
-					{t("mappings.cancel")}
+					{t("ui.actions.cancel")}
 				</Button>
 				<div style={{ flex: "1 0 0" }} />
 				<Button

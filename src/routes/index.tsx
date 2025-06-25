@@ -14,14 +14,16 @@ import { Controller, useForm } from "react-hook-form";
 import { UpdateLibraryFormData } from "../models/UpdateLibraryFormData";
 import { updateLibrary } from "../mutations/updateLibrary";
 import { UpdateLibraryResponse } from "../models/UpdateLibraryResponse";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import TimedAlert from "../components/TimedAlert/TimedAlert";
 import { formatChangedFields } from "../helpers/confirmationFunctions";
 import { AlertObject } from "../models/AlertObject";
 import Confirmation from "../components/Confirmation/Confirmation";
-import { Cancel, Edit, Save } from "@mui/icons-material";
+import Cancel from "@mui/icons-material/Cancel";
+import Edit from "@mui/icons-material/Edit";
+import Save from "@mui/icons-material/Save";
 import { isEmpty } from "lodash";
 
 // Landing page, also library information page
@@ -35,12 +37,15 @@ function HomeComponent() {
 
 	const { cfg } = useRouter().options.context as { cfg: any };
 
-	const headers = {
-		Authorization: `Bearer ${auth.user?.access_token}`,
-	};
+	const headers = useMemo(
+		() => ({
+			Authorization: `Bearer ${auth.user?.access_token}`,
+		}),
+		[auth.user?.access_token]
+	);
 
 	const id = auth.user?.profile?.libraryId;
-	const libraryName = auth.user?.profile?.library;
+	const code = auth.user?.profile?.code;
 
 	const theme = useTheme();
 	const [editMode, setEditMode] = useState(false);
@@ -79,13 +84,13 @@ function HomeComponent() {
 	// need a better way of handling tokens as this causes a request to be sent (almost) every time
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const { data, isError, isLoading, refetch } = useQuery({
-		queryKey: ["libraryInfo", id, headers, libraryName, cfg.VITE_DCB_API_BASE],
+		queryKey: ["libraryInfo", id, headers, code, cfg.VITE_DCB_API_BASE],
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
 				getLibrary,
 				{
-					query: libraryName ? "fullName:" + libraryName : "id:" + id, // Prefer to use the full name, but fall back to the ID if needed
+					query: code ? "agencyCode:" + code : "id:" + id, // Prefer to use the full name, but fall back to the ID if needed
 					pagesize: 10,
 					pageno: 0,
 					orderBy: "fullName",

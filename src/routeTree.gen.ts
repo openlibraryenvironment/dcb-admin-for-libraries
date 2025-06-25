@@ -8,259 +8,105 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as SupplierRequestsRouteImport } from './routes/supplierRequests'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ServiceRouteImport } from './routes/service'
+import { Route as MappingsRouteImport } from './routes/mappings'
+import { Route as LogoutRouteImport } from './routes/logout'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as LocationsRouteImport } from './routes/locations'
+import { Route as DataChangeLogRouteImport } from './routes/dataChangeLog'
+import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as PatronRequestsIndexRouteImport } from './routes/patronRequests/index'
+import { Route as LocationsIndexRouteImport } from './routes/locations/index'
+import { Route as PatronRequestsIdIndexRouteImport } from './routes/patronRequests/$id/index'
+import { Route as LocationsIdIndexRouteImport } from './routes/locations/$id/index'
+import { Route as IndexesIndexCodeIndexRouteImport } from './routes/indexes/$indexCode/index'
+import { Route as IndexesIndexCodeRecordIdIndexRouteImport } from './routes/indexes/$indexCode/$recordId/index'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as SupplierRequestsImport } from './routes/supplierRequests'
-import { Route as SettingsImport } from './routes/settings'
-import { Route as ServiceImport } from './routes/service'
-import { Route as MappingsImport } from './routes/mappings'
-import { Route as LogoutImport } from './routes/logout'
-import { Route as LoginImport } from './routes/login'
-import { Route as LocationsImport } from './routes/locations'
-import { Route as DataChangeLogImport } from './routes/dataChangeLog'
-import { Route as ContactsImport } from './routes/contacts'
-import { Route as IndexImport } from './routes/index'
-import { Route as PatronRequestsIndexImport } from './routes/patronRequests/index'
-import { Route as LocationsIndexImport } from './routes/locations/index'
-import { Route as PatronRequestsIdIndexImport } from './routes/patronRequests/$id/index'
-import { Route as LocationsIdIndexImport } from './routes/locations/$id/index'
-import { Route as IndexesIndexCodeIndexImport } from './routes/indexes/$indexCode/index'
-import { Route as IndexesIndexCodeRecordIdIndexImport } from './routes/indexes/$indexCode/$recordId/index'
-
-// Create/Update Routes
-
-const SupplierRequestsRoute = SupplierRequestsImport.update({
+const SupplierRequestsRoute = SupplierRequestsRouteImport.update({
   id: '/supplierRequests',
   path: '/supplierRequests',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const SettingsRoute = SettingsImport.update({
+const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ServiceRoute = ServiceImport.update({
+const ServiceRoute = ServiceRouteImport.update({
   id: '/service',
   path: '/service',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const MappingsRoute = MappingsImport.update({
+const MappingsRoute = MappingsRouteImport.update({
   id: '/mappings',
   path: '/mappings',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const LogoutRoute = LogoutImport.update({
+const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
   path: '/logout',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const LoginRoute = LoginImport.update({
+const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const LocationsRoute = LocationsImport.update({
+const LocationsRoute = LocationsRouteImport.update({
   id: '/locations',
   path: '/locations',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const DataChangeLogRoute = DataChangeLogImport.update({
+const DataChangeLogRoute = DataChangeLogRouteImport.update({
   id: '/dataChangeLog',
   path: '/dataChangeLog',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ContactsRoute = ContactsImport.update({
+const ContactsRoute = ContactsRouteImport.update({
   id: '/contacts',
   path: '/contacts',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const PatronRequestsIndexRoute = PatronRequestsIndexImport.update({
+const PatronRequestsIndexRoute = PatronRequestsIndexRouteImport.update({
   id: '/patronRequests/',
   path: '/patronRequests/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const LocationsIndexRoute = LocationsIndexImport.update({
+const LocationsIndexRoute = LocationsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LocationsRoute,
 } as any)
-
-const PatronRequestsIdIndexRoute = PatronRequestsIdIndexImport.update({
+const PatronRequestsIdIndexRoute = PatronRequestsIdIndexRouteImport.update({
   id: '/patronRequests/$id/',
   path: '/patronRequests/$id/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const LocationsIdIndexRoute = LocationsIdIndexImport.update({
+const LocationsIdIndexRoute = LocationsIdIndexRouteImport.update({
   id: '/$id/',
   path: '/$id/',
   getParentRoute: () => LocationsRoute,
 } as any)
-
-const IndexesIndexCodeIndexRoute = IndexesIndexCodeIndexImport.update({
+const IndexesIndexCodeIndexRoute = IndexesIndexCodeIndexRouteImport.update({
   id: '/indexes/$indexCode/',
   path: '/indexes/$indexCode/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
 const IndexesIndexCodeRecordIdIndexRoute =
-  IndexesIndexCodeRecordIdIndexImport.update({
+  IndexesIndexCodeRecordIdIndexRouteImport.update({
     id: '/indexes/$indexCode/$recordId/',
     path: '/indexes/$indexCode/$recordId/',
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => rootRouteImport,
   } as any)
-
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/contacts': {
-      id: '/contacts'
-      path: '/contacts'
-      fullPath: '/contacts'
-      preLoaderRoute: typeof ContactsImport
-      parentRoute: typeof rootRoute
-    }
-    '/dataChangeLog': {
-      id: '/dataChangeLog'
-      path: '/dataChangeLog'
-      fullPath: '/dataChangeLog'
-      preLoaderRoute: typeof DataChangeLogImport
-      parentRoute: typeof rootRoute
-    }
-    '/locations': {
-      id: '/locations'
-      path: '/locations'
-      fullPath: '/locations'
-      preLoaderRoute: typeof LocationsImport
-      parentRoute: typeof rootRoute
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginImport
-      parentRoute: typeof rootRoute
-    }
-    '/logout': {
-      id: '/logout'
-      path: '/logout'
-      fullPath: '/logout'
-      preLoaderRoute: typeof LogoutImport
-      parentRoute: typeof rootRoute
-    }
-    '/mappings': {
-      id: '/mappings'
-      path: '/mappings'
-      fullPath: '/mappings'
-      preLoaderRoute: typeof MappingsImport
-      parentRoute: typeof rootRoute
-    }
-    '/service': {
-      id: '/service'
-      path: '/service'
-      fullPath: '/service'
-      preLoaderRoute: typeof ServiceImport
-      parentRoute: typeof rootRoute
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsImport
-      parentRoute: typeof rootRoute
-    }
-    '/supplierRequests': {
-      id: '/supplierRequests'
-      path: '/supplierRequests'
-      fullPath: '/supplierRequests'
-      preLoaderRoute: typeof SupplierRequestsImport
-      parentRoute: typeof rootRoute
-    }
-    '/locations/': {
-      id: '/locations/'
-      path: '/'
-      fullPath: '/locations/'
-      preLoaderRoute: typeof LocationsIndexImport
-      parentRoute: typeof LocationsImport
-    }
-    '/patronRequests/': {
-      id: '/patronRequests/'
-      path: '/patronRequests'
-      fullPath: '/patronRequests'
-      preLoaderRoute: typeof PatronRequestsIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/indexes/$indexCode/': {
-      id: '/indexes/$indexCode/'
-      path: '/indexes/$indexCode'
-      fullPath: '/indexes/$indexCode'
-      preLoaderRoute: typeof IndexesIndexCodeIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/locations/$id/': {
-      id: '/locations/$id/'
-      path: '/$id'
-      fullPath: '/locations/$id'
-      preLoaderRoute: typeof LocationsIdIndexImport
-      parentRoute: typeof LocationsImport
-    }
-    '/patronRequests/$id/': {
-      id: '/patronRequests/$id/'
-      path: '/patronRequests/$id'
-      fullPath: '/patronRequests/$id'
-      preLoaderRoute: typeof PatronRequestsIdIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/indexes/$indexCode/$recordId/': {
-      id: '/indexes/$indexCode/$recordId/'
-      path: '/indexes/$indexCode/$recordId'
-      fullPath: '/indexes/$indexCode/$recordId'
-      preLoaderRoute: typeof IndexesIndexCodeRecordIdIndexImport
-      parentRoute: typeof rootRoute
-    }
-  }
-}
-
-// Create and export the route tree
-
-interface LocationsRouteChildren {
-  LocationsIndexRoute: typeof LocationsIndexRoute
-  LocationsIdIndexRoute: typeof LocationsIdIndexRoute
-}
-
-const LocationsRouteChildren: LocationsRouteChildren = {
-  LocationsIndexRoute: LocationsIndexRoute,
-  LocationsIdIndexRoute: LocationsIdIndexRoute,
-}
-
-const LocationsRouteWithChildren = LocationsRoute._addFileChildren(
-  LocationsRouteChildren,
-)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -280,7 +126,6 @@ export interface FileRoutesByFullPath {
   '/patronRequests/$id': typeof PatronRequestsIdIndexRoute
   '/indexes/$indexCode/$recordId': typeof IndexesIndexCodeRecordIdIndexRoute
 }
-
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contacts': typeof ContactsRoute
@@ -298,9 +143,8 @@ export interface FileRoutesByTo {
   '/patronRequests/$id': typeof PatronRequestsIdIndexRoute
   '/indexes/$indexCode/$recordId': typeof IndexesIndexCodeRecordIdIndexRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/contacts': typeof ContactsRoute
   '/dataChangeLog': typeof DataChangeLogRoute
@@ -318,7 +162,6 @@ export interface FileRoutesById {
   '/patronRequests/$id/': typeof PatronRequestsIdIndexRoute
   '/indexes/$indexCode/$recordId/': typeof IndexesIndexCodeRecordIdIndexRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
@@ -375,7 +218,6 @@ export interface FileRouteTypes {
     | '/indexes/$indexCode/$recordId/'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContactsRoute: typeof ContactsRoute
@@ -393,6 +235,137 @@ export interface RootRouteChildren {
   IndexesIndexCodeRecordIdIndexRoute: typeof IndexesIndexCodeRecordIdIndexRoute
 }
 
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/supplierRequests': {
+      id: '/supplierRequests'
+      path: '/supplierRequests'
+      fullPath: '/supplierRequests'
+      preLoaderRoute: typeof SupplierRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/service': {
+      id: '/service'
+      path: '/service'
+      fullPath: '/service'
+      preLoaderRoute: typeof ServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mappings': {
+      id: '/mappings'
+      path: '/mappings'
+      fullPath: '/mappings'
+      preLoaderRoute: typeof MappingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logout': {
+      id: '/logout'
+      path: '/logout'
+      fullPath: '/logout'
+      preLoaderRoute: typeof LogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locations': {
+      id: '/locations'
+      path: '/locations'
+      fullPath: '/locations'
+      preLoaderRoute: typeof LocationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dataChangeLog': {
+      id: '/dataChangeLog'
+      path: '/dataChangeLog'
+      fullPath: '/dataChangeLog'
+      preLoaderRoute: typeof DataChangeLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contacts': {
+      id: '/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof ContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patronRequests/': {
+      id: '/patronRequests/'
+      path: '/patronRequests'
+      fullPath: '/patronRequests'
+      preLoaderRoute: typeof PatronRequestsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locations/': {
+      id: '/locations/'
+      path: '/'
+      fullPath: '/locations/'
+      preLoaderRoute: typeof LocationsIndexRouteImport
+      parentRoute: typeof LocationsRoute
+    }
+    '/patronRequests/$id/': {
+      id: '/patronRequests/$id/'
+      path: '/patronRequests/$id'
+      fullPath: '/patronRequests/$id'
+      preLoaderRoute: typeof PatronRequestsIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locations/$id/': {
+      id: '/locations/$id/'
+      path: '/$id'
+      fullPath: '/locations/$id'
+      preLoaderRoute: typeof LocationsIdIndexRouteImport
+      parentRoute: typeof LocationsRoute
+    }
+    '/indexes/$indexCode/': {
+      id: '/indexes/$indexCode/'
+      path: '/indexes/$indexCode'
+      fullPath: '/indexes/$indexCode'
+      preLoaderRoute: typeof IndexesIndexCodeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/indexes/$indexCode/$recordId/': {
+      id: '/indexes/$indexCode/$recordId/'
+      path: '/indexes/$indexCode/$recordId'
+      fullPath: '/indexes/$indexCode/$recordId'
+      preLoaderRoute: typeof IndexesIndexCodeRecordIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
+}
+
+interface LocationsRouteChildren {
+  LocationsIndexRoute: typeof LocationsIndexRoute
+  LocationsIdIndexRoute: typeof LocationsIdIndexRoute
+}
+
+const LocationsRouteChildren: LocationsRouteChildren = {
+  LocationsIndexRoute: LocationsIndexRoute,
+  LocationsIdIndexRoute: LocationsIdIndexRoute,
+}
+
+const LocationsRouteWithChildren = LocationsRoute._addFileChildren(
+  LocationsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContactsRoute: ContactsRoute,
@@ -409,87 +382,6 @@ const rootRouteChildren: RootRouteChildren = {
   PatronRequestsIdIndexRoute: PatronRequestsIdIndexRoute,
   IndexesIndexCodeRecordIdIndexRoute: IndexesIndexCodeRecordIdIndexRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/contacts",
-        "/dataChangeLog",
-        "/locations",
-        "/login",
-        "/logout",
-        "/mappings",
-        "/service",
-        "/settings",
-        "/supplierRequests",
-        "/patronRequests/",
-        "/indexes/$indexCode/",
-        "/patronRequests/$id/",
-        "/indexes/$indexCode/$recordId/"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/contacts": {
-      "filePath": "contacts.tsx"
-    },
-    "/dataChangeLog": {
-      "filePath": "dataChangeLog.tsx"
-    },
-    "/locations": {
-      "filePath": "locations.tsx",
-      "children": [
-        "/locations/",
-        "/locations/$id/"
-      ]
-    },
-    "/login": {
-      "filePath": "login.tsx"
-    },
-    "/logout": {
-      "filePath": "logout.tsx"
-    },
-    "/mappings": {
-      "filePath": "mappings.tsx"
-    },
-    "/service": {
-      "filePath": "service.tsx"
-    },
-    "/settings": {
-      "filePath": "settings.tsx"
-    },
-    "/supplierRequests": {
-      "filePath": "supplierRequests.tsx"
-    },
-    "/locations/": {
-      "filePath": "locations/index.tsx",
-      "parent": "/locations"
-    },
-    "/patronRequests/": {
-      "filePath": "patronRequests/index.tsx"
-    },
-    "/indexes/$indexCode/": {
-      "filePath": "indexes/$indexCode/index.tsx"
-    },
-    "/locations/$id/": {
-      "filePath": "locations/$id/index.tsx",
-      "parent": "/locations"
-    },
-    "/patronRequests/$id/": {
-      "filePath": "patronRequests/$id/index.tsx"
-    },
-    "/indexes/$indexCode/$recordId/": {
-      "filePath": "indexes/$indexCode/$recordId/index.tsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

@@ -2,6 +2,7 @@
 
 import { Library } from "./Library";
 import { Location } from "./Location";
+import { PatronIdentity } from "./PatronIdentity";
 import { PatronRequest } from "./PatronRequest";
 
 // Helper types for our GraphQL responses - previously this was taken care of by Apollo
@@ -9,6 +10,11 @@ import { PatronRequest } from "./PatronRequest";
 export interface PatronRequestQueryData {
 	patronRequests?: {
 		content: PatronRequest[];
+	};
+}
+export interface PatronIdentitiesQueryData {
+	patronIdentities?: {
+		content: PatronIdentity[];
 	};
 }
 

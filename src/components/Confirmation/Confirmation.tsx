@@ -227,7 +227,7 @@ const Confirmation = ({
 					<Button onClick={handleClose} variant="outlined" color="primary">
 						{action == "unsavedChanges"
 							? t("ui.unsaved_changes.keep_editing")
-							: t("mappings.cancel")}
+							: t("ui.actions.cancel")}
 					</Button>
 					<div style={{ flex: "1 0 0" }} />
 					{action == "unsavedChanges" ? (

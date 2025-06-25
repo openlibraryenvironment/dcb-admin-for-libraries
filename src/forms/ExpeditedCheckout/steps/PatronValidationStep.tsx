@@ -41,7 +41,7 @@ export const PatronValidationStep = ({
 	return (
 		<>
 			<Typography variant="body1">
-				{t("expedited_checkout.steps.patron_validation_instruction")}
+				{t("requesting.expedited_checkout.steps.patron_validation_instruction")}
 			</Typography>
 			{/* /** The library of the patron. Could be a visiting patron, so this is not restricted*/}
 			<Controller
@@ -66,7 +66,7 @@ export const PatronValidationStep = ({
 								{...params}
 								margin="normal"
 								required
-								label={t("staff_request.patron.affiliated")}
+								label={t("requesting.staff_request.patron.affiliated")}
 								error={!!errors.agencyCode}
 								helperText={errors.agencyCode?.message}
 							/>
@@ -88,7 +88,7 @@ export const PatronValidationStep = ({
 						required
 						fullWidth
 						id="patronBarcode"
-						label={t("staff_request.patron.barcode")}
+						label={t("requesting.staff_request.patron.barcode")}
 						error={!!errors.patronBarcode}
 						helperText={errors.patronBarcode?.message}
 						disabled={patronValidated}
@@ -97,7 +97,7 @@ export const PatronValidationStep = ({
 			/>
 			<Stack spacing={1} direction={"row"}>
 				<Button variant="outlined" onClick={handleClose}>
-					{t("mappings.cancel")}
+					{t("ui.actions.cancel")}
 				</Button>
 				<div style={{ flex: "1 0 0" }} />
 				<Button
@@ -106,8 +106,8 @@ export const PatronValidationStep = ({
 					onClick={validatePatron}
 					disabled={isValidatingPatron || !patronBarcode || !agencyCode}>
 					{isValidatingPatron
-						? t("staff_request.patron.validating")
-						: t("staff_request.patron.validate")}
+						? t("requesting.staff_request.patron.validating")
+						: t("requesting.staff_request.patron.validate")}
 				</Button>
 			</Stack>
 		</>

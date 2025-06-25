@@ -1,5 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
@@ -12,7 +12,10 @@ export default defineConfig(({ mode }) => {
 
 	return {
 		plugins: [
-			TanStackRouterVite({ target: "react", autoCodeSplitting: true }),
+			tanstackRouter({
+				target: "react",
+				autoCodeSplitting: true,
+			}),
 			react(),
 		],
 		base: bp,
@@ -20,12 +23,24 @@ export default defineConfig(({ mode }) => {
 			// think about other ways of addressing bundle size
 			// ultimately if we can't because of the DGrid it's fine
 			rollupOptions: {
+				// external: ["redux"],
 				output: {
 					manualChunks: {
 						vendor: ["react", "react-dom"],
-						ui: ["@mui/material", "@mui/icons-material"],
+						router: ["@tanstack/react-router", "@tanstack/react-query"],
+						mui: ["@mui/material", "@emotion/styled", "@emotion/react"],
 					},
 				},
+			},
+			optimizeDeps: {
+				// Pre-bundle common dependencies
+				include: [
+					"react",
+					"react-dom",
+					"@mui/material",
+					"@emotion/styled",
+					"@emotion/react",
+				],
 			},
 		},
 		resolve: {

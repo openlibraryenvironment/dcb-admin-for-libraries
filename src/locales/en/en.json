@@ -1,6 +1,7 @@
 {
 	"agency": {
-		"code": "Agency code"
+		"code": "Agency code",
+		"name": "Agency name"
 	},
 	"a11y": {
 		"empty": "This field is empty"
@@ -133,24 +134,151 @@
 		"title": "Information for {{library}}",
 		"type": "Type"
 	},
+	"location": {
+		"code": "Location code",
+		"name": "Location name"
+	},
+	"nav": {
+		"library": {
+			"service": "Service"
+		}
+	},
 	"patron_request": {
+		"error_identities": "Error loading patron identity information",
+		"error_pickup": "Error loading pickup location information",
+		"patron_type_dcb": "DCB patron type",
 		"title": "Patron request"
 	},
-	"shared_index": {
-		"cluster": "Cluster",
+	"requesting": {
+		"barcode": "Barcode",
+		"bib_record_id": "Bib record UUID",
+		"call_no": "Call number",
+		"context": "Context",
+		"cluster_title": "Cluster details for {{record}}",
+		"cluster_tooltip": "View cluster record",
+		"cluster_id": "Cluster UUID",
+		"cluster_deleted": "Is cluster deleted?",
+		"date_available": "Date available",
+		"date_due": "Date due",
+		"shared_index_unavailable_title": "Shared index is not configured on this system",
+		"shared_index_unavailable_message": "Please set a valid DCB_SEARCH_BASE environment variable for this deployment.",
+		"hold_count": "Hold count",
+		"identifiers": "Identifiers",
 		"items": "Items",
-		"title": "Shared index"
+		"items_error_title": "We could not load the associated items",
+		"item_id": "Item ID",
+		"items_title": "Items available for cluster {{cluster}}",
+		"local_item_type_code": "Local item type code",
+		"local_item_type_name": "Local item type name",
+		"no_data": "No data available. Please enter a search term, or change your current search.",
+		"requestable": "Requestable",
+		"suppressed": "Suppressed",
+		"volume_parsed": "Parsed volume statement",
+		"volume_raw": "Raw volume statement",
+		"expedited_checkout": {
+			"create_request": "Create request",
+			"creating_request": "Creating request ...",
+			"description": "Welcome to DCB on-site borrowing. Please provide the barcode and the library of the patron you would like to make a request for. <paragraph>Provided that the patron's details are valid and the item exists and is available at your library, DCB will instantly check out this item to the specified patron.</paragraph>",
+			"feedback": {
+				"current_status": "Current status: {{status}}",
+				"in_progress": "Your on-site borrowing request has been successfully placed and DCB is now attempting to check it out.",
+				"in_progress_explanation": "Your on-site borrowing request has been successfully placed and DCB is now attempting to check it out.",
+				"success": "Your on-site borrowing request has been checked out successfully and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
+				"time_elapsed": "Time elapsed: {{time}}"
+			},
+			"request_title": "On-site borrowing request",
+			"steps": {
+				"checkout": "Check out item",
+				"checkout_failure": "Item checkout is taking too long. Please view the request and use the 'check for updates' option to refresh its status.",
+				"checkout_success": "The item has been successfully checked out, and all steps are complete. The due date for this item is {{dueDate}}",
+				"checkout_waiting": "The request has been created. Please wait while we attempt to check out the item.",
+				"complete": "All steps complete!",
+				"patron_validation": "Patron validation",
+				"patron_validation_instruction": "Please provide the barcode and the affiliated institution of the patron.",
+				"request_creation": "Request creation",
+				"request_creation_instruction": "The patron barcode is valid. Please now provide the remaining details."
+			},
+			"title_on_site": "Item checkout",
+			"view_request": "View request"
+		},
+		"shared_index": {
+			"cluster": "Cluster",
+			"cluster_details": "Cluster details",
+			"items": "Items",
+			"items_for_cluster": "{{number}} item(s) for cluster {{id}}",
+			"items_not_shown": "{{number}} item(s) unable to be shown",
+			"items_not_shown_helper_item": "Items without an item type are usually the result of a missing or misconfigured item type mapping. Please review the item type mappings for this library.",
+			"items_not_shown_helper_location": "Items without an 'Agency' value are usually the result of a missing or misconfigured Location mapping, or a missing agency. Please review the Location mappings for this library and the agency configuration.",
+			"items_not_shown_long": "{{number}} item(s) not shown for cluster {{id}}. You may have missing mappings or other configuration issues.",
+			"items_not_shown_resolution": "If the item(s) below belong to your library and should be available to users, please review the mappings in the 'Mappings' section. There may be incorrect or missing mappings preventing DCB from showing the items below",
+			"items_unavailable": "No items are available for this cluster",
+			"return": "Return to shared index",
+			"title": "Shared index"
+		},
+		"staff_request": {
+			"actions": {
+				"place": "Place a staff request"
+			},
+			"new": "New request",
+			"patron": {
+				"affiliated": "Affiliated institution",
+				"barcode": "Patron barcode",
+				"description": "Please provide the barcode and the library of the patron you would like to make a staff request for.",
+				"error": {
+					"no_brackets": "Please remove any brackets from the barcode.",
+					"request": {
+						"duplicate": "A request already exists for this patron at this library within the time window of 900 seconds.",
+						"generic": "Error: {{code}}. More info: {{description}}"
+					},
+					"validation_failure": "We were unable to validate this patron. Please correct the barcode and/or affiliated institution, and try again.",
+					"validate_first": "You must validate a patron before attempting to make a staff request on their behalf."
+				},
+				"item_agency_code": "Item agency",
+				"item_host_lms": "Item Host LMS",
+				"item_library": "Item library",
+				"item_local_id": "Item local ID",
+				"item_select": "Item {{id}} - Location: {{name}}, Barcode: {{barcode}}",
+				"pickup_location": "Pickup location",
+				"pickup_location_no_agency": "Other locations",
+				"requester_note": "Requester note",
+				"selection": {
+					"automatic": "Automatic",
+					"automatic_context": "DCB will automatically select an item to fulfil this request.",
+					"manual": "Manual",
+					"manual_context": "DCB will use the criteria provided to select an item to fulfil this request",
+					"type": "Selection type"
+				},
+				"success": {
+					"lookup": "The patron {{barcode}} has been successfully validated for {{library}}.",
+					"request": "Your staff request has been successfully placed and can be tracked in DCB Admin <linkComponent> here </linkComponent>."
+				},
+				"validate": "Validate patron",
+				"validating": "Validating patron"
+			},
+			"select_pickup": "We have succesfully validated the patron provided. Please choose a pickup location and click 'Submit' to finish placing this staff request."
+		}
 	},
-	"tooltips": {
-		"logo": "Click this logo to go to the home page"
+
+	"settings": {
+		"customisation": "Customisation",
+		"dark_mode": "Dark mode",
+		"library": "Library",
+		"light_mode": "Light mode",
+		"system_mode": "System mode",
+		"theme_selection": "Theme selection"
 	},
+
 	"ui": {
 		"actions": {
 			"cancel": "Cancel",
 			"edit": "Edit",
 			"login": "Login",
 			"logout": "Logout",
-			"save": "Save"
+			"save": "Save",
+			"title": "Actions"
+		},
+		"tooltips": {
+			"logo": "Click this logo to go to the home page"
 		},
 		"validation": {
 			"locations": {

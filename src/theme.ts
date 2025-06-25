@@ -12,6 +12,95 @@ const theme = createTheme({
 			defaultProps: {
 				slotProps: { transition: { timeout: 400 } },
 			},
+			variants: [
+				{
+					props: { variant: "styled" },
+					style: {
+						borderBottom: "0px",
+						borderLeft: "0px",
+						borderRight: "0px",
+						"&::before": {
+							display: "none",
+						},
+					},
+				},
+				{
+					props: { variant: "dataGrid" },
+					style: ({ theme }) => ({
+						boxShadow: "none",
+						backgroundColor: "transparent",
+						"&:before": {
+							display: "none",
+						},
+						"&:first-of-type": {
+							borderTop: `2px solid ${theme.palette.divider}`,
+						},
+					}),
+				},
+				{
+					props: { variant: "sub" },
+					style: {
+						borderBottom: "0px",
+						borderLeft: "0px",
+						borderRight: "0px",
+						marginTop: "16px",
+						"&::before": {
+							display: "none",
+						},
+					},
+				},
+			],
+		},
+		MuiAccordionSummary: {
+			styleOverrides: {
+				root: {
+					variants: [
+						{
+							props: { variant: "dataGrid" },
+							style: ({ theme }) => ({
+								backgroundColor: "transparent",
+								flexDirection: "row-reverse",
+								minHeight: "auto",
+								"&.Mui-expanded": {
+									minHeight: "auto",
+								},
+								"& .MuiAccordionSummary-content": {
+									marginLeft: theme.spacing(1),
+								},
+							}),
+						},
+						{
+							props: { variant: "sub" },
+							style: {
+								backgroundColor: "transparent",
+								"&.Mui-focusVisible": {
+									outline: "2px solid", // For keyboard focus
+								},
+							},
+						},
+					],
+				},
+			},
+		},
+		MuiAccordionDetails: {
+			styleOverrides: {
+				root: {
+					variants: [
+						{
+							props: { variant: "dataGrid" },
+							style: {
+								marginTop: "16px",
+							},
+						},
+						{
+							props: { variant: "sub" },
+							style: {
+								marginTop: "0px",
+							},
+						},
+					],
+				},
+			},
 		},
 		MuiButton: {
 			defaultProps: {
@@ -98,6 +187,8 @@ const theme = createTheme({
 		light: {
 			palette: {
 				primary: {
+					iconSymbol: "#FFFFFF",
+					inactiveBackground: "#8C8C8C",
 					main: "#556cd6",
 				},
 				secondary: {
@@ -111,6 +202,8 @@ const theme = createTheme({
 		dark: {
 			palette: {
 				primary: {
+					iconSymbol: "#FFFFFF",
+					inactiveBackground: "#8C8C8C",
 					main: "#35B7FF",
 				},
 				secondary: {
@@ -216,12 +309,17 @@ declare module "@mui/material/styles" {
 		headerText?: string;
 		hover?: string;
 		hoverOnSelectedPage: string;
+		iconSymbol?: string;
+		inactiveBackground?: string;
 		link?: string;
 		linkText?: string;
 		landingBackground?: string;
 		landingCard?: string;
 		loginCard?: string;
 		loginText?: string;
+		secondary?: {
+			main?: string;
+		};
 		selectedText?: string;
 		sidebar: string;
 		titleArea?: string;
@@ -248,12 +346,17 @@ declare module "@mui/material/styles" {
 		headerText?: string;
 		hover?: string;
 		hoverOnSelectedPage?: string;
+		iconSymbol?: string;
+		inactiveBackground?: string;
 		link?: string;
 		linkText?: string;
 		landingBackground?: string;
 		landingCard?: string;
 		loginCard?: string;
 		loginText?: string;
+		secondary?: {
+			main?: string;
+		};
 		selectedText?: string;
 		sidebar?: string;
 		titleArea?: string;
@@ -302,6 +405,37 @@ declare module "@mui/material/styles" {
 		loadingText?: React.CSSProperties;
 		accordionSummary?: React.CSSProperties;
 		subTabTitle?: React.CSSProperties;
+	}
+}
+
+// Add variant declarations for the new accordion and button variants
+declare module "@mui/material/Paper" {
+	interface PaperPropsVariantOverrides {
+		styled: true;
+		dataGrid: true;
+		sub: true;
+	}
+}
+
+declare module "@mui/material/Accordion" {
+	interface AccordionPropsVariantOverrides {
+		styled: true;
+		dataGrid: true;
+		sub: true;
+	}
+}
+
+declare module "@mui/material/AccordionDetails" {
+	interface AccordionDetailsPropsOverrides {
+		sub: true;
+		dataGrid: true;
+	}
+}
+
+declare module "@mui/material/AccordionSummary" {
+	interface AccordionSummaryPropsOverrides {
+		sub: true;
+		dataGrid: true;
 	}
 }
 declare module "@mui/material/Typography" {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
@@ -13,7 +13,7 @@ import {
 	Stepper,
 } from "@mui/material";
 import { Trans, useTranslation } from "react-i18next";
-import { Close } from "@mui/icons-material";
+import Close from "@mui/icons-material/Close";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import { getLibraries } from "@queries/getLibraries";
 import { getLocations } from "@queries/getLocations";
@@ -32,7 +32,10 @@ import { PlaceRequestResponse } from "@models/PlaceRequestResponse";
 import { StaffRequestFormData } from "@models/StaffRequestFormData";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import request from "graphql-request";
-import { LibrariesQueryData, LocationsQueryData } from "@models/HelperTypes";
+import {
+	LibrariesQueryData,
+	LocationsQueryData,
+} from "@models/ReactQueryHelperTypes";
 import { StaffRequestDetailsStep } from "@forms/ExpeditedCheckout/steps/StaffRequestDetailsStep";
 import { PatronValidationStep } from "@forms/ExpeditedCheckout/steps/PatronValidationStep";
 
@@ -48,9 +51,12 @@ export default function StaffRequest({
 }: PatronRequestFormType) {
 	const { t } = useTranslation();
 	const auth = useAuth();
-	const headers = {
-		Authorization: `Bearer ${auth.user?.access_token}`,
-	};
+	const headers = useMemo(
+		() => ({
+			Authorization: `Bearer ${auth.user?.access_token}`,
+		}),
+		[auth.user?.access_token]
+	);
 	const agencyCode = auth.user?.profile?.code
 		? String(auth.user?.profile?.code)
 		: ""; // This is the agency code - now on the user in the library context
@@ -74,35 +80,39 @@ export default function StaffRequest({
 
 	const steps = [
 		t("requesting.expedited_checkout.steps.patron_validation"),
-		t("requesting.staff_request.steps.request_details"),
+		t("requesting.expedited_checkout.steps.request_creation"),
 	];
 
 	const validationSchema = Yup.object().shape({
 		patronBarcode: Yup.string()
 			.required(
 				t("ui.validation.required", {
-					field: t("staff_request.patron.barcode").toLowerCase(),
+					field: t("requesting.staff_request.patron.barcode").toLowerCase(),
 				})
 			)
 			.test(
 				"no-square-brackets",
-				t("staff_request.patron.error.no_brackets"),
+				t("requesting.staff_request.patron.error.no_brackets"),
 				(value) => (value ? !value.includes("[") && !value.includes("]") : true)
 			),
 		agencyCode: Yup.string().required(
 			t("ui.validation.required", {
-				field: t("details.agency_code").toLowerCase(),
+				field: t("agency.code").toLowerCase(),
 			})
 		),
 		pickupLocationId: Yup.string().required(
 			t("ui.validation.required", {
-				field: t("staff_request.patron.pickup_location").toLowerCase(),
+				field: t(
+					"requesting.staff_request.patron.pickup_location"
+				).toLowerCase(),
 			})
 		),
 		requesterNote: Yup.string(),
 		selectionType: Yup.string().required(
 			t("ui.validation.required", {
-				field: t("staff_request.patron.selection.type").toLowerCase(),
+				field: t(
+					"requesting.staff_request.patron.selection.type"
+				).toLowerCase(),
 			})
 		),
 		itemLocalId: Yup.string().when("selectionType", {
@@ -110,7 +120,9 @@ export default function StaffRequest({
 			then: (schema) =>
 				schema.required(
 					t("ui.validation.required", {
-						field: t("staff_request.patron.item_local_id").toLowerCase(),
+						field: t(
+							"requesting.staff_request.patron.item_local_id"
+						).toLowerCase(),
 					})
 				),
 			otherwise: (schema) => schema.notRequired(),
@@ -120,7 +132,9 @@ export default function StaffRequest({
 			then: (schema) =>
 				schema.required(
 					t("ui.validation.required", {
-						field: t("staff_request.patron.item_library").toLowerCase(),
+						field: t(
+							"requesting.staff_request.patron.item_library"
+						).toLowerCase(),
 					})
 				),
 			otherwise: (schema) => schema.notRequired(),
@@ -150,7 +164,7 @@ export default function StaffRequest({
 	});
 
 	const selectionType = watch("selectionType");
-	// const agencyCode = watch("agencyCode");
+	const patronAgencyCode = watch("agencyCode");
 	const itemAgencyCode = watch("itemAgencyCode");
 	const patronBarcode = watch("patronBarcode");
 
@@ -158,7 +172,7 @@ export default function StaffRequest({
 	const {
 		data: librariesData,
 		isLoading: librariesDataLoading,
-		isError: librariesDataError,
+		// isError: librariesDataError,
 	} = useQuery<LibrariesQueryData>({
 		queryKey: ["librariesInfo", headers],
 		queryFn: () =>
@@ -195,7 +209,7 @@ export default function StaffRequest({
 		) || [];
 
 	const selectedLibrary = libraryOptions.find(
-		(option) => option.value === agencyCode
+		(option) => option.value === patronAgencyCode
 	);
 	const isPickupAnywhere = !!selectedLibrary?.functionalSettings?.some(
 		(setting) => setting.name === "PICKUP_ANYWHERE" && setting.enabled === true
@@ -265,6 +279,44 @@ export default function StaffRequest({
 				code: item.code,
 			})
 		) || [];
+	const sortedPickupLocationOptions = useMemo(() => {
+		if (!pickupLocations?.locations?.content) {
+			return [];
+		}
+		const options = pickupLocations?.locations?.content.map(
+			(item: {
+				name: string;
+				id: string;
+				agency: { name: string; code: string };
+			}) => ({
+				label: item.name,
+				value: item.id,
+				agencyName:
+					item?.agency?.name ??
+					t("staff_request.patron.pickup_location_no_agency"),
+				agencyCode: item?.agency?.code,
+			})
+		);
+
+		// Sort the array of options
+		return options.sort((a: any, b: any) => {
+			const isAUserAgency = a.agencyCode === agencyCode;
+			const isBUserAgency = b.agencyCode === agencyCode;
+
+			// #1: The user's selected agency locations always come first.
+			if (isAUserAgency && !isBUserAgency) return -1;
+			if (!isAUserAgency && isBUserAgency) return 1;
+
+			// #2: For all other locations (or within the user's agency group),
+			// sort the groups alphabetically by agency name.
+			if (a.agencyName && b.agencyName && a.agencyName !== b.agencyName) {
+				return a.agencyName.localeCompare(b.agencyName);
+			}
+
+			// #3: Within each agency group, sort locations alphabetically by name.
+			return a.label.localeCompare(b.label);
+		});
+	}, [pickupLocations?.locations?.content, t, agencyCode]);
 
 	const itemLibraryOptions: PatronRequestAutocompleteOption[] =
 		librariesData?.libraries?.content?.map(
@@ -283,7 +335,7 @@ export default function StaffRequest({
 				location: Location;
 				barcode: string;
 			}) => ({
-				label: t("staff_request.patron.item_select", {
+				label: t("requesting.staff_request.patron.item_select", {
 					id: item.id,
 					name: item.location.name,
 					barcode: item.barcode,
@@ -317,7 +369,7 @@ export default function StaffRequest({
 				setAlert({
 					open: true,
 					severity: "success",
-					text: t("staff_request.patron.success.lookup", {
+					text: t("requesting.staff_request.patron.success.lookup", {
 						barcode: patronBarcode,
 						library: agencyCode,
 					}),
@@ -326,7 +378,7 @@ export default function StaffRequest({
 				setAlert({
 					open: true,
 					severity: "error",
-					text: t("staff_request.patron.error.validation_failure"),
+					text: t("requesting.staff_request.patron.error.validation_failure"),
 				});
 			}
 		},
@@ -335,7 +387,7 @@ export default function StaffRequest({
 			setAlert({
 				open: true,
 				severity: "error",
-				text: t("staff_request.patron.error.validation_failure"),
+				text: t("requesting.staff_request.patron.error.validation_failure"),
 			});
 		},
 	});
@@ -359,7 +411,7 @@ export default function StaffRequest({
 			setAlert({
 				open: true,
 				severity: "success",
-				text: t("staff_request.patron.success.request"),
+				text: t("requesting.staff_request.patron.success.request"),
 				patronRequestLink,
 			});
 			setTimeout(() => {
@@ -380,7 +432,11 @@ export default function StaffRequest({
 	});
 
 	const validatePatron = () => {
-		validatePatronMutation.mutate({ patronBarcode, agencyCode });
+		console.log(selectedLibrary);
+		validatePatronMutation.mutate({
+			patronBarcode,
+			agencyCode: selectedLibrary?.value ?? agencyCode,
+		});
 	};
 
 	const onSubmit = (data: StaffRequestFormData) => {
@@ -388,7 +444,7 @@ export default function StaffRequest({
 			setAlert({
 				open: true,
 				severity: "error",
-				text: t("staff_request.patron.error.validate_first"),
+				text: t("requesting.staff_request.patron.error.validate_first"),
 			});
 			return;
 		}
@@ -471,7 +527,7 @@ export default function StaffRequest({
 						errors={errors}
 						watch={watch}
 						setValue={setValue}
-						pickupLocationOptions={pickupLocationOptions}
+						pickupLocationOptions={sortedPickupLocationOptions}
 						pickupLocationsLoading={pickupLocationsLoading}
 						getPickupLocations={getPickupLocations}
 						itemLibraryOptions={itemLibraryOptions}
@@ -500,7 +556,7 @@ export default function StaffRequest({
 				fullWidth
 				maxWidth="sm">
 				<DialogTitle id="form-dialog-title" variant="modalTitle">
-					{t("staff_request.new")}
+					{t("requesting.staff_request.new")}
 				</DialogTitle>
 				<IconButton
 					aria-label="close"
@@ -561,7 +617,7 @@ export default function StaffRequest({
 // 				fullWidth
 // 				maxWidth="sm">
 // 				<DialogTitle id="form-dialog-title" variant="modalTitle">
-// 					{t("staff_request.new")}
+// 					{t("requesting.staff_request.new")}
 // 				</DialogTitle>
 // 				<IconButton
 // 					aria-label="close"
@@ -577,8 +633,8 @@ export default function StaffRequest({
 // 				<DialogContent>
 // 					<Typography variant="body1">
 // 						{patronValidated
-// 							? t("staff_request.select_pickup")
-// 							: t("staff_request.patron.description")}
+// 							? t("requesting.staff_request.select_pickup")
+// 							: t("requesting.staff_request.patron.description")}
 // 					</Typography>
 // 					<form onSubmit={handleSubmit(onSubmit)}>
 // 						{/* Patron validation fields */}
@@ -599,7 +655,7 @@ export default function StaffRequest({
 // 											{...params}
 // 											margin="normal"
 // 											required
-// 											label={t("staff_request.patron.affiliated")}
+// 											label={t("requesting.staff_request.patron.affiliated")}
 // 											error={!!errors.agencyCode}
 // 											helperText={errors.agencyCode?.message}
 // 										/>
@@ -620,7 +676,7 @@ export default function StaffRequest({
 // 									margin="normal"
 // 									required
 // 									fullWidth
-// 									label={t("staff_request.patron.barcode")}
+// 									label={t("requesting.staff_request.patron.barcode")}
 // 									error={!!errors.patronBarcode}
 // 									helperText={errors.patronBarcode?.message}
 // 									disabled={patronValidated}
@@ -642,8 +698,8 @@ export default function StaffRequest({
 // 									!agencyCode
 // 								}>
 // 								{validatePatronMutation.isPending
-// 									? t("staff_request.patron.validating")
-// 									: t("staff_request.patron.validate")}
+// 									? t("requesting.staff_request.patron.validating")
+// 									: t("requesting.staff_request.patron.validate")}
 // 							</Button>
 // 						) : (
 // 							<>
@@ -671,7 +727,7 @@ export default function StaffRequest({
 // 													{...params}
 // 													margin="normal"
 // 													required
-// 													label={t("staff_request.patron.pickup_location")}
+// 													label={t("requesting.staff_request.patron.pickup_location")}
 // 													error={!!errors.pickupLocationId}
 // 													helperText={errors.pickupLocationId?.message}
 // 												/>
@@ -686,29 +742,29 @@ export default function StaffRequest({
 // 									render={({ field }) => (
 // 										<FormControl component="fieldset" margin="normal">
 // 											<FormLabel component="legend">
-// 												{t("staff_request.patron.selection.type")}
+// 												{t("requesting.staff_request.patron.selection.type")}
 // 											</FormLabel>
 // 											<RadioGroup row {...field}>
 // 												<Tooltip
 // 													title={t(
-// 														"staff_request.patron.selection.automatic_context"
+// 														"requesting.staff_request.patron.selection.automatic_context"
 // 													)}>
 // 													<FormControlLabel
 // 														value="automatic"
 // 														control={<Radio />}
 // 														label={t(
-// 															"staff_request.patron.selection.automatic"
+// 															"requesting.staff_request.patron.selection.automatic"
 // 														)}
 // 													/>
 // 												</Tooltip>
 // 												<Tooltip
 // 													title={t(
-// 														"staff_request.patron.selection.manual_context"
+// 														"requesting.staff_request.patron.selection.manual_context"
 // 													)}>
 // 													<FormControlLabel
 // 														value="manual"
 // 														control={<Radio />}
-// 														label={t("staff_request.patron.selection.manual")}
+// 														label={t("requesting.staff_request.patron.selection.manual")}
 // 													/>
 // 												</Tooltip>
 // 											</RadioGroup>
@@ -744,7 +800,7 @@ export default function StaffRequest({
 // 															margin="normal"
 // 															required
 // 															fullWidth
-// 															label={t("staff_request.patron.item_library")}
+// 															label={t("requesting.staff_request.patron.item_library")}
 // 															error={!!errors.itemAgencyCode}
 // 															helperText={errors.itemAgencyCode?.message}
 // 														/>
@@ -782,7 +838,7 @@ export default function StaffRequest({
 // 															required
 // 															disabled={isEmpty(itemAgencyCode)}
 // 															fullWidth
-// 															label={t("staff_request.patron.item_local_id")}
+// 															label={t("requesting.staff_request.patron.item_local_id")}
 // 															error={!!errors.itemLocalId || itemsError}
 // 															helperText={
 // 																errors.itemLocalId?.message ||
@@ -804,7 +860,7 @@ export default function StaffRequest({
 // 											{...field}
 // 											margin="normal"
 // 											fullWidth
-// 											label={t("staff_request.patron.requester_note")}
+// 											label={t("requesting.staff_request.patron.requester_note")}
 // 											multiline
 // 											rows={2}
 // 										/>

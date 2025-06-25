@@ -31,7 +31,7 @@ import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocomple
 import { PlaceRequestResponse } from "@models/PlaceRequestResponse";
 import { PatronLookupResponse } from "@models/PatronLookupResponse";
 import { OnSiteBorrowingFormData } from "@models/OnSiteBorrowingFormData";
-import { Close } from "@mui/icons-material";
+import Close from "@mui/icons-material/Close";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import DCBStepIcon from "@components/DCBStepIcon/DCBStepIcon";
 import { PatronValidationStep } from "./steps/PatronValidationStep";
@@ -47,7 +47,7 @@ import { getLibrary } from "@queries/getLibrary";
 import {
 	LibrariesQueryData,
 	PatronRequestQueryData,
-} from "@models/HelperTypes";
+} from "@models/ReactQueryHelperTypes";
 import {
 	getStepColors,
 	getStepLabelFontWeight,
@@ -85,9 +85,9 @@ export default function ExpeditedCheckout({
 	});
 	const [activeStep, setActiveStep] = useState(0);
 	const steps = [
-		t("expedited_checkout.steps.patron_validation"),
-		t("expedited_checkout.steps.request_creation"),
-		t("expedited_checkout.steps.checkout"),
+		t("requesting.expedited_checkout.steps.patron_validation"),
+		t("requesting.expedited_checkout.steps.request_creation"),
+		t("requesting.expedited_checkout.steps.checkout"),
 	];
 
 	const [patronValidated, setPatronValidated] = useState(false);
@@ -107,8 +107,8 @@ export default function ExpeditedCheckout({
 
 	const {
 		data: staffLibraryData,
-		isError: errorFetchingStaffLibrary,
-		isLoading: staffLibraryLoading,
+		// isError: errorFetchingStaffLibrary,
+		// isLoading: staffLibraryLoading,
 	} = useQuery<LibrariesQueryData>({
 		queryKey: ["libraryInfo", libraryId, headers],
 		queryFn: async () =>
@@ -132,7 +132,7 @@ export default function ExpeditedCheckout({
 	const {
 		data: patronLibrariesData,
 		isLoading: patronLibrariesLoading,
-		isError: patronLibrariesError,
+		// isError: patronLibrariesError,
 	} = useQuery<LibrariesQueryData>({
 		queryKey: ["librariesInfo", headers],
 		queryFn: () =>
@@ -215,34 +215,36 @@ export default function ExpeditedCheckout({
 		patronBarcode: Yup.string()
 			.required(
 				t("ui.validation.required", {
-					field: t("staff_request.patron.barcode").toLowerCase(),
+					field: t("requesting.staff_request.patron.barcode").toLowerCase(),
 				})
 			)
 			.test(
 				"no-square-brackets",
-				t("staff_request.patron.error.no_brackets"),
+				t("requesting.staff_request.patron.error.no_brackets"),
 				(value) => (value ? !value.includes("[") && !value.includes("]") : true)
 			),
 		agencyCode: Yup.string().required(
 			t("ui.validation.required", {
-				field: t("details.agency_code").toLowerCase(),
+				field: t("agency.code").toLowerCase(),
 			})
 		),
 		pickupLocationId: Yup.string().required(
 			t("ui.validation.required", {
-				field: t("staff_request.patron.pickup_location").toLowerCase(),
+				field: t(
+					"requesting.staff_request.patron.pickup_location"
+				).toLowerCase(),
 			})
 		),
 		requesterNote: Yup.string(),
 		itemLocalId: Yup.string().required(
 			t("ui.validation.required", {
-				field: t("staff_request.patron.item_local_id").toLowerCase(),
+				field: t("requesting.staff_request.patron.item_local_id").toLowerCase(),
 			})
 		),
 		itemLocalSystemCode: Yup.string().required(),
 		itemAgencyCode: Yup.string().required(
 			t("ui.validation.required", {
-				field: t("staff_request.patron.item_library").toLowerCase(),
+				field: t("requesting.staff_request.patron.item_library").toLowerCase(),
 			})
 		),
 	});
@@ -350,7 +352,7 @@ export default function ExpeditedCheckout({
 				barcode: string;
 				dueDate?: string;
 			}) => ({
-				label: t("staff_request.patron.item_select", {
+				label: t("requesting.staff_request.patron.item_select", {
 					id: item.id,
 					name: item.location.name,
 					barcode: item.barcode,
@@ -406,7 +408,7 @@ export default function ExpeditedCheckout({
 				setAlert({
 					open: true,
 					severity: "error",
-					text: t("staff_request.patron.error.validation_failure"),
+					text: t("requesting.staff_request.patron.error.validation_failure"),
 				});
 				setStepError(0);
 			}
@@ -416,7 +418,7 @@ export default function ExpeditedCheckout({
 			setAlert({
 				open: true,
 				severity: "error",
-				text: t("staff_request.patron.error.validation_failure"),
+				text: t("requesting.staff_request.patron.error.validation_failure"),
 			});
 			setStepError(0);
 		},
@@ -429,7 +431,9 @@ export default function ExpeditedCheckout({
 	>({
 		mutationFn: async (data) => {
 			if (!patronData || patronData.status !== "VALID") {
-				throw new Error("Patron not validated");
+				throw new Error(
+					t("requesting.staff_request.patron.error.validation_failure")
+				);
 			}
 			const selectedLocation = pickupLocationOptions.find(
 				(option) => option.value === data.pickupLocationId
@@ -467,7 +471,7 @@ export default function ExpeditedCheckout({
 			setAlert({
 				open: true,
 				severity: "success",
-				text: t("expedited_checkout.feedback.in_progress"),
+				text: t("requesting.expedited_checkout.feedback.in_progress"),
 			});
 			setPatronRequestWaiting(true);
 			setStepError(null);
@@ -499,7 +503,7 @@ export default function ExpeditedCheckout({
 			setAlert({
 				open: true,
 				severity: "error",
-				text: t("staff_request.patron.error.validate_first"),
+				text: t("requesting.staff_request.patron.error.validate_first"),
 			});
 			return;
 		}
@@ -608,7 +612,7 @@ export default function ExpeditedCheckout({
 				fullWidth
 				maxWidth="sm">
 				<DialogTitle id="form-dialog-title" variant="modalTitle">
-					{t("expedited_checkout.title_on_site")}
+					{t("requesting.expedited_checkout.title_on_site")}
 				</DialogTitle>
 
 				{(!patronRequestWaiting || checkoutCompleted) && (
@@ -658,7 +662,7 @@ export default function ExpeditedCheckout({
 							if (index === 2 && checkoutCompleted) {
 								labelProps.optional = (
 									<Typography variant="caption" color="success.main">
-										{t("expedited_checkout.steps.complete")}
+										{t("requesting.expedited_checkout.steps.complete")}
 									</Typography>
 								);
 							}

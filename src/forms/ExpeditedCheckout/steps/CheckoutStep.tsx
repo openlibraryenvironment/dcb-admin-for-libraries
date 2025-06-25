@@ -29,13 +29,15 @@ export const CheckoutStep = ({
 		<Stack direction="column" spacing={2}>
 			<Typography>
 				{checkoutCompleted &&
-					t("expedited_checkout.steps.checkout_success", { dueDate: dueDate })}
+					t("requesting.expedited_checkout.steps.checkout_success", {
+						dueDate: dueDate,
+					})}
 				{!checkoutCompleted &&
 					stepError !== 2 &&
-					t("expedited_checkout.steps.checkout_waiting")}
+					t("requesting.expedited_checkout.steps.checkout_waiting")}
 				{!checkoutCompleted &&
 					stepError === 2 &&
-					t("expedited_checkout.steps.checkout_failure")}
+					t("requesting.expedited_checkout.steps.checkout_failure")}
 			</Typography>
 
 			<LinearProgress
@@ -65,7 +67,7 @@ export const CheckoutStep = ({
 					variant="contained"
 					onClick={handleViewRequest}
 					disabled={!isButtonEnabled}>
-					{t("expedited_checkout.view_request")}
+					{t("requesting.expedited_checkout.view_request")}
 				</Button>
 			</Box>
 		</Stack>

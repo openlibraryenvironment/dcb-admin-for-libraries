@@ -46,8 +46,6 @@ export function SharedIndexComponent() {
 
 	// console.log("params: %s %s", q, qt);
 
-	console.log(indexCode);
-
 	if (!indexCode) {
 		return (
 			<Box
@@ -228,7 +226,7 @@ export function SharedIndexComponent() {
 	return (
 		<Box sx={{ width: "100%" }}>
 			<Typography variant="h4" component="h1" gutterBottom>
-				{t("shared_index.title")}
+				{t("requesting.shared_index.title")}
 			</Typography>
 			{/* <LanguageSwitcher /> */}
 

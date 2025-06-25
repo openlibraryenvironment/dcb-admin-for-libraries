@@ -1,4 +1,5 @@
-import { Cancel, CheckCircle } from "@mui/icons-material";
+import Cancel from "@mui/icons-material/Cancel";
+import CheckCircle from "@mui/icons-material/CheckCircle";
 import { Avatar, StepIconProps, useTheme } from "@mui/material";
 
 // A component for our implementation of the Material UI Stepper Icons
@@ -15,8 +16,7 @@ export default function DCBStepIcon(props: StepIconProps) {
 					bgcolor: "transparent",
 					width: iconSize,
 					height: iconSize,
-				}}
-			>
+				}}>
 				<Cancel
 					sx={{
 						fontSize: `${iconSize * 1.1}px`, // Adjust size if needed
@@ -34,8 +34,7 @@ export default function DCBStepIcon(props: StepIconProps) {
 					bgcolor: "transparent",
 					width: iconSize,
 					height: iconSize,
-				}}
-			>
+				}}>
 				<CheckCircle
 					htmlColor={theme.palette.success.main}
 					sx={{
@@ -57,8 +56,7 @@ export default function DCBStepIcon(props: StepIconProps) {
 					width: iconSize,
 					height: iconSize,
 					fontWeight: "bold",
-				}}
-			>
+				}}>
 				{String(icon)} {/* Display the step number */}
 			</Avatar>
 		);
@@ -73,8 +71,7 @@ export default function DCBStepIcon(props: StepIconProps) {
 				color: theme.palette.primary.iconSymbol,
 				width: iconSize,
 				height: iconSize,
-			}}
-		>
+			}}>
 			{String(icon)}
 		</Avatar>
 	);
