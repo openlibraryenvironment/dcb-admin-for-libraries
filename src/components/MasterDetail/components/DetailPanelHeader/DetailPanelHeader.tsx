@@ -3,18 +3,15 @@ import {
 	useGridSelector,
 	gridDetailPanelExpandedRowIdsSelector,
 	gridDetailPanelExpandedRowsContentCacheSelector,
-	gridRowsLookupSelector,
 	GridRowId,
 	useGridApiContext,
-	GridApiPro,
 } from "@mui/x-data-grid-premium";
 import { useTranslation } from "react-i18next";
-import { RefObject } from "react";
 import UnfoldLess from "@mui/icons-material/UnfoldLess";
 import UnfoldMore from "@mui/icons-material/UnfoldMore";
 
 export default function DetailPanelHeader() {
-	const apiRef = useGridApiContext() as RefObject<GridApiPro>;
+	const apiRef = useGridApiContext();
 	const { t } = useTranslation();
 
 	const expandedRowIds = useGridSelector(
@@ -26,16 +23,16 @@ export default function DetailPanelHeader() {
 		gridDetailPanelExpandedRowsContentCacheSelector
 	);
 
-	const noDetailPanelsOpen = expandedRowIds.length === 0;
-
+	const noDetailPanelsOpen = expandedRowIds.size === 0;
 	const expandOrCollapseAll = () => {
-		const dataRowIdToModelLookup = gridRowsLookupSelector(apiRef);
-		const allRowIdsWithDetailPanels: GridRowId[] = Object.keys(
-			rowsWithDetailPanels
-		).map((key) => apiRef.current.getRowId(dataRowIdToModelLookup[key]));
+		// Now using the keys from the rows with detail panels above.
+		// as v8 deprecated getRowId
+		const allRowIdsWithDetailPanels: GridRowId[] =
+			Object.keys(rowsWithDetailPanels);
 
+		// Convert to set to avoid typing issues in v8
 		apiRef.current.setExpandedDetailPanels(
-			noDetailPanelsOpen ? allRowIdsWithDetailPanels : []
+			noDetailPanelsOpen ? new Set(allRowIdsWithDetailPanels) : new Set()
 		);
 	};
 
