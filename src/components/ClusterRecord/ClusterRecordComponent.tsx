@@ -5,9 +5,8 @@ import { useAuth } from "react-oidc-context";
 import { ItemAvailabilityResponse } from "@models/ItemAvailabilityResponse";
 import { QueryFunction, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { GridColDef } from "@mui/x-data-grid";
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import Box from "@mui/material/Box";
-import { DataGridPremium } from "@mui/x-data-grid-premium";
 import {
 	Button,
 	Menu,
@@ -28,6 +27,10 @@ import StaffRequest from "@forms/StaffRequest/StaffRequest";
 import { useTranslation } from "react-i18next";
 import Loading from "../../components/Loading/Loading";
 import Error from "../../components/Error/Error";
+import DataGrid from "@components/DataGrid/DataGrid";
+import { GRID_DETAIL_PANEL_TOGGLE_COL_DEF } from "@mui/x-data-grid-premium";
+import { DetailPanelToggle } from "@components/MasterDetail/components/DetailPanelToggle/DetailPanelToggle";
+import DetailPanelHeader from "@components/MasterDetail/components/DetailPanelHeader/DetailPanelHeader";
 
 interface CombinedData {
 	availability: ItemAvailabilityResponse;
@@ -156,6 +159,14 @@ export default function ClusterRecordComponent() {
 	};
 
 	const columns: GridColDef[] = [
+		{
+			...GRID_DETAIL_PANEL_TOGGLE_COL_DEF,
+			headerName: t("ui.data_grid.master_detail"),
+			renderCell: (params) => (
+				<DetailPanelToggle id={params.id} value={params.value} />
+			),
+			renderHeader: () => <DetailPanelHeader />,
+		},
 		{
 			field: "agencyCode",
 			headerName: "Agency Code",
@@ -324,31 +335,26 @@ export default function ClusterRecordComponent() {
 				</Box>
 			</Stack>
 
-			<DataGridPremium
-				loading={isLoading}
-				rows={data?.availability?.itemList ?? []}
+			<DataGrid
+				checkboxSelection={false}
 				columns={columns}
-				autoHeight
-				sx={{ border: 0, mb: 2 }}
 				disableAggregation={true}
+				disableHoverInteractions={true}
 				disableRowGrouping={true}
-				getDetailPanelContent={({ row }) => (
+				getDetailPanelContent={({ row }: GridRowParams) => (
 					<MasterDetail type="items" row={row} />
 				)}
-				slots={{
-					noRowsOverlay: () => (
-						<Box
-							sx={{
-								display: "flex",
-								justifyContent: "center",
-								alignItems: "center",
-								height: "100%",
-								p: 2,
-							}}>
-							{t("requesting.shared_index.items_unavailable")}
-						</Box>
-					),
-				}}
+				identifier="ClusterRecordItems"
+				listViewEnabled={false}
+				loading={isLoading}
+				noResultsText={t("requesting.items_not_found")}
+				pagination
+				pivotingEnabled={false}
+				rows={data?.availability?.itemList ?? []}
+				scrollbarVisible={false}
+				searchText={t("requesting.items_search")}
+				toolbarVisible={true}
+				type={"Items"}
 			/>
 
 			<Accordion
@@ -406,31 +412,27 @@ export default function ClusterRecordComponent() {
 						<Typography>
 							{t("requesting.shared_index.items_not_shown_resolution")}
 						</Typography>
-						<DataGridPremium
-							loading={isLoading}
-							rows={itemsNotShown ?? []}
+						<DataGrid
+							checkboxSelection={false}
 							columns={columns}
-							autoHeight
-							sx={{ border: 0, mb: 2 }}
 							disableAggregation={true}
 							disableRowGrouping={true}
-							getDetailPanelContent={({ row }) => (
+							disableHoverInteractions={true}
+							getDetailPanelContent={({ row }: any) => (
 								<MasterDetail type="items" row={row} />
 							)}
-							slots={{
-								noRowsOverlay: () => (
-									<Box
-										sx={{
-											display: "flex",
-											justifyContent: "center",
-											alignItems: "center",
-											height: "100%",
-											p: 2,
-										}}>
-										{t("requesting.shared_index.items_unavailable")}
-									</Box>
-								),
-							}}
+							identifier="ClusterRecordItemsNotShown"
+							loading={isLoading}
+							listViewEnabled={false}
+							noResultsText={t("requesting.items_not_found")}
+							pagination
+							pivotingEnabled={false}
+							scrollbarVisible={false}
+							searchText={t("requesting.items_search")}
+							toolbarVisible={false}
+							rows={itemsNotShown ?? []}
+							// sx={{ border: 0, mb: 2 }}
+							type={"Items"}
 						/>
 					</AccordionDetails>
 				</Accordion>

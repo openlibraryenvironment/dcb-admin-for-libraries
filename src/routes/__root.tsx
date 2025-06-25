@@ -1,4 +1,9 @@
-import { createRootRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import {
+	// createRootRoute,
+	createRootRouteWithContext,
+	Outlet,
+	useNavigate,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 // import { CustomLink } from "./components/CustomLink";
 
@@ -9,10 +14,13 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Container from "@mui/material/Container";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useAuth } from "react-oidc-context";
+import { AuthContextProps, useAuth } from "react-oidc-context";
 import { Header } from "../components/Header/Header";
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+	auth: AuthContextProps;
+	cfg: any;
+}>()({
 	component: () => {
 		const auth = useAuth();
 		const navigate = useNavigate();
@@ -85,9 +93,8 @@ export const Route = createRootRoute({
 			);
 		}
 
-
 		// Tabs below marked with import.meta.env.DEV means that these tabs will only show up in DEV mode,
-    // remove the conditon to make then show up in prod.
+		// remove the conditon to make then show up in prod.
 
 		// Authenticated UI
 		return (
@@ -106,12 +113,24 @@ export const Route = createRootRoute({
 							<Tab label="MOBIUS index" value="/indexes/mobius" />
 							<Tab label="Service" value="/service" />
 							<Tab label="Settings" value="/settings" />
-							{import.meta.env.DEV && <Tab label="Mappings" value="/mappings" />}
-							{import.meta.env.DEV && <Tab label="Patron Requests" value="/patronRequests" />}
-							{import.meta.env.DEV && <Tab label="Supplier Requests" value="/supplierRequests" />}
-							{import.meta.env.DEV && <Tab label="Contacts" value="/contacts" />}
-							{import.meta.env.DEV && <Tab label="Locations" value="/locations" />}
-							{import.meta.env.DEV && <Tab label="Data Change Log" value="/dataChangeLog" />}
+							{import.meta.env.DEV && (
+								<Tab label="Mappings" value="/mappings" />
+							)}
+							{import.meta.env.DEV && (
+								<Tab label="Patron Requests" value="/patronRequests" />
+							)}
+							{import.meta.env.DEV && (
+								<Tab label="Supplier Requests" value="/supplierRequests" />
+							)}
+							{import.meta.env.DEV && (
+								<Tab label="Contacts" value="/contacts" />
+							)}
+							{import.meta.env.DEV && (
+								<Tab label="Locations" value="/locations" />
+							)}
+							{import.meta.env.DEV && (
+								<Tab label="Data Change Log" value="/dataChangeLog" />
+							)}
 						</Tabs>
 					</Box>
 				)}

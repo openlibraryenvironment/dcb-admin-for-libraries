@@ -56,7 +56,8 @@ export const RequestCreationStep = ({
 	pickupLocationId,
 	t,
 }: RequestCreationStepType) => {
-	console.log(isValid, isSubmitting, pickupLocationId, errors);
+	console.log(isValid, isSubmitting, pickupLocationId);
+	console.log(errors);
 	return (
 		<>
 			<Typography>

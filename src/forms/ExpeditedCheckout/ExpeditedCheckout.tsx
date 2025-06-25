@@ -208,7 +208,6 @@ export default function ExpeditedCheckout({
 		}
 	}, [patronRequestData, patronRequestWaiting]);
 
-	// FIX 2: Use optional chaining for safer property access
 	const patronRequest = patronRequestData?.patronRequests?.content?.[0];
 
 	const validationSchema = Yup.object().shape({
@@ -248,6 +247,7 @@ export default function ExpeditedCheckout({
 			})
 		),
 	});
+	const staffLibraryHostLmsCode = staffLibrary?.agency?.hostLms?.code;
 
 	const {
 		control,
@@ -263,9 +263,9 @@ export default function ExpeditedCheckout({
 			pickupLocationId: "",
 			requesterNote: "On-site-borrowing: ",
 			itemLocalId: "",
-			itemLocalSystemCode: staffLibrary?.agency?.hostLms?.code,
+			itemLocalSystemCode: staffLibraryHostLmsCode,
 			itemAgencyCode: userAgencyCode, // For on-site borrowing, the item agency code must match the user's.
-			// As you can only do an on-site borrowing request for your own stuff.
+			// As you can only do an on-site borrowing request for your own library's items.
 		},
 		resolver: yupResolver(validationSchema),
 		mode: "onChange",
@@ -278,9 +278,12 @@ export default function ExpeditedCheckout({
 		itemAgencyCode,
 		pickupLocationId,
 		itemLocalId,
+		itemLocalSystemCode,
 	} = formValues;
 
 	const locationQuery = `agency:${staffLibrary?.agency?.id}`;
+
+	console.log(itemLocalSystemCode);
 
 	const { data: pickupLocations, isLoading: pickupLocationsLoading } = useQuery(
 		{
@@ -301,6 +304,13 @@ export default function ExpeditedCheckout({
 			enabled: !!staffLibrary?.agency?.id,
 		}
 	);
+	useEffect(() => {
+		if (staffLibraryHostLmsCode) {
+			setValue("itemLocalSystemCode", staffLibraryHostLmsCode, {
+				shouldValidate: true,
+			});
+		}
+	}, [staffLibraryHostLmsCode, setValue]);
 
 	const fetchRecords = useCallback(async () => {
 		setItemsLoading(true);
@@ -384,6 +394,8 @@ export default function ExpeditedCheckout({
 			}
 		};
 	}, [activeStep, checkoutCompleted, stepError]);
+	console.log(errors);
+	console.log(formValues);
 
 	const validatePatronMutation = useMutation<
 		PatronLookupResponse,

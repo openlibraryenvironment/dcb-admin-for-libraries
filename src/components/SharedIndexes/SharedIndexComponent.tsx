@@ -4,15 +4,13 @@ import { useState, useCallback } from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "react-oidc-context";
-import {
-	Box,
-	Typography,
-	Card,
-	CardContent,
-	Chip,
-	Stack,
-	CircularProgress,
-} from "@mui/material";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import {
 	DataGridPremium,
 	GridColDef,

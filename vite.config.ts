@@ -1,4 +1,5 @@
-import { defineConfig, loadEnv } from "vite";
+// import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -23,7 +24,6 @@ export default defineConfig(({ mode }) => {
 			// think about other ways of addressing bundle size
 			// ultimately if we can't because of the DGrid it's fine
 			rollupOptions: {
-				// external: ["redux"],
 				output: {
 					manualChunks: {
 						vendor: ["react", "react-dom"],
@@ -38,6 +38,7 @@ export default defineConfig(({ mode }) => {
 					"react",
 					"react-dom",
 					"@mui/material",
+					"@mui/x-data-grid-premium",
 					"@emotion/styled",
 					"@emotion/react",
 				],

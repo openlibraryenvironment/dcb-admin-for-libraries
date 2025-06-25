@@ -1,9 +1,13 @@
 import {
 	DataGridPremium,
 	GridColDef,
+	GridExpandLessIcon,
+	GridExpandMoreIcon,
 	GridRowsProp,
 } from "@mui/x-data-grid-premium";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { NoResultsOverlay } from "./components/NoResultsOverlay";
 
 interface DataGridProps {
 	checkboxSelection: boolean;
@@ -11,10 +15,12 @@ interface DataGridProps {
 	disableAggregation: boolean;
 	disableHoverInteractions: boolean;
 	disableRowGrouping: boolean;
+	getDetailPanelContent?: any; // Function for returning detail panel content, where applicable
 	identifier: string; // The specific type or identifier. Must be unique in the application, as it is used to retrieve data grid settings.
 	loading: boolean;
 	listViewEnabled: boolean;
-	pagination: boolean;
+	noResultsText: string;
+	pagination: boolean; // Will need client/server toggle
 	pivotingEnabled: boolean;
 	rows: GridRowsProp;
 	scrollbarVisible: boolean;
@@ -28,8 +34,10 @@ export default function DataGrid({
 	disableAggregation,
 	disableHoverInteractions,
 	disableRowGrouping,
+	getDetailPanelContent,
 	loading,
 	listViewEnabled,
+	noResultsText,
 	pagination,
 	pivotingEnabled,
 	rows,
@@ -38,6 +46,7 @@ export default function DataGrid({
 	searchText,
 }: DataGridProps) {
 	const { t } = useTranslation();
+	const getDetailPanelHeight = useCallback(() => "auto", []); // Only necessary because master detail is not applicable to all grids yet
 	return (
 		<div style={{ display: "flex", flexDirection: "column" }}>
 			<DataGridPremium
@@ -45,6 +54,8 @@ export default function DataGrid({
 				columns={columns}
 				disableAggregation={disableAggregation}
 				disableRowGrouping={disableRowGrouping}
+				getDetailPanelContent={getDetailPanelContent}
+				getDetailPanelHeight={getDetailPanelHeight}
 				listView={listViewEnabled}
 				loading={loading}
 				localeText={{
@@ -65,6 +76,13 @@ export default function DataGrid({
 				pivotActive={pivotingEnabled}
 				rows={rows}
 				showToolbar={toolbarVisible}
+				slots={{
+					detailPanelExpandIcon: GridExpandMoreIcon,
+					detailPanelCollapseIcon: GridExpandLessIcon,
+					noResultsOverlay: () => (
+						<NoResultsOverlay noResultsMessage={noResultsText} />
+					),
+				}}
 				sx={{
 					border: "0",
 					"@media print": {
