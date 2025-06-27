@@ -2,6 +2,7 @@
 
 import { Library } from "./Library";
 import { Location } from "./Location";
+import { ReferenceValueMapping } from "./ReferenceValueMapping";
 import { PatronIdentity } from "./PatronIdentity";
 import { PatronRequest } from "./PatronRequest";
 
@@ -27,5 +28,11 @@ export interface LibrariesQueryData {
 export interface LocationsQueryData {
 	locations: {
 		content: Location[];
+	};
+}
+
+export interface ReferenceValueMappingsQueryData {
+	referenceValueMappings: {
+		content: ReferenceValueMapping[];
 	};
 }

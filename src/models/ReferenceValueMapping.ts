@@ -1,4 +1,4 @@
-export interface Mapping {
+export interface ReferenceValueMapping {
 	fromCategory: string;
 	fromContext: string;
 	fromValue: string;
