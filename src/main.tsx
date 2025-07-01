@@ -33,6 +33,7 @@ async function getCfg() {
 				VITE_KEYCLOAK_ID: String(import.meta.env.VITE_KEYCLOAK_ID),
 				VITE_DCB_API_BASE: String(import.meta.env.VITE_DCB_API_BASE),
 				VITE_DCB_SEARCH_BASE: String(import.meta.env.VITE_DCB_SEARCH_BASE),
+				VITE_ILL_API_BASE: String(import.meta.env.VITE_ILL_API_BASE),
 			};
 		}
 
@@ -68,6 +69,7 @@ const router = createRouter({
 	defaultStaleTime: 5000,
 	scrollRestoration: true,
 	context: {
+		cfg: undefined!,
 		auth: undefined!,
 		queryClient,
 	},
@@ -87,9 +89,11 @@ async function bootstrap() {
 	// Nice feature of tanstack etc - inject our config bundle into the router context
 	// Retrieve with  const { cfg } = useRouter().options.context;
 	router.update({
-		context: { cfg },
+		context: {
+			...router.options.context, // Spreads the existing context (auth, queryClient)
+			cfg, // Adds the new cfg object to it
+		},
 	});
-
 	LicenseInfo.setLicenseKey(cfg.VITE_MUI_X_LICENSE_KEY);
 
 	const oidcConfig = {

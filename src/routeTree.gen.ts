@@ -16,11 +16,14 @@ import { Route as MappingsRouteImport } from './routes/mappings'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LocationsRouteImport } from './routes/locations'
+import { Route as IllRouteImport } from './routes/ill'
 import { Route as DataChangeLogRouteImport } from './routes/dataChangeLog'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PatronRequestsIndexRouteImport } from './routes/patronRequests/index'
 import { Route as LocationsIndexRouteImport } from './routes/locations/index'
+import { Route as IllPatronRequestsRouteImport } from './routes/ill.patronRequests'
+import { Route as IllLoginRouteImport } from './routes/ill.login'
 import { Route as PatronRequestsIdIndexRouteImport } from './routes/patronRequests/$id/index'
 import { Route as LocationsIdIndexRouteImport } from './routes/locations/$id/index'
 import { Route as IndexesIndexCodeIndexRouteImport } from './routes/indexes/$indexCode/index'
@@ -61,6 +64,11 @@ const LocationsRoute = LocationsRouteImport.update({
   path: '/locations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IllRoute = IllRouteImport.update({
+  id: '/ill',
+  path: '/ill',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DataChangeLogRoute = DataChangeLogRouteImport.update({
   id: '/dataChangeLog',
   path: '/dataChangeLog',
@@ -85,6 +93,16 @@ const LocationsIndexRoute = LocationsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LocationsRoute,
+} as any)
+const IllPatronRequestsRoute = IllPatronRequestsRouteImport.update({
+  id: '/patronRequests',
+  path: '/patronRequests',
+  getParentRoute: () => IllRoute,
+} as any)
+const IllLoginRoute = IllLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => IllRoute,
 } as any)
 const PatronRequestsIdIndexRoute = PatronRequestsIdIndexRouteImport.update({
   id: '/patronRequests/$id/',
@@ -112,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/contacts': typeof ContactsRoute
   '/dataChangeLog': typeof DataChangeLogRoute
+  '/ill': typeof IllRouteWithChildren
   '/locations': typeof LocationsRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
@@ -119,6 +138,8 @@ export interface FileRoutesByFullPath {
   '/service': typeof ServiceRoute
   '/settings': typeof SettingsRoute
   '/supplierRequests': typeof SupplierRequestsRoute
+  '/ill/login': typeof IllLoginRoute
+  '/ill/patronRequests': typeof IllPatronRequestsRoute
   '/locations/': typeof LocationsIndexRoute
   '/patronRequests': typeof PatronRequestsIndexRoute
   '/indexes/$indexCode': typeof IndexesIndexCodeIndexRoute
@@ -130,12 +151,15 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contacts': typeof ContactsRoute
   '/dataChangeLog': typeof DataChangeLogRoute
+  '/ill': typeof IllRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/mappings': typeof MappingsRoute
   '/service': typeof ServiceRoute
   '/settings': typeof SettingsRoute
   '/supplierRequests': typeof SupplierRequestsRoute
+  '/ill/login': typeof IllLoginRoute
+  '/ill/patronRequests': typeof IllPatronRequestsRoute
   '/locations': typeof LocationsIndexRoute
   '/patronRequests': typeof PatronRequestsIndexRoute
   '/indexes/$indexCode': typeof IndexesIndexCodeIndexRoute
@@ -148,6 +172,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/contacts': typeof ContactsRoute
   '/dataChangeLog': typeof DataChangeLogRoute
+  '/ill': typeof IllRouteWithChildren
   '/locations': typeof LocationsRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
@@ -155,6 +180,8 @@ export interface FileRoutesById {
   '/service': typeof ServiceRoute
   '/settings': typeof SettingsRoute
   '/supplierRequests': typeof SupplierRequestsRoute
+  '/ill/login': typeof IllLoginRoute
+  '/ill/patronRequests': typeof IllPatronRequestsRoute
   '/locations/': typeof LocationsIndexRoute
   '/patronRequests/': typeof PatronRequestsIndexRoute
   '/indexes/$indexCode/': typeof IndexesIndexCodeIndexRoute
@@ -168,6 +195,7 @@ export interface FileRouteTypes {
     | '/'
     | '/contacts'
     | '/dataChangeLog'
+    | '/ill'
     | '/locations'
     | '/login'
     | '/logout'
@@ -175,6 +203,8 @@ export interface FileRouteTypes {
     | '/service'
     | '/settings'
     | '/supplierRequests'
+    | '/ill/login'
+    | '/ill/patronRequests'
     | '/locations/'
     | '/patronRequests'
     | '/indexes/$indexCode'
@@ -186,12 +216,15 @@ export interface FileRouteTypes {
     | '/'
     | '/contacts'
     | '/dataChangeLog'
+    | '/ill'
     | '/login'
     | '/logout'
     | '/mappings'
     | '/service'
     | '/settings'
     | '/supplierRequests'
+    | '/ill/login'
+    | '/ill/patronRequests'
     | '/locations'
     | '/patronRequests'
     | '/indexes/$indexCode'
@@ -203,6 +236,7 @@ export interface FileRouteTypes {
     | '/'
     | '/contacts'
     | '/dataChangeLog'
+    | '/ill'
     | '/locations'
     | '/login'
     | '/logout'
@@ -210,6 +244,8 @@ export interface FileRouteTypes {
     | '/service'
     | '/settings'
     | '/supplierRequests'
+    | '/ill/login'
+    | '/ill/patronRequests'
     | '/locations/'
     | '/patronRequests/'
     | '/indexes/$indexCode/'
@@ -222,6 +258,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContactsRoute: typeof ContactsRoute
   DataChangeLogRoute: typeof DataChangeLogRoute
+  IllRoute: typeof IllRouteWithChildren
   LocationsRoute: typeof LocationsRouteWithChildren
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
@@ -286,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ill': {
+      id: '/ill'
+      path: '/ill'
+      fullPath: '/ill'
+      preLoaderRoute: typeof IllRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dataChangeLog': {
       id: '/dataChangeLog'
       path: '/dataChangeLog'
@@ -321,6 +365,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocationsIndexRouteImport
       parentRoute: typeof LocationsRoute
     }
+    '/ill/patronRequests': {
+      id: '/ill/patronRequests'
+      path: '/patronRequests'
+      fullPath: '/ill/patronRequests'
+      preLoaderRoute: typeof IllPatronRequestsRouteImport
+      parentRoute: typeof IllRoute
+    }
+    '/ill/login': {
+      id: '/ill/login'
+      path: '/login'
+      fullPath: '/ill/login'
+      preLoaderRoute: typeof IllLoginRouteImport
+      parentRoute: typeof IllRoute
+    }
     '/patronRequests/$id/': {
       id: '/patronRequests/$id/'
       path: '/patronRequests/$id'
@@ -352,6 +410,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface IllRouteChildren {
+  IllLoginRoute: typeof IllLoginRoute
+  IllPatronRequestsRoute: typeof IllPatronRequestsRoute
+}
+
+const IllRouteChildren: IllRouteChildren = {
+  IllLoginRoute: IllLoginRoute,
+  IllPatronRequestsRoute: IllPatronRequestsRoute,
+}
+
+const IllRouteWithChildren = IllRoute._addFileChildren(IllRouteChildren)
+
 interface LocationsRouteChildren {
   LocationsIndexRoute: typeof LocationsIndexRoute
   LocationsIdIndexRoute: typeof LocationsIdIndexRoute
@@ -370,6 +440,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContactsRoute: ContactsRoute,
   DataChangeLogRoute: DataChangeLogRoute,
+  IllRoute: IllRouteWithChildren,
   LocationsRoute: LocationsRouteWithChildren,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
