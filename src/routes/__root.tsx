@@ -1,5 +1,6 @@
 import {
 	createRootRoute,
+	createRootRouteWithContext,
 	// createRootRouteWithContext,
 	Outlet,
 	useNavigate,
@@ -15,14 +16,21 @@ import Tab from "@mui/material/Tab";
 import Container from "@mui/material/Container";
 import CircularProgress from "@mui/material/CircularProgress";
 // import { AuthContextProps, useAuth } from "react-oidc-context";
-import { useAuth } from "react-oidc-context";
+import { AuthContextProps, useAuth } from "react-oidc-context";
 import { Header } from "../components/Header/Header";
+import { QueryClient } from "@tanstack/react-query";
 
 // export const Route = createRootRouteWithContext<{
 // 	auth: AuthContextProps;
 // 	cfg: any; // to be investigated as it could be a better way of handling context
 
-export const Route = createRootRoute({
+interface AppRouterContext {
+	queryClient: QueryClient;
+	auth: AuthContextProps; // This is the type for the OIDC auth context
+	cfg: any; // The runtime config object
+}
+
+export const Route = createRootRouteWithContext<AppRouterContext>()({
 	component: () => {
 		const auth = useAuth();
 		const navigate = useNavigate();
@@ -99,10 +107,11 @@ export const Route = createRootRoute({
 		// remove the conditon to make then show up in prod.
 
 		// Authenticated UI
+		// Review these tabs as we are running into issues with relative URLs.
+		// Not sure if these should be here.
 		return (
 			<>
 				<Header />
-
 				{auth.isAuthenticated && (
 					<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
 						<Tabs
@@ -133,6 +142,10 @@ export const Route = createRootRoute({
 							{import.meta.env.DEV && (
 								<Tab label="Data Change Log" value="/dataChangeLog" />
 							)}
+							{/* {import.meta.env.DEV && (
+								<Tab label="ILL - EXPERIMENTAL" value="/ill/patronRequests" />
+							)} */}
+							<Tab label="ILL - EXPERIMENTAL" value="/ill/patronRequests" />
 						</Tabs>
 					</Box>
 				)}
