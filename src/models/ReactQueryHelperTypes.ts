@@ -11,28 +11,33 @@ import { PatronRequest } from "./PatronRequest";
 export interface PatronRequestQueryData {
 	patronRequests?: {
 		content: PatronRequest[];
+		totalSize: number;
 	};
 }
 export interface PatronIdentitiesQueryData {
 	patronIdentities?: {
 		content: PatronIdentity[];
+		totalSize: number;
 	};
 }
 
 export interface LibrariesQueryData {
 	libraries: {
 		content: Library[];
+		totalSize: number;
 	};
 }
 
 export interface LocationsQueryData {
 	locations: {
 		content: Location[];
+		totalSize: number;
 	};
 }
 
 export interface ReferenceValueMappingsQueryData {
 	referenceValueMappings: {
 		content: ReferenceValueMapping[];
+		totalSize: number;
 	};
 }

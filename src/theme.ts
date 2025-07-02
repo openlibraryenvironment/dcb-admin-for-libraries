@@ -189,10 +189,10 @@ const theme = createTheme({
 				primary: {
 					iconSymbol: "#FFFFFF",
 					inactiveBackground: "#8C8C8C",
-					main: "#556cd6",
+					main: "#0C4068",
 				},
 				secondary: {
-					main: "#19857b",
+					main: "#2B7A9F",
 				},
 				error: {
 					main: red.A400,

@@ -19,6 +19,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { AuthContextProps, useAuth } from "react-oidc-context";
 import { Header } from "../components/Header/Header";
 import { QueryClient } from "@tanstack/react-query";
+import { useTheme } from "@mui/material";
 
 // export const Route = createRootRouteWithContext<{
 // 	auth: AuthContextProps;
@@ -35,6 +36,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 		const auth = useAuth();
 		const navigate = useNavigate();
 		const [activeTab, setActiveTab] = useState("/");
+		const theme = useTheme();
 
 		const library: string = auth.user?.profile?.library as string; // properly type this
 		console.log(library);
@@ -119,6 +121,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 							onChange={handleTabChange}
 							aria-label="navigation tabs"
 							variant="scrollable"
+							sx={{ backgroundColor: theme.palette.secondary.main }} // customise tab variants - secondary should always have the colour and white text
 							scrollButtons="auto">
 							<Tab label="Home" value="/" />
 							<Tab label="MOBIUS index" value="/indexes/mobius" />
@@ -145,7 +148,8 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 							{/* {import.meta.env.DEV && (
 								<Tab label="ILL - EXPERIMENTAL" value="/ill/patronRequests" />
 							)} */}
-							<Tab label="ILL - EXPERIMENTAL" value="/ill/patronRequests" />
+							<Tab label="ILL - EXPERIMENTAL" value="/ill/login" />{" "}
+							{/** When redirect is sorted out, this will point to patron requests */}
 						</Tabs>
 					</Box>
 				)}

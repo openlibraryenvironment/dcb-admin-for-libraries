@@ -29,6 +29,50 @@
 		"update_success": "The {{entity}} {{name}} was updated successfully",
 		"update_failure": "An error occurred while updating {{entity}} {{name}}"
 	},
+	"data_change_log": {
+		"action": "Action",
+		"category": "Change category",
+		"category_required": "Please select a category before proceeding.",
+		"categories": {
+			"additional_information": "Additional information provided",
+			"changing_status": "Status changed",
+			"details_changed": "Details changed",
+			"error_correction": "Error correction",
+			"initial_setup": "Initial setup",
+			"mappings_replacement": "Mappings replacement",
+			"membership_ended": "Membership ended",
+			"new_contact": "New contact",
+			"new_member": "New member",
+			"other": "Other"
+		},
+		"changes": "Changes",
+		"characters_remaining": "{{characters}} characters remaining",
+		"deleted_value": "Deleted value",
+		"entity_id": "Entity UUID",
+		"entity_type": "Entity type",
+		"field_label": "Field label",
+		"field_name": "Field name",
+		"id": "Data change log UUID",
+		"last_edited_by": "Last edited by",
+		"loading_details": "data change details",
+		"max_length_exceeded": "Values must not exceed 200 characters. Please provide a shorter value.",
+		"max_length_reached": "Maximum length of {{maxLength}} characters reached",
+		"new_data": "New data",
+		"new_value": "New value",
+		"no_eligible_changes": "There are no eligible changes to show. This can occur when an entity is updated immediately before deletion.",
+		"no_results": "No data change log entries were found. Try changing your search terms or filters.",
+		"no_rows": "No data change log entries are available. If you're expecting data to be here, please refresh the page.",
+		"old_data": "Old data",
+		"old_value": "Old value",
+		"reason": "Reason for change",
+		"reason_addition": "Reason for adding",
+		"reason_required": "Please provide a reason for this change.",
+		"reference_url": "Change reference URL",
+		"ref_url_helper": "The URL of the ticket describing the change requested, if applicable.",
+		"table_name": "Database table name",
+		"timestamp": "Timestamp",
+		"user": "User"
+	},
 	"entities": {
 		"contact": "contact",
 		"functional_setting": "functional setting",
@@ -366,6 +410,7 @@
 		"actions": {
 			"cancel": "Cancel",
 			"collapse": "Collapse",
+			"confirm_changes": "Confirm changes",
 			"edit": "Edit",
 			"expand": "Expand",
 			"login": "Login",
@@ -374,6 +419,9 @@
 			"submit": "Submit",
 			"submitting": "Submitting",
 			"title": "Actions"
+		},
+		"data_grid": {
+			"edit_summary": "Edit {{entity}}"
 		},
 		"tooltips": {
 			"logo": "Click this logo to go to the home page"
