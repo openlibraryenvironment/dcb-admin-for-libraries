@@ -1,4 +1,4 @@
-import { useGridStore } from "@/hooks/useDataGridStore2";
+import { useGridStore } from "@/hooks/useDataGridStore";
 import Confirmation from "@components/Confirmation/Confirmation";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Loading from "@components/Loading/Loading";

@@ -37,6 +37,7 @@ import TimedAlert from "@components/TimedAlert/TimedAlert";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import { formatDuration } from "@helpers/formatDuration";
 import Loading from "@components/Loading/Loading";
+import { GridRowModesModel } from "@mui/x-data-grid-premium";
 
 export const Route = createFileRoute("/patronRequests/$id/")({
 	component: RouteComponent,
@@ -64,6 +65,8 @@ function RouteComponent() {
 		}),
 		[auth.user?.access_token]
 	);
+	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+
 	const {
 		data,
 		isError,
@@ -289,11 +292,11 @@ function RouteComponent() {
 		<TabContext value={activeTab}>
 			<TabList onChange={handleTabChange} variant="scrollable">
 				<Tab label={t("patron_request.general")} />
-				<Tab label={t("patron_request.bib_record")} />
+				<Tab label={t("requesting.bib_record")} />
 				<Tab label={t("patron_request.supplying")} />
 				<Tab label={t("patron_request.borrowing")} />
 				<Tab label={t("patron_request.pickup")} />
-				<Tab label={t("patron_request.audit_log")} />
+				<Tab label={t("audit.log")} />
 			</TabList>
 
 			<TabPanel value={0}>
@@ -612,7 +615,7 @@ function RouteComponent() {
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("patron_request.is_transition_out_of_sequence")}
+								{t("patron_request.out_of_sequence")}
 							</Typography>
 							<RenderAttribute
 								attribute={patronRequest?.outOfSequenceFlag?.toString()}
@@ -642,7 +645,7 @@ function RouteComponent() {
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("patron_request.error")}
+								{t("patron_request.error_message")}
 							</Typography>
 							<RenderAttribute attribute={patronRequest?.errorMessage} />
 						</Stack>
@@ -674,7 +677,7 @@ function RouteComponent() {
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("expedited_checkout.request_title")}
+								{t("requesting.expedited_checkout.request_title")}
 							</Typography>
 							<RenderAttribute attribute={patronRequest?.isExpeditedCheckout} />
 						</Stack>
@@ -689,13 +692,13 @@ function RouteComponent() {
 					columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
 					<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
 						<Typography variant="accordionSummary">
-							{t("patron_request.bib_record")}
+							{t("requesting.bib_record")}
 						</Typography>
 					</Grid>
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("patron_request.title")}
+								{t("bib_record.record_title")}
 							</Typography>
 							<RenderAttribute
 								attribute={patronRequest?.clusterRecord?.title}
@@ -705,7 +708,7 @@ function RouteComponent() {
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("patron_request.record_created")}
+								{t("bib_record.record_created")}
 							</Typography>
 							<RenderAttribute
 								attribute={dayjs(
@@ -717,7 +720,7 @@ function RouteComponent() {
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("patron_request.record_updated")}
+								{t("bib_record.record_updated")}
 							</Typography>
 							<RenderAttribute
 								attribute={dayjs(
@@ -729,7 +732,7 @@ function RouteComponent() {
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("patron_request.bib_cluster_uuid")}
+								{t("bib_record.cluster_uuid")}
 							</Typography>
 							{bibClusterRecordUrl == "" ? (
 								<RenderAttribute attribute={patronRequest?.bibClusterId} />
@@ -737,7 +740,7 @@ function RouteComponent() {
 								<Link
 									href={bibClusterRecordUrl}
 									key="bibClusterRecordLink"
-									title={t("link.discovery_tip")}>
+									title={t("common.discovery")}>
 									<RenderAttribute attribute={patronRequest?.bibClusterId} />
 								</Link>
 							)}
@@ -746,7 +749,7 @@ function RouteComponent() {
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("patron_request.selected_bib_uuid")}
+								{t("bib_record.selected_bib_uuid")}
 							</Typography>
 							<RenderAttribute
 								attribute={patronRequest?.clusterRecord?.selectedBib}
@@ -756,7 +759,7 @@ function RouteComponent() {
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("patron_request.source_record_id")}
+								{t("bib_record.source_record_id")}
 							</Typography>
 							<RenderAttribute
 								attribute={
@@ -768,7 +771,7 @@ function RouteComponent() {
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("patron_request.source_system_id")}
+								{t("bib_record.source_system_id")}
 							</Typography>
 							<RenderAttribute
 								attribute={
@@ -791,7 +794,7 @@ function RouteComponent() {
 						id="request_source_record"
 						expandIcon={<ExpandMore fontSize="large" />}>
 						<Typography variant="h3" sx={{ fontWeight: "bold" }}>
-							{t("patron_request.source_record")}
+							{t("bib_record.source_record")}
 						</Typography>
 					</AccordionSummary>
 					<AccordionDetails>
@@ -1367,7 +1370,7 @@ function RouteComponent() {
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("patron_request..borrowing_patron_type")}
+								{t("patron_request.borrowing_patron_type")}
 							</Typography>
 							{patronIdentitiesLoading ? (
 								<CircularProgress
@@ -1389,8 +1392,8 @@ function RouteComponent() {
 					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 						<Stack direction={"column"}>
 							<Typography variant="attributeTitle">
-								{t("patron_request..patron_type_dcb")}
-							</Typography>{" "}
+								{t("patron_request.patron_type_dcb")}
+							</Typography>
 							{patronIdentitiesLoading ? (
 								<CircularProgress
 									color="inherit"
@@ -1462,7 +1465,7 @@ function RouteComponent() {
 
 			<TabPanel value={5}>
 				<Typography id="auditlog" variant="accordionSummary">
-					{t("patron_request.audit_log")}
+					{t("audit.log")}
 				</Typography>
 				<DataGrid
 					rows={patronRequest?.audit ?? []}
@@ -1472,6 +1475,9 @@ function RouteComponent() {
 							headerName: "Audit date",
 							minWidth: 60,
 							flex: 0.2,
+							editable: false,
+							filterable: true,
+							sortable: true,
 							valueGetter: (value: string, row: { auditDate: string }) => {
 								const auditDate = row.auditDate;
 								return dayjs(auditDate).format("YYYY-MM-DD HH:mm:ss.SSS");
@@ -1496,7 +1502,7 @@ function RouteComponent() {
 							flex: 0.25,
 						},
 					]}
-					type="Audit"
+					type="audits"
 					identifier="AuditPatronRequestDetails"
 					// This grid could show click-through details of its own for each audit log entry
 					checkboxSelection={false}
@@ -1511,10 +1517,17 @@ function RouteComponent() {
 					listViewEnabled={false}
 					noResultsText={t("audit.no_results")}
 					pagination
+					paginationMode="client"
+					paginationModel={{ page: 0, pageSize: 25 }}
 					pivotingEnabled={false}
 					toolbarVisible
+					rowCount={patronRequest?.audit ? patronRequest?.audit.length : 0}
+					rowModesModel={rowModesModel}
 					searchText="Search by audit"
 					scrollbarVisible={false}
+					filterMode="client"
+					sortingMode="client"
+					sortModel={[{ field: "auditDate", sort: "desc" }]}
 				/>
 			</TabPanel>
 		</TabContext>

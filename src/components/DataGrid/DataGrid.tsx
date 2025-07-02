@@ -28,9 +28,9 @@ interface DataGridProps {
 	disableAggregation: boolean;
 	disableHoverInteractions: boolean;
 	disableRowGrouping: boolean;
-	editMode: "cell" | "row"; // Determines cell or row editing
+	editMode?: "cell" | "row"; // Determines cell or row editing
 	filterMode: GridFeatureMode; // Determines client or server-side filtering
-	filterModel: GridFilterModel;
+	filterModel?: GridFilterModel;
 	getDetailPanelContent?: any; // Function for returning detail panel content, where applicable
 	identifier: string; // The specific type or identifier. Must be unique in the application, as it is used to retrieve data grid settings.
 	loading: boolean;
@@ -38,7 +38,7 @@ interface DataGridProps {
 	noResultsText: string;
 	onFilterModelChange?: (model: GridFilterModel) => void;
 	// onPaginationModelChange: (model: GridPaginationModel) => void;
-	onPaginationModelChange: any;
+	onPaginationModelChange?: any;
 	onRowModesModelChange?: (model: GridRowModesModel) => void;
 	onRowEditStop?: (params: any, event: any) => void;
 	onSortModelChange?: (model: GridSortModel) => void;
@@ -68,7 +68,6 @@ export default function DataGrid({
 	filterMode,
 	filterModel,
 	getDetailPanelContent,
-	identifier,
 	loading,
 	listViewEnabled,
 	noResultsText,
@@ -124,6 +123,15 @@ export default function DataGrid({
 			event.defaultMuiPrevented = true;
 		}
 	};
+
+	// To make it really explicit that these things are only meant to be undefined if pagination mode is not srver
+	const finalOnPaginationModelChange =
+		paginationMode === "server" ? onPaginationModelChange : undefined;
+	const finalOnFilterModelChange =
+		filterMode === "server" ? onFilterModelChange : undefined;
+	const finalOnSortModelChange =
+		sortingMode === "server" ? onSortModelChange : undefined;
+
 	//identifier may not be needed
 	return (
 		<div style={{ display: "flex", flexDirection: "column" }}>
@@ -153,8 +161,9 @@ export default function DataGrid({
 					"filterOperator<": t("ui.data_grid.filters.less_than_exclusive"),
 					"filterOperator<=": t("ui.data_grid.filters.less_than_inclusive"),
 				}} // Overrides for data grid text
-				onFilterModelChange={onFilterModelChange}
-				onPaginationModelChange={onPaginationModelChange}
+				onFilterModelChange={finalOnFilterModelChange}
+				onPaginationModelChange={finalOnPaginationModelChange}
+				//@ts-expect-error Until we fix the typing issues, expect an error here.
 				onProcessRowUpdateError={(params: GridRowParams, error: string) => {
 					// fix typing
 					console.error("Error updating row:", error);
@@ -173,7 +182,7 @@ export default function DataGrid({
 						}),
 					});
 				}}
-				onSortModelChange={onSortModelChange}
+				onSortModelChange={finalOnSortModelChange}
 				onRowClick={handleRowClick}
 				pageSizeOptions={[5, 10, 20, 30, 40, 50, 100, 200]}
 				pagination={pagination}

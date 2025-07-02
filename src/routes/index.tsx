@@ -59,6 +59,8 @@ function HomeComponent() {
 		reset();
 	};
 
+	console.log(showConfirmationEdit);
+
 	const [alert, setAlert] = useState<AlertObject>({
 		open: false,
 		severity: "success",
@@ -225,6 +227,8 @@ function HomeComponent() {
 	// attributes
 	// proper layout
 	// actions button
+	// Move edit form onto its own page, somewhere.
+	// And make the initial values show up.
 
 	// refactor this into common code
 	const onSubmit = (data: Partial<Library>) => {
@@ -615,16 +619,18 @@ function HomeComponent() {
 				onCloseFunc={() => setAlert({ ...alert, open: false })}
 				alertTitle={alert.title}
 			/>
-			<Confirmation
-				open={showConfirmationEdit}
-				onClose={() => setConfirmationEdit(false)}
-				onConfirm={handleConfirmSave}
-				action="pageEdit"
-				editInformation={formatChangedFields(changedFields, library)}
-				entityName={library?.fullName}
-				entityType={t("entities.library")}
-				gridEdit={false}
-			/>
+			{library && showConfirmationEdit && (
+				<Confirmation
+					open={showConfirmationEdit}
+					onClose={() => setConfirmationEdit(false)}
+					onConfirm={handleConfirmSave}
+					action="pageEdit"
+					editInformation={formatChangedFields(changedFields, library)}
+					entityName={library?.fullName}
+					entityType={t("entities.library")}
+					gridEdit={false}
+				/>
+			)}
 		</Grid>
 	);
 }

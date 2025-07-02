@@ -28,6 +28,7 @@ import { Route as PatronRequestsIdIndexRouteImport } from './routes/patronReques
 import { Route as LocationsIdIndexRouteImport } from './routes/locations/$id/index'
 import { Route as IndexesIndexCodeIndexRouteImport } from './routes/indexes/$indexCode/index'
 import { Route as IndexesIndexCodeRecordIdIndexRouteImport } from './routes/indexes/$indexCode/$recordId/index'
+import { Route as PatronRequestsIdAuditsAuditIdIndexRouteImport } from './routes/patronRequests/$id/audits/$auditId/index'
 
 const SupplierRequestsRoute = SupplierRequestsRouteImport.update({
   id: '/supplierRequests',
@@ -125,6 +126,12 @@ const IndexesIndexCodeRecordIdIndexRoute =
     path: '/indexes/$indexCode/$recordId/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const PatronRequestsIdAuditsAuditIdIndexRoute =
+  PatronRequestsIdAuditsAuditIdIndexRouteImport.update({
+    id: '/patronRequests/$id/audits/$auditId/',
+    path: '/patronRequests/$id/audits/$auditId/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/locations/$id': typeof LocationsIdIndexRoute
   '/patronRequests/$id': typeof PatronRequestsIdIndexRoute
   '/indexes/$indexCode/$recordId': typeof IndexesIndexCodeRecordIdIndexRoute
+  '/patronRequests/$id/audits/$auditId': typeof PatronRequestsIdAuditsAuditIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -166,6 +174,7 @@ export interface FileRoutesByTo {
   '/locations/$id': typeof LocationsIdIndexRoute
   '/patronRequests/$id': typeof PatronRequestsIdIndexRoute
   '/indexes/$indexCode/$recordId': typeof IndexesIndexCodeRecordIdIndexRoute
+  '/patronRequests/$id/audits/$auditId': typeof PatronRequestsIdAuditsAuditIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -188,6 +197,7 @@ export interface FileRoutesById {
   '/locations/$id/': typeof LocationsIdIndexRoute
   '/patronRequests/$id/': typeof PatronRequestsIdIndexRoute
   '/indexes/$indexCode/$recordId/': typeof IndexesIndexCodeRecordIdIndexRoute
+  '/patronRequests/$id/audits/$auditId/': typeof PatronRequestsIdAuditsAuditIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/locations/$id'
     | '/patronRequests/$id'
     | '/indexes/$indexCode/$recordId'
+    | '/patronRequests/$id/audits/$auditId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/locations/$id'
     | '/patronRequests/$id'
     | '/indexes/$indexCode/$recordId'
+    | '/patronRequests/$id/audits/$auditId'
   id:
     | '__root__'
     | '/'
@@ -252,6 +264,7 @@ export interface FileRouteTypes {
     | '/locations/$id/'
     | '/patronRequests/$id/'
     | '/indexes/$indexCode/$recordId/'
+    | '/patronRequests/$id/audits/$auditId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -270,6 +283,7 @@ export interface RootRouteChildren {
   IndexesIndexCodeIndexRoute: typeof IndexesIndexCodeIndexRoute
   PatronRequestsIdIndexRoute: typeof PatronRequestsIdIndexRoute
   IndexesIndexCodeRecordIdIndexRoute: typeof IndexesIndexCodeRecordIdIndexRoute
+  PatronRequestsIdAuditsAuditIdIndexRoute: typeof PatronRequestsIdAuditsAuditIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -407,6 +421,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexesIndexCodeRecordIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/patronRequests/$id/audits/$auditId/': {
+      id: '/patronRequests/$id/audits/$auditId/'
+      path: '/patronRequests/$id/audits/$auditId'
+      fullPath: '/patronRequests/$id/audits/$auditId'
+      preLoaderRoute: typeof PatronRequestsIdAuditsAuditIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -452,6 +473,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexesIndexCodeIndexRoute: IndexesIndexCodeIndexRoute,
   PatronRequestsIdIndexRoute: PatronRequestsIdIndexRoute,
   IndexesIndexCodeRecordIdIndexRoute: IndexesIndexCodeRecordIdIndexRoute,
+  PatronRequestsIdAuditsAuditIdIndexRoute:
+    PatronRequestsIdAuditsAuditIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

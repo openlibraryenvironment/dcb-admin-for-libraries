@@ -34,6 +34,7 @@ const Confirmation = ({
 	const { t } = useTranslation();
 	console.log(entityName);
 	console.log(editInformation);
+	console.log(gridEdit, open);
 	const getCharCountHelperText = (
 		value: string,
 		maxLength: number,

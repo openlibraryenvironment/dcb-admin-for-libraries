@@ -54,7 +54,8 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 
 		const handleTabChange = (_: React.SyntheticEvent, newValue: string) => {
 			setActiveTab(newValue);
-			navigate({ to: newValue });
+			console.log(newValue);
+			navigate({ to: newValue, from: "/" });
 		};
 
 		// Handle authentication callback

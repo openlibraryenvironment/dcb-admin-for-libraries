@@ -4,7 +4,13 @@ import {
 	useRouter,
 } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { GridColDef } from "@mui/x-data-grid";
+import {
+	GridColDef,
+	GridFilterModel,
+	GridPaginationModel,
+	GridRowModesModel,
+	GridSortModel,
+} from "@mui/x-data-grid";
 import {
 	Box,
 	CircularProgress,
@@ -16,15 +22,21 @@ import {
 } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useILLAuth } from "../lib/illAuth";
-import { useAuth as useOidcAuth } from "react-oidc-context"; // OIDC auth for DCB
+import { useAuth, useAuth as useOidcAuth } from "react-oidc-context"; // OIDC auth for DCB
 import { useTranslation } from "react-i18next"; // For error messages
 import Error from "@components/Error/Error"; // Import your custom Error component
-import { useEffect, useMemo } from "react";
-import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+	LibrariesQueryData,
+	PatronRequestQueryData,
+} from "@models/ReactQueryHelperTypes";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import request from "graphql-request";
 import { standardPatronRequestColumns } from "@helpers/dataGrid/columns";
 import DataGrid from "@components/DataGrid/DataGrid";
+import { useGridStore } from "@/hooks/useDataGridStore";
+import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
+import { getLibrary } from "@queries/getLibrary";
 
 interface ILLPatronRequest {
 	id: string;
@@ -85,10 +97,50 @@ export const Route = createFileRoute("/ill/patronRequests")({
 	component: PatronRequestsComponent,
 });
 
+const processMuiFilterModel = (
+	model: GridFilterModel,
+	baseQuery: string
+): string => {
+	const { items, logicOperator = "AND", quickFilterValues = [] } = model;
+
+	const columnFilterQueries = items
+		.map((item) => buildFilterQuery(item.field, item.operator, item.value))
+		.filter(Boolean);
+
+	let finalQuery = ""; // Must default to the library specific host lms in all situations.
+	// we will need more context to infer
+	// and we should make this generic - perhaps pass in a preset for each one
+	if (columnFilterQueries.length > 0) {
+		finalQuery = `(${columnFilterQueries.join(` ${logicOperator.toUpperCase()} `)})`;
+	}
+
+	if (quickFilterValues.length > 0) {
+		const quickFilterQuery = quickFilterValues
+			.map(
+				(val) =>
+					`(fromValue:*${val}* OR toValue:*${val}* OR fromCategory:*${val}* OR toCategory:*${val}*)`
+			)
+			.join(" AND ");
+
+		if (finalQuery) {
+			finalQuery += ` AND (${quickFilterQuery})`;
+		} else {
+			finalQuery = quickFilterQuery;
+		}
+	}
+
+	if (baseQuery) {
+		return finalQuery ? `${baseQuery} AND (${finalQuery})` : baseQuery;
+	}
+	return finalQuery;
+};
+
 // --- Component ---
 function PatronRequestsComponent() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
+	const auth = useAuth();
+
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const oidcAuth = useOidcAuth();
 	const {
@@ -96,6 +148,7 @@ function PatronRequestsComponent() {
 		isILLAuthenticated,
 		isLoading: isAuthLoading,
 	} = useILLAuth();
+	const id = auth.user?.profile?.libraryId;
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
 	const oidcToken = oidcAuth.user?.access_token;
@@ -107,26 +160,117 @@ function PatronRequestsComponent() {
 		[oidcToken]
 	);
 
+	const gridId = "combinedPatronRequests";
+	const {
+		sortModel: storedSortModel,
+		filterModel: storedFilterModel,
+		paginationModel: storedPaginationModel,
+		setSortModel,
+		setFilterModel,
+		setPaginationModel,
+	} = useGridStore();
+
+	const storedState = {
+		sort: storedSortModel[gridId],
+		filter: storedFilterModel[gridId],
+		pagination: storedPaginationModel[gridId],
+	};
+
+	const [paginationModel, setLocalPaginationModel] =
+		useState<GridPaginationModel>(
+			storedState.pagination ?? { page: 0, pageSize: 20 }
+		);
+	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
+		storedState.filter ?? { items: [] }
+	);
+	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
+		storedState.sort ?? [{ field: "lastImported", sort: "desc" }]
+	);
+	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+
+	const handlePaginationChange = useCallback(
+		(model: GridPaginationModel) => {
+			setLocalPaginationModel(model);
+			setPaginationModel(gridId, model);
+		},
+		[gridId, setPaginationModel]
+	);
+
+	const handleFilterChange = useCallback(
+		(model: GridFilterModel) => {
+			setLocalFilterModel(model);
+			setFilterModel(gridId, model);
+		},
+		[gridId, setFilterModel]
+	);
+
+	const handleSortChange = useCallback(
+		(model: GridSortModel) => {
+			setLocalSortModel(model);
+			setSortModel(gridId, model);
+		},
+		[gridId, setSortModel]
+	);
+
+	const code = auth.user?.profile?.code;
+
+	// Find a way for this not to be needed twice
+	const {
+		data: librariesData,
+		isLoading: librariesLoading,
+		isError: librariesError,
+	} = useQuery<LibrariesQueryData>({
+		queryKey: ["libraryInfo", id, headers, code, dcbApiBase],
+		queryFn: async () =>
+			request(
+				`${dcbApiBase}/graphql`,
+				getLibrary,
+				{
+					query: code ? "agencyCode:" + code : "id:" + id, // Prefer to use the full name, but fall back to the ID if needed
+					pagesize: 10,
+					pageno: 0,
+					orderBy: "fullName",
+					order: "DESC",
+				},
+				headers
+			),
+		// do the on success here
+	});
+	const libraryHostLmsCode =
+		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.code;
+
 	const {
 		data: dcbData,
 		isLoading: isDcbLoading,
 		isError: isDcbError,
 	} = useQuery<PatronRequestQueryData>({
-		queryKey: ["getPatronRequests", dcbApiBase, headers],
-		queryFn: () =>
-			request(
-				`${dcbApiBase}/graphql`, // Use the variable safely
+		queryKey: [
+			"getPatronRequests",
+			dcbApiBase,
+			headers,
+			libraryHostLmsCode,
+			filterModel,
+			paginationModel.pageSize,
+			paginationModel.page,
+			sortModel[0]?.field,
+		],
+		queryFn: async () => {
+			const baseQuery = `patronHostlmsCode:${libraryHostLmsCode}`;
+			const queryVariables = {
+				query: processMuiFilterModel(filterModel, baseQuery) ?? "",
+				pagesize: paginationModel.pageSize ?? 200,
+				pageno: paginationModel.page ?? 0,
+				order: sortModel[0]?.field ?? "lastImported",
+				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+			};
+			return request(
+				`${dcbApiBase}/graphql`,
 				getPatronRequests,
-				{
-					query: "",
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "DESC",
-					order: "dateCreated",
-				},
+				queryVariables,
 				headers
-			),
-		enabled: !!oidcToken && !!dcbApiBase,
+			);
+		},
+		enabled: !!oidcToken && !!dcbApiBase && !!libraryHostLmsCode,
 		refetchInterval: 10000,
 	});
 
@@ -256,6 +400,19 @@ function PatronRequestsComponent() {
 						toolbarVisible
 						searchText="Search by patron request"
 						scrollbarVisible={false}
+						paginationMode="server"
+						paginationModel={paginationModel}
+						onPaginationModelChange={handlePaginationChange}
+						filterMode="server"
+						filterModel={filterModel}
+						onFilterModelChange={handleFilterChange}
+						sortingMode="server"
+						sortModel={sortModel}
+						onSortModelChange={handleSortChange}
+						rowCount={
+							dcbData.patronRequests ? dcbData.patronRequests?.totalSize : 0
+						}
+						rowModesModel={rowModesModel}
 					/>
 				)}
 
@@ -282,6 +439,13 @@ function PatronRequestsComponent() {
 						toolbarVisible
 						searchText="Search by patron request"
 						scrollbarVisible={false}
+						filterMode="client"
+						sortingMode="client"
+						sortModel={[{ field: "title", sort: "desc" }]}
+						paginationMode="client"
+						paginationModel={{ page: 0, pageSize: 25 }}
+						rowCount={illData.totalRecords}
+						rowModesModel={{}}
 					/>
 				)}
 			</Stack>
