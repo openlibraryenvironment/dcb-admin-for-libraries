@@ -107,7 +107,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		headerName: "To context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
 	},
 	{
 		field: "toValue",
@@ -158,7 +158,7 @@ export const standardNumRangeMappingColumns: GridColDef[] = [
 		headerName: "From context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
 	},
 	{
 		field: "lowerBound",
@@ -220,7 +220,7 @@ export const numRangeMappingColumnsNoCategoryFilter: GridColDef[] = [
 		headerName: "From context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
 	},
 	{
 		field: "lowerBound",
@@ -283,7 +283,8 @@ export const standardPatronRequestColumns: GridColDef[] = [
 	{
 		field: "patronHostlmsCode",
 		headerName: "Patron host LMS code",
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
 	},
 	{
 		field: "localBarcode",
@@ -479,7 +480,8 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 	{
 		field: "patronHostlmsCode",
 		headerName: "Patron host LMS code",
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
 	},
 	{
 		field: "localBarcode",
@@ -694,7 +696,8 @@ export const supplierRequestColumnsLibrary: GridColDef[] = [
 	{
 		field: "hostLmsCode",
 		headerName: "Host LMS code",
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
 		flex: 0.5,
 	},
 	{
@@ -808,6 +811,7 @@ export const defaultPatronRequestColumnVisibility: GridColumnVisibilityModel = {
 	canonicalItemType: false,
 	canonicalPtype: false,
 	pickupLocationCode: false,
+	patronHostlmsCode: false,
 	previousStatus: false,
 	nextExpectedStatus: false,
 	errorMessage: false,
@@ -834,6 +838,7 @@ export const finishedPatronRequestColumnVisibility: GridColumnVisibilityModel =
 		pickupRequestId: false,
 		pickupRequestStatus: false,
 		isExpeditedCheckout: false,
+		patronHostlmsCode: false,
 	};
 
 export const exceptionPatronRequestColumnVisibility = {
@@ -852,6 +857,7 @@ export const exceptionPatronRequestColumnVisibility = {
 	pickupRequestId: false,
 	pickupRequestStatus: false,
 	isExpeditedCheckout: false,
+	patronHostlmsCode: false,
 };
 
 export const locationPatronRequestColumnVisibility = {
@@ -861,12 +867,12 @@ export const locationPatronRequestColumnVisibility = {
 	status: true,
 	previousStatus: false,
 	nextExpectedStatus: false,
+	patronHostlmsCode: false,
 	errorMessage: false,
 	elapsedTimeInCurrentStatus: false,
 	pollCountForCurrentStatus: false,
 	dateUpdated: false,
 	dateCreated: true,
-	patronHostlmsCode: false,
 	suppliers: false,
 	id: false,
 	outOfSequenceFlag: false,

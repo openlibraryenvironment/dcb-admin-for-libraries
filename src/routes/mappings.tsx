@@ -42,6 +42,10 @@ import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 
+// We need to stop filters causing a re-render on every keystroke.
+// It should only happen on enter
+// We also need to make sure that build filter query is watertight or filters will expose others' data
+
 export const Route = createFileRoute("/mappings")({
 	component: RouteComponent,
 });
@@ -58,7 +62,9 @@ const processMuiFilterModel = (
 		.map((item) => buildFilterQuery(item.field, item.operator, item.value))
 		.filter(Boolean);
 
-	let finalQuery = "";
+	let finalQuery = ""; // Must default to the library specific fromContext and toContext in all situations.
+	// we will need more context to infer
+	// and we should make this generic - perhaps pass in a preset for each one
 	if (columnFilterQueries.length > 0) {
 		finalQuery = `(${columnFilterQueries.join(` ${logicOperator.toUpperCase()} `)})`;
 	}
