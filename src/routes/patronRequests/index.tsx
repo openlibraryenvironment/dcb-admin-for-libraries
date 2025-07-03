@@ -90,15 +90,18 @@ function RouteComponent() {
 		sortModel: storedSortModel,
 		filterModel: storedFilterModel,
 		paginationModel: storedPaginationModel,
+		columnVisibilityModel: storedColumnVisibilityModel,
 		setSortModel,
 		setFilterModel,
 		setPaginationModel,
+		setColumnVisibilityModel,
 	} = useGridStore();
 
 	const storedState = {
 		sort: storedSortModel[gridId],
 		filter: storedFilterModel[gridId],
 		pagination: storedPaginationModel[gridId],
+		columnVisibility: storedColumnVisibilityModel[gridId],
 	};
 
 	const [paginationModel, setLocalPaginationModel] =
@@ -114,6 +117,9 @@ function RouteComponent() {
 		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }]
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
+		storedState.columnVisibility ?? {}
+	);
 
 	// Add state to track if we're filtering
 	const [isFiltering, setIsFiltering] = useState(false);
@@ -162,6 +168,14 @@ function RouteComponent() {
 			setSortModel(gridId, model);
 		},
 		[gridId, setSortModel]
+	);
+
+	const handleColumnVisibilityChange = useCallback(
+		(model: any) => {
+			setLocalColumnVisibilityModel(model);
+			setColumnVisibilityModel(gridId, model);
+		},
+		[gridId, setColumnVisibilityModel]
 	);
 
 	const code = auth.user?.profile?.code;
@@ -264,6 +278,8 @@ function RouteComponent() {
 			<DataGrid
 				rows={patronRequestData?.patronRequests?.content ?? []}
 				columns={standardPatronRequestColumns}
+				columnVisibilityModel={columnVisibilityModel}
+				onColumnVisibilityModelChange={handleColumnVisibilityChange}
 				type="patronRequests"
 				identifier="patronRequestsMain"
 				checkboxSelection={false}

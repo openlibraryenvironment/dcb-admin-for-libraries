@@ -22,13 +22,17 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
+		sortable: true,
+		editable: false,
 	},
 	{
 		field: "fromContext",
 		headerName: "From context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
+		editable: false,
 	},
 	{
 		field: "fromValue",
@@ -36,13 +40,17 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		minWidth: 50,
 		flex: 0.4,
 		filterOperators: standardFilters,
+		sortable: true,
+		editable: false,
 	},
 	{
 		field: "toContext",
 		headerName: "To context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
+		editable: false,
 	},
 	{
 		field: "toValue",
@@ -51,6 +59,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		flex: 0.5,
 		filterOperators: standardFilters,
 		editable: true,
+		sortable: true,
 		valueGetter: (value: any, row: { toValue: any }) => row?.toValue,
 	},
 	{
@@ -59,6 +68,8 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: standardFilters,
+		editable: false,
+		sortable: true,
 		valueGetter: (value: any, row: { lastImported: any }) => {
 			const lastImported = row.lastImported;
 			const formattedDate = dayjs(lastImported).format("YYYY-MM-DD HH:mm");
@@ -76,6 +87,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		flex: 0.5,
 		filterOperators: standardFilters,
 		editable: true,
+		sortable: true,
 		valueGetter: (value: any, row: { toCategory: any }) => row?.toCategory,
 	},
 ];
@@ -87,13 +99,17 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		minWidth: 50,
 		flex: 0.5,
 		filterable: false,
+		sortable: true,
+		editable: false,
 	},
 	{
 		field: "fromContext",
 		headerName: "From context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
+		editable: false,
 	},
 	{
 		field: "fromValue",
@@ -101,6 +117,8 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		minWidth: 50,
 		flex: 0.4,
 		filterOperators: standardFilters,
+		sortable: true,
+		editable: false,
 	},
 	{
 		field: "toContext",
@@ -108,6 +126,8 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		minWidth: 50,
 		flex: 0.5,
 		filterable: false,
+		sortable: false,
+		editable: false,
 	},
 	{
 		field: "toValue",
@@ -115,6 +135,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
+		sortable: true,
 		editable: true,
 		valueGetter: (value: any, row: { toValue: any }) => row?.toValue,
 	},
@@ -124,6 +145,8 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: standardFilters,
+		sortable: true,
+		editable: false,
 		valueGetter: (value: any, row: { lastImported: any }) => {
 			const lastImported = row.lastImported;
 			const formattedDate = dayjs(lastImported).format("YYYY-MM-DD HH:mm");
@@ -141,6 +164,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		flex: 0.5,
 		filterOperators: standardFilters,
 		editable: true,
+		sortable: true,
 		valueGetter: (value: any, row: { toCategory: any }) => row?.toCategory,
 	},
 ];

@@ -13,14 +13,14 @@ interface GridState {
 	// Only the filter model is needed; the string is derived from it
 	filterModel: Record<string, GridFilterModel>;
 	paginationModel: Record<string, GridPaginationModel>;
-	columnVisibility: Record<string, GridColumnVisibilityModel>;
+	columnVisibilityModel: Record<string, GridColumnVisibilityModel>;
 }
 
 interface GridActions {
 	setSortModel: (gridType: string, model: GridSortModel) => void;
 	setFilterModel: (gridType: string, model: GridFilterModel) => void;
 	setPaginationModel: (gridType: string, model: GridPaginationModel) => void;
-	setColumnVisibility: (
+	setColumnVisibilityModel: (
 		gridType: string,
 		model: GridColumnVisibilityModel
 	) => void;
@@ -34,7 +34,7 @@ export const useGridStore = create<GridState & GridActions>()(
 			sortModel: {},
 			filterModel: {},
 			paginationModel: {},
-			columnVisibility: {},
+			columnVisibilityModel: {},
 
 			setSortModel: (gridType, model) =>
 				set((state) => ({
@@ -51,9 +51,12 @@ export const useGridStore = create<GridState & GridActions>()(
 					paginationModel: { ...state.paginationModel, [gridType]: model },
 				})),
 
-			setColumnVisibility: (gridType, model) =>
+			setColumnVisibilityModel: (gridType, model) =>
 				set((state) => ({
-					columnVisibility: { ...state.columnVisibility, [gridType]: model },
+					columnVisibilityModel: {
+						...state.columnVisibilityModel,
+						[gridType]: model,
+					},
 				})),
 
 			clearGridState: () =>
@@ -61,7 +64,7 @@ export const useGridStore = create<GridState & GridActions>()(
 					sortModel: {},
 					filterModel: {},
 					paginationModel: {},
-					columnVisibility: {},
+					columnVisibilityModel: {},
 				})),
 		}),
 		{

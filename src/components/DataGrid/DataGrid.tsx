@@ -1,6 +1,7 @@
 import {
 	DataGridPremium,
 	GridColDef,
+	GridColumnVisibilityModel,
 	GridEventListener,
 	GridExpandLessIcon,
 	GridExpandMoreIcon,
@@ -25,6 +26,7 @@ import {
 interface DataGridProps {
 	checkboxSelection: boolean;
 	columns: GridColDef[];
+	columnVisibilityModel?: GridColumnVisibilityModel;
 	disableAggregation: boolean;
 	disableHoverInteractions: boolean;
 	disableRowGrouping: boolean;
@@ -36,6 +38,7 @@ interface DataGridProps {
 	loading: boolean;
 	listViewEnabled: boolean;
 	noResultsText: string;
+	onColumnVisibilityModelChange?: (model: GridColumnVisibilityModel) => void;
 	onFilterModelChange?: (model: GridFilterModel) => void;
 	// onPaginationModelChange: (model: GridPaginationModel) => void;
 	onPaginationModelChange?: any;
@@ -61,6 +64,7 @@ interface DataGridProps {
 export default function DataGrid({
 	checkboxSelection,
 	columns,
+	columnVisibilityModel,
 	disableAggregation,
 	disableHoverInteractions,
 	disableRowGrouping,
@@ -71,6 +75,7 @@ export default function DataGrid({
 	loading,
 	listViewEnabled,
 	noResultsText,
+	onColumnVisibilityModelChange,
 	onFilterModelChange,
 	onPaginationModelChange,
 	onRowModesModelChange,
@@ -138,8 +143,10 @@ export default function DataGrid({
 			<DataGridPremium
 				checkboxSelection={checkboxSelection}
 				columns={columns}
+				columnVisibilityModel={columnVisibilityModel}
 				disableAggregation={disableAggregation}
 				disableRowGrouping={disableRowGrouping}
+				disableRowSelectionOnClick
 				editMode={editMode}
 				filterMode={filterMode}
 				filterModel={filterModel}
@@ -161,6 +168,11 @@ export default function DataGrid({
 					"filterOperator<": t("ui.data_grid.filters.less_than_exclusive"),
 					"filterOperator<=": t("ui.data_grid.filters.less_than_inclusive"),
 				}} // Overrides for data grid text
+				onCellDoubleClick={(params, event) => {
+					// Prevent default double-click edit behavior
+					event.defaultMuiPrevented = true;
+				}}
+				onColumnVisibilityModelChange={onColumnVisibilityModelChange}
 				onFilterModelChange={finalOnFilterModelChange}
 				onPaginationModelChange={finalOnPaginationModelChange}
 				//@ts-expect-error Until we fix the typing issues, expect an error here.

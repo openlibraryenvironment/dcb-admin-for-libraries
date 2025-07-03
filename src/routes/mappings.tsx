@@ -1,11 +1,16 @@
 import { useGridStore } from "@/hooks/useDataGridStore";
+import { useDebounce } from "@/hooks/useDebounce";
 import Confirmation from "@components/Confirmation/Confirmation";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Loading from "@components/Loading/Loading";
 import { standardFilters } from "@constants/filters/filters";
-import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
+import { standardRefValueMappingColumns } from "@helpers/dataGrid/columns";
 import { computeMutation } from "@helpers/dataGrid/computeMutation";
-// import { validateRow } from "@helpers/dataGrid/validateRow";
+import {
+	processMuiFilterModel,
+	getSortOrderForServer,
+	checkIfFiltering,
+} from "@helpers/dataGrid/utilities";
 import {
 	LibrariesQueryData,
 	ReferenceValueMappingsQueryData,
@@ -21,6 +26,7 @@ import {
 import {
 	GridActionsCellItem,
 	GridColDef,
+	GridColumnVisibilityModel,
 	GridFilterModel,
 	GridPaginationModel,
 	GridRowId,
@@ -38,57 +44,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import request from "graphql-request";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
-
-// We need to stop filters causing a re-render on every keystroke.
-// It should only happen on enter
-// We also need to make sure that build filter query is watertight or filters will expose others' data
 
 export const Route = createFileRoute("/mappings")({
 	component: RouteComponent,
 });
+
 interface UpdateMappingResponse {
 	updateReferenceValueMapping: GridValidRowModel;
 }
-const processMuiFilterModel = (
-	model: GridFilterModel,
-	baseQuery: string
-): string => {
-	const { items, logicOperator = "AND", quickFilterValues = [] } = model;
-
-	const columnFilterQueries = items
-		.map((item) => buildFilterQuery(item.field, item.operator, item.value))
-		.filter(Boolean);
-
-	let finalQuery = ""; // Must default to the library specific fromContext and toContext in all situations.
-	// we will need more context to infer
-	// and we should make this generic - perhaps pass in a preset for each one
-	if (columnFilterQueries.length > 0) {
-		finalQuery = `(${columnFilterQueries.join(` ${logicOperator.toUpperCase()} `)})`;
-	}
-
-	if (quickFilterValues.length > 0) {
-		const quickFilterQuery = quickFilterValues
-			.map(
-				(val) =>
-					`(fromValue:*${val}* OR toValue:*${val}* OR fromCategory:*${val}* OR toCategory:*${val}*)`
-			)
-			.join(" AND ");
-
-		if (finalQuery) {
-			finalQuery += ` AND (${quickFilterQuery})`;
-		} else {
-			finalQuery = quickFilterQuery;
-		}
-	}
-
-	if (baseQuery) {
-		return finalQuery ? `${baseQuery} AND (${finalQuery})` : baseQuery;
-	}
-	return finalQuery;
-};
 
 function RouteComponent() {
 	const auth = useAuth();
@@ -106,15 +72,18 @@ function RouteComponent() {
 		sortModel: storedSortModel,
 		filterModel: storedFilterModel,
 		paginationModel: storedPaginationModel,
+		columnVisibilityModel: storedColumnVisibilityModel,
 		setSortModel,
 		setFilterModel,
 		setPaginationModel,
+		setColumnVisibilityModel,
 	} = useGridStore();
 
 	const storedState = {
 		sort: storedSortModel[gridId],
 		filter: storedFilterModel[gridId],
 		pagination: storedPaginationModel[gridId],
+		columnVisibility: storedColumnVisibilityModel[gridId],
 	};
 
 	const [paginationModel, setLocalPaginationModel] =
@@ -124,6 +93,8 @@ function RouteComponent() {
 	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
 		storedState.filter ?? { items: [] }
 	);
+	const debouncedFilterModel = useDebounce(filterModel, 500);
+
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
 		storedState.sort ?? [{ field: "lastImported", sort: "desc" }]
 	);
@@ -132,10 +103,22 @@ function RouteComponent() {
 	const [editRecord, setEditRecord] = useState<string | null>(null);
 	const [deleteConfirmationId, setDeleteConfirmationId] =
 		useState<GridRowId | null>(null);
+	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
+		storedState.columnVisibility ?? {}
+	);
+
+	// Add state to track if we're filtering
+	const [isFiltering, setIsFiltering] = useState(false);
+
 	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
 	const code = auth.user?.profile?.code;
 
-	// Find a way for this not to be needed twice
+	// Track when filter is being applied
+	useEffect(() => {
+		setIsFiltering(checkIfFiltering(filterModel, debouncedFilterModel));
+	}, [filterModel, debouncedFilterModel]);
+
+	// Library query
 	const {
 		data: librariesData,
 		isLoading: librariesLoading,
@@ -147,7 +130,7 @@ function RouteComponent() {
 				DCB_URL,
 				getLibrary,
 				{
-					query: code ? "agencyCode:" + code : "id:" + id, // Prefer to use the full name, but fall back to the ID if needed
+					query: code ? "agencyCode:" + code : "id:" + id,
 					pagesize: 10,
 					pageno: 0,
 					orderBy: "fullName",
@@ -155,41 +138,52 @@ function RouteComponent() {
 				},
 				headers
 			),
-		// do the on success here
 	});
 	const libraryHostLmsCode =
 		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.code;
 
-	const { data: mappingsData, isLoading: mappingsLoading } =
-		useQuery<ReferenceValueMappingsQueryData>({
-			queryKey: [
-				gridId,
-				libraryHostLmsCode,
-				paginationModel,
-				filterModel,
-				sortModel,
-				headers,
-				DCB_URL,
-				sortModel[0]?.field,
-			],
-			queryFn: async () => {
-				const baseQuery = `fromContext:${libraryHostLmsCode} OR toContext:${libraryHostLmsCode}`;
-				const queryVariables = {
-					query: processMuiFilterModel(filterModel, baseQuery) ?? "",
-					pagesize: paginationModel.pageSize ?? 200,
-					pageno: paginationModel.page ?? 0,
-					order: sortModel[0]?.field ?? "lastImported",
-					orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
-				};
-				return request(DCB_URL, getMappings, queryVariables, headers);
-			},
-			enabled: !!libraryHostLmsCode,
-		});
+	// Mappings query - using debounced filter model
+	const {
+		data: mappingsData,
+		isLoading: mappingsLoading,
+		isFetching,
+		error,
+		isError: mappingsError,
+	} = useQuery<ReferenceValueMappingsQueryData>({
+		queryKey: [
+			gridId,
+			libraryHostLmsCode,
+			paginationModel,
+			debouncedFilterModel, // Use debounced filter model
+			sortModel,
+			headers,
+			DCB_URL,
+			sortModel[0]?.field,
+			sortModel[0]?.sort,
+		],
+		queryFn: async () => {
+			const baseQuery = `(toContext:"${libraryHostLmsCode}" OR fromContext:${libraryHostLmsCode}) AND NOT deleted:true`;
+			// Second Host LMS to come.
+			const queryVariables = {
+				query: processMuiFilterModel(debouncedFilterModel, baseQuery) ?? "",
+				pagesize: paginationModel.pageSize ?? 200,
+				pageno: paginationModel.page ?? 0,
+				order: sortModel[0]?.field ?? "lastImported",
+				orderBy: getSortOrderForServer(sortModel[0]?.sort) ?? "DESC",
+			};
+			return request(DCB_URL, getMappings, queryVariables, headers);
+		},
+		enabled: !!libraryHostLmsCode,
+		refetchOnWindowFocus: true,
+		refetchIntervalInBackground: false,
+		// Keep previous data while new data is loading
+		placeholderData: (previousData) => previousData,
+	});
 
 	const { mutateAsync: updateMapping } = useMutation<
-		UpdateMappingResponse, // ✅ Type for successful data
-		Error, // Type for the error
-		{ input: any } // Type for the variables
+		UpdateMappingResponse,
+		Error,
+		{ input: any }
 	>({
 		mutationFn: (variables: { input: any }) =>
 			request(
@@ -240,6 +234,14 @@ function RouteComponent() {
 		[gridId, setSortModel]
 	);
 
+	const handleColumnVisibilityChange = useCallback(
+		(model: GridColumnVisibilityModel) => {
+			setLocalColumnVisibilityModel(model);
+			setColumnVisibilityModel(gridId, model);
+		},
+		[gridId, setColumnVisibilityModel]
+	);
+
 	const handleEditClick = (id: GridRowId) => () => {
 		setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
 	};
@@ -269,14 +271,6 @@ function RouteComponent() {
 	const processRowUpdate = useCallback(
 		(newRow: GridRowModel, oldRow: GridRowModel) =>
 			new Promise<GridRowModel>((resolve, reject) => {
-				// const validationError = validateRow(
-				// 	newRow as GridValidRowModel,
-				// 	oldRow as GridValidRowModel
-				// );
-				// if (validationError) {
-				// 	reject(new Error(validationError.translationKey));
-				// 	return;
-				// }
 				const changes = computeMutation(newRow, oldRow);
 				if (!changes) {
 					resolve(oldRow);
@@ -327,70 +321,8 @@ function RouteComponent() {
 		setEditRecord(null);
 	};
 
-	const standardRefValueMappingColumns: GridColDef[] = useMemo(
+	const actionsColumn: GridColDef[] = useMemo(
 		() => [
-			{
-				field: "fromCategory",
-				headerName: "Category",
-				minWidth: 50,
-				flex: 0.5,
-				filterOperators: standardFilters,
-			},
-			{
-				field: "fromContext",
-				headerName: "From context",
-				minWidth: 50,
-				flex: 0.5,
-				filterOperators: standardFilters,
-			},
-			{
-				field: "fromValue",
-				headerName: "From value",
-				minWidth: 50,
-				flex: 0.4,
-				filterOperators: standardFilters,
-			},
-			{
-				field: "toContext",
-				headerName: "To context",
-				minWidth: 50,
-				flex: 0.5,
-				filterOperators: standardFilters,
-			},
-			{
-				field: "toValue",
-				headerName: "To value",
-				minWidth: 50,
-				flex: 0.5,
-				filterOperators: standardFilters,
-				editable: true,
-				valueGetter: (value: any, row: { toValue: any }) => row?.toValue,
-			},
-			{
-				field: "lastImported",
-				headerName: "Last imported",
-				minWidth: 100,
-				flex: 0.5,
-				filterOperators: standardFilters,
-				valueGetter: (value: any, row: { lastImported: any }) => {
-					const lastImported = row.lastImported;
-					const formattedDate = dayjs(lastImported).format("YYYY-MM-DD HH:mm");
-					if (formattedDate == "Invalid Date") {
-						return "";
-					} else {
-						return formattedDate;
-					}
-				},
-			},
-			{
-				field: "toCategory",
-				headerName: "To category",
-				minWidth: 50,
-				flex: 0.5,
-				filterOperators: standardFilters,
-				editable: true,
-				valueGetter: (value: any, row: { toCategory: any }) => row?.toCategory,
-			},
 			{
 				field: "actions",
 				type: "actions",
@@ -402,11 +334,13 @@ function RouteComponent() {
 					if (isInEditMode) {
 						return [
 							<GridActionsCellItem
+								key="save"
 								icon={<Save />}
 								label="Save"
 								onClick={handleSaveClick(id)}
 							/>,
 							<GridActionsCellItem
+								key="cancel"
 								icon={<Cancel />}
 								label="Cancel"
 								onClick={handleCancelClick(id)}
@@ -415,11 +349,13 @@ function RouteComponent() {
 					}
 					return [
 						<GridActionsCellItem
+							key="edit"
 							icon={<Edit />}
 							label="Edit"
 							onClick={handleEditClick(id)}
 						/>,
 						<GridActionsCellItem
+							key="delete"
 							icon={<Delete />}
 							label="Delete"
 							onClick={handleDeleteClick(id)}
@@ -431,7 +367,10 @@ function RouteComponent() {
 		[rowModesModel]
 	);
 
-	if (mappingsLoading || librariesLoading) {
+	const refValueColumns = [...standardRefValueMappingColumns, ...actionsColumn];
+
+	// Show loading if initial load or libraries are loading
+	if ((mappingsLoading && !mappingsData) || librariesLoading) {
 		return (
 			<Loading
 				title={t("ui.info.loading.document")}
@@ -440,24 +379,40 @@ function RouteComponent() {
 		);
 	}
 
+	if (mappingsError) {
+		console.log(error, mappingsError);
+		return (
+			<Loading
+				title="Error loading mappings"
+				subtitle="Please try again later"
+			/>
+		);
+	}
+
+	// Determine if we should show loading state
+	const shouldShowLoading =
+		isFiltering || mappingsLoading || (isFetching && !!mappingsData);
+
 	return (
 		<>
 			<DataGrid
 				identifier={gridId}
 				type="ReferenceValueMappings"
-				columns={standardRefValueMappingColumns}
+				columns={refValueColumns}
 				rows={mappingsData?.referenceValueMappings?.content ?? []}
 				rowCount={mappingsData?.referenceValueMappings?.totalSize ?? 0}
-				loading={mappingsLoading || librariesLoading}
+				loading={shouldShowLoading} // Show loading when filtering or fetching
 				paginationMode="server"
 				paginationModel={paginationModel}
 				onPaginationModelChange={handlePaginationChange}
 				filterMode="server"
-				filterModel={filterModel}
+				filterModel={filterModel} // Use immediate filter model for UI
 				onFilterModelChange={handleFilterChange}
 				sortingMode="server"
 				sortModel={sortModel}
 				onSortModelChange={handleSortChange}
+				columnVisibilityModel={columnVisibilityModel}
+				onColumnVisibilityModelChange={handleColumnVisibilityChange}
 				editMode="row"
 				rowModesModel={rowModesModel}
 				onRowModesModelChange={setRowModesModel}
@@ -475,7 +430,7 @@ function RouteComponent() {
 				scrollbarVisible={false}
 			/>
 			<Confirmation
-				open={!!promiseArguments} // a direct state for this could prevent the issue with needing an early null check in changessummmary
+				open={!!promiseArguments}
 				onClose={handleModalCancel}
 				onConfirm={handleModalConfirm}
 				gridEdit={true}
