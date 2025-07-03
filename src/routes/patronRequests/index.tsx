@@ -1,4 +1,5 @@
 import { useGridStore } from "@/hooks/useDataGridStore";
+import { useDebounce } from "@/hooks/useDebounce";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -24,7 +25,7 @@ import {
 	useRouter,
 } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 
@@ -42,9 +43,7 @@ const processMuiFilterModel = (
 		.map((item) => buildFilterQuery(item.field, item.operator, item.value))
 		.filter(Boolean);
 
-	let finalQuery = ""; // Must default to the library specific fromContext and toContext in all situations.
-	// we will need more context to infer
-	// and we should make this generic - perhaps pass in a preset for each one
+	let finalQuery = "";
 	if (columnFilterQueries.length > 0) {
 		finalQuery = `(${columnFilterQueries.join(` ${logicOperator.toUpperCase()} `)})`;
 	}
@@ -109,10 +108,37 @@ function RouteComponent() {
 	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
 		storedState.filter ?? { items: [] }
 	);
+	const debouncedFilterModel = useDebounce(filterModel, 500);
+
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
 		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }]
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+
+	// Add state to track if we're filtering
+	const [isFiltering, setIsFiltering] = useState(false);
+
+	// Track when filter is being applied
+	useEffect(() => {
+		const hasActiveFilters =
+			filterModel.items.some(
+				(item) => item.value && item.value !== "" && item.value !== null
+			) ||
+			(filterModel.quickFilterValues &&
+				filterModel.quickFilterValues.length > 0);
+
+		const hasActiveDebounceFilters =
+			debouncedFilterModel.items.some(
+				(item) => item.value && item.value !== "" && item.value !== null
+			) ||
+			(debouncedFilterModel.quickFilterValues &&
+				debouncedFilterModel.quickFilterValues.length > 0);
+
+		// We're filtering if there are active filters but they don't match debounced filters
+		const isDifferent =
+			JSON.stringify(filterModel) !== JSON.stringify(debouncedFilterModel);
+		setIsFiltering(!!hasActiveFilters && isDifferent);
+	}, [filterModel, debouncedFilterModel]);
 
 	const handlePaginationChange = useCallback(
 		(model: GridPaginationModel) => {
@@ -140,7 +166,7 @@ function RouteComponent() {
 
 	const code = auth.user?.profile?.code;
 
-	// Find a way for this not to be needed twice
+	// Library query
 	const {
 		data: librariesData,
 		isLoading: librariesLoading,
@@ -152,7 +178,7 @@ function RouteComponent() {
 				`${dcbApiBase}/graphql`,
 				getLibrary,
 				{
-					query: code ? "agencyCode:" + code : "id:" + id, // Prefer to use the full name, but fall back to the ID if needed
+					query: code ? "agencyCode:" + code : "id:" + id,
 					pagesize: 10,
 					pageno: 0,
 					orderBy: "fullName",
@@ -160,30 +186,33 @@ function RouteComponent() {
 				},
 				headers
 			),
-		// do the on success here
 	});
 	const libraryHostLmsCode =
 		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.code;
 
+	// Patron requests query - using debounced filter model
 	const {
 		data: patronRequestData,
 		isLoading: isPatronRequestLoading,
 		isError: isPatronRequestError,
+		error,
+		isFetching,
 	} = useQuery<PatronRequestQueryData>({
 		queryKey: [
 			"getPatronRequests",
 			dcbApiBase,
 			headers,
 			libraryHostLmsCode,
-			filterModel,
+			debouncedFilterModel, // Use debounced filter model
 			paginationModel.pageSize,
 			paginationModel.page,
 			sortModel[0]?.field,
+			sortModel[0]?.sort,
 		],
 		queryFn: async () => {
 			const baseQuery = `patronHostlmsCode:${libraryHostLmsCode}`;
 			const queryVariables = {
-				query: processMuiFilterModel(filterModel, baseQuery) ?? "",
+				query: processMuiFilterModel(debouncedFilterModel, baseQuery) ?? "",
 				pagesize: paginationModel.pageSize ?? 200,
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "dateCreated",
@@ -197,12 +226,19 @@ function RouteComponent() {
 			);
 		},
 		enabled: !!token && !!dcbApiBase && !!libraryHostLmsCode,
-		refetchInterval: 10000,
+		// refetchInterval: 1000000, // milliseconds
+		refetchOnWindowFocus: true,
+		refetchIntervalInBackground: false,
+		// Keep previous data while new data is loading (v5 syntax)
+		placeholderData: (previousData) => previousData,
 	});
-	if (isPatronRequestLoading) {
+
+	// Show loading if initial load or libraries are loading
+	if ((isPatronRequestLoading && !patronRequestData) || librariesLoading) {
 		return <Loading title="Patron requests loading" subtitle="Please wait" />;
 	}
 	if (isPatronRequestError) {
+		console.log(error, isPatronRequestError);
 		return (
 			<Error
 				title={t("ui.error.cannot_retrieve_record")}
@@ -213,9 +249,13 @@ function RouteComponent() {
 			/>
 		);
 	}
-	// Persisting column visibility is not working
-	// Sort is not working
-	// Pagination and persisting it appears to be working
+
+	// Determine if we should show loading state
+	const shouldShowLoading =
+		isFiltering ||
+		isPatronRequestLoading ||
+		(isFetching && !!patronRequestData);
+
 	return (
 		<>
 			<Typography variant="h5" component="h2" gutterBottom>
@@ -225,12 +265,12 @@ function RouteComponent() {
 				rows={patronRequestData?.patronRequests?.content ?? []}
 				columns={standardPatronRequestColumns}
 				type="patronRequests"
-				identifier="patronRequestsMain" // do we still need this now we handle persistence externally?
+				identifier="patronRequestsMain"
 				checkboxSelection={false}
 				disableAggregation={true}
 				disableHoverInteractions={true}
 				disableRowGrouping={true}
-				loading={isPatronRequestLoading}
+				loading={shouldShowLoading} // Show loading when filtering or fetching
 				listViewEnabled={false}
 				noResultsText={t("audit.no_results")}
 				pagination
@@ -242,16 +282,12 @@ function RouteComponent() {
 				paginationModel={paginationModel}
 				onPaginationModelChange={handlePaginationChange}
 				filterMode="server"
-				filterModel={filterModel}
+				filterModel={filterModel} // Use immediate filter model for UI
 				onFilterModelChange={handleFilterChange}
 				sortingMode="server"
 				sortModel={sortModel}
 				onSortModelChange={handleSortChange}
-				rowCount={
-					patronRequestData?.patronRequests
-						? patronRequestData.patronRequests?.totalSize
-						: 0
-				}
+				rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 				rowModesModel={rowModesModel}
 			/>
 		</>
