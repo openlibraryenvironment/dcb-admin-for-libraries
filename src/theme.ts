@@ -172,11 +172,35 @@ const theme = createTheme({
 		MuiTab: {
 			styleOverrides: {
 				root: ({ theme }) => ({
+					color: theme.palette.primary.navigationText,
 					"&.Mui-focusVisible": {
 						outline: "2px solid", // For keyboard focus
 						boxSizing: "border-box",
 						borderColor: theme.palette.primary.outlineColor,
 						outlineOffset: "-2px",
+					},
+					"&.Mui-selected": {
+						fontWeight: "bold",
+						color: theme.palette.primary.navigationTextActive,
+					},
+				}),
+			},
+		},
+		MuiTabs: {
+			styleOverrides: {
+				root: ({ theme }) => ({
+					backgroundColor: theme.palette.secondary.main,
+					"& .MuiTab-root": {
+						color: theme.palette.primary.headerText,
+						"&.Mui-selected": {
+							fontWeight: "bold",
+						},
+					},
+					"&.secondary": {
+						backgroundColor: "#e2eef6",
+						"& .MuiTab-root": {
+							color: theme.palette.primary.main, // This is '#0c4068'
+						},
 					},
 				}),
 			},
@@ -187,12 +211,15 @@ const theme = createTheme({
 		light: {
 			palette: {
 				primary: {
+					headerText: "#FFFFFF",
 					iconSymbol: "#FFFFFF",
 					inactiveBackground: "#8C8C8C",
-					main: "#556cd6",
+					main: "#0C4068",
+					navigationText: "#E2EEF6",
+					navigationTextActive: "#FFFFFF",
 				},
 				secondary: {
-					main: "#19857b",
+					main: "#1e7ebf",
 				},
 				error: {
 					main: red.A400,
@@ -202,6 +229,7 @@ const theme = createTheme({
 		dark: {
 			palette: {
 				primary: {
+					headerText: "#FFFFFF",
 					iconSymbol: "#FFFFFF",
 					inactiveBackground: "#8C8C8C",
 					main: "#35B7FF",
@@ -317,6 +345,8 @@ declare module "@mui/material/styles" {
 		landingCard?: string;
 		loginCard?: string;
 		loginText?: string;
+		navigationText?: string;
+		navigationTextActive?: string;
 		secondary?: {
 			main?: string;
 		};
@@ -354,6 +384,8 @@ declare module "@mui/material/styles" {
 		landingCard?: string;
 		loginCard?: string;
 		loginText?: string;
+		navigationText?: string;
+		navigationTextActive?: string;
 		secondary?: {
 			main?: string;
 		};
@@ -457,5 +489,11 @@ declare module "@mui/material/Typography" {
 		loadingText: true;
 		accordionSummary: true;
 		subTabTitle: true;
+	}
+}
+
+declare module "@mui/material/Tab" {
+	interface TabPropsVariantOverrides {
+		secondary: true;
 	}
 }

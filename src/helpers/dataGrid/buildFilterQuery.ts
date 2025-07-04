@@ -9,6 +9,14 @@ export const buildFilterQuery = (
 	operator: string,
 	value: any
 ) => {
+	console.log(field, operator, value);
+	if (!field || !value) {
+		// Handle the case when the field or value is empty
+		if (value != 0) {
+			return null;
+		}
+		// If the value is actually zero, this is valid so don't return null
+	}
 	const fromValue = value[0];
 	const toValue = value[1];
 	const isConversionField = conversionFields.includes(field);
@@ -71,14 +79,6 @@ export const buildFilterQuery = (
 	const greaterThanQueryExclusive = isConversionField
 		? `${field}:{${convertedValue} TO *}`
 		: `${field}:{${replacedValue} TO *}`;
-
-	if (!field || !value) {
-		// Handle the case when the field or value is empty
-		if (value != 0) {
-			return null;
-		}
-		// If the value is actually zero, this is valid so don't return null
-	}
 
 	switch (operator) {
 		case "contains":

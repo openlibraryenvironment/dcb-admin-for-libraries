@@ -340,6 +340,7 @@ export default function ClusterRecordComponent() {
 				columns={columns}
 				disableAggregation={true}
 				disableHoverInteractions={true}
+				disablePivoting
 				disableRowGrouping={true}
 				getDetailPanelContent={({ row }: GridRowParams) => (
 					<MasterDetail type="items" row={row} />
@@ -349,12 +350,23 @@ export default function ClusterRecordComponent() {
 				loading={isLoading}
 				noResultsText={t("requesting.items_not_found")}
 				pagination
+				paginationMode="client"
+				paginationModel={{ page: 0, pageSize: 25 }}
 				pivotingEnabled={false}
 				rows={data?.availability?.itemList ?? []}
 				scrollbarVisible={false}
 				searchText={t("requesting.items_search")}
 				toolbarVisible={true}
 				type={"Items"}
+				rowCount={
+					data?.availability?.itemList
+						? data?.availability?.itemList?.length
+						: 0
+				}
+				rowModesModel={{}}
+				filterMode="client"
+				sortingMode="client"
+				sortModel={[{ field: "availabilityDate", sort: "desc" }]}
 			/>
 
 			<Accordion
@@ -416,8 +428,9 @@ export default function ClusterRecordComponent() {
 							checkboxSelection={false}
 							columns={columns}
 							disableAggregation={true}
-							disableRowGrouping={true}
 							disableHoverInteractions={true}
+							disablePivoting
+							disableRowGrouping={true}
 							getDetailPanelContent={({ row }: any) => (
 								<MasterDetail type="items" row={row} />
 							)}
@@ -426,6 +439,8 @@ export default function ClusterRecordComponent() {
 							listViewEnabled={false}
 							noResultsText={t("requesting.items_not_found")}
 							pagination
+							paginationMode="client"
+							paginationModel={{ page: 0, pageSize: 25 }}
 							pivotingEnabled={false}
 							scrollbarVisible={false}
 							searchText={t("requesting.items_search")}
@@ -433,6 +448,11 @@ export default function ClusterRecordComponent() {
 							rows={itemsNotShown ?? []}
 							// sx={{ border: 0, mb: 2 }}
 							type={"Items"}
+							rowCount={itemsNotShown ? itemsNotShown.length : 0}
+							rowModesModel={{}}
+							filterMode="client"
+							sortingMode="client"
+							sortModel={[{ field: "availabilityDate", sort: "desc" }]}
 						/>
 					</AccordionDetails>
 				</Accordion>

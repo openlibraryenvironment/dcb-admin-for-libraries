@@ -61,7 +61,7 @@ const headerMappings: Record<string, Record<string, string>> = {
 
 export const getHeadersForExport = (
 	coreType: string,
-	usefulColumns?: string[],
+	usefulColumns?: string[]
 ) => {
 	const mappings = headerMappings[coreType] || {};
 	console.log(usefulColumns);

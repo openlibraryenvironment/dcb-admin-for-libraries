@@ -27,7 +27,13 @@ export default function ChangesSummary({
 	context,
 }: ChangesSummaryType) {
 	const { t } = useTranslation();
-
+	if (!changes) {
+		return (
+			<Typography variant="body1">
+				{t("data_change_log.no_eligible_changes")}
+			</Typography>
+		);
+	}
 	const parsedChanges = JSON.parse(changes);
 	// const { t } = useTranslation();
 
@@ -40,8 +46,10 @@ export default function ChangesSummary({
 	// We can have an INSERT, an UPDATE, or a DELETE
 	// Edits should always be UPDATES
 	// DCL can be either
+	console.log(parsedChanges);
 
 	if (isUpdate) {
+		console.log(parsedChanges.old_values);
 		const oldFields = Object.keys(parsedChanges.old_values);
 		const newFields = Object.keys(parsedChanges.new_values);
 		fields = oldFields.concat(

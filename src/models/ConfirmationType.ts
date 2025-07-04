@@ -8,7 +8,7 @@ export interface ConfirmationType {
 	) => void;
 	editInformation?: any;
 	action: string;
-	entityType: string;
+	entityType?: string;
 	entityName: string;
 	gridEdit: boolean;
 }

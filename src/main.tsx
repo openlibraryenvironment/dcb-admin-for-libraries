@@ -34,6 +34,7 @@ async function getCfg() {
 				VITE_DCB_API_BASE: String(import.meta.env.VITE_DCB_API_BASE),
 				VITE_DCB_SEARCH_BASE: String(import.meta.env.VITE_DCB_SEARCH_BASE),
 				VITE_ILL_API_BASE: String(import.meta.env.VITE_ILL_API_BASE),
+				VITE_PUBLIC_URL: String(import.meta.env.VITE_PUBLIC_URL),
 			};
 		}
 
@@ -44,11 +45,15 @@ async function getCfg() {
 	}
 }
 
-const getBasePath = () => {
-	const fullPath = window.location.pathname;
-	const matches = fullPath.match(/^\/[^/]+/);
-	return matches ? matches[0] : "/";
-};
+// Re-working this to use an environment variable for the time being.
+// As this method was causing difficulties when navigating from inner routes
+// i.e. navigation from /patronRequests to /mappings was becoming /patronRequests/mappings
+// Thus making navigation difficult
+// const getBasePath = () => {
+// 	const fullPath = window.location.pathname;
+// 	const matches = fullPath.match(/^\/[^/]+/);
+// 	return matches ? matches[0] : "/";
+// };
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -61,9 +66,14 @@ const queryClient = new QueryClient({
 
 // basename is set this way so we can deploy this app to multiple folders and the app will
 // work relative to those folders
+// Now uses env variable to tackle issue above. A temp fix for now.
+// Unfortunately my fix is also necessitating specifying base path in index.html - we definitely need a better way of doing it
+const bp = String(import.meta.env.VITE_PUBLIC_URL);
+console.log(bp);
 const router = createRouter({
 	routeTree,
-	basepath: getBasePath(),
+	// basepath: getBasePath(),
+	basepath: bp,
 	defaultPreload: "intent",
 	defaultPreloadStaleTime: 0,
 	defaultStaleTime: 5000,

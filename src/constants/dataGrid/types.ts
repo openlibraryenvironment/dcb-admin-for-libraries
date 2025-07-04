@@ -34,6 +34,7 @@ export const presetTypes = [
 // Types of data grid where users cannot click through to a details page
 export const nonClickableTypes = [
 	"referenceValueMappings",
+	"ReferenceValueMappings",
 	"numericRangeMappings",
 	"circulationStatus",
 	"referenceValueMappingsForLibraryPatronSecondHostLms",
@@ -70,6 +71,7 @@ export const specialRedirectionTypes = [
 	"welcomeLibraries",
 	"libraryLocations",
 	"supplierRequestsLibrary",
+	"audits",
 ];
 
 // Types of data grid where we show the actions menu to the user.

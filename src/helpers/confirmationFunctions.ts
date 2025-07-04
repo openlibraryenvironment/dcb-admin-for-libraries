@@ -1,9 +1,8 @@
 export const getEntityText = (
-	entity: string,
-	entityName?: string,
+	entityName: string,
 	gridEdit?: boolean
 ): string => {
-	switch (entity) {
+	switch (entityName) {
 		case "functionalSetting":
 		case "FunctionalSetting":
 		case "consortiumFunctionalSettings":
@@ -28,7 +27,7 @@ export const getEntityText = (
 		case "consortiumContact":
 			return "entities.contact";
 		default:
-			return entity.toLowerCase();
+			return entityName.toLowerCase();
 	}
 };
 

@@ -22,13 +22,17 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
+		sortable: true,
+		editable: false,
 	},
 	{
 		field: "fromContext",
 		headerName: "From context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
+		editable: false,
 	},
 	{
 		field: "fromValue",
@@ -36,13 +40,17 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		minWidth: 50,
 		flex: 0.4,
 		filterOperators: standardFilters,
+		sortable: true,
+		editable: false,
 	},
 	{
 		field: "toContext",
 		headerName: "To context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
+		editable: false,
 	},
 	{
 		field: "toValue",
@@ -51,6 +59,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		flex: 0.5,
 		filterOperators: standardFilters,
 		editable: true,
+		sortable: true,
 		valueGetter: (value: any, row: { toValue: any }) => row?.toValue,
 	},
 	{
@@ -59,6 +68,8 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: standardFilters,
+		editable: false,
+		sortable: true,
 		valueGetter: (value: any, row: { lastImported: any }) => {
 			const lastImported = row.lastImported;
 			const formattedDate = dayjs(lastImported).format("YYYY-MM-DD HH:mm");
@@ -76,6 +87,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		flex: 0.5,
 		filterOperators: standardFilters,
 		editable: true,
+		sortable: true,
 		valueGetter: (value: any, row: { toCategory: any }) => row?.toCategory,
 	},
 ];
@@ -87,13 +99,17 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		minWidth: 50,
 		flex: 0.5,
 		filterable: false,
+		sortable: true,
+		editable: false,
 	},
 	{
 		field: "fromContext",
 		headerName: "From context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
+		editable: false,
 	},
 	{
 		field: "fromValue",
@@ -101,13 +117,17 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		minWidth: 50,
 		flex: 0.4,
 		filterOperators: standardFilters,
+		sortable: true,
+		editable: false,
 	},
 	{
 		field: "toContext",
 		headerName: "To context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
+		editable: false,
 	},
 	{
 		field: "toValue",
@@ -115,6 +135,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
+		sortable: true,
 		editable: true,
 		valueGetter: (value: any, row: { toValue: any }) => row?.toValue,
 	},
@@ -124,6 +145,8 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: standardFilters,
+		sortable: true,
+		editable: false,
 		valueGetter: (value: any, row: { lastImported: any }) => {
 			const lastImported = row.lastImported;
 			const formattedDate = dayjs(lastImported).format("YYYY-MM-DD HH:mm");
@@ -141,6 +164,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		flex: 0.5,
 		filterOperators: standardFilters,
 		editable: true,
+		sortable: true,
 		valueGetter: (value: any, row: { toCategory: any }) => row?.toCategory,
 	},
 ];
@@ -158,7 +182,7 @@ export const standardNumRangeMappingColumns: GridColDef[] = [
 		headerName: "From context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
 	},
 	{
 		field: "lowerBound",
@@ -220,7 +244,7 @@ export const numRangeMappingColumnsNoCategoryFilter: GridColDef[] = [
 		headerName: "From context",
 		minWidth: 50,
 		flex: 0.5,
-		filterOperators: standardFilters,
+		filterable: false,
 	},
 	{
 		field: "lowerBound",
@@ -283,13 +307,15 @@ export const standardPatronRequestColumns: GridColDef[] = [
 	{
 		field: "patronHostlmsCode",
 		headerName: "Patron host LMS code",
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
 	},
 	{
 		field: "localBarcode",
 		headerName: "Patron barcode",
 		filterable: false,
 		sortable: false,
+		flex: 0.75,
 		valueGetter: (value: any, row: PatronRequest) =>
 			row?.requestingIdentity?.localBarcode,
 	},
@@ -297,7 +323,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		field: "clusterRecordTitle",
 		headerName: "Title",
 		minWidth: 100,
-		flex: 1.25,
+		flex: 1.5,
 		filterable: false, // Cannot currently filter on nested properties.
 		sortable: false,
 		valueGetter: (value: any, row: { clusterRecord: { title: string } }) =>
@@ -308,6 +334,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		headerName: "Supplying agency",
 		filterable: false,
 		sortable: false,
+		flex: 0.75,
 		valueGetter: (value: any, row: PatronRequest) => {
 			// Check if suppliers array is not empty
 			if (row.suppliers.length > 0) {
@@ -398,7 +425,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 	{
 		field: "pollCountForCurrentStatus",
 		headerName: "Polling count",
-		flex: 0.25,
+		flex: 0.75,
 		filterOperators: equalsOnly,
 	},
 	{
@@ -479,7 +506,8 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 	{
 		field: "patronHostlmsCode",
 		headerName: "Patron host LMS code",
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
 	},
 	{
 		field: "localBarcode",
@@ -694,7 +722,8 @@ export const supplierRequestColumnsLibrary: GridColDef[] = [
 	{
 		field: "hostLmsCode",
 		headerName: "Host LMS code",
-		filterOperators: standardFilters,
+		filterable: false,
+		sortable: false,
 		flex: 0.5,
 	},
 	{
@@ -808,6 +837,7 @@ export const defaultPatronRequestColumnVisibility: GridColumnVisibilityModel = {
 	canonicalItemType: false,
 	canonicalPtype: false,
 	pickupLocationCode: false,
+	patronHostlmsCode: false,
 	previousStatus: false,
 	nextExpectedStatus: false,
 	errorMessage: false,
@@ -834,6 +864,7 @@ export const finishedPatronRequestColumnVisibility: GridColumnVisibilityModel =
 		pickupRequestId: false,
 		pickupRequestStatus: false,
 		isExpeditedCheckout: false,
+		patronHostlmsCode: false,
 	};
 
 export const exceptionPatronRequestColumnVisibility = {
@@ -852,6 +883,7 @@ export const exceptionPatronRequestColumnVisibility = {
 	pickupRequestId: false,
 	pickupRequestStatus: false,
 	isExpeditedCheckout: false,
+	patronHostlmsCode: false,
 };
 
 export const locationPatronRequestColumnVisibility = {
@@ -861,12 +893,12 @@ export const locationPatronRequestColumnVisibility = {
 	status: true,
 	previousStatus: false,
 	nextExpectedStatus: false,
+	patronHostlmsCode: false,
 	errorMessage: false,
 	elapsedTimeInCurrentStatus: false,
 	pollCountForCurrentStatus: false,
 	dateUpdated: false,
 	dateCreated: true,
-	patronHostlmsCode: false,
 	suppliers: false,
 	id: false,
 	outOfSequenceFlag: false,

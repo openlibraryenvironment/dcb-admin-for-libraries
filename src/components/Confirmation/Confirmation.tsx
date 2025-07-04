@@ -32,6 +32,9 @@ const Confirmation = ({
 	gridEdit, // boolean value for grid editing
 }: ConfirmationType) => {
 	const { t } = useTranslation();
+	console.log(entityName);
+	console.log(editInformation);
+	console.log(gridEdit, open);
 	const getCharCountHelperText = (
 		value: string,
 		maxLength: number,
@@ -81,9 +84,16 @@ const Confirmation = ({
 		switch (action) {
 			case "gridEdit":
 			case "pageEdit":
+				console.log("HET", entityName);
+				console.log(getEntityText(entityName, gridEdit).toLowerCase());
+				console.log(
+					gridEdit
+						? t(getEntityText(entityName, gridEdit)).toLowerCase()
+						: entityName
+				);
 				return t("ui.data_grid.edit_summary", {
 					entity: gridEdit
-						? t(getEntityText(action, entityName, gridEdit)).toLowerCase()
+						? t(getEntityText(entityName, gridEdit)).toLowerCase()
 						: entityName,
 				});
 		}
@@ -106,7 +116,7 @@ const Confirmation = ({
 		switch (action) {
 			case "gridEdit":
 			case "pageEdit":
-				return t("ui.data_grid.confirm_changes");
+				return t("ui.actions.confirm_changes");
 		}
 	};
 	const onSubmit = async (data: ConfirmationForm) => {

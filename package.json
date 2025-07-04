@@ -23,7 +23,8 @@
 		"@mui/x-license": "^8.5.3",
 		"@react-querybuilder/material": "^8.7.1",
 		"@tanstack/react-query": "^5.68.0",
-		"@tanstack/react-router": "^1.121.34",
+		"@tanstack/react-router": "1.121.34",
+		"@tanstack/react-router-devtools": "^1.114.13",
 		"axios": "^1.8.3",
 		"dayjs": "^1.11.13",
 		"eslint-plugin-jsx-a11y": "^6.10.2",
@@ -39,7 +40,8 @@
 		"react-oidc-context": "^3.2.0",
 		"react-querybuilder": "^8.7.1",
 		"yup": "^1.6.1",
-		"zod": "^3.25.67"
+		"zod": "^3.25.67",
+		"zustand": "^5.0.6"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.22.0",
@@ -50,9 +52,7 @@
 		"@semantic-release/npm": "^12.0.1",
 		"@tanstack/eslint-plugin-query": "^5.68.0",
 		"@tanstack/eslint-plugin-router": "^1.114.12",
-		"@tanstack/react-router-devtools": "^1.114.13",
-		"@tanstack/router-devtools-core": "^1.121.34",
-		"@tanstack/router-plugin": "^1.121.34",
+		"@tanstack/router-plugin": "1.121.34",
 		"@types/lodash": "^4.17.16",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",

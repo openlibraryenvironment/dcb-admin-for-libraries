@@ -37,6 +37,8 @@ const ILLAuthContext = createContext<ILLAuthContextType | null>(null);
 // 	}
 // };
 
+// We'll need a cloudflare worker to make this work when we deploy it there.
+
 const checkILLSession = async (): Promise<boolean> => {
 	console.log("Skipping session check for debugging.");
 	return Promise.resolve(false); // Assume not logged in without a network call

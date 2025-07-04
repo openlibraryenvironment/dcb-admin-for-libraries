@@ -193,7 +193,6 @@ export default function ExpeditedCheckout({
 		refetchInterval: 10000,
 	});
 
-	// FIX 1: Handle side-effects from the query using useEffect ???????
 	useEffect(() => {
 		if (patronRequestData) {
 			const status = patronRequestData?.patronRequests?.content?.[0]?.status;

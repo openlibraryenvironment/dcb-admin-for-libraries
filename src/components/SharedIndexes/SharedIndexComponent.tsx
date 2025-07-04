@@ -241,6 +241,7 @@ export function SharedIndexComponent() {
 			)}
 
 			<DataGridPremium
+				disablePivoting
 				rows={searchResults?.instances || []}
 				columns={columns}
 				pagination
