@@ -184,7 +184,7 @@ function PatronRequestsComponent() {
 		storedState.filter ?? { items: [] }
 	);
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
-		storedState.sort ?? [{ field: "lastImported", sort: "desc" }]
+		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }]
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
@@ -260,7 +260,7 @@ function PatronRequestsComponent() {
 				query: processMuiFilterModel(filterModel, baseQuery) ?? "",
 				pagesize: paginationModel.pageSize ?? 200,
 				pageno: paginationModel.page ?? 0,
-				order: sortModel[0]?.field ?? "lastImported",
+				order: sortModel[0]?.field ?? "dateCreated",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
 			};
 			return request(

@@ -1,3 +1,13 @@
+// TODO: Maximum priorities
+// Confirm persistency
+// Fix column visibility
+// Fix audit log entries
+// Lock-down tests, especially of filters
+// Fix routing issues from patron requests page (tabs going from there can become /patronRequests/mappings)
+// Lock down ILL page - or at least hide it
+// Remove tabs for pages that won't be in pre release
+// make sub tabs white and fix colours according to Gill's design
+
 import {
 	DataGridPremium,
 	GridColDef,

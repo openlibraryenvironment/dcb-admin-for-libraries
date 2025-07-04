@@ -8,7 +8,7 @@ import { useNavigate, useRouter } from "@tanstack/react-router";
 import Button from "@mui/material/Button";
 import { useTranslation } from "react-i18next";
 import Avatar from "@mui/material/Avatar";
-import { Tooltip } from "@mui/material";
+import { Tooltip, useTheme } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
 import { getLibrary } from "@queries/getLibrary";
@@ -21,6 +21,7 @@ export const Header = () => {
 	const library: string = auth.user?.profile?.library as string; // properly type this
 	const { t } = useTranslation();
 	const { cfg } = useRouter().options.context as { cfg: any };
+	const theme = useTheme();
 
 	const headers = useMemo(
 		() => ({
@@ -62,15 +63,22 @@ export const Header = () => {
 					/>
 				</Tooltip>
 
-				<Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+				<Typography
+					variant="h6"
+					component="div"
+					sx={{ flexGrow: 1, color: theme.palette.primary.headerText }}>
 					{t("header.title", { library: library ? library : "Libraries" })}
 				</Typography>
 				{auth.isAuthenticated && auth.user && (
 					<Box sx={{ display: "flex", alignItems: "center" }}>
-						<Typography variant="body2" sx={{ mr: 2 }}>
+						<Typography
+							variant="body2"
+							sx={{ mr: 2, color: theme.palette.primary.headerText }}>
 							{auth.user.profile?.name || "User"}
 						</Typography>
-						<Typography variant="body2" sx={{ mr: 2 }}>
+						<Typography
+							variant="body2"
+							sx={{ mr: 2, color: theme.palette.primary.headerText }}>
 							{libraryData?.fullName ? libraryData?.fullName : library}
 						</Typography>
 						<Button

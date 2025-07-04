@@ -290,7 +290,14 @@ function RouteComponent() {
 		</>
 	) : (
 		<TabContext value={activeTab}>
-			<TabList onChange={handleTabChange} variant="scrollable">
+			<TabList
+				onChange={handleTabChange}
+				variant="scrollable"
+				className="secondary">
+				{/** Because tab list doesn't support custom variants, we have to get tricky */}
+				{/** The tabs are a little frustrating with variants because they use functional variants.
+				 * So style variants like those we prefer to use everywhere else don't get a look in.
+				 */}
 				<Tab label={t("patron_request.general")} />
 				<Tab label={t("requesting.bib_record")} />
 				<Tab label={t("patron_request.supplying")} />
