@@ -99,55 +99,8 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 			return <Loading title="Loading" subtitle="Please wait" />;
 		}
 
-		// Tabs below marked with import.meta.env.DEV means that these tabs will only show up in DEV mode,
-		// remove the conditon to make then show up in prod.
-
-		// Authenticated UI
-		// Review these tabs as we are running into issues with relative URLs.
-		// Not sure if these should be here.
 		return (
 			<>
-				{/* <Header /> */}
-				{/* {auth.isAuthenticated && (
-					<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-						<Tabs
-							value={activeTab}
-							onChange={handleTabChange}
-							aria-label="navigation tabs"
-							variant="scrollable"
-							sx={{ backgroundColor: theme.palette.secondary.main }} // customise tab variants - secondary should always have the colour and white text
-							scrollButtons="auto"
-							color="primary">
-							<Tab label="Home" value="/" />
-							<Tab label="MOBIUS index" value="/indexes/mobius" />
-							<Tab label="Service" value="/service" />
-							<Tab label="Settings" value="/settings" />
-							{import.meta.env.DEV && (
-								<Tab label="Mappings" value="/mappings" />
-							)}
-							{import.meta.env.DEV && (
-								<Tab label="Patron Requests" value="/patronRequests" />
-							)}
-							{import.meta.env.DEV && (
-								<Tab label="Supplier Requests" value="/supplierRequests" />
-							)}
-							{import.meta.env.DEV && (
-								<Tab label="Contacts" value="/contacts" />
-							)}
-							{import.meta.env.DEV && (
-								<Tab label="Locations" value="/locations" />
-							)}
-							{import.meta.env.DEV && (
-								<Tab label="Data Change Log" value="/dataChangeLog" />
-							)}
-							{/* {import.meta.env.DEV && (
-								<Tab label="ILL - EXPERIMENTAL" value="/ill/patronRequests" />
-							)} */}
-				{/* <Tab label="ILL - EXPERIMENTAL" value="/ill/login" />{" "} */}
-				{/** When redirect is sorted out, this will point to patron requests */}
-				{/* </Tabs> */}
-				{/* // 	</Box> */}
-				{/* // )} */}
 				<Layout>
 					<Outlet />
 				</Layout>

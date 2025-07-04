@@ -17,14 +17,12 @@ import request from "graphql-request";
 import dayjs from "dayjs";
 import { useAuth } from "react-oidc-context";
 import { useMemo } from "react";
-// import { isEmpty } from "lodash";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
 
-// Local Imports
 import RenderAttribute from "@/components/RenderAttribute/RenderAttribute";
 import Loading from "@/components/Loading/Loading";
 import Error from "@/components/Error/Error";
-import { AuditItem } from "@/models/AuditItem"; // Assuming models path
+import { AuditItem } from "@/models/AuditItem";
 import { AuditQueryData } from "@models/ReactQueryHelperTypes";
 import { getAuditById } from "@queries/getAuditById";
 import { getAuditsByPatronRequest } from "@queries/getAuditByPatronRequest";
@@ -39,10 +37,8 @@ function AuditDetailsComponent() {
 	const navigate = useNavigate();
 	const auth = useAuth();
 
-	// 1. Get URL parameters using the type-safe useParams hook from the route
 	const { auditId } = Route.useParams();
 
-	// Get config and auth token for API calls
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
 	const headers = useMemo(
@@ -50,7 +46,6 @@ function AuditDetailsComponent() {
 		[auth.user?.access_token]
 	);
 
-	// 2. First Query: Fetch the specific audit record by its ID
 	const {
 		data: auditData,
 		isLoading: isAuditLoading,
@@ -78,10 +73,6 @@ function AuditDetailsComponent() {
 	const patronRequestId =
 		audit?.patronRequest.id ?? audit?.auditData.patronRequestId;
 
-	// 3. Second Query: Fetch ALL related audits for the same patron request
-	// src/routes/patronRequests/$id/audits/$auditId.tsx
-
-	// 3. Second Query: Fetch ALL related audits for the same patron request
 	const {
 		data: otherAudits = [],
 		isLoading: areOtherAuditsLoading,
@@ -137,7 +128,6 @@ function AuditDetailsComponent() {
 		enabled: !!patronRequestId, // Only run when we have the patronRequestId
 	});
 
-	// 4. Derive previous/next navigation from the fully loaded audit list
 	const currentAuditIndex = useMemo(
 		() => otherAudits.findIndex((item) => item.id === auditId),
 		[otherAudits, auditId]
@@ -195,13 +185,14 @@ function AuditDetailsComponent() {
 		);
 	}
 
-	// 6. Render the main component JSX (mostly the same as your Next.js version)
 	return (
 		<Grid
 			container
 			spacing={{ xs: 2, md: 3 }}
 			columns={{ xs: 2, sm: 2, md: 2 }}>
-			{/* Audit Details Grid Items... (copied from original, no changes needed) */}
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Typography variant="h1">{audit?.id}</Typography>
+			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
 					<Typography variant="attributeTitle">{t("audit.uuid")}</Typography>

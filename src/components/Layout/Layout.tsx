@@ -16,6 +16,8 @@ interface LayoutProps {
 }
 
 // Define tabs outside the component so it's a stable constant
+// Tabs below marked with import.meta.env.DEV means that these tabs will only show up in DEV mode,
+// remove the conditon to make then show up in prod.
 const TABS_CONFIG = [
 	{ label: "Home", value: "/" },
 	{ label: "Titles", value: "/indexes/mobius" },
