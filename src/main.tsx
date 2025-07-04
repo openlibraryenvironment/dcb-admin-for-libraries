@@ -34,6 +34,7 @@ async function getCfg() {
 				VITE_DCB_API_BASE: String(import.meta.env.VITE_DCB_API_BASE),
 				VITE_DCB_SEARCH_BASE: String(import.meta.env.VITE_DCB_SEARCH_BASE),
 				VITE_ILL_API_BASE: String(import.meta.env.VITE_ILL_API_BASE),
+				VITE_PUBLIC_URL: String(import.meta.env.VITE_PUBLIC_URL),
 			};
 		}
 
@@ -66,10 +67,11 @@ const queryClient = new QueryClient({
 // basename is set this way so we can deploy this app to multiple folders and the app will
 // work relative to those folders
 // Now uses env variable to tackle issue above. A temp fix for now.
+const bp = String(import.meta.env.VITE_PUBLIC_URL);
 const router = createRouter({
 	routeTree,
 	// basepath: getBasePath(),
-	basepath: import.meta.env.VITE_PUBLIC_URL ?? "/",
+	basepath: bp ?? "/",
 	defaultPreload: "intent",
 	defaultPreloadStaleTime: 0,
 	defaultStaleTime: 5000,

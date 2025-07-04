@@ -16,7 +16,6 @@ import {
 	CircularProgress,
 	Divider,
 	Grid,
-	Link,
 	Stack,
 	Tab,
 	Tooltip,
@@ -38,6 +37,7 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import { formatDuration } from "@helpers/formatDuration";
 import Loading from "@components/Loading/Loading";
 import { GridRowModesModel } from "@mui/x-data-grid-premium";
+import { CustomLink } from "@components/CustomLink";
 
 export const Route = createFileRoute("/patronRequests/$id/")({
 	component: RouteComponent,
@@ -744,12 +744,13 @@ function RouteComponent() {
 							{bibClusterRecordUrl == "" ? (
 								<RenderAttribute attribute={patronRequest?.bibClusterId} />
 							) : (
-								<Link
+								<CustomLink
+									to={bibClusterRecordUrl}
 									href={bibClusterRecordUrl}
 									key="bibClusterRecordLink"
 									title={t("common.discovery")}>
 									<RenderAttribute attribute={patronRequest?.bibClusterId} />
-								</Link>
+								</CustomLink>
 							)}
 						</Stack>
 					</Grid>

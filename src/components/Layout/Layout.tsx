@@ -1,7 +1,7 @@
 // src/components/Layout/Layout.tsx
 
 import { useEffect, useState } from "react";
-import { Link, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { useAuth } from "react-oidc-context";
 import { useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -9,6 +9,7 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Container from "@mui/material/Container";
 import { Header } from "../Header/Header";
+import { CustomLink } from "@components/CustomLink";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -71,7 +72,7 @@ export const Layout = ({ children }: LayoutProps) => {
 								label={tab.label}
 								value={tab.value}
 								// Use the Link component for navigation
-								component={Link}
+								component={CustomLink}
 								to={tab.value}
 							/>
 						))}
