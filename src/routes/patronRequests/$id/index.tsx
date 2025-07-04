@@ -275,7 +275,7 @@ function RouteComponent() {
 					title={t("ui.error.cannot_retrieve_record")}
 					message={t("ui.info.connection_issue")}
 					description={t("ui.info.try_later")}
-					action={t("ui.action.go_back")}
+					action={t("ui.actions.go_back")}
 					goBack="/patronRequests/exception"
 				/>
 			) : (
@@ -283,7 +283,7 @@ function RouteComponent() {
 					title={t("ui.error.cannot_find_record")}
 					message={t("ui.error.invalid_UUID")}
 					description={t("ui.info.check_address")}
-					action={t("ui.action.go_back")}
+					action={t("ui.actions.go_back")}
 					goBack="/patronRequests/exception"
 				/>
 			)}

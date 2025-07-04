@@ -880,7 +880,7 @@ export default function StaffRequest({
 // 										!watch("pickupLocationId")
 // 									}>
 // 									{placeRequestMutation.isPending
-// 										? t("ui.action.submitting")
+// 										? t("ui.actions.submitting")
 // 										: t("ui.actions.submit")}
 // 								</Button>
 // 							</>

@@ -71,6 +71,7 @@ export const specialRedirectionTypes = [
 	"welcomeLibraries",
 	"libraryLocations",
 	"supplierRequestsLibrary",
+	"audits",
 ];
 
 // Types of data grid where we show the actions menu to the user.

@@ -30,7 +30,7 @@ import { getAuditById } from "@queries/getAuditById";
 import { getAuditsByPatronRequest } from "@queries/getAuditByPatronRequest";
 
 // Define the route and its component
-export const Route = createFileRoute("/patronRequests/$id/audits/$auditId/")({
+export const Route = createFileRoute("/patronRequests/audits/$auditId/")({
 	component: AuditDetailsComponent,
 });
 
@@ -159,7 +159,7 @@ function AuditDetailsComponent() {
 	const handleNavigate = (targetAuditId: string | null) => {
 		if (targetAuditId && patronRequestId) {
 			navigate({
-				to: `/patronRequests/${patronRequestId}/audits/${targetAuditId}`,
+				to: `/patronRequests/audits/${targetAuditId}`,
 			});
 		}
 	};
@@ -169,7 +169,7 @@ function AuditDetailsComponent() {
 		return (
 			<Loading
 				title={t("ui.info.loading.document", {
-					document_type: t("details.audit").toLowerCase(),
+					document_type: t("audit.").toLowerCase(),
 				})}
 				subtitle={t("ui.info.wait")}
 			/>
@@ -189,7 +189,7 @@ function AuditDetailsComponent() {
 						? t("ui.info.connection_issue")
 						: t("ui.error.invalid_UUID")
 				}
-				action={t("ui.action.go_back")}
+				action={t("ui.actions.go_back")}
 				goBack={patronRequestId ? `/patronRequests/${patronRequestId}` : `/`}
 			/>
 		);
@@ -204,17 +204,13 @@ function AuditDetailsComponent() {
 			{/* Audit Details Grid Items... (copied from original, no changes needed) */}
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
-					<Typography variant="attributeTitle">
-						{t("details.audit_uuid")}
-					</Typography>
+					<Typography variant="attributeTitle">{t("audit.uuid")}</Typography>
 					<RenderAttribute attribute={audit?.id} />
 				</Stack>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
-					<Typography variant="attributeTitle">
-						{t("details.audit_date")}
-					</Typography>
+					<Typography variant="attributeTitle">{t("audit.date")}</Typography>
 					<RenderAttribute
 						attribute={dayjs(audit?.auditDate).format(
 							"YYYY-MM-DD HH:mm:ss.SSS"
@@ -225,7 +221,7 @@ function AuditDetailsComponent() {
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
 					<Typography variant="attributeTitle">
-						{t("details.audit_description")}
+						{t("audit.description")}
 					</Typography>
 					<RenderAttribute attribute={audit?.briefDescription} />
 				</Stack>
@@ -233,7 +229,7 @@ function AuditDetailsComponent() {
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
 					<Typography variant="attributeTitle">
-						{t("details.audit_from_status")}
+						{t("audit.from_status")}
 					</Typography>
 					<RenderAttribute attribute={audit?.fromStatus} />
 				</Stack>
@@ -241,7 +237,7 @@ function AuditDetailsComponent() {
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
 					<Typography variant="attributeTitle">
-						{t("details.audit_to_status")}
+						{t("audit.to_status")}
 					</Typography>
 					<RenderAttribute attribute={audit?.toStatus} />
 				</Stack>
@@ -249,13 +245,13 @@ function AuditDetailsComponent() {
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
 					<Typography variant="attributeTitle">
-						{t("details.patron_request_uuid")}
+						{t("patron_request.patron_request_uuid")}
 					</Typography>
 					<RenderAttribute attribute={audit?.patronRequest?.id} />
 				</Stack>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Typography variant="attributeTitle">{t("details.audit")}</Typography>
+				<Typography variant="attributeTitle">{t("audit.data")}</Typography>
 				<pre>{JSON.stringify(audit?.auditData, null, 2)}</pre>
 			</Grid>
 
@@ -263,7 +259,7 @@ function AuditDetailsComponent() {
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="row" justifyContent="space-between" width="100%">
 					<Button variant="contained" onClick={handleReturn}>
-						{t("details.patron_request_return")}
+						{t("patron_request.return")}
 					</Button>
 					<Stack direction="row" spacing={2}>
 						<Tooltip
@@ -288,7 +284,7 @@ function AuditDetailsComponent() {
 											<ArrowLeft />
 										)
 									}>
-									{t("ui.action.older")}
+									{t("ui.actions.older")}
 								</Button>
 							</span>
 						</Tooltip>
@@ -312,7 +308,7 @@ function AuditDetailsComponent() {
 											<ArrowRight />
 										)
 									}>
-									{t("ui.action.newer")}
+									{t("ui.actions.newer")}
 								</Button>
 							</span>
 						</Tooltip>

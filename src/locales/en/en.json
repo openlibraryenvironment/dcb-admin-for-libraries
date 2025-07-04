@@ -450,6 +450,8 @@
 			"expand": "Expand",
 			"login": "Login",
 			"logout": "Logout",
+			"newer": "Newer",
+			"older": "Older",
 			"save": "Save",
 			"submit": "Submit",
 			"submitting": "Submitting",
@@ -457,6 +459,20 @@
 		},
 		"data_grid": {
 			"edit_summary": "Edit {{entity}}"
+		},
+		"info": {
+			"contact": "contact",
+			"connection_issue": "There may be a connection issue",
+			"description": "Description: {{description}}",
+			"loading": {
+				"document": "Loading {{document_type}}"
+			},
+			"reload": "Try reloading the page",
+			"try_later": "Please try again later",
+			"wait": "Please wait",
+			"check_address": "Please check the web address",
+			"oldest_entry": "This is the oldest audit entry in the log.",
+			"newest_entry": "This is the most recent audit entry in the log."
 		},
 		"tooltips": {
 			"logo": "Click this logo to go to the home page"

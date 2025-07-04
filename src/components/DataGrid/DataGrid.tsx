@@ -1,9 +1,3 @@
-// TODO: Maximum priorities
-// Confirm persistency
-// Fix column visibility
-// Fix audit log entries
-// Lock-down tests, especially of filters
-
 import {
 	DataGridPremium,
 	GridColDef,
@@ -114,14 +108,39 @@ export default function DataGrid({
 	});
 	const handleRowClick: GridEventListener<"rowClick"> = (params, event) => {
 		//UseNavigateResult<string>
+		console.log(type, params);
 
 		if (rowModesModel[params?.row?.id]?.mode !== GridRowModes.Edit) {
 			// Some grids, like the PRs on the library page, need special redirection
 			if (specialRedirectionTypes.includes(type)) {
 				if (event.ctrlKey || event.metaKey)
-					window.open(`/patronRequests/${params?.row?.id}`, "_blank");
+					if (type == "audits") {
+						console.log("Type match");
+						if (event.ctrlKey || event.metaKey) {
+							window.open(
+								`/patronRequests/audits/${params?.row?.id}`,
+								"_blank"
+							);
+						} else {
+							navigate({ to: `/patronRequests/audits/${params?.row?.id}` });
+						}
+					} else {
+						window.open(`/patronRequests/${params?.row?.id}`, "_blank");
+					}
 				if (!(event.ctrlKey || event.metaKey))
-					navigate({ to: `/patronRequests/${params?.row?.id}` });
+					if (type == "audits") {
+						console.log("Type match");
+						if (event.ctrlKey || event.metaKey) {
+							window.open(
+								`/patronRequests/audits/${params?.row?.id}`,
+								"_blank"
+							);
+						} else {
+							navigate({ to: `/patronRequests/audits/${params?.row?.id}` });
+						}
+					} else {
+						navigate({ to: `/patronRequests/${params?.row?.id}` });
+					}
 			} else if (
 				// Others we don't want users to be able to click through on
 				!nonClickableTypes.includes(type)
