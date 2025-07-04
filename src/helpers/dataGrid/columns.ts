@@ -315,6 +315,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		headerName: "Patron barcode",
 		filterable: false,
 		sortable: false,
+		flex: 0.75,
 		valueGetter: (value: any, row: PatronRequest) =>
 			row?.requestingIdentity?.localBarcode,
 	},
@@ -322,7 +323,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		field: "clusterRecordTitle",
 		headerName: "Title",
 		minWidth: 100,
-		flex: 1.25,
+		flex: 1.5,
 		filterable: false, // Cannot currently filter on nested properties.
 		sortable: false,
 		valueGetter: (value: any, row: { clusterRecord: { title: string } }) =>
@@ -333,6 +334,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		headerName: "Supplying agency",
 		filterable: false,
 		sortable: false,
+		flex: 0.75,
 		valueGetter: (value: any, row: PatronRequest) => {
 			// Check if suppliers array is not empty
 			if (row.suppliers.length > 0) {
@@ -423,7 +425,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 	{
 		field: "pollCountForCurrentStatus",
 		headerName: "Polling count",
-		flex: 0.25,
+		flex: 0.75,
 		filterOperators: equalsOnly,
 	},
 	{

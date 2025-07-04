@@ -384,6 +384,7 @@ function PatronRequestsComponent() {
 				</Typography>
 				{dcbData && (
 					<DataGrid
+						disablePivoting
 						rows={dcbData.patronRequests?.content ?? []}
 						columns={standardPatronRequestColumns}
 						type="PatronRequest"
@@ -423,6 +424,7 @@ function PatronRequestsComponent() {
 				{isIllLoading && <CircularProgress sx={{ m: 2 }} />}
 				{illData && (
 					<DataGrid
+						disablePivoting
 						rows={illData.results}
 						columns={illColumns}
 						type="ILLRequest"

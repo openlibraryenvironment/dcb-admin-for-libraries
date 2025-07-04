@@ -4,7 +4,10 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
-import { standardPatronRequestColumns } from "@helpers/dataGrid/columns";
+import {
+	defaultPatronRequestColumnVisibility,
+	standardPatronRequestColumns,
+} from "@helpers/dataGrid/columns";
 import {
 	LibrariesQueryData,
 	PatronRequestQueryData,
@@ -118,7 +121,7 @@ function RouteComponent() {
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? {}
+		storedState.columnVisibility ?? defaultPatronRequestColumnVisibility
 	);
 
 	// Add state to track if we're filtering
@@ -276,6 +279,7 @@ function RouteComponent() {
 				Patron Requests
 			</Typography>
 			<DataGrid
+				disablePivoting
 				rows={patronRequestData?.patronRequests?.content ?? []}
 				columns={standardPatronRequestColumns}
 				columnVisibilityModel={columnVisibilityModel}

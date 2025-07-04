@@ -396,6 +396,7 @@ function RouteComponent() {
 	return (
 		<>
 			<DataGrid
+				disablePivoting
 				identifier={gridId}
 				type="ReferenceValueMappings"
 				columns={refValueColumns}

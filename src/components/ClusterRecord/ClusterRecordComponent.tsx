@@ -340,6 +340,7 @@ export default function ClusterRecordComponent() {
 				columns={columns}
 				disableAggregation={true}
 				disableHoverInteractions={true}
+				disablePivoting
 				disableRowGrouping={true}
 				getDetailPanelContent={({ row }: GridRowParams) => (
 					<MasterDetail type="items" row={row} />
@@ -427,8 +428,9 @@ export default function ClusterRecordComponent() {
 							checkboxSelection={false}
 							columns={columns}
 							disableAggregation={true}
-							disableRowGrouping={true}
 							disableHoverInteractions={true}
+							disablePivoting
+							disableRowGrouping={true}
 							getDetailPanelContent={({ row }: any) => (
 								<MasterDetail type="items" row={row} />
 							)}

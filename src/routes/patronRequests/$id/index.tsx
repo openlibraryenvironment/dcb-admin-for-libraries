@@ -1476,6 +1476,7 @@ function RouteComponent() {
 					{t("audit.log")}
 				</Typography>
 				<DataGrid
+					disablePivoting
 					rows={patronRequest?.audit ?? []}
 					columns={[
 						{

@@ -6,9 +6,12 @@ import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import { useAuth } from "react-oidc-context";
+import { useGridStore } from "@/hooks/useDataGridStore";
 
 const Logout: React.FC = () => {
 	const auth = useAuth();
+
+	const { clearGridState } = useGridStore();
 
 	// need to make sure this does a full signout - see DCB Admin implementation
 	useEffect(() => {
@@ -16,6 +19,7 @@ const Logout: React.FC = () => {
 			try {
 				// Small delay to show the logout message
 				await new Promise((resolve) => setTimeout(resolve, 500));
+				clearGridState();
 				await auth.signoutRedirect();
 			} catch (error) {
 				console.error("Logout error:", error);

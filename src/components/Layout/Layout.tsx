@@ -29,9 +29,9 @@ const TABS_CONFIG = [
 				{ label: "Contacts", value: "/contacts" },
 				{ label: "Locations", value: "/locations" },
 				{ label: "Data Change Log", value: "/dataChangeLog" },
+				{ label: "ILL - EXPERIMENTAL", value: "/ill/login" },
 			]
 		: []),
-	{ label: "ILL - EXPERIMENTAL", value: "/ill/login" },
 ];
 
 export const Layout = ({ children }: LayoutProps) => {
