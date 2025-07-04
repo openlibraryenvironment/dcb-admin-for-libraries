@@ -37,6 +37,7 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		base: bp,
+		appType: "spa",
 		build: {
 			// think about other ways of addressing bundle size
 			// ultimately if we can't because of the DGrid it's fine
