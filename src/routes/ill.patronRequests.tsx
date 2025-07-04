@@ -61,7 +61,8 @@ const illPatronRequestsQueryOptions = {
 	queryKey: ["illPatronRequests"],
 	queryFn: async (): Promise<IllApiResponse> => {
 		const response = await fetch(
-			"/api/ill/patronrequests?filters=isRequester==true&sort=dateCreated;desc&stats=true&perPage=100",
+			`${import.meta.env.VITE_ILL_API_BASE}/ill/patronrequests?filters=isRequester==true&sort=dateCreated;desc&stats=true&perPage=100`,
+			// "/{api}/ill/patronrequests?filters=isRequester==true&sort=dateCreated;desc&stats=true&perPage=100",
 			{
 				method: "GET",
 				headers: {
