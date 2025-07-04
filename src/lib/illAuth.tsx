@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 
 const OKAPI_URL = "/api"; // Using the proxy
 
@@ -37,6 +37,8 @@ const ILLAuthContext = createContext<ILLAuthContextType | null>(null);
 // 	}
 // };
 
+// We'll need a cloudflare worker to make this work when we deploy it there.
+
 const checkILLSession = async (): Promise<boolean> => {
 	console.log("Skipping session check for debugging.");
 	return Promise.resolve(false); // Assume not logged in without a network call
@@ -46,7 +48,6 @@ export function ILLAuthProvider({ children }: { children: React.ReactNode }) {
 	const [isILLAuthenticated, setIsILLAuthenticated] = useState<boolean>(false);
 	const [isLoading, setIsLoading] = useState<boolean>(true); // Start in loading state
 	const navigate = useNavigate();
-	const { cfg } = useRouter().options.context as { cfg: any };
 
 	// On initial load, check if the session is still valid
 	useEffect(() => {
@@ -61,11 +62,8 @@ export function ILLAuthProvider({ children }: { children: React.ReactNode }) {
 		password: string;
 	}) => {
 		// The login request itself doesn't change much
-		// const response = await fetch(
-		// 	`${OKAPI_URL}/bl-users/login-with-expiry?expandPermissions=true&fullPermissions=true`,
-		// temp not using proxy
 		const response = await fetch(
-			`${cfg.VITE_ILL_API_BASE}/bl-users/login-with-expiry?expandPermissions=true&fullPermissions=true`,
+			`${OKAPI_URL}/bl-users/login-with-expiry?expandPermissions=true&fullPermissions=true`,
 			{
 				method: "POST",
 				headers: {

@@ -67,11 +67,13 @@ const queryClient = new QueryClient({
 // basename is set this way so we can deploy this app to multiple folders and the app will
 // work relative to those folders
 // Now uses env variable to tackle issue above. A temp fix for now.
+// Unfortunately my fix is also necessitating specifying base path in index.html - we definitely need a better way of doing it
 const bp = String(import.meta.env.VITE_PUBLIC_URL);
+console.log(bp);
 const router = createRouter({
 	routeTree,
 	// basepath: getBasePath(),
-	basepath: bp ?? "/",
+	basepath: bp,
 	defaultPreload: "intent",
 	defaultPreloadStaleTime: 0,
 	defaultStaleTime: 5000,
