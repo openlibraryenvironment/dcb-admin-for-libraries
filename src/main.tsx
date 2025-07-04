@@ -44,11 +44,15 @@ async function getCfg() {
 	}
 }
 
-const getBasePath = () => {
-	const fullPath = window.location.pathname;
-	const matches = fullPath.match(/^\/[^/]+/);
-	return matches ? matches[0] : "/";
-};
+// Re-working this to use an environment variable for the time being.
+// As this method was causing difficulties when navigating from inner routes
+// i.e. navigation from /patronRequests to /mappings was becoming /patronRequests/mappings
+// Thus making navigation difficult
+// const getBasePath = () => {
+// 	const fullPath = window.location.pathname;
+// 	const matches = fullPath.match(/^\/[^/]+/);
+// 	return matches ? matches[0] : "/";
+// };
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -61,9 +65,11 @@ const queryClient = new QueryClient({
 
 // basename is set this way so we can deploy this app to multiple folders and the app will
 // work relative to those folders
+// Now uses env variable to tackle issue above. A temp fix for now.
 const router = createRouter({
 	routeTree,
-	basepath: getBasePath(),
+	// basepath: getBasePath(),
+	basepath: import.meta.env.VITE_PUBLIC_URL ?? "/",
 	defaultPreload: "intent",
 	defaultPreloadStaleTime: 0,
 	defaultStaleTime: 5000,

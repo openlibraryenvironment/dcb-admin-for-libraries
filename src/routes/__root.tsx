@@ -60,6 +60,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 		// 	navigate({ to: newValue, replace: false });
 		// };
 
+		console.log(window.location.pathname);
 		// Handle authentication callback
 		if (
 			window.location.pathname.startsWith("/callback") ||
