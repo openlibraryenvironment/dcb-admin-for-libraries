@@ -35,9 +35,6 @@ const Login: React.FC = () => {
 	console.log("Redirect is", redirect);
 	const handleLogin = () => {
 		// Store current location
-		console.log("Handle login");
-		console.log("Current location is", window.location.pathname);
-		console.log("Redirect is", redirect);
 		sessionStorage.setItem("postLoginRedirectPath", redirect || "/");
 		const redirectPath = sessionStorage.getItem("postLoginRedirectPath");
 		console.log("Final redirect is", redirectPath);

@@ -20,7 +20,7 @@ const Logout: React.FC = () => {
 				// Small delay to show the logout message
 				await new Promise((resolve) => setTimeout(resolve, 500));
 				clearGridState();
-				sessionStorage.removeItem("postLoginRedirectPath");
+				sessionStorage.removeItem("afterLoginRedirectPath");
 				await auth.signoutRedirect();
 			} catch (error) {
 				console.error("Logout error:", error);
