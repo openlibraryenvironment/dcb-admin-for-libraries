@@ -1,5 +1,4 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useILLAuth } from "../lib/illAuth";
 import { useState, useEffect } from "react";
 import {
 	Container,
@@ -11,12 +10,13 @@ import {
 	CircularProgress,
 } from "@mui/material";
 import z from "zod";
+import { useILLAuth } from "@/lib/illAuth";
 
 const loginSearchSchema = z.object({
 	redirect: z.string().optional().catch(""),
 });
 
-export const Route = createFileRoute("/ill/login")({
+export const Route = createFileRoute("/__authenticated/ill/login")({
 	validateSearch: loginSearchSchema,
 	component: ILLLoginComponent,
 });

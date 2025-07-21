@@ -118,7 +118,21 @@ async function bootstrap() {
 			// Remove the query parameters from the URL
 			// Can we preserve the URL on log in - to stop people being redirected to home page?
 			console.log("Sign in for ", _user);
-			window.history.replaceState({}, document.title, window.location.pathname);
+			// window.history.replaceState({}, document.title, window.location.pathname);
+			// const redirectPath = sessionStorage.getItem("postLoginRedirectPath");
+			// console.log(redirectPath);
+			// // Clear the item from storage to avoid stale redirects
+			// // sessionStorage.removeItem("postLoginRedirectPath");
+
+			// // Use the router to navigate to the intended page, or fallback to home
+			// router.navigate({ to: redirectPath || "/" });
+
+			const redirectPath = sessionStorage.getItem("postLoginRedirectPath");
+			console.log("Final redirect MAIN is", redirectPath);
+			// Clear the item from storage to prevent reuse
+			// Use the router instance to navigate to the correct page
+			router.navigate({ to: redirectPath || "/" });
+			sessionStorage.removeItem("postLoginRedirectPath");
 		},
 	};
 

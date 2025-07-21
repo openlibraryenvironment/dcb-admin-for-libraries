@@ -9,47 +9,27 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SupplierRequestsRouteImport } from './routes/supplierRequests'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ServiceRouteImport } from './routes/service'
-import { Route as MappingsRouteImport } from './routes/mappings'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as LocationsRouteImport } from './routes/locations'
-import { Route as IllRouteImport } from './routes/ill'
-import { Route as DataChangeLogRouteImport } from './routes/dataChangeLog'
-import { Route as ContactsRouteImport } from './routes/contacts'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as PatronRequestsIndexRouteImport } from './routes/patronRequests/index'
-import { Route as LocationsIndexRouteImport } from './routes/locations/index'
-import { Route as IllPatronRequestsRouteImport } from './routes/ill.patronRequests'
-import { Route as IllLoginRouteImport } from './routes/ill.login'
-import { Route as PatronRequestsIdIndexRouteImport } from './routes/patronRequests/$id/index'
-import { Route as LocationsIdIndexRouteImport } from './routes/locations/$id/index'
-import { Route as IndexesIndexCodeIndexRouteImport } from './routes/indexes/$indexCode/index'
-import { Route as PatronRequestsAuditsAuditIdIndexRouteImport } from './routes/patronRequests/audits/$auditId/index'
-import { Route as IndexesIndexCodeRecordIdIndexRouteImport } from './routes/indexes/$indexCode/$recordId/index'
+import { Route as _authenticatedRouteImport } from './routes/__authenticated'
+import { Route as _authenticatedIndexRouteImport } from './routes/__authenticated/index'
+import { Route as _authenticatedSupplierRequestsRouteImport } from './routes/__authenticated/supplierRequests'
+import { Route as _authenticatedSettingsRouteImport } from './routes/__authenticated/settings'
+import { Route as _authenticatedServiceRouteImport } from './routes/__authenticated/service'
+import { Route as _authenticatedMappingsRouteImport } from './routes/__authenticated/mappings'
+import { Route as _authenticatedIllRouteImport } from './routes/__authenticated/ill'
+import { Route as _authenticatedDataChangeLogRouteImport } from './routes/__authenticated/dataChangeLog'
+import { Route as _authenticatedContactsRouteImport } from './routes/__authenticated/contacts'
+import { Route as _authenticatedPatronRequestsIndexRouteImport } from './routes/__authenticated/patronRequests/index'
+import { Route as _authenticatedLocationsIndexRouteImport } from './routes/__authenticated/locations/index'
+import { Route as _authenticatedIllPatronRequestsRouteImport } from './routes/__authenticated/ill.patronRequests'
+import { Route as _authenticatedIllLoginRouteImport } from './routes/__authenticated/ill.login'
+import { Route as _authenticatedPatronRequestsIdIndexRouteImport } from './routes/__authenticated/patronRequests/$id/index'
+import { Route as _authenticatedLocationsIdIndexRouteImport } from './routes/__authenticated/locations/$id/index'
+import { Route as _authenticatedIndexesIndexCodeIndexRouteImport } from './routes/__authenticated/indexes/$indexCode/index'
+import { Route as _authenticatedPatronRequestsAuditsAuditIdIndexRouteImport } from './routes/__authenticated/patronRequests/audits/$auditId/index'
+import { Route as _authenticatedIndexesIndexCodeRecordIdIndexRouteImport } from './routes/__authenticated/indexes/$indexCode/$recordId/index'
 
-const SupplierRequestsRoute = SupplierRequestsRouteImport.update({
-  id: '/supplierRequests',
-  path: '/supplierRequests',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ServiceRoute = ServiceRouteImport.update({
-  id: '/service',
-  path: '/service',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MappingsRoute = MappingsRouteImport.update({
-  id: '/mappings',
-  path: '/mappings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
   path: '/logout',
@@ -60,162 +40,187 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LocationsRoute = LocationsRouteImport.update({
-  id: '/locations',
-  path: '/locations',
+const _authenticatedRoute = _authenticatedRouteImport.update({
+  id: '/__authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IllRoute = IllRouteImport.update({
+const _authenticatedIndexRoute = _authenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => _authenticatedRoute,
+} as any)
+const _authenticatedSupplierRequestsRoute =
+  _authenticatedSupplierRequestsRouteImport.update({
+    id: '/supplierRequests',
+    path: '/supplierRequests',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
+const _authenticatedSettingsRoute = _authenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => _authenticatedRoute,
+} as any)
+const _authenticatedServiceRoute = _authenticatedServiceRouteImport.update({
+  id: '/service',
+  path: '/service',
+  getParentRoute: () => _authenticatedRoute,
+} as any)
+const _authenticatedMappingsRoute = _authenticatedMappingsRouteImport.update({
+  id: '/mappings',
+  path: '/mappings',
+  getParentRoute: () => _authenticatedRoute,
+} as any)
+const _authenticatedIllRoute = _authenticatedIllRouteImport.update({
   id: '/ill',
   path: '/ill',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => _authenticatedRoute,
 } as any)
-const DataChangeLogRoute = DataChangeLogRouteImport.update({
-  id: '/dataChangeLog',
-  path: '/dataChangeLog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactsRoute = ContactsRouteImport.update({
+const _authenticatedDataChangeLogRoute =
+  _authenticatedDataChangeLogRouteImport.update({
+    id: '/dataChangeLog',
+    path: '/dataChangeLog',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
+const _authenticatedContactsRoute = _authenticatedContactsRouteImport.update({
   id: '/contacts',
   path: '/contacts',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => _authenticatedRoute,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PatronRequestsIndexRoute = PatronRequestsIndexRouteImport.update({
-  id: '/patronRequests/',
-  path: '/patronRequests/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LocationsIndexRoute = LocationsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => LocationsRoute,
-} as any)
-const IllPatronRequestsRoute = IllPatronRequestsRouteImport.update({
-  id: '/patronRequests',
-  path: '/patronRequests',
-  getParentRoute: () => IllRoute,
-} as any)
-const IllLoginRoute = IllLoginRouteImport.update({
+const _authenticatedPatronRequestsIndexRoute =
+  _authenticatedPatronRequestsIndexRouteImport.update({
+    id: '/patronRequests/',
+    path: '/patronRequests/',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
+const _authenticatedLocationsIndexRoute =
+  _authenticatedLocationsIndexRouteImport.update({
+    id: '/locations/',
+    path: '/locations/',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
+const _authenticatedIllPatronRequestsRoute =
+  _authenticatedIllPatronRequestsRouteImport.update({
+    id: '/patronRequests',
+    path: '/patronRequests',
+    getParentRoute: () => _authenticatedIllRoute,
+  } as any)
+const _authenticatedIllLoginRoute = _authenticatedIllLoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => IllRoute,
+  getParentRoute: () => _authenticatedIllRoute,
 } as any)
-const PatronRequestsIdIndexRoute = PatronRequestsIdIndexRouteImport.update({
-  id: '/patronRequests/$id/',
-  path: '/patronRequests/$id/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LocationsIdIndexRoute = LocationsIdIndexRouteImport.update({
-  id: '/$id/',
-  path: '/$id/',
-  getParentRoute: () => LocationsRoute,
-} as any)
-const IndexesIndexCodeIndexRoute = IndexesIndexCodeIndexRouteImport.update({
-  id: '/indexes/$indexCode/',
-  path: '/indexes/$indexCode/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PatronRequestsAuditsAuditIdIndexRoute =
-  PatronRequestsAuditsAuditIdIndexRouteImport.update({
+const _authenticatedPatronRequestsIdIndexRoute =
+  _authenticatedPatronRequestsIdIndexRouteImport.update({
+    id: '/patronRequests/$id/',
+    path: '/patronRequests/$id/',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
+const _authenticatedLocationsIdIndexRoute =
+  _authenticatedLocationsIdIndexRouteImport.update({
+    id: '/locations/$id/',
+    path: '/locations/$id/',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
+const _authenticatedIndexesIndexCodeIndexRoute =
+  _authenticatedIndexesIndexCodeIndexRouteImport.update({
+    id: '/indexes/$indexCode/',
+    path: '/indexes/$indexCode/',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
+const _authenticatedPatronRequestsAuditsAuditIdIndexRoute =
+  _authenticatedPatronRequestsAuditsAuditIdIndexRouteImport.update({
     id: '/patronRequests/audits/$auditId/',
     path: '/patronRequests/audits/$auditId/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => _authenticatedRoute,
   } as any)
-const IndexesIndexCodeRecordIdIndexRoute =
-  IndexesIndexCodeRecordIdIndexRouteImport.update({
+const _authenticatedIndexesIndexCodeRecordIdIndexRoute =
+  _authenticatedIndexesIndexCodeRecordIdIndexRouteImport.update({
     id: '/indexes/$indexCode/$recordId/',
     path: '/indexes/$indexCode/$recordId/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => _authenticatedRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/contacts': typeof ContactsRoute
-  '/dataChangeLog': typeof DataChangeLogRoute
-  '/ill': typeof IllRouteWithChildren
-  '/locations': typeof LocationsRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
-  '/mappings': typeof MappingsRoute
-  '/service': typeof ServiceRoute
-  '/settings': typeof SettingsRoute
-  '/supplierRequests': typeof SupplierRequestsRoute
-  '/ill/login': typeof IllLoginRoute
-  '/ill/patronRequests': typeof IllPatronRequestsRoute
-  '/locations/': typeof LocationsIndexRoute
-  '/patronRequests': typeof PatronRequestsIndexRoute
-  '/indexes/$indexCode': typeof IndexesIndexCodeIndexRoute
-  '/locations/$id': typeof LocationsIdIndexRoute
-  '/patronRequests/$id': typeof PatronRequestsIdIndexRoute
-  '/indexes/$indexCode/$recordId': typeof IndexesIndexCodeRecordIdIndexRoute
-  '/patronRequests/audits/$auditId': typeof PatronRequestsAuditsAuditIdIndexRoute
+  '/contacts': typeof _authenticatedContactsRoute
+  '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
+  '/ill': typeof _authenticatedIllRouteWithChildren
+  '/mappings': typeof _authenticatedMappingsRoute
+  '/service': typeof _authenticatedServiceRoute
+  '/settings': typeof _authenticatedSettingsRoute
+  '/supplierRequests': typeof _authenticatedSupplierRequestsRoute
+  '/': typeof _authenticatedIndexRoute
+  '/ill/login': typeof _authenticatedIllLoginRoute
+  '/ill/patronRequests': typeof _authenticatedIllPatronRequestsRoute
+  '/locations': typeof _authenticatedLocationsIndexRoute
+  '/patronRequests': typeof _authenticatedPatronRequestsIndexRoute
+  '/indexes/$indexCode': typeof _authenticatedIndexesIndexCodeIndexRoute
+  '/locations/$id': typeof _authenticatedLocationsIdIndexRoute
+  '/patronRequests/$id': typeof _authenticatedPatronRequestsIdIndexRoute
+  '/indexes/$indexCode/$recordId': typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
+  '/patronRequests/audits/$auditId': typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/contacts': typeof ContactsRoute
-  '/dataChangeLog': typeof DataChangeLogRoute
-  '/ill': typeof IllRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
-  '/mappings': typeof MappingsRoute
-  '/service': typeof ServiceRoute
-  '/settings': typeof SettingsRoute
-  '/supplierRequests': typeof SupplierRequestsRoute
-  '/ill/login': typeof IllLoginRoute
-  '/ill/patronRequests': typeof IllPatronRequestsRoute
-  '/locations': typeof LocationsIndexRoute
-  '/patronRequests': typeof PatronRequestsIndexRoute
-  '/indexes/$indexCode': typeof IndexesIndexCodeIndexRoute
-  '/locations/$id': typeof LocationsIdIndexRoute
-  '/patronRequests/$id': typeof PatronRequestsIdIndexRoute
-  '/indexes/$indexCode/$recordId': typeof IndexesIndexCodeRecordIdIndexRoute
-  '/patronRequests/audits/$auditId': typeof PatronRequestsAuditsAuditIdIndexRoute
+  '/contacts': typeof _authenticatedContactsRoute
+  '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
+  '/ill': typeof _authenticatedIllRouteWithChildren
+  '/mappings': typeof _authenticatedMappingsRoute
+  '/service': typeof _authenticatedServiceRoute
+  '/settings': typeof _authenticatedSettingsRoute
+  '/supplierRequests': typeof _authenticatedSupplierRequestsRoute
+  '/': typeof _authenticatedIndexRoute
+  '/ill/login': typeof _authenticatedIllLoginRoute
+  '/ill/patronRequests': typeof _authenticatedIllPatronRequestsRoute
+  '/locations': typeof _authenticatedLocationsIndexRoute
+  '/patronRequests': typeof _authenticatedPatronRequestsIndexRoute
+  '/indexes/$indexCode': typeof _authenticatedIndexesIndexCodeIndexRoute
+  '/locations/$id': typeof _authenticatedLocationsIdIndexRoute
+  '/patronRequests/$id': typeof _authenticatedPatronRequestsIdIndexRoute
+  '/indexes/$indexCode/$recordId': typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
+  '/patronRequests/audits/$auditId': typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/contacts': typeof ContactsRoute
-  '/dataChangeLog': typeof DataChangeLogRoute
-  '/ill': typeof IllRouteWithChildren
-  '/locations': typeof LocationsRouteWithChildren
+  '/__authenticated': typeof _authenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
-  '/mappings': typeof MappingsRoute
-  '/service': typeof ServiceRoute
-  '/settings': typeof SettingsRoute
-  '/supplierRequests': typeof SupplierRequestsRoute
-  '/ill/login': typeof IllLoginRoute
-  '/ill/patronRequests': typeof IllPatronRequestsRoute
-  '/locations/': typeof LocationsIndexRoute
-  '/patronRequests/': typeof PatronRequestsIndexRoute
-  '/indexes/$indexCode/': typeof IndexesIndexCodeIndexRoute
-  '/locations/$id/': typeof LocationsIdIndexRoute
-  '/patronRequests/$id/': typeof PatronRequestsIdIndexRoute
-  '/indexes/$indexCode/$recordId/': typeof IndexesIndexCodeRecordIdIndexRoute
-  '/patronRequests/audits/$auditId/': typeof PatronRequestsAuditsAuditIdIndexRoute
+  '/__authenticated/contacts': typeof _authenticatedContactsRoute
+  '/__authenticated/dataChangeLog': typeof _authenticatedDataChangeLogRoute
+  '/__authenticated/ill': typeof _authenticatedIllRouteWithChildren
+  '/__authenticated/mappings': typeof _authenticatedMappingsRoute
+  '/__authenticated/service': typeof _authenticatedServiceRoute
+  '/__authenticated/settings': typeof _authenticatedSettingsRoute
+  '/__authenticated/supplierRequests': typeof _authenticatedSupplierRequestsRoute
+  '/__authenticated/': typeof _authenticatedIndexRoute
+  '/__authenticated/ill/login': typeof _authenticatedIllLoginRoute
+  '/__authenticated/ill/patronRequests': typeof _authenticatedIllPatronRequestsRoute
+  '/__authenticated/locations/': typeof _authenticatedLocationsIndexRoute
+  '/__authenticated/patronRequests/': typeof _authenticatedPatronRequestsIndexRoute
+  '/__authenticated/indexes/$indexCode/': typeof _authenticatedIndexesIndexCodeIndexRoute
+  '/__authenticated/locations/$id/': typeof _authenticatedLocationsIdIndexRoute
+  '/__authenticated/patronRequests/$id/': typeof _authenticatedPatronRequestsIdIndexRoute
+  '/__authenticated/indexes/$indexCode/$recordId/': typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
+  '/__authenticated/patronRequests/audits/$auditId/': typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
+    | '/login'
+    | '/logout'
     | '/contacts'
     | '/dataChangeLog'
     | '/ill'
-    | '/locations'
-    | '/login'
-    | '/logout'
     | '/mappings'
     | '/service'
     | '/settings'
     | '/supplierRequests'
+    | '/'
     | '/ill/login'
     | '/ill/patronRequests'
-    | '/locations/'
+    | '/locations'
     | '/patronRequests'
     | '/indexes/$indexCode'
     | '/locations/$id'
@@ -224,16 +229,16 @@ export interface FileRouteTypes {
     | '/patronRequests/audits/$auditId'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
+    | '/login'
+    | '/logout'
     | '/contacts'
     | '/dataChangeLog'
     | '/ill'
-    | '/login'
-    | '/logout'
     | '/mappings'
     | '/service'
     | '/settings'
     | '/supplierRequests'
+    | '/'
     | '/ill/login'
     | '/ill/patronRequests'
     | '/locations'
@@ -245,77 +250,36 @@ export interface FileRouteTypes {
     | '/patronRequests/audits/$auditId'
   id:
     | '__root__'
-    | '/'
-    | '/contacts'
-    | '/dataChangeLog'
-    | '/ill'
-    | '/locations'
+    | '/__authenticated'
     | '/login'
     | '/logout'
-    | '/mappings'
-    | '/service'
-    | '/settings'
-    | '/supplierRequests'
-    | '/ill/login'
-    | '/ill/patronRequests'
-    | '/locations/'
-    | '/patronRequests/'
-    | '/indexes/$indexCode/'
-    | '/locations/$id/'
-    | '/patronRequests/$id/'
-    | '/indexes/$indexCode/$recordId/'
-    | '/patronRequests/audits/$auditId/'
+    | '/__authenticated/contacts'
+    | '/__authenticated/dataChangeLog'
+    | '/__authenticated/ill'
+    | '/__authenticated/mappings'
+    | '/__authenticated/service'
+    | '/__authenticated/settings'
+    | '/__authenticated/supplierRequests'
+    | '/__authenticated/'
+    | '/__authenticated/ill/login'
+    | '/__authenticated/ill/patronRequests'
+    | '/__authenticated/locations/'
+    | '/__authenticated/patronRequests/'
+    | '/__authenticated/indexes/$indexCode/'
+    | '/__authenticated/locations/$id/'
+    | '/__authenticated/patronRequests/$id/'
+    | '/__authenticated/indexes/$indexCode/$recordId/'
+    | '/__authenticated/patronRequests/audits/$auditId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ContactsRoute: typeof ContactsRoute
-  DataChangeLogRoute: typeof DataChangeLogRoute
-  IllRoute: typeof IllRouteWithChildren
-  LocationsRoute: typeof LocationsRouteWithChildren
+  _authenticatedRoute: typeof _authenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
-  MappingsRoute: typeof MappingsRoute
-  ServiceRoute: typeof ServiceRoute
-  SettingsRoute: typeof SettingsRoute
-  SupplierRequestsRoute: typeof SupplierRequestsRoute
-  PatronRequestsIndexRoute: typeof PatronRequestsIndexRoute
-  IndexesIndexCodeIndexRoute: typeof IndexesIndexCodeIndexRoute
-  PatronRequestsIdIndexRoute: typeof PatronRequestsIdIndexRoute
-  IndexesIndexCodeRecordIdIndexRoute: typeof IndexesIndexCodeRecordIdIndexRoute
-  PatronRequestsAuditsAuditIdIndexRoute: typeof PatronRequestsAuditsAuditIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/supplierRequests': {
-      id: '/supplierRequests'
-      path: '/supplierRequests'
-      fullPath: '/supplierRequests'
-      preLoaderRoute: typeof SupplierRequestsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/service': {
-      id: '/service'
-      path: '/service'
-      fullPath: '/service'
-      preLoaderRoute: typeof ServiceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mappings': {
-      id: '/mappings'
-      path: '/mappings'
-      fullPath: '/mappings'
-      preLoaderRoute: typeof MappingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/logout': {
       id: '/logout'
       path: '/logout'
@@ -330,150 +294,197 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/locations': {
-      id: '/locations'
-      path: '/locations'
-      fullPath: '/locations'
-      preLoaderRoute: typeof LocationsRouteImport
+    '/__authenticated': {
+      id: '/__authenticated'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof _authenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ill': {
-      id: '/ill'
-      path: '/ill'
-      fullPath: '/ill'
-      preLoaderRoute: typeof IllRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dataChangeLog': {
-      id: '/dataChangeLog'
-      path: '/dataChangeLog'
-      fullPath: '/dataChangeLog'
-      preLoaderRoute: typeof DataChangeLogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contacts': {
-      id: '/contacts'
-      path: '/contacts'
-      fullPath: '/contacts'
-      preLoaderRoute: typeof ContactsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
+    '/__authenticated/': {
+      id: '/__authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof _authenticatedIndexRouteImport
+      parentRoute: typeof _authenticatedRoute
     }
-    '/patronRequests/': {
-      id: '/patronRequests/'
+    '/__authenticated/supplierRequests': {
+      id: '/__authenticated/supplierRequests'
+      path: '/supplierRequests'
+      fullPath: '/supplierRequests'
+      preLoaderRoute: typeof _authenticatedSupplierRequestsRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/settings': {
+      id: '/__authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof _authenticatedSettingsRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/service': {
+      id: '/__authenticated/service'
+      path: '/service'
+      fullPath: '/service'
+      preLoaderRoute: typeof _authenticatedServiceRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/mappings': {
+      id: '/__authenticated/mappings'
+      path: '/mappings'
+      fullPath: '/mappings'
+      preLoaderRoute: typeof _authenticatedMappingsRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/ill': {
+      id: '/__authenticated/ill'
+      path: '/ill'
+      fullPath: '/ill'
+      preLoaderRoute: typeof _authenticatedIllRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/dataChangeLog': {
+      id: '/__authenticated/dataChangeLog'
+      path: '/dataChangeLog'
+      fullPath: '/dataChangeLog'
+      preLoaderRoute: typeof _authenticatedDataChangeLogRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/contacts': {
+      id: '/__authenticated/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof _authenticatedContactsRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/patronRequests/': {
+      id: '/__authenticated/patronRequests/'
       path: '/patronRequests'
       fullPath: '/patronRequests'
-      preLoaderRoute: typeof PatronRequestsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof _authenticatedPatronRequestsIndexRouteImport
+      parentRoute: typeof _authenticatedRoute
     }
-    '/locations/': {
-      id: '/locations/'
-      path: '/'
-      fullPath: '/locations/'
-      preLoaderRoute: typeof LocationsIndexRouteImport
-      parentRoute: typeof LocationsRoute
+    '/__authenticated/locations/': {
+      id: '/__authenticated/locations/'
+      path: '/locations'
+      fullPath: '/locations'
+      preLoaderRoute: typeof _authenticatedLocationsIndexRouteImport
+      parentRoute: typeof _authenticatedRoute
     }
-    '/ill/patronRequests': {
-      id: '/ill/patronRequests'
+    '/__authenticated/ill/patronRequests': {
+      id: '/__authenticated/ill/patronRequests'
       path: '/patronRequests'
       fullPath: '/ill/patronRequests'
-      preLoaderRoute: typeof IllPatronRequestsRouteImport
-      parentRoute: typeof IllRoute
+      preLoaderRoute: typeof _authenticatedIllPatronRequestsRouteImport
+      parentRoute: typeof _authenticatedIllRoute
     }
-    '/ill/login': {
-      id: '/ill/login'
+    '/__authenticated/ill/login': {
+      id: '/__authenticated/ill/login'
       path: '/login'
       fullPath: '/ill/login'
-      preLoaderRoute: typeof IllLoginRouteImport
-      parentRoute: typeof IllRoute
+      preLoaderRoute: typeof _authenticatedIllLoginRouteImport
+      parentRoute: typeof _authenticatedIllRoute
     }
-    '/patronRequests/$id/': {
-      id: '/patronRequests/$id/'
+    '/__authenticated/patronRequests/$id/': {
+      id: '/__authenticated/patronRequests/$id/'
       path: '/patronRequests/$id'
       fullPath: '/patronRequests/$id'
-      preLoaderRoute: typeof PatronRequestsIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof _authenticatedPatronRequestsIdIndexRouteImport
+      parentRoute: typeof _authenticatedRoute
     }
-    '/locations/$id/': {
-      id: '/locations/$id/'
-      path: '/$id'
+    '/__authenticated/locations/$id/': {
+      id: '/__authenticated/locations/$id/'
+      path: '/locations/$id'
       fullPath: '/locations/$id'
-      preLoaderRoute: typeof LocationsIdIndexRouteImport
-      parentRoute: typeof LocationsRoute
+      preLoaderRoute: typeof _authenticatedLocationsIdIndexRouteImport
+      parentRoute: typeof _authenticatedRoute
     }
-    '/indexes/$indexCode/': {
-      id: '/indexes/$indexCode/'
+    '/__authenticated/indexes/$indexCode/': {
+      id: '/__authenticated/indexes/$indexCode/'
       path: '/indexes/$indexCode'
       fullPath: '/indexes/$indexCode'
-      preLoaderRoute: typeof IndexesIndexCodeIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof _authenticatedIndexesIndexCodeIndexRouteImport
+      parentRoute: typeof _authenticatedRoute
     }
-    '/patronRequests/audits/$auditId/': {
-      id: '/patronRequests/audits/$auditId/'
+    '/__authenticated/patronRequests/audits/$auditId/': {
+      id: '/__authenticated/patronRequests/audits/$auditId/'
       path: '/patronRequests/audits/$auditId'
       fullPath: '/patronRequests/audits/$auditId'
-      preLoaderRoute: typeof PatronRequestsAuditsAuditIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof _authenticatedPatronRequestsAuditsAuditIdIndexRouteImport
+      parentRoute: typeof _authenticatedRoute
     }
-    '/indexes/$indexCode/$recordId/': {
-      id: '/indexes/$indexCode/$recordId/'
+    '/__authenticated/indexes/$indexCode/$recordId/': {
+      id: '/__authenticated/indexes/$indexCode/$recordId/'
       path: '/indexes/$indexCode/$recordId'
       fullPath: '/indexes/$indexCode/$recordId'
-      preLoaderRoute: typeof IndexesIndexCodeRecordIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof _authenticatedIndexesIndexCodeRecordIdIndexRouteImport
+      parentRoute: typeof _authenticatedRoute
     }
   }
 }
 
-interface IllRouteChildren {
-  IllLoginRoute: typeof IllLoginRoute
-  IllPatronRequestsRoute: typeof IllPatronRequestsRoute
+interface _authenticatedIllRouteChildren {
+  _authenticatedIllLoginRoute: typeof _authenticatedIllLoginRoute
+  _authenticatedIllPatronRequestsRoute: typeof _authenticatedIllPatronRequestsRoute
 }
 
-const IllRouteChildren: IllRouteChildren = {
-  IllLoginRoute: IllLoginRoute,
-  IllPatronRequestsRoute: IllPatronRequestsRoute,
+const _authenticatedIllRouteChildren: _authenticatedIllRouteChildren = {
+  _authenticatedIllLoginRoute: _authenticatedIllLoginRoute,
+  _authenticatedIllPatronRequestsRoute: _authenticatedIllPatronRequestsRoute,
 }
 
-const IllRouteWithChildren = IllRoute._addFileChildren(IllRouteChildren)
+const _authenticatedIllRouteWithChildren =
+  _authenticatedIllRoute._addFileChildren(_authenticatedIllRouteChildren)
 
-interface LocationsRouteChildren {
-  LocationsIndexRoute: typeof LocationsIndexRoute
-  LocationsIdIndexRoute: typeof LocationsIdIndexRoute
+interface _authenticatedRouteChildren {
+  _authenticatedContactsRoute: typeof _authenticatedContactsRoute
+  _authenticatedDataChangeLogRoute: typeof _authenticatedDataChangeLogRoute
+  _authenticatedIllRoute: typeof _authenticatedIllRouteWithChildren
+  _authenticatedMappingsRoute: typeof _authenticatedMappingsRoute
+  _authenticatedServiceRoute: typeof _authenticatedServiceRoute
+  _authenticatedSettingsRoute: typeof _authenticatedSettingsRoute
+  _authenticatedSupplierRequestsRoute: typeof _authenticatedSupplierRequestsRoute
+  _authenticatedIndexRoute: typeof _authenticatedIndexRoute
+  _authenticatedLocationsIndexRoute: typeof _authenticatedLocationsIndexRoute
+  _authenticatedPatronRequestsIndexRoute: typeof _authenticatedPatronRequestsIndexRoute
+  _authenticatedIndexesIndexCodeIndexRoute: typeof _authenticatedIndexesIndexCodeIndexRoute
+  _authenticatedLocationsIdIndexRoute: typeof _authenticatedLocationsIdIndexRoute
+  _authenticatedPatronRequestsIdIndexRoute: typeof _authenticatedPatronRequestsIdIndexRoute
+  _authenticatedIndexesIndexCodeRecordIdIndexRoute: typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
+  _authenticatedPatronRequestsAuditsAuditIdIndexRoute: typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
 }
 
-const LocationsRouteChildren: LocationsRouteChildren = {
-  LocationsIndexRoute: LocationsIndexRoute,
-  LocationsIdIndexRoute: LocationsIdIndexRoute,
+const _authenticatedRouteChildren: _authenticatedRouteChildren = {
+  _authenticatedContactsRoute: _authenticatedContactsRoute,
+  _authenticatedDataChangeLogRoute: _authenticatedDataChangeLogRoute,
+  _authenticatedIllRoute: _authenticatedIllRouteWithChildren,
+  _authenticatedMappingsRoute: _authenticatedMappingsRoute,
+  _authenticatedServiceRoute: _authenticatedServiceRoute,
+  _authenticatedSettingsRoute: _authenticatedSettingsRoute,
+  _authenticatedSupplierRequestsRoute: _authenticatedSupplierRequestsRoute,
+  _authenticatedIndexRoute: _authenticatedIndexRoute,
+  _authenticatedLocationsIndexRoute: _authenticatedLocationsIndexRoute,
+  _authenticatedPatronRequestsIndexRoute:
+    _authenticatedPatronRequestsIndexRoute,
+  _authenticatedIndexesIndexCodeIndexRoute:
+    _authenticatedIndexesIndexCodeIndexRoute,
+  _authenticatedLocationsIdIndexRoute: _authenticatedLocationsIdIndexRoute,
+  _authenticatedPatronRequestsIdIndexRoute:
+    _authenticatedPatronRequestsIdIndexRoute,
+  _authenticatedIndexesIndexCodeRecordIdIndexRoute:
+    _authenticatedIndexesIndexCodeRecordIdIndexRoute,
+  _authenticatedPatronRequestsAuditsAuditIdIndexRoute:
+    _authenticatedPatronRequestsAuditsAuditIdIndexRoute,
 }
 
-const LocationsRouteWithChildren = LocationsRoute._addFileChildren(
-  LocationsRouteChildren,
+const _authenticatedRouteWithChildren = _authenticatedRoute._addFileChildren(
+  _authenticatedRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  ContactsRoute: ContactsRoute,
-  DataChangeLogRoute: DataChangeLogRoute,
-  IllRoute: IllRouteWithChildren,
-  LocationsRoute: LocationsRouteWithChildren,
+  _authenticatedRoute: _authenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
-  MappingsRoute: MappingsRoute,
-  ServiceRoute: ServiceRoute,
-  SettingsRoute: SettingsRoute,
-  SupplierRequestsRoute: SupplierRequestsRoute,
-  PatronRequestsIndexRoute: PatronRequestsIndexRoute,
-  IndexesIndexCodeIndexRoute: IndexesIndexCodeIndexRoute,
-  PatronRequestsIdIndexRoute: PatronRequestsIdIndexRoute,
-  IndexesIndexCodeRecordIdIndexRoute: IndexesIndexCodeRecordIdIndexRoute,
-  PatronRequestsAuditsAuditIdIndexRoute: PatronRequestsAuditsAuditIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

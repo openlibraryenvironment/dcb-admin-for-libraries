@@ -1,7 +1,7 @@
 // import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { createFileRoute } from "@tanstack/react-router";
-export const Route = createFileRoute("/contacts")({
+export const Route = createFileRoute("/__authenticated/contacts")({
 	// beforeLoad: ({ context, location }) => {
 	// 	// If the user is not authenticated, redirect them to the login page.
 	// 	// We pass the current path as a 'redirect' search parameter.

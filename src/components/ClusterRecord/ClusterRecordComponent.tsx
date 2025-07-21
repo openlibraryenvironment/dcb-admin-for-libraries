@@ -20,7 +20,6 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { CustomLink } from "../CustomLink";
 import MasterDetail from "../../components/MasterDetail/MasterDetail";
-import { Route } from "../../routes/indexes/$indexCode/$recordId";
 import { ClusterDetailResponse } from "@models/ClusterDetailResponse";
 import ExpeditedCheckout from "@forms/ExpeditedCheckout/ExpeditedCheckout";
 import StaffRequest from "@forms/StaffRequest/StaffRequest";
@@ -31,6 +30,7 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import { GRID_DETAIL_PANEL_TOGGLE_COL_DEF } from "@mui/x-data-grid-premium";
 import { DetailPanelToggle } from "@components/MasterDetail/components/DetailPanelToggle/DetailPanelToggle";
 import DetailPanelHeader from "@components/MasterDetail/components/DetailPanelHeader/DetailPanelHeader";
+import { Route } from "@/routes/__authenticated/indexes/$indexCode/$recordId";
 
 interface CombinedData {
 	availability: ItemAvailabilityResponse;

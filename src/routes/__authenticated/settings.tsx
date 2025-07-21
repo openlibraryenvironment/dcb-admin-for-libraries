@@ -11,7 +11,7 @@ import Grid from "@mui/material/Grid";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-export const Route = createFileRoute("/settings")({
+export const Route = createFileRoute("/__authenticated/settings")({
 	component: RouteComponent,
 });
 
@@ -66,5 +66,5 @@ function RouteComponent() {
 				</FormControl>
 			</Grid>
 		</Grid>
-	);
+	)
 }

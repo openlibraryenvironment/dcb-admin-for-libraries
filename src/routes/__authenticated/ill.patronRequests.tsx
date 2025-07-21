@@ -21,7 +21,6 @@ import {
 	Stack,
 } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { useILLAuth } from "../lib/illAuth";
 import { useAuth, useAuth as useOidcAuth } from "react-oidc-context"; // OIDC auth for DCB
 import { useTranslation } from "react-i18next"; // For error messages
 import Error from "@components/Error/Error"; // Import your custom Error component
@@ -37,6 +36,7 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
 import { getLibrary } from "@queries/getLibrary";
+import { useILLAuth } from "@/lib/illAuth";
 
 interface ILLPatronRequest {
 	id: string;
@@ -53,8 +53,6 @@ interface IllApiResponse {
 	results: ILLPatronRequest[];
 	totalRecords: number;
 }
-
-// --- Data Fetching Options ---
 
 // For ILL Requests (uses HttpOnly cookie)
 const illPatronRequestsQueryOptions = {
@@ -89,7 +87,7 @@ const illPatronRequestsQueryOptions = {
 };
 
 // --- Route Definition ---
-export const Route = createFileRoute("/ill/patronRequests")({
+export const Route = createFileRoute("/__authenticated/ill/patronRequests")({
 	// We only pre-fetch the ILL data now, as DCB data needs client-side context.
 	loader: ({ context: { queryClient } }) => {
 		return queryClient.ensureQueryData(illPatronRequestsQueryOptions);

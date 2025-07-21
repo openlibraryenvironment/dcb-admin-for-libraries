@@ -39,7 +39,7 @@ import Loading from "@components/Loading/Loading";
 import { GridRowModesModel } from "@mui/x-data-grid-premium";
 import { CustomLink } from "@components/CustomLink";
 
-export const Route = createFileRoute("/patronRequests/$id/")({
+export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
 	component: RouteComponent,
 });
 
@@ -64,7 +64,7 @@ function RouteComponent() {
 			Authorization: `Bearer ${auth.user?.access_token}`,
 		}),
 		[auth.user?.access_token]
-	);
+	)
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
 	const {
@@ -97,7 +97,7 @@ function RouteComponent() {
 		cfg.VITE_DCB_API_BASE + "/patrons/requests/" + id + "/transition/cleanup";
 	const bibClusterRecordUrl = cfg.VITE_DCB_SEARCH_BASE
 		? "/search?q=" + patronRequest?.bibClusterId
-		: "";
+		: ""
 	const updateUrl =
 		cfg.VITE_DCB_API_BASE + "/patrons/requests/" + id + "/update";
 
@@ -171,7 +171,7 @@ function RouteComponent() {
 			return fetch(updateUrl, {
 				method: "POST",
 				headers,
-			});
+			})
 		},
 		onSuccess: () => {
 			// When the mutation is successful, invalidate the query to refetch the data
@@ -189,7 +189,7 @@ function RouteComponent() {
 			return fetch(cleanupUrl, {
 				method: "POST",
 				headers,
-			});
+			})
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
@@ -204,7 +204,7 @@ function RouteComponent() {
 
 	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
-	};
+	}
 
 	// const updateUrl = cfg.DCB_API_BASE + "/patrons/requests/" + id + "/update";
 	// const cleanupUrl =
@@ -265,7 +265,7 @@ function RouteComponent() {
 				})}
 				subtitle={t("ui.info.wait")}
 			/>
-		);
+		)
 	}
 
 	return isError || patronRequest == null || patronRequest == undefined ? (
@@ -1559,5 +1559,5 @@ function RouteComponent() {
 				</TabPanel>
 			</TabContext>
 		</>
-	);
+	)
 }

@@ -4,18 +4,18 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
-import { getLibrary } from "../queries/getLibrary";
+import { getLibrary } from "@queries/getLibrary";
 import { Library } from "@models/Library";
 import { HostLMS } from "@models/HostLMS";
-import { getILS } from "../helpers/getILS";
+import { getILS } from "@helpers/getILS";
 import Typography from "@mui/material/Typography";
-import RenderAttribute from "../components/RenderAttribute/RenderAttribute";
+import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import { Divider, Stack } from "@mui/material";
-import FormatArrayAsList from "../components/FormatArrayAsList/FormatArrayAsList";
-import PrivateData from "../components/PrivateData/PrivateData";
+import FormatArrayAsList from "@components/FormatArrayAsList/FormatArrayAsList";
+import PrivateData from "@components/PrivateData/PrivateData";
 import { useMemo } from "react";
 
-export const Route = createFileRoute("/service")({
+export const Route = createFileRoute("/__authenticated/service")({
 	component: ServiceComponent,
 });
 

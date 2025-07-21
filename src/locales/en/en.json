@@ -208,6 +208,13 @@
 		"code": "Location code",
 		"name": "Location name"
 	},
+	"login": {
+		"access": "To access DCB Admin for Libraries, please sign in with your library credentials",
+		"keycloak": "Sign in with Keycloak",
+		"initialising": "Initialising the application",
+		"loading_title": "Logging in",
+		"loading_subtitle": "Please wait"
+	},
 	"nav": {
 		"library": {
 			"service": "Service"

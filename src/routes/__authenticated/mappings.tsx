@@ -48,7 +48,7 @@ import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 
-export const Route = createFileRoute("/mappings")({
+export const Route = createFileRoute("/__authenticated/mappings")({
 	component: RouteComponent,
 });
 
@@ -65,7 +65,7 @@ function RouteComponent() {
 	const headers = useMemo(
 		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
 		[auth.user?.access_token]
-	);
+	)
 
 	const gridId = "referenceValueMappings";
 	const {
@@ -84,20 +84,20 @@ function RouteComponent() {
 		filter: storedFilterModel[gridId],
 		pagination: storedPaginationModel[gridId],
 		columnVisibility: storedColumnVisibilityModel[gridId],
-	};
+	}
 
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
 			storedState.pagination ?? { page: 0, pageSize: 20 }
-		);
+		)
 	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
 		storedState.filter ?? { items: [] }
-	);
+	)
 	const debouncedFilterModel = useDebounce(filterModel, 500);
 
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
 		storedState.sort ?? [{ field: "lastImported", sort: "desc" }]
-	);
+	)
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [promiseArguments, setPromiseArguments] = useState<any>(null);
 	const [editRecord, setEditRecord] = useState<string | null>(null);
@@ -105,7 +105,7 @@ function RouteComponent() {
 		useState<GridRowId | null>(null);
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
 		storedState.columnVisibility ?? {}
-	);
+	)
 
 	// Add state to track if we're filtering
 	const [isFiltering, setIsFiltering] = useState(false);
@@ -170,7 +170,7 @@ function RouteComponent() {
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "lastImported",
 				orderBy: getSortOrderForServer(sortModel[0]?.sort) ?? "DESC",
-			};
+			}
 			return request(DCB_URL, getMappings, queryVariables, headers);
 		},
 		enabled: !!libraryHostLmsCode,
@@ -216,7 +216,7 @@ function RouteComponent() {
 			setPaginationModel(gridId, model);
 		},
 		[gridId, setPaginationModel]
-	);
+	)
 
 	const handleFilterChange = useCallback(
 		(model: GridFilterModel) => {
@@ -224,7 +224,7 @@ function RouteComponent() {
 			setFilterModel(gridId, model);
 		},
 		[gridId, setFilterModel]
-	);
+	)
 
 	const handleSortChange = useCallback(
 		(model: GridSortModel) => {
@@ -232,7 +232,7 @@ function RouteComponent() {
 			setSortModel(gridId, model);
 		},
 		[gridId, setSortModel]
-	);
+	)
 
 	const handleColumnVisibilityChange = useCallback(
 		(model: GridColumnVisibilityModel) => {
@@ -240,33 +240,33 @@ function RouteComponent() {
 			setColumnVisibilityModel(gridId, model);
 		},
 		[gridId, setColumnVisibilityModel]
-	);
+	)
 
 	const handleEditClick = (id: GridRowId) => () => {
 		setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-	};
+	}
 
 	const handleSaveClick = (id: GridRowId) => () => {
 		setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-	};
+	}
 
 	const handleCancelClick = (id: GridRowId) => () => {
 		setRowModesModel({
 			...rowModesModel,
 			[id]: { mode: GridRowModes.View, ignoreModifications: true },
-		});
-	};
+		})
+	}
 
 	const handleDeleteClick = (id: GridRowId) => () => {
 		setDeleteConfirmationId(id);
-	};
+	}
 
 	const handleConfirmDelete = () => {
 		if (deleteConfirmationId) {
 			deleteMapping(deleteConfirmationId);
 			setDeleteConfirmationId(null);
 		}
-	};
+	}
 
 	const processRowUpdate = useCallback(
 		(newRow: GridRowModel, oldRow: GridRowModel) =>
@@ -274,13 +274,13 @@ function RouteComponent() {
 				const changes = computeMutation(newRow, oldRow);
 				if (!changes) {
 					resolve(oldRow);
-					return;
+					return
 				}
 				setEditRecord(changes);
 				setPromiseArguments({ resolve, reject, newRow, oldRow });
 			}),
 		[]
-	);
+	)
 
 	const handleModalConfirm = async (
 		reason: string,
@@ -295,12 +295,12 @@ function RouteComponent() {
 			reason,
 			changeCategory,
 			changeReferenceUrl,
-		};
+		}
 		Object.keys(newRow).forEach((key) => {
 			if (newRow[key] !== oldRow[key]) {
 				input[key] = newRow[key];
 			}
-		});
+		})
 
 		try {
 			const result = await updateMapping({ input });
@@ -311,7 +311,7 @@ function RouteComponent() {
 			setPromiseArguments(null);
 			setEditRecord(null);
 		}
-	};
+	}
 
 	const handleModalCancel = () => {
 		if (!promiseArguments) return;
@@ -319,7 +319,7 @@ function RouteComponent() {
 		resolve(oldRow);
 		setPromiseArguments(null);
 		setEditRecord(null);
-	};
+	}
 
 	const actionsColumn: GridColDef[] = useMemo(
 		() => [
@@ -345,7 +345,7 @@ function RouteComponent() {
 								label="Cancel"
 								onClick={handleCancelClick(id)}
 							/>,
-						];
+						]
 					}
 					return [
 						<GridActionsCellItem
@@ -360,12 +360,12 @@ function RouteComponent() {
 							label="Delete"
 							onClick={handleDeleteClick(id)}
 						/>,
-					];
+					]
 				},
 			},
 		],
 		[rowModesModel]
-	);
+	)
 
 	const refValueColumns = [...standardRefValueMappingColumns, ...actionsColumn];
 
@@ -376,7 +376,7 @@ function RouteComponent() {
 				title={t("ui.info.loading.document")}
 				subtitle="Loading mappings"
 			/>
-		);
+		)
 	}
 
 	if (mappingsError) {
@@ -386,7 +386,7 @@ function RouteComponent() {
 				title="Error loading mappings"
 				subtitle="Please try again later"
 			/>
-		);
+		)
 	}
 
 	// Determine if we should show loading state
@@ -454,5 +454,5 @@ function RouteComponent() {
 				</DialogActions>
 			</Dialog>
 		</>
-	);
+	)
 }

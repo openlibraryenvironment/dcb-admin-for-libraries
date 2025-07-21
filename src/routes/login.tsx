@@ -1,4 +1,3 @@
-// src/pages/Login.tsx
 import React, { useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -6,13 +5,15 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import LoginIcon from "@mui/icons-material/Login";
 import { z } from "zod";
+import Loading from "@components/Loading/Loading";
+import { useTranslation } from "react-i18next";
 
 const Login: React.FC = () => {
 	const auth = useAuth();
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 
 	// If user is already authenticated, redirect to home page
 	// Retrieve the redirect path from the URL search parameters.
@@ -20,38 +21,36 @@ const Login: React.FC = () => {
 
 	// If the user is already authenticated, redirect them to their intended page
 	// or the dashboard. This handles cases where a logged-in user navigates to /login.
-	useEffect(() => {
-		console.log(redirect);
-		if (auth.isAuthenticated) {
-			console.log(redirect);
-			navigate({ to: redirect || "/" });
-		}
-	}, [auth.isAuthenticated, navigate, redirect]);
+	// useEffect(() => {
+	// 	// console.log(redirect);
+	// 	console.log("Auth: ", auth);
+	// 	if (auth.isAuthenticated) {
+	// 		console.log(redirect);
+	// 		navigate({ to: redirect || "/" });
+	// 	}
+	// }, [auth.isAuthenticated, navigate, redirect]);
+	// Still need to handle this case but this should stop it causing problems.
 
+	console.log("Current location is", window.location.pathname);
+	console.log("Redirect is", redirect);
 	const handleLogin = () => {
 		// Store current location
-		console.log(window.location.pathname);
-		sessionStorage.setItem("redirectPath", "/");
+		console.log("Handle login");
+		console.log("Current location is", window.location.pathname);
+		console.log("Redirect is", redirect);
+		sessionStorage.setItem("postLoginRedirectPath", redirect || "/");
+		const redirectPath = sessionStorage.getItem("postLoginRedirectPath");
+		console.log("Final redirect is", redirectPath);
 		// Trigger login redirect - this is being lost
-		console.log(redirect);
-		auth.signinRedirect({ state: redirect || "/" });
+		auth.signinRedirect();
 	};
-
-	console.log(auth.isAuthenticated);
-	console.log(auth);
-	console.log(auth.error);
 
 	if (auth.isLoading) {
 		return (
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "center",
-					alignItems: "center",
-					minHeight: "100vh",
-				}}>
-				<CircularProgress />
-			</Box>
+			<Loading
+				title={t("login.loading_title")}
+				subtitle={t("login.loading_subtitle")}
+			/>
 		);
 	}
 

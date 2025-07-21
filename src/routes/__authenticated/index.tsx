@@ -3,31 +3,31 @@ import Typography from "@mui/material/Typography";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
-import { getLibrary } from "../queries/getLibrary";
+import { getLibrary } from "../../queries/getLibrary";
 import { useAuth } from "react-oidc-context";
 import { Library } from "@models/Library";
 import { useTranslation } from "react-i18next";
-import RenderAttribute from "../components/RenderAttribute/RenderAttribute";
+import RenderAttribute from "../../components/RenderAttribute/RenderAttribute";
 import { Button, Stack, TextField, useTheme } from "@mui/material";
-import AddressLink from "../components/Address/AddressLink";
+import AddressLink from "../../components/Address/AddressLink";
 import { Controller, useForm } from "react-hook-form";
-import { UpdateLibraryFormData } from "../models/UpdateLibraryFormData";
-import { updateLibrary } from "../mutations/updateLibrary";
-import { UpdateLibraryResponse } from "../models/UpdateLibraryResponse";
+import { UpdateLibraryFormData } from "../../models/UpdateLibraryFormData";
+import { updateLibrary } from "../../mutations/updateLibrary";
+import { UpdateLibraryResponse } from "../../models/UpdateLibraryResponse";
 import { useMemo, useRef, useState } from "react";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import TimedAlert from "../components/TimedAlert/TimedAlert";
-import { formatChangedFields } from "../helpers/confirmationFunctions";
-import { AlertObject } from "../models/AlertObject";
-import Confirmation from "../components/Confirmation/Confirmation";
+import TimedAlert from "../../components/TimedAlert/TimedAlert";
+import { formatChangedFields } from "../../helpers/confirmationFunctions";
+import { AlertObject } from "../../models/AlertObject";
+import Confirmation from "../../components/Confirmation/Confirmation";
 import Cancel from "@mui/icons-material/Cancel";
 import Edit from "@mui/icons-material/Edit";
 import Save from "@mui/icons-material/Save";
 import { isEmpty } from "lodash";
 
 // Landing page, also library information page
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/__authenticated/")({
 	component: HomeComponent,
 });
 
@@ -42,7 +42,7 @@ function HomeComponent() {
 			Authorization: `Bearer ${auth.user?.access_token}`,
 		}),
 		[auth.user?.access_token]
-	);
+	)
 
 	const id = auth.user?.profile?.libraryId;
 	const code = auth.user?.profile?.code;
@@ -57,7 +57,7 @@ function HomeComponent() {
 		setEditMode(false);
 		setChangedFields({});
 		reset();
-	};
+	}
 
 	console.log(showConfirmationEdit);
 
@@ -79,7 +79,7 @@ function HomeComponent() {
 				firstEditableFieldRef.current.focus();
 			}
 		}, 0);
-	};
+	}
 
 	// skip if headers not available
 	// figure out polling intervals
@@ -116,7 +116,7 @@ function HomeComponent() {
 					},
 				},
 				headers
-			);
+			)
 			return response.updateLibrary;
 		},
 		onSuccess: (data) => {
@@ -133,7 +133,7 @@ function HomeComponent() {
 					name: library?.fullName,
 				}),
 				title: t("common.updated"),
-			});
+			})
 			if (data) {
 				reset({
 					fullName: library.fullName ?? "",
@@ -143,7 +143,7 @@ function HomeComponent() {
 					backupDowntimeSchedule: library.backupDowntimeSchedule,
 					longitude: library.longitude,
 					latitude: library.latitude,
-				});
+				})
 			}
 			refetch();
 		},
@@ -156,7 +156,7 @@ function HomeComponent() {
 					name: library?.fullName,
 				}),
 				title: t("common.error"),
-			});
+			})
 		},
 	});
 
@@ -245,10 +245,10 @@ function HomeComponent() {
 		setChangedFields(newChangedFields);
 		if (Object.keys(newChangedFields).length === 0) {
 			setEditMode(false);
-			return;
+			return
 		}
 		setConfirmationEdit(true);
-	};
+	}
 
 	const handleConfirmSave = async (
 		reason: string,
@@ -262,7 +262,7 @@ function HomeComponent() {
 				reason,
 				changeCategory,
 				changeReferenceUrl,
-			});
+			})
 		} catch (error) {
 			console.error("Error updating library:", error);
 			setAlert({
@@ -273,11 +273,11 @@ function HomeComponent() {
 					name: library?.fullName,
 				}),
 				title: t("ui.data_grid.updated"),
-			});
+			})
 		} finally {
 			setConfirmationEdit(false);
 		}
-	};
+	}
 
 	return (
 		<Grid
@@ -632,5 +632,5 @@ function HomeComponent() {
 				/>
 			)}
 		</Grid>
-	);
+	)
 }

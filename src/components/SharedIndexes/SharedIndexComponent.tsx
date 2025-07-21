@@ -19,7 +19,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { UserSelectableQuerySpec } from "../Search/UserSelectableQuerySpec";
-import { Route } from "../../routes/indexes/$indexCode";
+import { Route } from "@/routes/__authenticated/indexes/$indexCode";
 
 interface SharedIndexQueryParams {
 	q: string;

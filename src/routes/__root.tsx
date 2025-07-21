@@ -1,109 +1,40 @@
-import {
-	createRootRoute,
-	createRootRouteWithContext,
-	// createRootRouteWithContext,
-	Outlet,
-	useNavigate,
-} from "@tanstack/react-router";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-// import { CustomLink } from "./components/CustomLink";
-
-import { useEffect, useState } from "react";
-
-import Box from "@mui/material/Box";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
-import Container from "@mui/material/Container";
-import CircularProgress from "@mui/material/CircularProgress";
-// import { AuthContextProps, useAuth } from "react-oidc-context";
 import { AuthContextProps, useAuth } from "react-oidc-context";
-import { Header } from "../components/Header/Header";
 import { QueryClient } from "@tanstack/react-query";
-import { useTheme } from "@mui/material";
-import { Layout } from "@components/Layout/Layout";
 import Loading from "@components/Loading/Loading";
+import { useTranslation } from "react-i18next";
 
-// export const Route = createRootRouteWithContext<{
-// 	auth: AuthContextProps;
-// 	cfg: any; // to be investigated as it could be a better way of handling context
-
+// Define the context available to the router
 interface AppRouterContext {
 	queryClient: QueryClient;
-	auth: AuthContextProps; // This is the type for the OIDC auth context
-	cfg: any; // The runtime config object
+	auth: AuthContextProps;
+	cfg: any;
 }
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
 	component: () => {
 		const auth = useAuth();
-		const navigate = useNavigate();
-		const [activeTab, setActiveTab] = useState("/");
-		const theme = useTheme();
+		const { t } = useTranslation();
 
-		const library: string = auth.user?.profile?.library as string; // properly type this
-		console.log(library);
-		// useEffect(() => {
-		// 	// Set active tab based on current path
-		// 	setActiveTab(window.location.pathname);
-		// }, []);
-
-		// Move navigation logic into `useEffect` temporarily
-		useEffect(() => {
-			if (!auth.isAuthenticated && !auth.isLoading) {
-				navigate({ to: "/login" });
-			}
-		}, [auth.isAuthenticated, auth.isLoading, navigate]);
-
-		// const handleTabChange = (_: React.SyntheticEvent, newValue: string) => {
-		// 	setActiveTab(newValue);
-		// 	console.log(newValue);
-		// 	navigate({ to: newValue, replace: false });
-		// };
-
-		console.log(window.location.pathname);
-		// Handle authentication callback
-		if (
-			window.location.pathname.startsWith("/callback") ||
-			window.location.search.includes("code=")
-		) {
+		// Show a global loading spinner only during the initial auth check
+		if (auth.isLoading) {
 			return (
-				<Box
-					sx={{
-						display: "flex",
-						justifyContent: "center",
-						alignItems: "center",
-						height: "100vh",
-					}}>
-					<CircularProgress />
-				</Box>
+				<Loading
+					title={t("login.initialising")}
+					subtitle={t("login.loading_subtitle")}
+				/>
 			);
 		}
 
-		// Public routes - no authentication required
-		if (
-			window.location.pathname === "/login" ||
-			window.location.pathname === "/logout"
-		) {
-			return <Outlet />;
-		}
-
-		// // Check if authenticated
-		// if (!auth.isAuthenticated && !auth.isLoading) {
-		// 	// Redirect to login
-		// 	navigate({ to: "/login" });
-		// 	return null;
-		// } // MAY BE CAUSING ISSUES
-
-		// Loading state
-		if (auth.isLoading) {
-			return <Loading title="Loading" subtitle="Please wait" />;
-		}
+		// The Outlet will render the correct route.
+		// For protected routes, it will be the _authenticated layout.
+		// For public routes, it will be the login page directly.
+		// This necessitates that authenticated routes MUST be children of the main authenticated route.
 
 		return (
 			<>
-				<Layout>
-					<Outlet />
-				</Layout>
+				<Outlet />
 				{process.env.NODE_ENV !== "production" && <TanStackRouterDevtools />}
 			</>
 		);
