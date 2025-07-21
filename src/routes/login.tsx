@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
 import { useAuth } from "react-oidc-context";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -10,9 +9,8 @@ import { z } from "zod";
 import Loading from "@components/Loading/Loading";
 import { useTranslation } from "react-i18next";
 
-const Login: React.FC = () => {
+const Login = () => {
 	const auth = useAuth();
-	const navigate = useNavigate();
 	const { t } = useTranslation();
 
 	// If user is already authenticated, redirect to home page
@@ -44,10 +42,7 @@ const Login: React.FC = () => {
 
 	if (auth.isLoading) {
 		return (
-			<Loading
-				title={t("login.loading_title")}
-				subtitle={t("login.loading_subtitle")}
-			/>
+			<Loading title={t("login.loading_title")} subtitle={t("ui.info.wait")} />
 		);
 	}
 
@@ -71,12 +66,11 @@ const Login: React.FC = () => {
 					width: "100%",
 				}}>
 				<Typography component="h1" variant="h5" sx={{ mb: 3 }}>
-					DCB Admin Login
+					{t("login.title")}
 				</Typography>
 
 				<Typography variant="body1" sx={{ mb: 3, textAlign: "center" }}>
-					Please sign in with your library credentials to access the admin
-					panel.
+					{t("login.access")}
 				</Typography>
 
 				<Button
@@ -87,7 +81,7 @@ const Login: React.FC = () => {
 					disabled={auth.isLoading}
 					startIcon={<LoginIcon />}
 					sx={{ mt: 2 }}>
-					Sign in with Keycloak
+					{t("login.keycloak")}
 				</Button>
 
 				{auth.error && (

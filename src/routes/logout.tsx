@@ -8,7 +8,7 @@ import Paper from "@mui/material/Paper";
 import { useAuth } from "react-oidc-context";
 import { useGridStore } from "@/hooks/useDataGridStore";
 
-const Logout: React.FC = () => {
+const Logout = () => {
 	const auth = useAuth();
 
 	const { clearGridState } = useGridStore();

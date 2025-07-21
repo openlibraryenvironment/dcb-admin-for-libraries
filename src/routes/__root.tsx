@@ -20,10 +20,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 		// Show a global loading spinner only during the initial auth check
 		if (auth.isLoading) {
 			return (
-				<Loading
-					title={t("login.initialising")}
-					subtitle={t("login.loading_subtitle")}
-				/>
+				<Loading title={t("login.initialising")} subtitle={t("ui.info.wait")} />
 			);
 		}
 

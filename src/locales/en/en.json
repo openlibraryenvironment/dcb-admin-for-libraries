@@ -95,6 +95,7 @@
 	},
 	"header": {
 		"title": "DCB Admin for {{library}}",
+		"user": "Welcome, {{user}}",
 		"welcome": "Welcome to DCB Admin for {{name}}"
 	},
 	"hostlms": {
@@ -210,10 +211,11 @@
 	},
 	"login": {
 		"access": "To access DCB Admin for Libraries, please sign in with your library credentials",
+		"authenticating": "Authenticating",
 		"keycloak": "Sign in with Keycloak",
 		"initialising": "Initialising the application",
 		"loading_title": "Logging in",
-		"loading_subtitle": "Please wait"
+		"title": "Log in to DCB Admin for Libraries"
 	},
 	"nav": {
 		"library": {
