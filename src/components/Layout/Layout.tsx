@@ -1,7 +1,5 @@
-// src/components/Layout/Layout.tsx
-
 import { useEffect, useState } from "react";
-import { useRouter } from "@tanstack/react-router";
+import { useLocation } from "@tanstack/react-router";
 import { useAuth } from "react-oidc-context";
 import { useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -38,23 +36,21 @@ const TABS_CONFIG = [
 
 export const Layout = ({ children }: LayoutProps) => {
 	const auth = useAuth();
-	const router = useRouter();
 	const theme = useTheme();
 	const [activeTab, setActiveTab] = useState("/");
+	const { pathname } = useLocation();
 
 	// This effect correctly sets the active tab based on the current route
 	useEffect(() => {
-		const currentPath = router.state.location.pathname;
-
 		const bestMatch = TABS_CONFIG.filter((tab) =>
-			currentPath.startsWith(tab.value)
+			pathname.startsWith(tab.value)
 		).sort((a, b) => b.value.length - a.value.length)[0];
 
 		if (bestMatch) {
 			setActiveTab(bestMatch.value);
 		}
-		console.log(bestMatch.value);
-	}, [router.state.location.pathname]);
+		// Add pathname to the dependency array
+	}, [pathname]);
 
 	return (
 		<>
