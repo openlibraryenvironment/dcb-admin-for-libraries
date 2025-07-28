@@ -2,6 +2,7 @@
 
 import { Box, Button, LinearProgress, Stack, Typography } from "@mui/material";
 import { TFunction } from "i18next";
+import dayjs from "dayjs";
 
 // The align items on the stack is to prevent the button taking up full width of the container.
 interface CheckoutStep {
@@ -30,7 +31,7 @@ export const CheckoutStep = ({
 			<Typography>
 				{checkoutCompleted &&
 					t("requesting.expedited_checkout.steps.checkout_success", {
-						dueDate: dueDate,
+						dueDate: dayjs(dueDate).format("YYYY-MM-DD HH:mm"),
 					})}
 				{!checkoutCompleted &&
 					stepError !== 2 &&
