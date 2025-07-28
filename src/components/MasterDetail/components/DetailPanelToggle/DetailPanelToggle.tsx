@@ -30,9 +30,7 @@ export function DetailPanelToggle(
 
 	return (
 		<Tooltip
-			title={
-				isExpanded ? t("ui.data_grid.collapse") : t("ui.data_grid.expand")
-			}>
+			title={isExpanded ? t("ui.data_grid.collapse") : t("ui.actions.expand")}>
 			<IconButton
 				size="small"
 				tabIndex={-1}

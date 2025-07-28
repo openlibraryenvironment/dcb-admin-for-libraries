@@ -1,70 +1,96 @@
-import {
-  TextField,
-  InputAdornment,
-  IconButton,
-  Box,
-  Typography,
-  Card,
-} from "@mui/material";
+import { Box, Divider } from "@mui/material";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import { SimpleTextQuerySpec } from "./SimpleTextQuerySpec";
 import { LuceneQueryBuilder } from "./LuceneQueryBuilder";
-import * as React from "react";
+import { useState } from "react";
 
 interface UserSelectableQuerySpecProps {
-  searchTerm: string;
-  handleSearch: (q: string, qtype: string) => void;
+	searchTerm: string;
+	handleSearch: (q: string, qtype: string) => void;
 }
 
-export function UserSelectableQuerySpec({ searchTerm, handleSearch }: UserSelectableQuerySpecProps ) {
+export function UserSelectableQuerySpec({
+	searchTerm,
+	handleSearch,
+}: UserSelectableQuerySpecProps) {
+	const [tab, setTab] = useState(0);
 
-  const [tab, setTab] = React.useState(0);
-
-  return (
-   <Box sx={{ p: 2, border: '1px solid #ccc', borderRadius: 2, mb: 2 }}>
-     <Box sx={{ mb: 1 }}>
-      {tab === 0 && (
-        <SimpleTextQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} queryType="Lucene" />
-      )}
-      {tab === 1 && (
-        <LuceneQueryBuilder searchTerm={searchTerm} handleSearch={handleSearch} />
-      )}
-      {tab === 2 && (
-        <SimpleTextQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} queryType="default" />
-      )}
-      {tab === 3 && (
-        <SimpleTextQuerySpec searchTerm={searchTerm} handleSearch={handleSearch} queryType="CQL" />
-      )}
-     </Box>
-     <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-       <Tabs 
-         value={tab} 
-         onChange={(_, newTab) => setTab(newTab)}
-         aria-label="Query input type"
-         TabIndicatorProps={{
-           sx: {
-             top: 'unset',
-             bottom: 'unset', // unset the default bottom position
-           },
-         }}
-         sx={{
-           minHeight: '28px',
-           '& .MuiTab-root': {
-             minHeight: '28px',
-             minWidth: '64px',
-             padding: '4px 8px',
-             fontSize: '0.65rem',
-           },
-         }}
-         >
-         <Tab label="LuceneQL" />
-         <Tab label="Lucene Builder" />
-         <Tab label="Simple" />
-         <Tab label="CQL" />
-       </Tabs>
-     </Box>
-   </Box>
-  );
+	return (
+		<Box sx={{ p: 2, border: "1px solid #ccc", borderRadius: 2, mb: 2 }}>
+			<Box sx={{ mb: 1 }}>
+				{tab === 0 && (
+					<SimpleTextQuerySpec
+						searchTerm={searchTerm}
+						handleSearch={handleSearch}
+						queryType="Lucene"
+					/>
+				)}
+				{tab === 1 && (
+					<LuceneQueryBuilder
+						searchTerm={searchTerm}
+						handleSearch={handleSearch}
+					/>
+				)}
+				{tab === 2 && (
+					<SimpleTextQuerySpec
+						searchTerm={searchTerm}
+						handleSearch={handleSearch}
+						queryType="default"
+					/>
+				)}
+				{tab === 3 && (
+					<SimpleTextQuerySpec
+						searchTerm={searchTerm}
+						handleSearch={handleSearch}
+						queryType="CQL"
+					/>
+				)}
+			</Box>
+			<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+				<Tabs
+					value={tab}
+					onChange={(_, newTab) => setTab(newTab)}
+					aria-label="Query input type"
+					TabIndicatorProps={{
+						sx: {
+							top: "unset",
+							bottom: "unset", // unset the default bottom position
+						},
+					}}
+					sx={{
+						minHeight: "28px",
+						"& .MuiTab-root": {
+							minHeight: "28px",
+							minWidth: "64px",
+							padding: "4px 8px",
+							fontSize: "0.65rem",
+						},
+					}}>
+					<Tab label="LuceneQL" sx={{ ml: 1 }} />
+					<Divider
+						aria-hidden="true"
+						orientation="vertical"
+						variant="fullWidth"
+						flexItem
+					/>
+					<Tab label="Lucene Builder" />
+					<Divider
+						aria-hidden="true"
+						orientation="vertical"
+						variant="fullWidth"
+						flexItem
+					/>
+					<Tab label="Simple" />
+					<Divider
+						aria-hidden="true"
+						orientation="vertical"
+						variant="fullWidth"
+						flexItem
+					/>
+					<Tab label="CQL" />
+				</Tabs>
+			</Box>
+		</Box>
+	);
 }
-

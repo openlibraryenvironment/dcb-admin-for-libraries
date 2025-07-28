@@ -64,7 +64,7 @@ function RouteComponent() {
 			Authorization: `Bearer ${auth.user?.access_token}`,
 		}),
 		[auth.user?.access_token]
-	)
+	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
 	const {
@@ -97,7 +97,7 @@ function RouteComponent() {
 		cfg.VITE_DCB_API_BASE + "/patrons/requests/" + id + "/transition/cleanup";
 	const bibClusterRecordUrl = cfg.VITE_DCB_SEARCH_BASE
 		? "/search?q=" + patronRequest?.bibClusterId
-		: ""
+		: "";
 	const updateUrl =
 		cfg.VITE_DCB_API_BASE + "/patrons/requests/" + id + "/update";
 
@@ -171,11 +171,12 @@ function RouteComponent() {
 			return fetch(updateUrl, {
 				method: "POST",
 				headers,
-			})
+			});
 		},
 		onSuccess: () => {
 			// When the mutation is successful, invalidate the query to refetch the data
 			queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
+			setUpdateSuccessAlertVisibility(true);
 		},
 		onError: (error) => {
 			console.error("Error starting update", error);
@@ -189,10 +190,11 @@ function RouteComponent() {
 			return fetch(cleanupUrl, {
 				method: "POST",
 				headers,
-			})
+			});
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
+			setCleanupSuccessAlertVisibility(true);
 		},
 		onError: (error) => {
 			console.error("Error starting cleanup", error);
@@ -204,58 +206,7 @@ function RouteComponent() {
 
 	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
-	}
-
-	// const updateUrl = cfg.DCB_API_BASE + "/patrons/requests/" + id + "/update";
-	// const cleanupUrl =
-	// 	cfg.DCB_API_BASE + "/patrons/requests/" + id + "/transition/cleanup";
-
-	// const handleUpdate: any = async () => {
-	// 	setLoadingUpdate(true);
-	// 	try {
-	// 		await axios.post<any>(
-	// 			updateUrl,
-	// 			{},
-	// 			{
-	// 				headers: { Authorization: `Bearer ${auth.user?.access_token}` },
-	// 			}
-	// 		);
-	// 		setUpdateSuccessAlertVisibility(true);
-	// 	} catch (error) {
-	// 		console.error("Error starting update", error);
-	// 		console.log("Request data: ", data);
-	// 		setErrorAlertVisibility(true);
-	// 	}
-
-	// 	console.log("Request to update: ", data);
-	// 	client.refetchQueries({
-	// 		include: ["LoadPatronRequestsById"],
-	// 	});
-	// 	setLoadingUpdate(false);
-	// };
-
-	// const handleCleanup: any = async () => {
-	// 	setLoadingCleanup(true);
-	// 	try {
-	// 		await axios.post<any>(
-	// 			cleanupUrl,
-	// 			{},
-	// 			{
-	// 				headers: { Authorization: `Bearer ${auth.user?.access_token}` },
-	// 			}
-	// 		);
-	// 		setLoadingCleanup(false);
-	// 		setCleanupSuccessAlertVisibility(true);
-	// 	} catch (error) {
-	// 		console.error("Error starting cleanup", error);
-	// 		console.log("Request data: ", data);
-	// 		setCleanupErrorAlertVisibility(true);
-	// 	}
-	// 	client.refetchQueries({
-	// 		include: ["LoadPatronRequestsById"],
-	// 	});
-	// 	setLoadingCleanup(false);
-	// };
+	};
 
 	if (patronRequestLoading) {
 		return (
@@ -265,7 +216,7 @@ function RouteComponent() {
 				})}
 				subtitle={t("ui.info.wait")}
 			/>
-		)
+		);
 	}
 
 	return isError || patronRequest == null || patronRequest == undefined ? (
@@ -407,7 +358,7 @@ function RouteComponent() {
 									<RenderAttribute
 										attribute={
 											pickupLocationDataError
-												? t("patron_request..error_pickup")
+												? t("patron_request.error_pickup")
 												: pickupLocation?.name
 										}
 									/>
@@ -1547,6 +1498,7 @@ function RouteComponent() {
 						paginationMode="client"
 						paginationModel={{ page: 0, pageSize: 25 }}
 						pivotingEnabled={false}
+						onRowModesModelChange={setRowModesModel}
 						toolbarVisible
 						rowCount={patronRequest?.audit ? patronRequest?.audit.length : 0}
 						rowModesModel={rowModesModel}
@@ -1559,5 +1511,5 @@ function RouteComponent() {
 				</TabPanel>
 			</TabContext>
 		</>
-	)
+	);
 }

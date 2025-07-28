@@ -87,7 +87,7 @@ function RouteComponent() {
 			Authorization: `Bearer ${auth?.user?.access_token}`,
 		}),
 		[token]
-	)
+	);
 	const gridId = "mainPatronRequests";
 	const {
 		sortModel: storedSortModel,
@@ -105,24 +105,24 @@ function RouteComponent() {
 		filter: storedFilterModel[gridId],
 		pagination: storedPaginationModel[gridId],
 		columnVisibility: storedColumnVisibilityModel[gridId],
-	}
+	};
 
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
 			storedState.pagination ?? { page: 0, pageSize: 20 }
-		)
+		);
 	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
 		storedState.filter ?? { items: [] }
-	)
+	);
 	const debouncedFilterModel = useDebounce(filterModel, 500);
 
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
 		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }]
-	)
+	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
 		storedState.columnVisibility ?? defaultPatronRequestColumnVisibility
-	)
+	);
 
 	// Add state to track if we're filtering
 	const [isFiltering, setIsFiltering] = useState(false);
@@ -155,7 +155,7 @@ function RouteComponent() {
 			setPaginationModel(gridId, model);
 		},
 		[gridId, setPaginationModel]
-	)
+	);
 
 	const handleFilterChange = useCallback(
 		(model: GridFilterModel) => {
@@ -163,7 +163,7 @@ function RouteComponent() {
 			setFilterModel(gridId, model);
 		},
 		[gridId, setFilterModel]
-	)
+	);
 
 	const handleSortChange = useCallback(
 		(model: GridSortModel) => {
@@ -171,7 +171,7 @@ function RouteComponent() {
 			setSortModel(gridId, model);
 		},
 		[gridId, setSortModel]
-	)
+	);
 
 	const handleColumnVisibilityChange = useCallback(
 		(model: any) => {
@@ -179,7 +179,7 @@ function RouteComponent() {
 			setColumnVisibilityModel(gridId, model);
 		},
 		[gridId, setColumnVisibilityModel]
-	)
+	);
 
 	const code = auth.user?.profile?.code;
 
@@ -234,13 +234,13 @@ function RouteComponent() {
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "dateCreated",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
-			}
+			};
 			return request(
 				`${dcbApiBase}/graphql`,
 				getPatronRequests,
 				queryVariables,
 				headers
-			)
+			);
 		},
 		enabled: !!token && !!dcbApiBase && !!libraryHostLmsCode,
 		// refetchInterval: 1000000, // milliseconds
@@ -264,7 +264,7 @@ function RouteComponent() {
 				action={t("ui.actions.go_back")}
 				goBack="/"
 			/>
-		)
+		);
 	}
 
 	// Determine if we should show loading state
@@ -309,7 +309,8 @@ function RouteComponent() {
 				onSortModelChange={handleSortChange}
 				rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 				rowModesModel={rowModesModel}
+				onRowModesModelChange={setRowModesModel}
 			/>
 		</>
-	)
+	);
 }
