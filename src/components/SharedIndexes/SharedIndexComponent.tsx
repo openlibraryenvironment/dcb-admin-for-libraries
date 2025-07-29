@@ -223,8 +223,8 @@ export function SharedIndexComponent() {
 
 	return (
 		<Box sx={{ width: "100%" }}>
-			<Typography variant="h4" component="h1" gutterBottom>
-				{t("requesting.shared_index.title")}
+			<Typography variant="h1" gutterBottom>
+				{t("nav.titles.title")}
 			</Typography>
 			{/* <LanguageSwitcher /> */}
 

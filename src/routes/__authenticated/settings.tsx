@@ -22,18 +22,15 @@ function RouteComponent() {
 		return null;
 	}
 
-	console.log(mode);
 	return (
 		<Grid
 			container
 			spacing={{ xs: 2, md: 3 }}
 			columns={{ xs: 4, sm: 8, md: 12 }}>
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography>{t("settings.library")}</Typography>
+				<Typography variant="h1">{t("nav.settings.title")}</Typography>
 			</Grid>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography>{t("settings.customisation")}</Typography>
-			</Grid>
+
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<FormControl>
 					<FormLabel id="theme-toggle">
@@ -66,5 +63,5 @@ function RouteComponent() {
 				</FormControl>
 			</Grid>
 		</Grid>
-	)
+	);
 }

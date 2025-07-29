@@ -4,11 +4,11 @@ import { getHeadersForExport } from "./getHeadersForExport";
 
 // type for nested field paths
 type SimpleField = string;
-type NestedField = {
+interface NestedField {
 	field: string;
 	path: string[];
 	arrayHandler?: (value: any[]) => any;
-};
+}
 type FieldPath = SimpleField | NestedField;
 
 const isNestedField = (field: FieldPath): field is NestedField => {
@@ -23,7 +23,7 @@ const getNestedValue = (item: any, path: string[]): any => {
 const formatCellValue = (
 	value: any,
 	delimiter: string,
-	field: string,
+	field: string
 ): string => {
 	if (value === null || value === undefined) {
 		return "";
@@ -101,7 +101,7 @@ export const convertFileToString = (
 	data: any[],
 	delimiter: string,
 	coreType: string,
-	usefulColumns: string[] | null,
+	usefulColumns: string[] | null
 ) => {
 	const fieldsForExport = usefulColumns
 		? usefulColumns
@@ -125,7 +125,7 @@ export const convertFileToString = (
 				const value = getFieldValue(item, fieldMapping);
 				return formatCellValue(value, delimiter, field);
 			})
-			.join(delimiter),
+			.join(delimiter)
 	);
 
 	return [headerRow, ...rows].join("\n");

@@ -30,17 +30,17 @@ function ServiceComponent() {
 		}),
 		[auth.user?.access_token]
 	);
-	const id = auth.user?.profile?.libraryId;
+	const code = auth.user?.profile?.code;
 
 	// does this need a different key
 	const { data } = useQuery({
-		queryKey: ["libraryInfo", id, headers, cfg.VITE_DCB_API_BASE],
+		queryKey: ["libraryInfo", headers, code, cfg.VITE_DCB_API_BASE],
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
 				getLibrary,
 				{
-					query: "id:" + id,
+					query: "agencyCode:" + code,
 					pagesize: 10,
 					pageno: 0,
 					orderBy: "fullName",

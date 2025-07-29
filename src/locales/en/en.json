@@ -160,6 +160,12 @@
 			"user_base_url": "User base URL"
 		}
 	},
+	"ill": {
+		"dcb_requests": "DCB patron requests",
+		"login": "ILL login",
+		"logout": "Logout from ILL",
+		"requests": "ILL patron requests"
+	},
 	"library": {
 		"abbreviated_name": "Abbreviated name",
 		"backup_schedule": "Backup / downtime schedule",
@@ -217,9 +223,32 @@
 		"loading_title": "Logging in",
 		"title": "Log in to DCB Admin for Libraries"
 	},
+	"mappings": {
+		"category": "Category",
+		"delete_warning": "Are you sure you want to delete this mapping?",
+		"domain": "Domain",
+		"from_value": "From value",
+		"last_imported": "Last imported",
+		"title": "Mappings",
+		"to_value": "To value"
+	},
 	"nav": {
 		"library": {
-			"service": "Service"
+			"service": "Service",
+			"title": "Your library"
+		},
+		"mappings": {
+			"numeric": "Numeric range mappings",
+			"reference": "Reference value mappings"
+		},
+		"patron_requests": {
+			"title": "Patron requests"
+		},
+		"settings": {
+			"title": "Settings"
+		},
+		"titles": {
+			"title": "Titles"
 		}
 	},
 	"patron_request": {
@@ -332,6 +361,7 @@
 		"bib_record_id": "Bib record UUID",
 		"call_no": "Call number",
 		"context": "Context",
+		"cluster": "Cluster record",
 		"cluster_title": "Cluster details for {{record}}",
 		"cluster_tooltip": "View cluster record",
 		"cluster_id": "Cluster UUID",
@@ -372,8 +402,8 @@
 			"steps": {
 				"checkout": "Check out item",
 				"checkout_failure": "Item checkout is taking too long. Please view the request and use the 'check for updates' option to refresh its status.",
-				"checkout_success": "The item has been successfully checked out, and all steps are complete. The due date for this item is {{dueDate}}",
-				"checkout_waiting": "The request has been created. fit while we attempt to check out the item.",
+				"checkout_success": "The item has been successfully checked out, and all steps are complete. The due date for this item is {{dueDate}}.",
+				"checkout_waiting": "The request has been created. Please wait while we attempt to check out the item.",
 				"complete": "All steps complete!",
 				"patron_validation": "Patron validation",
 				"patron_validation_instruction": "Please provide the barcode and the affiliated institution of the patron.",
@@ -461,13 +491,26 @@
 			"logout": "Logout",
 			"newer": "Newer",
 			"older": "Older",
+			"reload": "Reload",
 			"save": "Save",
 			"submit": "Submit",
 			"submitting": "Submitting",
 			"title": "Actions"
 		},
+		"common": {
+			"author": "Author",
+			"last_updated": "Last updated",
+			"status": "Status",
+			"title": "Title"
+		},
 		"data_grid": {
 			"edit_summary": "Edit {{entity}}"
+		},
+		"feedback": {
+			"error": {
+				"loading": "Error loading {{entity}}",
+				"loading_message": "An error has occurred loading this page"
+			}
 		},
 		"info": {
 			"contact": "contact",

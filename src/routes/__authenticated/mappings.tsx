@@ -2,8 +2,8 @@ import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
 import Confirmation from "@components/Confirmation/Confirmation";
 import DataGrid from "@components/DataGrid/DataGrid";
+import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
-import { standardFilters } from "@constants/filters/filters";
 import { standardRefValueMappingColumns } from "@helpers/dataGrid/columns";
 import { computeMutation } from "@helpers/dataGrid/computeMutation";
 import {
@@ -16,13 +16,7 @@ import {
 	ReferenceValueMappingsQueryData,
 } from "@models/ReactQueryHelperTypes";
 import { Cancel, Delete, Edit, Save } from "@mui/icons-material";
-import {
-	Dialog,
-	DialogActions,
-	DialogContent,
-	DialogTitle,
-	Button,
-} from "@mui/material";
+import { Typography } from "@mui/material";
 import {
 	GridActionsCellItem,
 	GridColDef,
@@ -42,7 +36,7 @@ import { getLibrary } from "@queries/getLibrary";
 import { getMappings } from "@queries/getMappings";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import dayjs from "dayjs";
+// import dayjs from "dayjs";
 import request from "graphql-request";
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -61,11 +55,10 @@ function RouteComponent() {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const id = auth.user?.profile?.libraryId;
 	const headers = useMemo(
 		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
 		[auth.user?.access_token]
-	)
+	);
 
 	const gridId = "referenceValueMappings";
 	const {
@@ -84,20 +77,20 @@ function RouteComponent() {
 		filter: storedFilterModel[gridId],
 		pagination: storedPaginationModel[gridId],
 		columnVisibility: storedColumnVisibilityModel[gridId],
-	}
+	};
 
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
 			storedState.pagination ?? { page: 0, pageSize: 20 }
-		)
+		);
 	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
 		storedState.filter ?? { items: [] }
-	)
+	);
 	const debouncedFilterModel = useDebounce(filterModel, 500);
 
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
 		storedState.sort ?? [{ field: "lastImported", sort: "desc" }]
-	)
+	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [promiseArguments, setPromiseArguments] = useState<any>(null);
 	const [editRecord, setEditRecord] = useState<string | null>(null);
@@ -105,7 +98,7 @@ function RouteComponent() {
 		useState<GridRowId | null>(null);
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
 		storedState.columnVisibility ?? {}
-	)
+	);
 
 	// Add state to track if we're filtering
 	const [isFiltering, setIsFiltering] = useState(false);
@@ -124,13 +117,13 @@ function RouteComponent() {
 		isLoading: librariesLoading,
 		isError: librariesError,
 	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", id, headers, code, DCB_URL],
+		queryKey: ["libraryInfo", headers, code, DCB_URL],
 		queryFn: async () =>
 			request(
 				DCB_URL,
 				getLibrary,
 				{
-					query: code ? "agencyCode:" + code : "id:" + id,
+					query: "agencyCode:" + code,
 					pagesize: 10,
 					pageno: 0,
 					orderBy: "fullName",
@@ -170,7 +163,7 @@ function RouteComponent() {
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "lastImported",
 				orderBy: getSortOrderForServer(sortModel[0]?.sort) ?? "DESC",
-			}
+			};
 			return request(DCB_URL, getMappings, queryVariables, headers);
 		},
 		enabled: !!libraryHostLmsCode,
@@ -216,7 +209,7 @@ function RouteComponent() {
 			setPaginationModel(gridId, model);
 		},
 		[gridId, setPaginationModel]
-	)
+	);
 
 	const handleFilterChange = useCallback(
 		(model: GridFilterModel) => {
@@ -224,7 +217,7 @@ function RouteComponent() {
 			setFilterModel(gridId, model);
 		},
 		[gridId, setFilterModel]
-	)
+	);
 
 	const handleSortChange = useCallback(
 		(model: GridSortModel) => {
@@ -232,7 +225,7 @@ function RouteComponent() {
 			setSortModel(gridId, model);
 		},
 		[gridId, setSortModel]
-	)
+	);
 
 	const handleColumnVisibilityChange = useCallback(
 		(model: GridColumnVisibilityModel) => {
@@ -240,33 +233,33 @@ function RouteComponent() {
 			setColumnVisibilityModel(gridId, model);
 		},
 		[gridId, setColumnVisibilityModel]
-	)
+	);
 
 	const handleEditClick = (id: GridRowId) => () => {
 		setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-	}
+	};
 
 	const handleSaveClick = (id: GridRowId) => () => {
 		setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-	}
+	};
 
 	const handleCancelClick = (id: GridRowId) => () => {
 		setRowModesModel({
 			...rowModesModel,
 			[id]: { mode: GridRowModes.View, ignoreModifications: true },
-		})
-	}
+		});
+	};
 
 	const handleDeleteClick = (id: GridRowId) => () => {
 		setDeleteConfirmationId(id);
-	}
+	};
 
 	const handleConfirmDelete = () => {
 		if (deleteConfirmationId) {
 			deleteMapping(deleteConfirmationId);
 			setDeleteConfirmationId(null);
 		}
-	}
+	};
 
 	const processRowUpdate = useCallback(
 		(newRow: GridRowModel, oldRow: GridRowModel) =>
@@ -274,13 +267,13 @@ function RouteComponent() {
 				const changes = computeMutation(newRow, oldRow);
 				if (!changes) {
 					resolve(oldRow);
-					return
+					return;
 				}
 				setEditRecord(changes);
 				setPromiseArguments({ resolve, reject, newRow, oldRow });
 			}),
 		[]
-	)
+	);
 
 	const handleModalConfirm = async (
 		reason: string,
@@ -295,12 +288,12 @@ function RouteComponent() {
 			reason,
 			changeCategory,
 			changeReferenceUrl,
-		}
+		};
 		Object.keys(newRow).forEach((key) => {
 			if (newRow[key] !== oldRow[key]) {
 				input[key] = newRow[key];
 			}
-		})
+		});
 
 		try {
 			const result = await updateMapping({ input });
@@ -311,7 +304,7 @@ function RouteComponent() {
 			setPromiseArguments(null);
 			setEditRecord(null);
 		}
-	}
+	};
 
 	const handleModalCancel = () => {
 		if (!promiseArguments) return;
@@ -319,7 +312,7 @@ function RouteComponent() {
 		resolve(oldRow);
 		setPromiseArguments(null);
 		setEditRecord(null);
-	}
+	};
 
 	const actionsColumn: GridColDef[] = useMemo(
 		() => [
@@ -345,7 +338,7 @@ function RouteComponent() {
 								label="Cancel"
 								onClick={handleCancelClick(id)}
 							/>,
-						]
+						];
 					}
 					return [
 						<GridActionsCellItem
@@ -360,12 +353,12 @@ function RouteComponent() {
 							label="Delete"
 							onClick={handleDeleteClick(id)}
 						/>,
-					]
+					];
 				},
 			},
 		],
 		[rowModesModel]
-	)
+	);
 
 	const refValueColumns = [...standardRefValueMappingColumns, ...actionsColumn];
 
@@ -373,20 +366,27 @@ function RouteComponent() {
 	if ((mappingsLoading && !mappingsData) || librariesLoading) {
 		return (
 			<Loading
-				title={t("ui.info.loading.document")}
-				subtitle="Loading mappings"
+				title={t("ui.info.loading.document", {
+					document_type: t("nav.mappings.reference").toLowerCase(),
+				})}
+				subtitle={t("ui.info.wait")}
 			/>
-		)
+		);
 	}
 
 	if (mappingsError) {
-		console.log(error, mappingsError);
+		console.log(error, mappingsError, librariesError);
 		return (
-			<Loading
-				title="Error loading mappings"
-				subtitle="Please try again later"
+			<Error
+				title={t("ui.feedback.error.loading", {
+					entity: t("nav.mappings.reference").toLowerCase(),
+				})}
+				message={t("ui.info.connection_issue")}
+				description={t("ui.info.try_later")}
+				action={t("ui.actions.go_back")}
+				goBack="/"
 			/>
-		)
+		);
 	}
 
 	// Determine if we should show loading state
@@ -395,6 +395,7 @@ function RouteComponent() {
 
 	return (
 		<>
+			<Typography variant="h1">{t("nav.mappings.reference")}</Typography>
 			<DataGrid
 				disablePivoting
 				identifier={gridId}
@@ -439,20 +440,14 @@ function RouteComponent() {
 				action="gridEdit"
 				editInformation={editRecord}
 			/>
-			<Dialog
+			<Confirmation
 				open={!!deleteConfirmationId}
-				onClose={() => setDeleteConfirmationId(null)}>
-				<DialogTitle>Delete Mapping</DialogTitle>
-				<DialogContent>
-					Are you sure you want to delete this mapping?
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={() => setDeleteConfirmationId(null)}>Cancel</Button>
-					<Button onClick={handleConfirmDelete} color="error">
-						Delete
-					</Button>
-				</DialogActions>
-			</Dialog>
+				onClose={() => setDeleteConfirmationId(null)}
+				onConfirm={handleConfirmDelete}
+				gridEdit={false}
+				entityName="ReferenceValueMapping"
+				action="deletion"
+			/>
 		</>
-	)
+	);
 }

@@ -1,10 +1,8 @@
 interface UpdateChanges {
-	new_values: { [key: string]: string };
-	old_values: { [key: string]: string };
+	new_values: Record<string, string>;
+	old_values: Record<string, string>;
 }
 
-interface InsertChanges {
-	[key: string]: string;
-}
+type InsertChanges = Record<string, string>;
 
 export type Changes = UpdateChanges | InsertChanges;

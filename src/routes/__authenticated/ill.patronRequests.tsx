@@ -37,6 +37,7 @@ import { useGridStore } from "@/hooks/useDataGridStore";
 import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
 import { getLibrary } from "@queries/getLibrary";
 import { useILLAuth } from "@/lib/illAuth";
+import Loading from "@components/Loading/Loading";
 
 interface ILLPatronRequest {
 	id: string;
@@ -146,7 +147,6 @@ function PatronRequestsComponent() {
 		isILLAuthenticated,
 		isLoading: isAuthLoading,
 	} = useILLAuth();
-	const id = auth.user?.profile?.libraryId;
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
 	const oidcToken = oidcAuth.user?.access_token;
@@ -218,13 +218,13 @@ function PatronRequestsComponent() {
 		isLoading: librariesLoading,
 		isError: librariesError,
 	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", id, headers, code, dcbApiBase],
+		queryKey: ["libraryInfo", headers, code, dcbApiBase],
 		queryFn: async () =>
 			request(
 				`${dcbApiBase}/graphql`,
 				getLibrary,
 				{
-					query: code ? "agencyCode:" + code : "id:" + id, // Prefer to use the full name, but fall back to the ID if needed
+					query: "agencyCode:" + code,
 					pagesize: 10,
 					pageno: 0,
 					orderBy: "fullName",
@@ -298,14 +298,14 @@ function PatronRequestsComponent() {
 		{ field: "hrid", headerName: "Request ID", width: 150 },
 		{
 			field: "title",
-			headerName: "Title",
+			headerName: t("ui.common.title"),
 			flex: 1,
 			minWidth: 250,
 			valueGetter: (value, row) => row.title || "N/A",
 		},
 		{
 			field: "author",
-			headerName: "Author",
+			headerName: t("ui.common.author"),
 			flex: 1,
 			minWidth: 200,
 			valueGetter: (value, row) => row.author || "N/A",
@@ -313,22 +313,28 @@ function PatronRequestsComponent() {
 		{ field: "patronIdentifier", headerName: "Patron", width: 150 },
 		{
 			field: "state",
-			headerName: "Status",
+			headerName: t("ui.common.status"),
 			width: 200,
 			valueGetter: (_value, row) => row.state.code,
 		},
 		{
 			field: "lastUpdated",
-			headerName: "Last Updated",
+			headerName: t("ui.common.last_updated"),
 			width: 200,
 			type: "dateTime",
 			valueGetter: (_value, row) => new Date(row.lastUpdated),
 		},
 	];
 
-	// Various loading or error statess
-	if (isAuthLoading) {
-		return <CircularProgress />;
+	if (isAuthLoading || librariesLoading) {
+		return (
+			<Loading
+				title={t("ui.info.loading.document", {
+					document_type: t("ill.requests"),
+				})}
+				subtitle={t("ui.info.wait")}
+			/>
+		);
 	}
 
 	if (isIllError) {
@@ -343,7 +349,7 @@ function PatronRequestsComponent() {
 		);
 	}
 
-	if (isDcbError) {
+	if (isDcbError || librariesError) {
 		return (
 			<Error
 				title={t("ui.error.cannot_retrieve_record")}
@@ -364,13 +370,13 @@ function PatronRequestsComponent() {
 			<AppBar position="static" color="default">
 				<Toolbar>
 					<Typography variant="h6" sx={{ flexGrow: 1 }}>
-						Patron Requests
+						{t("nav.patron_requests.title")}
 					</Typography>
 					<Button
 						color="inherit"
 						onClick={logoutILL}
 						startIcon={<LogoutIcon />}>
-						Logout from ILL
+						{t("ill.logout")}
 					</Button>
 				</Toolbar>
 			</AppBar>
@@ -378,7 +384,7 @@ function PatronRequestsComponent() {
 			<Stack spacing={2} direction={"column"} sx={{ mt: 4 }}>
 				{/* DCB Requests Section */}
 				<Typography variant="h5" component="h2" gutterBottom>
-					DCB Requests
+					{t("ill.dcb_requests")}
 				</Typography>
 				{dcbData && (
 					<DataGrid
@@ -412,12 +418,13 @@ function PatronRequestsComponent() {
 							dcbData.patronRequests ? dcbData.patronRequests?.totalSize : 0
 						}
 						rowModesModel={rowModesModel}
+						onRowModesModelChange={setRowModesModel}
 					/>
 				)}
 
 				{/* ILL Requests Section */}
 				<Typography variant="h5" component="h2" gutterBottom>
-					ILL Requests
+					{t("ill.requests")}
 				</Typography>
 				{isIllLoading && <CircularProgress sx={{ m: 2 }} />}
 				{illData && (
@@ -446,6 +453,7 @@ function PatronRequestsComponent() {
 						paginationModel={{ page: 0, pageSize: 25 }}
 						rowCount={illData.totalRecords}
 						rowModesModel={{}}
+						onRowModesModelChange={setRowModesModel}
 					/>
 				)}
 			</Stack>

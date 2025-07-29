@@ -13,6 +13,7 @@ import {
 	Divider,
 	Stack,
 	TextField,
+	Typography,
 } from "@mui/material";
 import ChangesSummary from "../ChangesSummary/ChangesSummary";
 import * as Yup from "yup";
@@ -32,9 +33,7 @@ const Confirmation = ({
 	gridEdit, // boolean value for grid editing
 }: ConfirmationType) => {
 	const { t } = useTranslation();
-	console.log(entityName);
-	console.log(editInformation);
-	console.log(gridEdit, open);
+
 	const getCharCountHelperText = (
 		value: string,
 		maxLength: number,
@@ -82,15 +81,13 @@ const Confirmation = ({
 
 	const getHeaderText = () => {
 		switch (action) {
+			case "deletion":
+				return t("ui.data_grid.delete_header", {
+					entity: t("ui.info.contact"),
+					name: entityName,
+				});
 			case "gridEdit":
 			case "pageEdit":
-				console.log("HET", entityName);
-				console.log(getEntityText(entityName, gridEdit).toLowerCase());
-				console.log(
-					gridEdit
-						? t(getEntityText(entityName, gridEdit)).toLowerCase()
-						: entityName
-				);
 				return t("ui.data_grid.edit_summary", {
 					entity: gridEdit
 						? t(getEntityText(entityName, gridEdit)).toLowerCase()
@@ -101,6 +98,14 @@ const Confirmation = ({
 
 	const getDialogContent = () => {
 		switch (action) {
+			case "deletion":
+				return (
+					<Box>
+						<Typography variant="body1">
+							{t("ui.data_grid.delete_body_library")}
+						</Typography>
+					</Box>
+				);
 			case "gridEdit":
 			case "pageEdit":
 				return (

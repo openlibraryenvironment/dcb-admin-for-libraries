@@ -60,7 +60,6 @@ export default function ExpeditedCheckout({
 }: PatronRequestFormType) {
 	const { t } = useTranslation();
 	const auth = useAuth();
-	const libraryId = auth.user?.profile?.libraryId; // The ID for the library of the staff user.
 	const userAgencyCode = String(auth.user?.profile?.code);
 	// Also the ID of the library of the item.
 
@@ -110,13 +109,13 @@ export default function ExpeditedCheckout({
 		// isError: errorFetchingStaffLibrary,
 		// isLoading: staffLibraryLoading,
 	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", libraryId, headers],
+		queryKey: ["libraryInfo", userAgencyCode, headers],
 		queryFn: async () =>
 			request(
 				import.meta.env.VITE_DCB_API_BASE + "/graphql",
 				getLibrary,
 				{
-					query: "id:" + libraryId,
+					query: "agencyCode:" + userAgencyCode,
 					pagesize: 10,
 					pageno: 0,
 					orderBy: "fullName",
@@ -280,7 +279,7 @@ export default function ExpeditedCheckout({
 		itemLocalSystemCode,
 	} = formValues;
 
-	const locationQuery = `agency:${staffLibrary?.agency?.id}`;
+	const locationQuery = `agency:${staffLibrary?.agency?.id}`; // Staff library is always the supplier.
 
 	console.log(itemLocalSystemCode);
 

@@ -256,8 +256,10 @@ export default function ClusterRecordComponent() {
 	if (isLoading) {
 		return (
 			<Loading
-				title="Loading Cluster Data"
-				subtitle="Please wait while we fetch the item and cluster information."
+				title={t("ui.info.loading.document", {
+					document_type: t("requesting.cluster"),
+				})}
+				subtitle={t("ui.info.wait")}
 			/>
 		);
 	}
@@ -265,10 +267,12 @@ export default function ClusterRecordComponent() {
 	if (isError) {
 		return (
 			<Error
-				title="Error"
-				message="There was an issue retrieving the cluster data."
-				description="Please try again later. If the problem persists, contact support."
-				action="Reload Page"
+				title={t("ui.feedback.error.loading", {
+					entity: t("requesting.cluster"),
+				})}
+				message={t("ui.feedback.error.loading_message")}
+				description={t("ui.info.reload")}
+				action={t("ui.actions.reload")}
 				reload={true}
 			/>
 		);
@@ -276,13 +280,6 @@ export default function ClusterRecordComponent() {
 
 	const itemCount = data?.availability?.itemList?.length ?? 0;
 
-	// deprecate auto height and adornments, use input props instead
-	// Sub in breadcrumbs and an actual layout when we can
-
-	console.log(data?.comparisonItems?.itemList);
-	console.log(itemsNotShown);
-
-	console.log(itemsNotShown?.length);
 	return (
 		<Box sx={{ width: "100%" }}>
 			<Stack

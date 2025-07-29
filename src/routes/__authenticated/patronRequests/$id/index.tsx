@@ -38,6 +38,7 @@ import { formatDuration } from "@helpers/formatDuration";
 import Loading from "@components/Loading/Loading";
 import { GridRowModesModel } from "@mui/x-data-grid-premium";
 import { CustomLink } from "@components/CustomLink";
+import { SourceRecord } from "@models/SourceRecord";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
 	component: RouteComponent,
@@ -765,10 +766,11 @@ function RouteComponent() {
 						<AccordionDetails>
 							{members &&
 							members.some(
-								(member: { sourceRecord: any }) => member.sourceRecord !== null
+								(member: { sourceRecord: SourceRecord }) =>
+									member.sourceRecord !== null
 							) ? (
 								members.map(
-									(member: { sourceRecord: any }, index: number) =>
+									(member: { sourceRecord: SourceRecord }, index: number) =>
 										member.sourceRecord && (
 											<pre key={index}>
 												{JSON.stringify(member.sourceRecord, null, 2)}

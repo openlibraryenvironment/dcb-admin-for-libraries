@@ -42,9 +42,8 @@ function HomeComponent() {
 			Authorization: `Bearer ${auth.user?.access_token}`,
 		}),
 		[auth.user?.access_token]
-	)
+	);
 
-	const id = auth.user?.profile?.libraryId;
 	const code = auth.user?.profile?.code;
 
 	const theme = useTheme();
@@ -57,7 +56,7 @@ function HomeComponent() {
 		setEditMode(false);
 		setChangedFields({});
 		reset();
-	}
+	};
 
 	console.log(showConfirmationEdit);
 
@@ -79,20 +78,20 @@ function HomeComponent() {
 				firstEditableFieldRef.current.focus();
 			}
 		}, 0);
-	}
+	};
 
 	// skip if headers not available
 	// figure out polling intervals
 	// need a better way of handling tokens as this causes a request to be sent (almost) every time
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const { data, isError, isLoading, refetch } = useQuery({
-		queryKey: ["libraryInfo", id, headers, code, cfg.VITE_DCB_API_BASE],
+		queryKey: ["libraryInfo", headers, code, cfg.VITE_DCB_API_BASE],
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
 				getLibrary,
 				{
-					query: code ? "agencyCode:" + code : "id:" + id, // Prefer to use the full name, but fall back to the ID if needed
+					query: "agencyCode:" + code,
 					pagesize: 10,
 					pageno: 0,
 					orderBy: "fullName",
@@ -104,6 +103,11 @@ function HomeComponent() {
 	});
 	// on success
 
+	// Sort out types for graphql queries - we don't have apollo to do this for us any more
+
+	//@ts-expect-error TYPING
+	const library: Library = data?.libraries?.content?.[0];
+
 	const updateLibraryMutation = useMutation({
 		mutationFn: async (formData: UpdateLibraryFormData) => {
 			const response: UpdateLibraryResponse = await request(
@@ -111,12 +115,12 @@ function HomeComponent() {
 				updateLibrary,
 				{
 					input: {
-						id: id,
+						id: library?.id,
 						...formData,
 					},
 				},
 				headers
-			)
+			);
 			return response.updateLibrary;
 		},
 		onSuccess: (data) => {
@@ -133,7 +137,7 @@ function HomeComponent() {
 					name: library?.fullName,
 				}),
 				title: t("common.updated"),
-			})
+			});
 			if (data) {
 				reset({
 					fullName: library.fullName ?? "",
@@ -143,7 +147,7 @@ function HomeComponent() {
 					backupDowntimeSchedule: library.backupDowntimeSchedule,
 					longitude: library.longitude,
 					latitude: library.latitude,
-				})
+				});
 			}
 			refetch();
 		},
@@ -156,14 +160,10 @@ function HomeComponent() {
 					name: library?.fullName,
 				}),
 				title: t("common.error"),
-			})
+			});
 		},
 	});
 
-	// Sort out types for graphql queries - we don't have apollo to do this for us any more
-
-	//@ts-expect-error TYPING
-	const library: Library = data?.libraries?.content?.[0];
 	const validationSchema = Yup.object().shape({
 		fullName: Yup.string()
 			.trim()
@@ -245,10 +245,10 @@ function HomeComponent() {
 		setChangedFields(newChangedFields);
 		if (Object.keys(newChangedFields).length === 0) {
 			setEditMode(false);
-			return
+			return;
 		}
 		setConfirmationEdit(true);
-	}
+	};
 
 	const handleConfirmSave = async (
 		reason: string,
@@ -262,7 +262,7 @@ function HomeComponent() {
 				reason,
 				changeCategory,
 				changeReferenceUrl,
-			})
+			});
 		} catch (error) {
 			console.error("Error updating library:", error);
 			setAlert({
@@ -273,11 +273,11 @@ function HomeComponent() {
 					name: library?.fullName,
 				}),
 				title: t("ui.data_grid.updated"),
-			})
+			});
 		} finally {
 			setConfirmationEdit(false);
 		}
-	}
+	};
 
 	return (
 		<Grid
@@ -632,5 +632,5 @@ function HomeComponent() {
 				/>
 			)}
 		</Grid>
-	)
+	);
 }

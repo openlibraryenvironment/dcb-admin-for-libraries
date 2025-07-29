@@ -14,6 +14,7 @@ import {
 } from "@models/ReactQueryHelperTypes";
 import { Typography } from "@mui/material";
 import {
+	GridColumnVisibilityModel,
 	GridFilterModel,
 	GridPaginationModel,
 	GridRowModesModel,
@@ -24,7 +25,7 @@ import { getPatronRequests } from "@queries/getPatronRequests";
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
-	useNavigate,
+	// useNavigate,
 	useRouter,
 } from "@tanstack/react-router";
 import request from "graphql-request";
@@ -74,11 +75,10 @@ const processMuiFilterModel = (
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	const navigate = useNavigate();
+	// const navigate = useNavigate();
 	const auth = useAuth();
 
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const id = auth.user?.profile?.libraryId;
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
 	const token = auth?.user?.access_token;
@@ -174,7 +174,7 @@ function RouteComponent() {
 	);
 
 	const handleColumnVisibilityChange = useCallback(
-		(model: any) => {
+		(model: GridColumnVisibilityModel) => {
 			setLocalColumnVisibilityModel(model);
 			setColumnVisibilityModel(gridId, model);
 		},
@@ -189,13 +189,13 @@ function RouteComponent() {
 		isLoading: librariesLoading,
 		isError: librariesError,
 	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", id, headers, code, dcbApiBase],
+		queryKey: ["libraryInfo", headers, code, dcbApiBase],
 		queryFn: async () =>
 			request(
 				`${dcbApiBase}/graphql`,
 				getLibrary,
 				{
-					query: code ? "agencyCode:" + code : "id:" + id,
+					query: "agencyCode:" + code,
 					pagesize: 10,
 					pageno: 0,
 					orderBy: "fullName",
@@ -255,7 +255,7 @@ function RouteComponent() {
 		return <Loading title="Patron requests loading" subtitle="Please wait" />;
 	}
 	if (isPatronRequestError) {
-		console.log(error, isPatronRequestError);
+		console.log(error, isPatronRequestError, librariesError);
 		return (
 			<Error
 				title={t("ui.error.cannot_retrieve_record")}
@@ -275,9 +275,7 @@ function RouteComponent() {
 
 	return (
 		<>
-			<Typography variant="h5" component="h2" gutterBottom>
-				Patron Requests
-			</Typography>
+			<Typography variant="h1">{t("nav.patron_requests.title")}</Typography>
 			<DataGrid
 				disablePivoting
 				rows={patronRequestData?.patronRequests?.content ?? []}

@@ -31,7 +31,7 @@ export const CheckoutStep = ({
 			<Typography>
 				{checkoutCompleted &&
 					t("requesting.expedited_checkout.steps.checkout_success", {
-						dueDate: dayjs(dueDate).format("YYYY-MM-DD HH:mm"),
+						dueDate: dayjs(dueDate).format("dddd, MMMM D, YYYY h:mm A"),
 					})}
 				{!checkoutCompleted &&
 					stepError !== 2 &&
