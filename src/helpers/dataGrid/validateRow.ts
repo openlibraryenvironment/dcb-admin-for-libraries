@@ -1,13 +1,13 @@
 import { GridValidRowModel } from "@mui/x-data-grid-premium";
-interface ValidationResult = {
+interface ValidationResult {
 	field: string;
 	translationKey: string;
-};
+}
 // For the validation of row edits in the data grids.
 export const validateRow = (
 	newRow: GridValidRowModel,
 	oldRow: GridValidRowModel,
-	editableColumns: any,
+	editableColumns: any
 ): ValidationResult | null => {
 	// For debugging purposes. Commented out by default
 	// console.log("New Row:", JSON.stringify(newRow, null, 2));
