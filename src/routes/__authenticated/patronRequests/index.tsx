@@ -12,7 +12,6 @@ import {
 	LibrariesQueryData,
 	PatronRequestQueryData,
 } from "@models/ReactQueryHelperTypes";
-import { Typography } from "@mui/material";
 import {
 	GridColumnVisibilityModel,
 	GridFilterModel,
@@ -275,7 +274,6 @@ function RouteComponent() {
 
 	return (
 		<>
-			<Typography variant="h1">{t("nav.patron_requests.title")}</Typography>
 			<DataGrid
 				disablePivoting
 				rows={patronRequestData?.patronRequests?.content ?? []}

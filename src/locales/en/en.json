@@ -545,6 +545,7 @@
 	},
 	"welcome": {
 		"background": "DCB Admin for Libraries is an all-new part of the DCB experience, putting the power of Direct Consortial Borrowing in the hands of library staff worldwide. Tailored to the tasks library staff do every day, DCB Admin abstracts away the noise and delivers exactly the information you want, when you want it.",
+		"library": "Library information for {{library}}",
 		"title": "Welcome to DCB Admin for {{library}}, {{name}}."
 	}
 }

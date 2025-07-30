@@ -16,7 +16,6 @@ import {
 	ReferenceValueMappingsQueryData,
 } from "@models/ReactQueryHelperTypes";
 import { Cancel, Delete, Edit, Save } from "@mui/icons-material";
-import { Typography } from "@mui/material";
 import {
 	GridActionsCellItem,
 	GridColDef,
@@ -395,7 +394,6 @@ function RouteComponent() {
 
 	return (
 		<>
-			<Typography variant="h1">{t("nav.mappings.reference")}</Typography>
 			<DataGrid
 				disablePivoting
 				identifier={gridId}

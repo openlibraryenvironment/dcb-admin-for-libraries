@@ -4,7 +4,6 @@ import {
 	FormLabel,
 	Radio,
 	RadioGroup,
-	Typography,
 	useColorScheme,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
@@ -27,10 +26,6 @@ function RouteComponent() {
 			container
 			spacing={{ xs: 2, md: 3 }}
 			columns={{ xs: 4, sm: 8, md: 12 }}>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h1">{t("nav.settings.title")}</Typography>
-			</Grid>
-
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<FormControl>
 					<FormLabel id="theme-toggle">

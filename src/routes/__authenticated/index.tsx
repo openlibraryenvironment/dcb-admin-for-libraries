@@ -14,7 +14,7 @@ import { Controller, useForm } from "react-hook-form";
 import { UpdateLibraryFormData } from "../../models/UpdateLibraryFormData";
 import { updateLibrary } from "../../mutations/updateLibrary";
 import { UpdateLibraryResponse } from "../../models/UpdateLibraryResponse";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import TimedAlert from "../../components/TimedAlert/TimedAlert";
@@ -125,7 +125,6 @@ function HomeComponent() {
 		},
 		onSuccess: (data) => {
 			setChangedFields({});
-
 			setEditMode(false);
 			refetch();
 			console.log(data);
@@ -221,14 +220,23 @@ function HomeComponent() {
 		mode: "onChange",
 	});
 
-	// Needs:
-	// Some landing page content
-	// the library edit form
-	// attributes
-	// proper layout
-	// actions button
-	// Move edit form onto its own page, somewhere.
-	// And make the initial values show up.
+	useEffect(() => {
+		if (library) {
+			// The reset function populates the form with the latest data
+			// from the query, whether it's the initial fetch or a subsequent poll.
+			// This exists to replicate what was previously handled by the onSuccess in react-query
+			// https://tkdodo.eu/blog/breaking-react-querys-api-on-purpose
+			reset({
+				fullName: library.fullName ?? "",
+				shortName: library.shortName ?? "",
+				abbreviatedName: library.abbreviatedName ?? "",
+				supportHours: library.supportHours ?? "",
+				backupDowntimeSchedule: library.backupDowntimeSchedule ?? "",
+				latitude: library.latitude,
+				longitude: library.longitude,
+			});
+		}
+	}, [library, reset]);
 
 	// refactor this into common code
 	const onSubmit = (data: Partial<Library>) => {
@@ -288,7 +296,7 @@ function HomeComponent() {
 				<Typography>
 					{t("welcome.title", {
 						library: library?.fullName,
-						name: auth.user?.profile?.name, // May need to expand typing here too
+						name: auth.user?.profile?.name,
 					})}
 				</Typography>
 			</Grid>
@@ -296,7 +304,7 @@ function HomeComponent() {
 				<Typography>
 					{t("welcome.background", {
 						library: library?.fullName,
-						name: auth.user?.profile?.name, // May need to expand typing here too
+						name: auth.user?.profile?.name,
 					})}
 				</Typography>
 			</Grid>
@@ -335,7 +343,7 @@ function HomeComponent() {
 			</Grid>
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography variant="h3" fontWeight={"bold"}>
-					{library?.fullName}
+					{t("welcome.library", { library: library?.fullName })}
 				</Typography>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
@@ -397,7 +405,7 @@ function HomeComponent() {
 									margin="normal"
 								/>
 							) : (
-								<RenderAttribute attribute={library?.fullName} />
+								<RenderAttribute attribute={library?.shortName} />
 							)
 						}
 					/>
