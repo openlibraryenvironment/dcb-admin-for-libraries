@@ -60,7 +60,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		filterOperators: standardFilters,
 		editable: true,
 		sortable: true,
-		valueGetter: (value: any, row: { toValue: any }) => row?.toValue,
+		valueGetter: (value: string, row: { toValue: string }) => row?.toValue,
 	},
 	{
 		field: "lastImported",
@@ -70,7 +70,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		filterOperators: standardFilters,
 		editable: false,
 		sortable: true,
-		valueGetter: (value: any, row: { lastImported: any }) => {
+		valueGetter: (value: string, row: { lastImported: string }) => {
 			const lastImported = row.lastImported;
 			const formattedDate = dayjs(lastImported).format("YYYY-MM-DD HH:mm");
 			if (formattedDate == "Invalid Date") {
@@ -88,7 +88,8 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		filterOperators: standardFilters,
 		editable: true,
 		sortable: true,
-		valueGetter: (value: any, row: { toCategory: any }) => row?.toCategory,
+		valueGetter: (value: string, row: { toCategory: string }) =>
+			row?.toCategory,
 	},
 ];
 
@@ -137,7 +138,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		filterOperators: standardFilters,
 		sortable: true,
 		editable: true,
-		valueGetter: (value: any, row: { toValue: any }) => row?.toValue,
+		valueGetter: (value: string, row: { toValue: string }) => row?.toValue,
 	},
 	{
 		field: "lastImported",
@@ -147,7 +148,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		filterOperators: standardFilters,
 		sortable: true,
 		editable: false,
-		valueGetter: (value: any, row: { lastImported: any }) => {
+		valueGetter: (value: string, row: { lastImported: string }) => {
 			const lastImported = row.lastImported;
 			const formattedDate = dayjs(lastImported).format("YYYY-MM-DD HH:mm");
 			if (formattedDate == "Invalid Date") {
@@ -165,7 +166,8 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 		filterOperators: standardFilters,
 		editable: true,
 		sortable: true,
-		valueGetter: (value: any, row: { toCategory: any }) => row?.toCategory,
+		valueGetter: (value: string, row: { toCategory: string }) =>
+			row?.toCategory,
 	},
 ];
 
@@ -219,7 +221,7 @@ export const standardNumRangeMappingColumns: GridColDef[] = [
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: standardFilters,
-		valueGetter: (value: any, row: { lastImported: any }) => {
+		valueGetter: (value: string, row: { lastImported: string }) => {
 			const lastImported = row.lastImported;
 			const formattedDate = dayjs(lastImported).format("YYYY-MM-DD HH:mm");
 			if (formattedDate == "Invalid Date") {
@@ -281,7 +283,7 @@ export const numRangeMappingColumnsNoCategoryFilter: GridColDef[] = [
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: standardFilters,
-		valueGetter: (value: any, row: { lastImported: any }) => {
+		valueGetter: (value: string, row: { lastImported: string }) => {
 			const lastImported = row.lastImported;
 			const formattedDate = dayjs(lastImported).format("YYYY-MM-DD HH:mm");
 			if (formattedDate == "Invalid Date") {
@@ -299,7 +301,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		headerName: "Request created",
 		minWidth: 150,
 		filterable: false,
-		valueGetter: (value: any, row: { dateCreated: string }) => {
+		valueGetter: (value: string, row: { dateCreated: string }) => {
 			const requestCreated = row.dateCreated;
 			return dayjs(requestCreated).format("YYYY-MM-DD HH:mm");
 		},
@@ -316,7 +318,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		filterable: false,
 		sortable: false,
 		flex: 0.75,
-		valueGetter: (value: any, row: PatronRequest) =>
+		valueGetter: (value: string, row: PatronRequest) =>
 			row?.requestingIdentity?.localBarcode,
 	},
 	{
@@ -326,7 +328,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		flex: 1.5,
 		filterable: false, // Cannot currently filter on nested properties.
 		sortable: false,
-		valueGetter: (value: any, row: { clusterRecord: { title: string } }) =>
+		valueGetter: (value: string, row: { clusterRecord: { title: string } }) =>
 			row?.clusterRecord?.title,
 	},
 	{
@@ -335,7 +337,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		filterable: false,
 		sortable: false,
 		flex: 0.75,
-		valueGetter: (value: any, row: PatronRequest) => {
+		valueGetter: (value: string, row: PatronRequest) => {
 			// Check if suppliers array is not empty
 			if (row.suppliers.length > 0) {
 				return row.suppliers[0].localAgency;
@@ -365,7 +367,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		flex: 0.5,
 		filterable: false,
 		sortable: false,
-		valueGetter: (value: any, row: PatronRequest) => {
+		valueGetter: (value: string, row: PatronRequest) => {
 			const requestingIdentity = row?.requestingIdentity;
 			return requestingIdentity?.canonicalPtype ?? "";
 		},
@@ -378,7 +380,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		filterable: false,
 		sortable: false,
 		valueGetter: (
-			value: any,
+			value: string,
 			row: { suppliers: { canonicalItemType: string }[] }
 		) => {
 			if (row.suppliers.length > 0) {
@@ -436,7 +438,10 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		minWidth: 50,
 		type: "number",
 		filterOperators: durationFilters,
-		valueGetter: (value: any, row: { elapsedTimeInCurrentStatus: number }) => {
+		valueGetter: (
+			value: string,
+			row: { elapsedTimeInCurrentStatus: number }
+		) => {
 			return formatDuration(row.elapsedTimeInCurrentStatus);
 		},
 	},
@@ -451,7 +456,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		headerName: "Request updated",
 		minWidth: 150,
 		filterable: false,
-		valueGetter: (value: any, row: { dateUpdated: string }) => {
+		valueGetter: (value: string, row: { dateUpdated: string }) => {
 			const requestUpdated = row.dateUpdated;
 			return dayjs(requestUpdated).format("YYYY-MM-DD HH:mm");
 		},
@@ -498,7 +503,7 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		headerName: "Request created",
 		minWidth: 150,
 		filterable: false,
-		valueGetter: (value: any, row: { dateCreated: string }) => {
+		valueGetter: (value: string, row: { dateCreated: string }) => {
 			const requestCreated = row.dateCreated;
 			return dayjs(requestCreated).format("YYYY-MM-DD HH:mm");
 		},
@@ -514,7 +519,7 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		headerName: "Patron barcode",
 		filterable: false,
 		sortable: false,
-		valueGetter: (value: any, row: PatronRequest) =>
+		valueGetter: (value: string, row: PatronRequest) =>
 			row?.requestingIdentity?.localBarcode,
 	},
 	{
@@ -524,7 +529,7 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		flex: 1.25,
 		filterable: false, // Cannot currently filter on nested properties.
 		sortable: false,
-		valueGetter: (value: any, row: { clusterRecord: { title: string } }) =>
+		valueGetter: (value: string, row: { clusterRecord: { title: string } }) =>
 			row?.clusterRecord?.title,
 	},
 	{
@@ -533,7 +538,7 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		filterable: false,
 		sortable: false,
 		valueGetter: (
-			value: any,
+			value: string,
 			row: { suppliers: { localAgency: string }[] }
 		) => {
 			// Check if suppliers array is not empty
@@ -565,7 +570,7 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		flex: 0.5,
 		filterable: false,
 		sortable: false,
-		valueGetter: (value: any, row: PatronRequest) => {
+		valueGetter: (value: string, row: PatronRequest) => {
 			const requestingIdentity = row?.requestingIdentity;
 			return requestingIdentity?.canonicalPtype ?? "";
 		},
@@ -578,7 +583,7 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		filterable: false,
 		sortable: false,
 		valueGetter: (
-			value: any,
+			value: string,
 			row: { suppliers: { canonicalItemType: string }[] }
 		) => {
 			if (row.suppliers.length > 0) {
@@ -637,7 +642,7 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		minWidth: 50,
 		type: "number",
 		filterOperators: durationFilters,
-		valueGetter: (value: any, row: { elapsedTimeInCurrentStatus: number }) =>
+		valueGetter: (value: string, row: { elapsedTimeInCurrentStatus: number }) =>
 			formatDuration(row.elapsedTimeInCurrentStatus),
 	},
 	{
@@ -651,7 +656,7 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		headerName: "Request updated",
 		minWidth: 150,
 		filterable: false,
-		valueGetter: (value: any, row: { dateUpdated: string }) => {
+		valueGetter: (value: string, row: { dateUpdated: string }) => {
 			const requestUpdated = row.dateUpdated;
 			return dayjs(requestUpdated).format("YYYY-MM-DD HH:mm");
 		},
@@ -698,7 +703,7 @@ export const supplierRequestColumnsLibrary: GridColDef[] = [
 		headerName: "Request created",
 		minWidth: 150,
 		filterable: false,
-		valueGetter: (value: any, row: { dateCreated: string }) => {
+		valueGetter: (value: string, row: { dateCreated: string }) => {
 			const requestCreated = row.dateCreated;
 			return dayjs(requestCreated).format("YYYY-MM-DD HH:mm");
 		},
@@ -708,7 +713,7 @@ export const supplierRequestColumnsLibrary: GridColDef[] = [
 		headerName: "Request updated",
 		minWidth: 150,
 		filterable: false,
-		valueGetter: (value: any, row: { dateUpdated: string }) => {
+		valueGetter: (value: string, row: { dateUpdated: string }) => {
 			const requestUpdated = row.dateUpdated;
 			return dayjs(requestUpdated).format("YYYY-MM-DD HH:mm");
 		},
@@ -780,7 +785,7 @@ export const supplierRequestColumnsLibrary: GridColDef[] = [
 		filterable: false,
 		groupable: true,
 		flex: 0.5,
-		valueGetter: (value: any, row: { patronRequest: PatronRequest }) => {
+		valueGetter: (value: string, row: { patronRequest: PatronRequest }) => {
 			const id = row?.patronRequest.id;
 			return id;
 		},
@@ -789,7 +794,7 @@ export const supplierRequestColumnsLibrary: GridColDef[] = [
 		field: "isExpeditedCheckout",
 		headerName: "On-site borrowing request?",
 		flex: 0.5,
-		valueGetter: (value: any, row: { patronRequest: PatronRequest }) => {
+		valueGetter: (value: string, row: { patronRequest: PatronRequest }) => {
 			const isExpeditedCheckout = row?.patronRequest?.isExpeditedCheckout;
 			return isExpeditedCheckout;
 		},
