@@ -11,8 +11,6 @@ export default defineConfig(({ mode }) => {
 	// const env = loadEnv(mode, process.cwd(), '');
 	const env = loadEnv(mode, process.cwd(), "");
 
-	const bp = "./";
-
 	return {
 		plugins: [
 			tanstackRouter({
@@ -36,7 +34,7 @@ export default defineConfig(({ mode }) => {
 				},
 			},
 		},
-		base: bp,
+		base: env.VITE_PUBLIC_URL || "/",
 		build: {
 			// think about other ways of addressing bundle size
 			// ultimately if we can't because of the DGrid it's fine
