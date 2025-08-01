@@ -28,7 +28,9 @@ import { getAuditById } from "@queries/getAuditById";
 import { getAuditsByPatronRequest } from "@queries/getAuditByPatronRequest";
 
 // Define the route and its component
-export const Route = createFileRoute("/__authenticated/patronRequests/audits/$auditId/")({
+export const Route = createFileRoute(
+	"/__authenticated/patronRequests/audits/$auditId/"
+)({
 	component: AuditDetailsComponent,
 });
 
@@ -44,7 +46,7 @@ function AuditDetailsComponent() {
 	const headers = useMemo(
 		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
 		[auth.user?.access_token]
-	)
+	);
 
 	const {
 		data: auditData,
@@ -104,7 +106,7 @@ function AuditDetailsComponent() {
 						pageno: currentPage,
 					},
 					headers
-				)
+				);
 
 				const content = data?.audits?.content ?? [];
 				if (content.length > 0) {
@@ -123,7 +125,7 @@ function AuditDetailsComponent() {
 			return allContent.sort(
 				(a, b) =>
 					new Date(a.auditDate).getTime() - new Date(b.auditDate).getTime()
-			)
+			);
 		},
 		enabled: !!patronRequestId, // Only run when we have the patronRequestId
 	});
@@ -131,28 +133,28 @@ function AuditDetailsComponent() {
 	const currentAuditIndex = useMemo(
 		() => otherAudits.findIndex((item) => item.id === auditId),
 		[otherAudits, auditId]
-	)
+	);
 
 	const previousAudit =
 		currentAuditIndex > 0 ? otherAudits[currentAuditIndex - 1] : null;
 	const nextAudit =
 		currentAuditIndex < otherAudits.length - 1
 			? otherAudits[currentAuditIndex + 1]
-			: null
+			: null;
 
 	// Helper functions for navigation
 	const handleReturn = () => {
 		if (patronRequestId) {
 			navigate({ to: `/patronRequests/${patronRequestId}`, hash: `auditlog` });
 		}
-	}
+	};
 	const handleNavigate = (targetAuditId: string | null) => {
 		if (targetAuditId && patronRequestId) {
 			navigate({
 				to: `/patronRequests/audits/${targetAuditId}`,
-			})
+			});
 		}
-	}
+	};
 
 	// 5. Render loading and error states
 	if (isAuditLoading || (areOtherAuditsLoading && patronRequestId)) {
@@ -163,7 +165,7 @@ function AuditDetailsComponent() {
 				})}
 				subtitle={t("ui.info.wait")}
 			/>
-		)
+		);
 	}
 
 	if (isAuditError || !audit) {
@@ -171,18 +173,18 @@ function AuditDetailsComponent() {
 			<Error
 				title={
 					isAuditError
-						? t("ui.error.cannot_retrieve_record")
-						: t("ui.error.cannot_find_record")
+						? t("ui.feedback.error.cannot_retrieve_record")
+						: t("ui.feedback.error.cannot_find_record")
 				}
 				message={
 					isAuditError
 						? t("ui.info.connection_issue")
-						: t("ui.error.invalid_UUID")
+						: t("ui.feedback.error.invalid_UUID")
 				}
 				action={t("ui.actions.go_back")}
 				goBack={patronRequestId ? `/patronRequests/${patronRequestId}` : `/`}
 			/>
-		)
+		);
 	}
 
 	return (
@@ -307,5 +309,5 @@ function AuditDetailsComponent() {
 				</Stack>
 			</Grid>
 		</Grid>
-	)
+	);
 }

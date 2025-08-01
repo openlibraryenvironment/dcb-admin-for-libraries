@@ -224,7 +224,7 @@ function RouteComponent() {
 		<>
 			{isError ? (
 				<Error
-					title={t("ui.error.cannot_retrieve_record")}
+					title={t("ui.feedback.error.cannot_retrieve_record")}
 					message={t("ui.info.connection_issue")}
 					description={t("ui.info.try_later")}
 					action={t("ui.actions.go_back")}
@@ -232,8 +232,8 @@ function RouteComponent() {
 				/>
 			) : (
 				<Error
-					title={t("ui.error.cannot_find_record")}
-					message={t("ui.error.invalid_UUID")}
+					title={t("ui.feedback.error.cannot_find_record")}
+					message={t("ui.feedback.error.invalid_UUID")}
 					description={t("ui.info.check_address")}
 					action={t("ui.actions.go_back")}
 					goBack="/patronRequests/exception"

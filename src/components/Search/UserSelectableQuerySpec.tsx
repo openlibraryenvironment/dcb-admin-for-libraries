@@ -1,4 +1,4 @@
-import { Box, Divider } from "@mui/material";
+import { Box } from "@mui/material";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import { SimpleTextQuerySpec } from "./SimpleTextQuerySpec";
@@ -67,27 +67,9 @@ export function UserSelectableQuerySpec({
 							fontSize: "0.65rem",
 						},
 					}}>
-					<Tab label="LuceneQL" sx={{ ml: 1 }} />
-					<Divider
-						aria-hidden="true"
-						orientation="vertical"
-						variant="fullWidth"
-						flexItem
-					/>
+					<Tab label="LuceneQL" />
 					<Tab label="Lucene Builder" />
-					<Divider
-						aria-hidden="true"
-						orientation="vertical"
-						variant="fullWidth"
-						flexItem
-					/>
 					<Tab label="Simple" />
-					<Divider
-						aria-hidden="true"
-						orientation="vertical"
-						variant="fullWidth"
-						flexItem
-					/>
 					<Tab label="CQL" />
 				</Tabs>
 			</Box>

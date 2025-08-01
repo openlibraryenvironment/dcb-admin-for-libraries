@@ -487,6 +487,7 @@
 			"confirm_changes": "Confirm changes",
 			"edit": "Edit",
 			"expand": "Expand",
+			"go_back": "Go back",
 			"login": "Login",
 			"logout": "Logout",
 			"newer": "Newer",
@@ -508,8 +509,13 @@
 		},
 		"feedback": {
 			"error": {
+				"cannot_retrieve_record": "Unable to retrieve the record",
+				"cannot_find_record": "Unable to find the record",
+				"general": "Something went wrong",
+				"invalid_UUID": "The record might have been deleted or the identifier could be wrong",
 				"loading": "Error loading {{entity}}",
-				"loading_message": "An error has occurred loading this page"
+				"loading_message": "An error has occurred loading this page",
+				"too_long_load": "The record is taking too long to load"
 			}
 		},
 		"info": {

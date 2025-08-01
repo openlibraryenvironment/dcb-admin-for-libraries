@@ -340,7 +340,7 @@ function PatronRequestsComponent() {
 	if (isIllError) {
 		return (
 			<Error
-				title={t("ui.error.cannot_retrieve_record")}
+				title={t("ui.feedback.error.cannot_retrieve_record")}
 				message={t("ui.info.connection_issue")}
 				description={t("ui.info.try_later")}
 				action={t("ui.actions.go_back")}
@@ -352,7 +352,7 @@ function PatronRequestsComponent() {
 	if (isDcbError || librariesError) {
 		return (
 			<Error
-				title={t("ui.error.cannot_retrieve_record")}
+				title={t("ui.feedback.error.cannot_retrieve_record")}
 				message={t("ui.info.connection_issue")}
 				description={t("ui.info.try_later")}
 				action={t("ui.actions.go_back")}
