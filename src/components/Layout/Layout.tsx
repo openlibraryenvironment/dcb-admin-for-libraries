@@ -16,20 +16,21 @@ interface LayoutProps {
 // Define tabs outside the component so it's a stable constant
 // Tabs below marked with import.meta.env.DEV means that these tabs will only show up in DEV mode,
 // remove the conditon to make then show up in prod.
+const basePath = String(import.meta.env.VITE_PUBLIC_URL);
 const TABS_CONFIG = [
-	{ label: "Home", value: "/" },
-	{ label: "Titles", value: "/indexes/mobius" },
-	{ label: "Service", value: "/service" },
-	{ label: "Settings", value: "/settings" },
-	{ label: "Patron Requests", value: "/patronRequests" },
-	{ label: "Mappings", value: "/mappings" },
+	{ label: "Home", value: basePath },
+	{ label: "Titles", value: basePath + "indexes/mobius" },
+	{ label: "Service", value: basePath + "service" },
+	{ label: "Settings", value: basePath + "settings" },
+	{ label: "Patron Requests", value: basePath + "patronRequests" },
+	{ label: "Mappings", value: basePath + "mappings" },
 	...(import.meta.env.DEV
 		? [
-				{ label: "Supplier Requests", value: "/supplierRequests" },
-				{ label: "Contacts", value: "/contacts" },
-				{ label: "Locations", value: "/locations" },
-				{ label: "Data Change Log", value: "/dataChangeLog" },
-				{ label: "ILL - EXPERIMENTAL", value: "/ill/login" },
+				{ label: "Supplier Requests", value: basePath + "supplierRequests" },
+				{ label: "Contacts", value: basePath + "contacts" },
+				{ label: "Locations", value: basePath + "locations" },
+				{ label: "Data Change Log", value: basePath + "dataChangeLog" },
+				{ label: "ILL - EXPERIMENTAL", value: basePath + "ill/login" },
 			]
 		: []),
 ];
@@ -37,19 +38,28 @@ const TABS_CONFIG = [
 export const Layout = ({ children }: LayoutProps) => {
 	const auth = useAuth();
 	const theme = useTheme();
-	const [activeTab, setActiveTab] = useState("/");
+	const [activeTab, setActiveTab] = useState<string | false>(basePath);
 	const { pathname } = useLocation();
 
-	// This effect correctly sets the active tab based on the current route
+	// This effect sets the active tab based on the current route
 	useEffect(() => {
-		const bestMatch = TABS_CONFIG.filter((tab) =>
-			pathname.startsWith(tab.value)
-		).sort((a, b) => b.value.length - a.value.length)[0];
-
-		if (bestMatch) {
-			setActiveTab(bestMatch.value);
+		// Find exact matches first
+		const exactMatch = TABS_CONFIG.find((tab) => tab.value === pathname);
+		if (exactMatch) {
+			setActiveTab(exactMatch.value);
+		} else {
+			// Then use best matching for nested routes etc
+			const bestMatch = TABS_CONFIG.filter((tab) =>
+				pathname.startsWith(tab.value)
+			).sort((a, b) => b.value.length - a.value.length)[0];
+			if (bestMatch) {
+				setActiveTab(bestMatch.value);
+			} else {
+				// If no match is found at all, set no tab as active.
+				// Useful warning indicator that something isn't right (maybe base path isn't set correctly etc)
+				setActiveTab(false);
+			}
 		}
-		// Add pathname to the dependency array
 	}, [pathname]);
 
 	return (
