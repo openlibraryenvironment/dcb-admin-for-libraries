@@ -47,6 +47,33 @@ build:
       - dist/
     expire_in: 1 hour
 
+release:
+  stage: release
+  image:
+    name: node:22.12.0-bullseye
+    pull_policy: if-not-present
+  tags:
+    - ki-onprem
+  # This rule ensures the job ONLY runs on the 'release' branch
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "release"'
+      when: always
+    - when: never
+  script:
+    - export NPM_TOKEN="$NPMJS_TOKEN"
+    # Set up git credentials again for this job
+    - git config --global user.name "ianibbo"
+    - git config --global user.email "ian.ibbotson@k-int.com"
+    - pwd
+    - ls -al
+    - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
+    - npm ci
+    # Run the release
+    - npm run semantic-release
+  # This job depends on the build job completing successfully
+  dependencies:
+    - build
+
 # build-container-image:
 #   image:
 #     name: docker:stable
