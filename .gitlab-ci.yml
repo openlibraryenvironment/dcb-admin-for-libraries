@@ -14,15 +14,15 @@ default:
 
 stages:
   - build
-  # - release
+  - release
   - container
   - deploy
 
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - .npm/
-    - node-modules/
+    - dcb-admin-for-libraries/.npm/
+    - dcb-admin-for-libraries/node-modules/
     - .yarn
     - .npm
 
@@ -40,41 +40,39 @@ build:
     - pwd
     - ls -al
     - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
-    - npm install
+    - npm ci
     - npm run build
-    - npm run semantic-release
   artifacts:
     paths:
       - dist/
     expire_in: 1 hour
 
-# Trying to copy DCB Admin's existing approach.
-# But we should restore a dedicated release job when possible.
-# release:
-#   stage: release
-#   image:
-#     name: node:22.12.0-bullseye
-#     pull_policy: if-not-present
-#   tags:
-#     - ki-onprem
-#   # This rule ensures the job ONLY runs on the 'release' branch
-#   rules:
-#     - if: '$CI_COMMIT_BRANCH == "release"'
-#       when: always
-#     - when: never
-#   script:
-#     - export NPM_TOKEN="$NPMJS_TOKEN"
-#     - git config --global user.name "ianibbo"
-#     - git config --global user.email "ian.ibbotson@k-int.com"
-#     - pwd
-#     - ls -al
-#     - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
-#     - npm install
-#     - npm run semantic-release
-
-#   # This job depends on the build job completing successfully
-#   dependencies:
-#     - build
+release:
+  stage: release
+  image:
+    name: node:22.12.0-bullseye
+    pull_policy: if-not-present
+  tags:
+    - ki-onprem
+  # This rule ensures the job ONLY runs on the 'release' branch
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "release"'
+      when: always
+    - when: never
+  script:
+    - export NPM_TOKEN="$NPMJS_TOKEN"
+    # Set up git credentials again for this job
+    - git config --global user.name "ianibbo"
+    - git config --global user.email "ian.ibbotson@k-int.com"
+    - pwd
+    - ls -al
+    - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
+    - npm ci
+    # Run the release
+    - npm run semantic-release
+  # This job depends on the build job completing successfully
+  dependencies:
+    - build
 
 # build-container-image:
 #   image:
