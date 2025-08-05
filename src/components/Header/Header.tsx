@@ -4,16 +4,51 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { useAuth } from "react-oidc-context";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import Button from "@mui/material/Button";
 import { useTranslation } from "react-i18next";
 import Avatar from "@mui/material/Avatar";
 import { Tooltip, useTheme } from "@mui/material";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import request from "graphql-request";
+import { getLibrary } from "@queries/getLibrary";
+import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
 
 export const Header = () => {
 	const navigate = useNavigate();
 	const auth = useAuth();
-	const library: string = auth.user?.profile?.library as string; // properly type this
+
+	const headers = useMemo(
+		() => ({
+			Authorization: `Bearer ${auth.user?.access_token}`,
+		}),
+		[auth.user?.access_token]
+	);
+
+	const code = auth.user?.profile?.code;
+	const { cfg } = useRouter().options.context as { cfg: any };
+
+	const { data } = useQuery<LibrariesQueryData>({
+		queryKey: ["libraryInfo", headers, code, cfg.VITE_DCB_API_BASE],
+		queryFn: async () =>
+			request(
+				cfg.VITE_DCB_API_BASE + "/graphql",
+				getLibrary,
+				{
+					query: "agencyCode:" + code,
+					pagesize: 10,
+					pageno: 0,
+					orderBy: "fullName",
+					order: "DESC",
+				},
+				headers
+			),
+		// do the on success here
+	});
+
+	const library = data?.libraries?.content?.[0];
+
 	const { t } = useTranslation();
 	const theme = useTheme();
 
@@ -32,7 +67,9 @@ export const Header = () => {
 					variant="h6"
 					component="div"
 					sx={{ flexGrow: 1, color: theme.palette.primary.headerText }}>
-					{t("header.title", { library: library ? library : "Libraries" })}
+					{t("header.title", {
+						library: library ? library?.fullName : "Libraries",
+					})}
 				</Typography>
 				{auth.isAuthenticated && auth.user && (
 					<Box sx={{ display: "flex", alignItems: "center" }}>

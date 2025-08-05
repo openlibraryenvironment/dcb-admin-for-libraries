@@ -14,15 +14,15 @@ default:
 
 stages:
   - build
-  - release
+  # - release
   - container
   - deploy
 
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - dcb-admin-for-libraries/.npm/
-    - dcb-admin-for-libraries/node-modules/
+    - .npm/
+    - node-modules/
     - .yarn
     - .npm
 
@@ -40,7 +40,7 @@ build:
     - pwd
     - ls -al
     - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
-    - npm ci
+    - npm install
     - npm run build
     - npm run semantic-release
   artifacts:
