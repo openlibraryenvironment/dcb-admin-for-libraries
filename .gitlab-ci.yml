@@ -41,12 +41,12 @@ build:
     - ls -al
     - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
     - npm install
+    - npm run build
     - npm run semantic-release
-
-  # artifacts:
-  #   paths:
-  #     - dist/
-  #   expire_in: 1 hour
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
 
 # Trying to copy DCB Admin's existing approach.
 # But we should restore a dedicated release job when possible.
