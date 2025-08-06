@@ -38,6 +38,7 @@ import {
 } from "@models/ReactQueryHelperTypes";
 import { StaffRequestDetailsStep } from "@forms/ExpeditedCheckout/steps/StaffRequestDetailsStep";
 import { PatronValidationStep } from "@forms/ExpeditedCheckout/steps/PatronValidationStep";
+import { useRouter } from "@tanstack/react-router";
 
 // WHEN WE INTRODUCE DCB ADMIN FOR LIBRARIES THIS DROP DOWN FOR LIBRARIES MUST BE RESTRICTED TO ONLY THE LIBRARY THE USER IS MANAGING
 // Pickup locations can be for anywhere, but the user's library should be prioritised
@@ -57,6 +58,8 @@ export default function StaffRequest({
 		}),
 		[auth.user?.access_token]
 	);
+	const router = useRouter();
+	const { cfg } = router.options.context;
 	const agencyCode = auth.user?.profile?.code
 		? String(auth.user?.profile?.code)
 		: ""; // This is the agency code - now on the user in the library context
@@ -174,10 +177,10 @@ export default function StaffRequest({
 		isLoading: librariesDataLoading,
 		// isError: librariesDataError,
 	} = useQuery<LibrariesQueryData>({
-		queryKey: ["librariesInfo", headers],
+		queryKey: ["librariesInfo", headers, cfg.VITE_DCB_API_BASE],
 		queryFn: () =>
 			request(
-				`${import.meta.env.VITE_DCB_API_BASE}/graphql`,
+				`${cfg.VITE_DCB_API_BASE}/graphql`,
 				getLibraries,
 				{
 					order: "fullName",
@@ -227,13 +230,15 @@ export default function StaffRequest({
 			selectedLibrary?.agencyId,
 			isPickupAnywhere,
 			headers,
+			,
+			cfg.VITE_DCB_API_BASE,
 		],
 		queryFn: () => {
 			const locationQuery = isPickupAnywhere
 				? ""
 				: `agency.id:${selectedLibrary?.agencyId}`;
 			return request(
-				`${import.meta.env.VITE_DCB_API_BASE}/graphql`,
+				`${cfg.VITE_DCB_API_BASE}/graphql`,
 				getLocations,
 				{
 					order: "name",
@@ -256,9 +261,14 @@ export default function StaffRequest({
 		isError: itemsError,
 		refetch: fetchItems,
 	} = useQuery<any>({
-		queryKey: ["itemAvailability", bibClusterId, headers],
+		queryKey: [
+			"itemAvailability",
+			bibClusterId,
+			headers,
+			cfg.VITE_DCB_API_BASE,
+		],
 		queryFn: () =>
-			axios.get(`${import.meta.env.VITE_DCB_API_BASE}/items/availability`, {
+			axios.get(`${cfg.VITE_DCB_API_BASE}/items/availability`, {
 				headers,
 				params: { clusteredBibId: bibClusterId },
 			}),
@@ -354,7 +364,7 @@ export default function StaffRequest({
 		mutationFn: (variables) =>
 			axios
 				.post(
-					`${import.meta.env.VITE_DCB_API_BASE}/patron/auth/lookup`,
+					`${cfg.VITE_DCB_API_BASE}/patron/auth/lookup`,
 					{
 						patronPrinciple: variables.patronBarcode,
 						agencyCode: variables.agencyCode,
@@ -400,11 +410,9 @@ export default function StaffRequest({
 	>({
 		mutationFn: (payload) =>
 			axios
-				.post(
-					`${import.meta.env.VITE_DCB_API_BASE}/patrons/requests/place`,
-					payload,
-					{ headers }
-				)
+				.post(`${cfg.VITE_DCB_API_BASE}/patrons/requests/place`, payload, {
+					headers,
+				})
 				.then((res) => res.data),
 		onSuccess: (data) => {
 			const patronRequestLink = `/patronRequests/${data.id}`;

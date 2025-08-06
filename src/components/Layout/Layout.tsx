@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useRouter } from "@tanstack/react-router";
 import { useAuth } from "react-oidc-context";
 import { useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -13,45 +13,51 @@ interface LayoutProps {
 	children: React.ReactNode;
 }
 
-// Define tabs outside the component so it's a stable constant
-// Tabs below marked with import.meta.env.DEV means that these tabs will only show up in DEV mode,
-// remove the conditon to make then show up in prod.
-const basePath = String(import.meta.env.VITE_PUBLIC_URL);
-const TABS_CONFIG = [
-	{ label: "Home", value: basePath },
-	{ label: "Titles", value: basePath + "indexes/mobius" },
-	{ label: "Service", value: basePath + "service" },
-	{ label: "Settings", value: basePath + "settings" },
-	{ label: "Patron Requests", value: basePath + "patronRequests" },
-	{ label: "Mappings", value: basePath + "mappings" },
-	...(import.meta.env.DEV
-		? [
-				{ label: "Supplier Requests", value: basePath + "supplierRequests" },
-				{ label: "Contacts", value: basePath + "contacts" },
-				{ label: "Locations", value: basePath + "locations" },
-				{ label: "Data Change Log", value: basePath + "dataChangeLog" },
-				{ label: "ILL - EXPERIMENTAL", value: basePath + "ill/login" },
-			]
-		: []),
-];
-
 export const Layout = ({ children }: LayoutProps) => {
 	const auth = useAuth();
 	const theme = useTheme();
-	const [activeTab, setActiveTab] = useState<string | false>(basePath);
 	const { pathname } = useLocation();
+	const router = useRouter();
+	const { cfg } = router.options.context;
+	const basePath = cfg?.VITE_PUBLIC_URL || "/";
+	const [activeTab, setActiveTab] = useState<string | false>(basePath);
+
+	// Tabs below marked with import.meta.env.DEV means that these tabs will only show up in DEV mode,
+	// remove the conditon to make then show up in prod.
+	const tabsConfig = useMemo(() => {
+		return [
+			{ label: "Home", value: basePath },
+			{ label: "Titles", value: `${basePath}indexes/mobius` },
+			{ label: "Service", value: `${basePath}service` },
+			{ label: "Settings", value: `${basePath}settings` },
+			{ label: "Patron Requests", value: `${basePath}patronRequests` },
+			{ label: "Mappings", value: `${basePath}mappings` },
+			...(import.meta.env.DEV
+				? [
+						{
+							label: "Supplier Requests",
+							value: `${basePath}supplierRequests`,
+						},
+						{ label: "Contacts", value: `${basePath}contacts` },
+						{ label: "Locations", value: `${basePath}locations` },
+						{ label: "Data Change Log", value: `${basePath}dataChangeLog` },
+						{ label: "ILL - EXPERIMENTAL", value: `${basePath}ill/login` },
+					]
+				: []),
+		];
+	}, [basePath]); // This will only re-calculate if the basePath changes
 
 	// This effect sets the active tab based on the current route
 	useEffect(() => {
 		// Find exact matches first
-		const exactMatch = TABS_CONFIG.find((tab) => tab.value === pathname);
+		const exactMatch = tabsConfig.find((tab) => tab.value === pathname);
 		if (exactMatch) {
 			setActiveTab(exactMatch.value);
 		} else {
 			// Then use best matching for nested routes etc
-			const bestMatch = TABS_CONFIG.filter((tab) =>
-				pathname.startsWith(tab.value)
-			).sort((a, b) => b.value.length - a.value.length)[0];
+			const bestMatch = tabsConfig
+				.filter((tab) => pathname.startsWith(tab.value))
+				.sort((a, b) => b.value.length - a.value.length)[0];
 			if (bestMatch) {
 				setActiveTab(bestMatch.value);
 			} else {
@@ -74,7 +80,7 @@ export const Layout = ({ children }: LayoutProps) => {
 						sx={{ backgroundColor: theme.palette.secondary.main }}
 						scrollButtons="auto"
 						color="primary">
-						{TABS_CONFIG.map((tab) => (
+						{tabsConfig.map((tab) => (
 							<Tab
 								key={tab.value}
 								label={tab.label}

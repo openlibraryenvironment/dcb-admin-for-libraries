@@ -14,6 +14,11 @@ import "@fontsource/roboto/700.css";
 import App from "@components/App/App";
 import { User } from "oidc-client-ts";
 
+// declare module "@tanstack/react-router" {
+// 	interface Register {
+// 		router: typeof router;
+// 	}
+// }
 async function getCfg() {
 	try {
 		// We need to support runtime configuration as well as build time config. When using
@@ -68,33 +73,28 @@ const queryClient = new QueryClient({
 // work relative to those folders
 // Now uses env variable to tackle issue above. A temp fix for now.
 // Unfortunately my fix is also necessitating specifying base path in index.html - we definitely need a better way of doing it
-const bp = String(import.meta.env.VITE_PUBLIC_URL);
-console.log(bp);
-const router = createRouter({
-	routeTree,
-	// basepath: getBasePath(),
-	basepath: bp,
-	defaultPreload: "intent",
-	defaultPreloadStaleTime: 0,
-	defaultStaleTime: 5000,
-	scrollRestoration: true,
-	context: {
-		cfg: undefined!,
-		auth: undefined!,
-		queryClient,
-	},
-});
-
-// Register things for typesafety
-declare module "@tanstack/react-router" {
-	interface Register {
-		router: typeof router;
-	}
-}
+// const bp = String(import.meta.env.VITE_PUBLIC_URL);
+// console.log(bp);
 
 async function bootstrap() {
 	// See if there is an injected_cfg.json, otherwise fall back to build time variables.
 	const cfg = await getCfg();
+	const router = createRouter({
+		routeTree,
+		// basepath: getBasePath(),
+		basepath: cfg.VITE_PUBLIC_URL || "/",
+		defaultPreload: "intent",
+		defaultPreloadStaleTime: 0,
+		defaultStaleTime: 5000,
+		scrollRestoration: true,
+		context: {
+			cfg: undefined!,
+			auth: undefined!,
+			queryClient,
+		},
+	});
+
+	// Register things for typesafety
 
 	// Nice feature of tanstack etc - inject our config bundle into the router context
 	// Retrieve with  const { cfg } = useRouter().options.context;

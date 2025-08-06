@@ -41,7 +41,7 @@ import { successfulExpeditedCheckoutStatuses } from "@constants/statuses/success
 import { StatusStepConnector } from "../../components/StatusStepConnector/StatusStepConnector";
 import request from "graphql-request";
 import { Library } from "@models/Library";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { AutocompleteOption } from "@models/AutocompleteOption";
 import { getLibrary } from "@queries/getLibrary";
 import {
@@ -62,6 +62,7 @@ export default function ExpeditedCheckout({
 	const auth = useAuth();
 	const userAgencyCode = String(auth.user?.profile?.code);
 	// Also the ID of the library of the item.
+	const { cfg } = useRouter().options.context;
 
 	const navigate = useNavigate();
 	const headers = useMemo(
@@ -109,10 +110,10 @@ export default function ExpeditedCheckout({
 		// isError: errorFetchingStaffLibrary,
 		// isLoading: staffLibraryLoading,
 	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", userAgencyCode, headers],
+		queryKey: ["libraryInfo", userAgencyCode, headers, cfg.VITE_DCB_API_BASE],
 		queryFn: async () =>
 			request(
-				import.meta.env.VITE_DCB_API_BASE + "/graphql",
+				cfg.VITE_DCB_API_BASE + "/graphql",
 				getLibrary,
 				{
 					query: "agencyCode:" + userAgencyCode,
@@ -133,10 +134,10 @@ export default function ExpeditedCheckout({
 		isLoading: patronLibrariesLoading,
 		// isError: patronLibrariesError,
 	} = useQuery<LibrariesQueryData>({
-		queryKey: ["librariesInfo", headers],
+		queryKey: ["librariesInfo", headers, cfg.VITE_DCB_API_BASE],
 		queryFn: () =>
 			request(
-				`${import.meta.env.VITE_DCB_API_BASE}/graphql`,
+				`${cfg.VITE_DCB_API_BASE}/graphql`,
 				getLibraries,
 				{
 					order: "fullName",
@@ -180,10 +181,15 @@ export default function ExpeditedCheckout({
 	// The locations list is limited only to locations associated with the library of the staff user / item.
 
 	const { data: patronRequestData } = useQuery<PatronRequestQueryData>({
-		queryKey: ["patronRequestEssentials", patronRequestId, headers],
+		queryKey: [
+			"patronRequestEssentials",
+			patronRequestId,
+			headers,
+			cfg.VITE_DCB_API_BASE,
+		],
 		queryFn: () =>
 			request(
-				`${import.meta.env.VITE_DCB_API_BASE}/graphql`,
+				`${cfg.VITE_DCB_API_BASE}/graphql`,
 				getPatronRequestEssentials,
 				{ query: `id:${patronRequestId}` },
 				headers
@@ -285,10 +291,10 @@ export default function ExpeditedCheckout({
 
 	const { data: pickupLocations, isLoading: pickupLocationsLoading } = useQuery(
 		{
-			queryKey: ["locations", locationQuery, headers],
+			queryKey: ["locations", locationQuery, headers, cfg.VITE_DCB_API_BASE],
 			queryFn: () =>
 				request(
-					`${import.meta.env.VITE_DCB_API_BASE}/graphql`,
+					`${cfg.VITE_DCB_API_BASE}/graphql`,
 					getLocations,
 					{
 						order: "name",
@@ -315,7 +321,7 @@ export default function ExpeditedCheckout({
 		setItemsError(false);
 		try {
 			const response = await axios.get<any[]>(
-				`${import.meta.env.VITE_DCB_API_BASE}/items/availability`,
+				`${cfg.VITE_DCB_API_BASE}/items/availability`,
 				{
 					headers,
 					params: { clusteredBibId: bibClusterId },
@@ -402,11 +408,9 @@ export default function ExpeditedCheckout({
 	>({
 		mutationFn: (payload) =>
 			axios
-				.post(
-					`${import.meta.env.VITE_DCB_API_BASE}/patron/auth/lookup`,
-					payload,
-					{ headers }
-				)
+				.post(`${cfg.VITE_DCB_API_BASE}/patron/auth/lookup`, payload, {
+					headers,
+				})
 				.then((res) => res.data),
 		onSuccess: (data) => {
 			if (data.status === "VALID") {
@@ -468,9 +472,7 @@ export default function ExpeditedCheckout({
 			};
 
 			const response = await axios.post(
-				`${
-					import.meta.env.VITE_DCB_API_BASE
-				}/patrons/requests/place/expeditedCheckout`,
+				`${cfg.VITE_DCB_API_BASE}/patrons/requests/place/expeditedCheckout`,
 				payload,
 				{ headers }
 			);

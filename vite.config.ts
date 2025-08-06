@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
 				},
 			},
 		},
-		base: env.VITE_PUBLIC_URL || "/",
+		base: "./",
 		build: {
 			// think about other ways of addressing bundle size
 			// ultimately if we can't because of the DGrid it's fine
