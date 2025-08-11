@@ -1,9 +1,9 @@
 export const getStepColors = (
 	isActive: boolean,
 	hasError: boolean,
-	isCompleted: boolean,
+	isCompleted: boolean
 ): "success.main" | "error.main" | "primary" | "secondary" | "" => {
-	if (isActive && !hasError) return "success.main";
+	if (isActive && !hasError) return "primary";
 	if (hasError) return "error.main";
 	if (isCompleted) return "success.main";
 	else return "";

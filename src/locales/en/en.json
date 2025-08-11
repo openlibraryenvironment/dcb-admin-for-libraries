@@ -432,6 +432,12 @@
 			"title_on_site": "Item checkout",
 			"view_request": "View request"
 		},
+		"search_types": {
+			"cql": "CQL",
+			"default": "Default",
+			"query_builder": "Query builder",
+			"locate": "Locate"
+		},
 		"shared_index": {
 			"cluster": "Cluster",
 			"cluster_details": "Cluster details",

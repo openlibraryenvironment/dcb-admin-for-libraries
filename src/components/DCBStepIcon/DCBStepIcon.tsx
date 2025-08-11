@@ -51,7 +51,7 @@ export default function DCBStepIcon(props: StepIconProps) {
 		return (
 			<Avatar
 				sx={{
-					bgcolor: theme.palette.success.main,
+					bgcolor: theme.palette.primary.main,
 					color: theme.palette.primary.iconSymbol,
 					width: iconSize,
 					height: iconSize,
