@@ -233,11 +233,27 @@
 		"to_value": "To value"
 	},
 	"nav": {
+		"contacts": {
+			"title": "Contacts"
+		},
+		"data_change_log": {
+			"title": "Data change log"
+		},
+		"home": {
+			"title": "Home"
+		},
+		"ill": {
+			"title": "ILL integration - Experimental"
+		},
 		"library": {
 			"service": "Service",
 			"title": "Your library"
 		},
+		"locations": {
+			"title": "Locations"
+		},
 		"mappings": {
+			"title": "Mappings",
 			"numeric": "Numeric range mappings",
 			"reference": "Reference value mappings"
 		},
@@ -246,6 +262,9 @@
 		},
 		"settings": {
 			"title": "Settings"
+		},
+		"supplier_requests": {
+			"title": "Supplier requests"
 		},
 		"titles": {
 			"title": "Titles"

@@ -6,6 +6,7 @@ import { ReferenceValueMapping } from "./ReferenceValueMapping";
 import { PatronIdentity } from "./PatronIdentity";
 import { PatronRequest } from "./PatronRequest";
 import { AuditItem } from "./AuditItem";
+import { SupplierRequest } from "./SupplierRequest";
 
 // Helper types for our GraphQL responses - previously this was taken care of by Apollo
 // Bridges the gap between react-query, typescript and GraphQL.
@@ -46,6 +47,13 @@ export interface ReferenceValueMappingsQueryData {
 export interface AuditQueryData {
 	audits?: {
 		content: AuditItem[];
+		totalSize: number;
+	};
+}
+
+export interface SupplierRequestQueryData {
+	supplierRequests?: {
+		content: SupplierRequest[];
 		totalSize: number;
 	};
 }

@@ -8,6 +8,7 @@ import Tab from "@mui/material/Tab";
 import Container from "@mui/material/Container";
 import { Header } from "../Header/Header";
 import { CustomLink } from "@components/CustomLink";
+import { useTranslation } from "react-i18next";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -21,27 +22,34 @@ export const Layout = ({ children }: LayoutProps) => {
 	const { cfg } = router.options.context;
 	const basePath = cfg?.VITE_PUBLIC_URL || "/";
 	const [activeTab, setActiveTab] = useState<string | false>(basePath);
+	const { t } = useTranslation();
 
 	// Tabs below marked with import.meta.env.DEV means that these tabs will only show up in DEV mode,
 	// remove the conditon to make then show up in prod.
 	const tabsConfig = useMemo(() => {
 		return [
-			{ label: "Home", value: basePath },
-			{ label: "Titles", value: `${basePath}indexes/mobius` },
-			{ label: "Service", value: `${basePath}service` },
-			{ label: "Settings", value: `${basePath}settings` },
-			{ label: "Patron Requests", value: `${basePath}patronRequests` },
-			{ label: "Mappings", value: `${basePath}mappings` },
+			{ label: t("nav.home.title"), value: basePath },
+			{ label: t("nav.titles.title"), value: `${basePath}indexes/mobius` },
+			{ label: t("nav.library.service"), value: `${basePath}service` },
+			{ label: t("nav.settings.title"), value: `${basePath}settings` },
+			{
+				label: t("nav.patron_requests.title"),
+				value: `${basePath}patronRequests`,
+			},
+			{ label: t("nav.mappings.title"), value: `${basePath}mappings` },
+			{
+				label: t("nav.supplier_requests.title"),
+				value: `${basePath}supplierRequests`,
+			},
 			...(import.meta.env.DEV
 				? [
+						{ label: t("nav.contacts.title"), value: `${basePath}contacts` },
+						{ label: t("nav.locations.title"), value: `${basePath}locations` },
 						{
-							label: "Supplier Requests",
-							value: `${basePath}supplierRequests`,
+							label: t("nav.data_change_log.title"),
+							value: `${basePath}dataChangeLog`,
 						},
-						{ label: "Contacts", value: `${basePath}contacts` },
-						{ label: "Locations", value: `${basePath}locations` },
-						{ label: "Data Change Log", value: `${basePath}dataChangeLog` },
-						{ label: "ILL - EXPERIMENTAL", value: `${basePath}ill/login` },
+						{ label: t("nav.ill.title"), value: `${basePath}ill/login` },
 					]
 				: []),
 		];
