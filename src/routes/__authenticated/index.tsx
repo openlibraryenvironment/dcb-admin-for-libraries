@@ -6,9 +6,9 @@ import request from "graphql-request";
 import { getLibrary } from "../../queries/getLibrary";
 import { useAuth } from "react-oidc-context";
 import { Library } from "@models/Library";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import RenderAttribute from "../../components/RenderAttribute/RenderAttribute";
-import { Button, Stack, TextField, useTheme } from "@mui/material";
+import { Button, Link, Stack, TextField, useTheme } from "@mui/material";
 import AddressLink from "../../components/Address/AddressLink";
 import { Controller, useForm } from "react-hook-form";
 import { UpdateLibraryFormData } from "../../models/UpdateLibraryFormData";
@@ -53,6 +53,7 @@ function HomeComponent() {
 	const firstEditableFieldRef = useRef<HTMLInputElement>(null);
 	const [changedFields, setChangedFields] = useState<Partial<Library>>({});
 	const saveButtonRef = useRef<HTMLButtonElement>(null);
+	const FEEDBACK_LINK = "https://forms.gle/pc5yVDufGRdrGz6Y7";
 	const handleCancel = () => {
 		setEditMode(false);
 		setChangedFields({});
@@ -303,10 +304,16 @@ function HomeComponent() {
 			</Grid>
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography>
-					{t("welcome.background", {
-						library: library?.fullName,
-						name: auth.user?.profile?.name,
-					})}
+					<Trans
+						i18nKey="welcome.background"
+						values={{
+							library: library?.fullName,
+							name: auth.user?.profile?.name,
+						}}
+						components={{
+							linkComponent: <Link href={FEEDBACK_LINK} />,
+						}}
+					/>
 				</Typography>
 			</Grid>
 

@@ -575,7 +575,7 @@
 		}
 	},
 	"welcome": {
-		"background": "Thank you for participating in the DCB Admin for Libraries pre-release! DCB Admin for Libraries is an all-new part of the DCB experience, tailored to the tasks library staff do every day. Expect this pre-release to change constantly as we add new functionality and continue to improve the product.",
+		"background": "Thank you for participating in the DCB Admin for Libraries pre-release! DCB Admin for Libraries is an all-new part of the DCB experience, tailored to the tasks library staff do every day. Expect this pre-release to change constantly as we add new functionality and continue to improve the product. You can provide feedback <linkComponent>here</linkComponent>.",
 		"library": "Library information for {{library}}",
 		"title": "Welcome to DCB Admin for {{library}}, {{name}}."
 	}
