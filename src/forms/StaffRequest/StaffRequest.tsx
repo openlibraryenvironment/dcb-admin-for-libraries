@@ -11,6 +11,7 @@ import {
 	Step,
 	StepLabel,
 	Stepper,
+	Typography,
 } from "@mui/material";
 import { Trans, useTranslation } from "react-i18next";
 import Close from "@mui/icons-material/Close";
@@ -39,11 +40,12 @@ import {
 import { StaffRequestDetailsStep } from "@forms/ExpeditedCheckout/steps/StaffRequestDetailsStep";
 import { PatronValidationStep } from "@forms/ExpeditedCheckout/steps/PatronValidationStep";
 import { useRouter } from "@tanstack/react-router";
-
-// WHEN WE INTRODUCE DCB ADMIN FOR LIBRARIES THIS DROP DOWN FOR LIBRARIES MUST BE RESTRICTED TO ONLY THE LIBRARY THE USER IS MANAGING
-// Pickup locations can be for anywhere, but the user's library should be prioritised
-// put agency code on the user
-// split into steps
+import DCBStepIcon from "@components/DCBStepIcon/DCBStepIcon";
+import { StatusStepConnector } from "@components/StatusStepConnector/StatusStepConnector";
+import {
+	getStepColors,
+	getStepLabelFontWeight,
+} from "@helpers/getStepLabelStyles";
 
 export default function StaffRequest({
 	show,
@@ -62,7 +64,7 @@ export default function StaffRequest({
 	const { cfg } = router.options.context;
 	const agencyCode = auth.user?.profile?.code
 		? String(auth.user?.profile?.code)
-		: ""; // This is the agency code - now on the user in the library context
+		: "";
 
 	const [alert, setAlert] = useState<{
 		open: boolean;
@@ -80,6 +82,7 @@ export default function StaffRequest({
 	const [patronData, setPatronData] = useState<PatronLookupResponse | null>(
 		null
 	);
+	const [stepError, setStepError] = useState<number | null>(null);
 
 	const steps = [
 		t("requesting.expedited_checkout.steps.patron_validation"),
@@ -160,7 +163,7 @@ export default function StaffRequest({
 			selectionType: "automatic",
 			itemLocalId: "",
 			itemLocalSystemCode: "",
-			itemAgencyCode: "", // For staff requesting, this can be anywhere.
+			itemAgencyCode: "",
 		},
 		resolver: yupResolver(validationSchema),
 		mode: "onChange",
@@ -171,27 +174,23 @@ export default function StaffRequest({
 	const itemAgencyCode = watch("itemAgencyCode");
 	const patronBarcode = watch("patronBarcode");
 
-	// This query for all libraries runs automatically on component mount
-	const {
-		data: librariesData,
-		isLoading: librariesDataLoading,
-		// isError: librariesDataError,
-	} = useQuery<LibrariesQueryData>({
-		queryKey: ["librariesInfo", headers, cfg.VITE_DCB_API_BASE],
-		queryFn: () =>
-			request(
-				`${cfg.VITE_DCB_API_BASE}/graphql`,
-				getLibraries,
-				{
-					order: "fullName",
-					orderBy: "ASC",
-					pageno: 0,
-					pagesize: 1000,
-					query: "",
-				},
-				headers
-			),
-	});
+	const { data: librariesData, isLoading: librariesDataLoading } =
+		useQuery<LibrariesQueryData>({
+			queryKey: ["librariesInfo", headers, cfg.VITE_DCB_API_BASE],
+			queryFn: () =>
+				request(
+					`${cfg.VITE_DCB_API_BASE}/graphql`,
+					getLibraries,
+					{
+						order: "fullName",
+						orderBy: "ASC",
+						pageno: 0,
+						pagesize: 1000,
+						query: "",
+					},
+					headers
+				),
+		});
 
 	const libraryOptions: PatronRequestAutocompleteOption[] =
 		librariesData?.libraries?.content?.map(
@@ -218,8 +217,6 @@ export default function StaffRequest({
 		(setting) => setting.name === "PICKUP_ANYWHERE" && setting.enabled === true
 	); // This still matters in the context of staff requesting. However, pickup locations from the user's agency should be prioritised.
 
-	// REFACTOR 1: Replaced `useLazyQuery` for pickup locations.
-	// This query is disabled by default and will only be fetched when `refetch()` is called.
 	const {
 		data: pickupLocations,
 		isLoading: pickupLocationsLoading,
@@ -230,7 +227,6 @@ export default function StaffRequest({
 			selectedLibrary?.agencyId,
 			isPickupAnywhere,
 			headers,
-			,
 			cfg.VITE_DCB_API_BASE,
 		],
 		queryFn: () => {
@@ -250,11 +246,9 @@ export default function StaffRequest({
 				headers
 			);
 		},
-		enabled: false, // <-- This makes the query "lazy"
+		enabled: false,
 	});
 
-	// REFACTOR 2: Replaced manual axios call and useState for items with `useQuery`.
-	// This is also a lazy query for fetching available items.
 	const {
 		data: availabilityResults,
 		isLoading: itemsLoading,
@@ -272,8 +266,8 @@ export default function StaffRequest({
 				headers,
 				params: { clusteredBibId: bibClusterId },
 			}),
-		enabled: false, // <-- This makes the query "lazy"
-		select: (response) => response.data, // Select the data property from the axios response
+		enabled: false,
+		select: (response) => response.data,
 	});
 
 	const itemsData: Item[] = availabilityResults?.itemList || [];
@@ -307,23 +301,15 @@ export default function StaffRequest({
 				agencyCode: item?.agency?.code,
 			})
 		);
-
 		// Sort the array of options
 		return options.sort((a: any, b: any) => {
 			const isAUserAgency = a.agencyCode === agencyCode;
 			const isBUserAgency = b.agencyCode === agencyCode;
-
-			// Selected firsts.
 			if (isAUserAgency && !isBUserAgency) return -1;
 			if (!isAUserAgency && isBUserAgency) return 1;
-
-			// For all other locations,
-			// sort the groups alphabetically by agency name.
 			if (a.agencyName && b.agencyName && a.agencyName !== b.agencyName) {
 				return a.agencyName.localeCompare(b.agencyName);
 			}
-
-			// Then within each agency group, sort locations alphabetically by name.
 			return a.label.localeCompare(b.label);
 		});
 	}, [pickupLocations?.locations?.content, t, agencyCode]);
@@ -354,7 +340,6 @@ export default function StaffRequest({
 			})
 		) || [];
 
-	// REFACTOR 3: Use `useMutation` for validating the patron.
 	// This handles loading state, errors, and success callbacks cleanly.
 	const validatePatronMutation = useMutation<
 		PatronLookupResponse,
@@ -376,6 +361,7 @@ export default function StaffRequest({
 			if (data.status === "VALID") {
 				setPatronData(data);
 				setActiveStep(1);
+				setStepError(null); // Clear error on success
 				setAlert({
 					open: true,
 					severity: "success",
@@ -390,6 +376,7 @@ export default function StaffRequest({
 					severity: "error",
 					text: t("requesting.staff_request.patron.error.validation_failure"),
 				});
+				setStepError(0); // Set error on step 0
 			}
 		},
 		onError: (error) => {
@@ -399,10 +386,10 @@ export default function StaffRequest({
 				severity: "error",
 				text: t("requesting.staff_request.patron.error.validation_failure"),
 			});
+			setStepError(0); // Set error on step 0
 		},
 	});
 
-	// REFACTOR 4: Use `useMutation` for submitting the final request.
 	const placeRequestMutation = useMutation<
 		PlaceRequestResponse,
 		AxiosError,
@@ -416,6 +403,7 @@ export default function StaffRequest({
 				.then((res) => res.data),
 		onSuccess: (data) => {
 			const patronRequestLink = `/patronRequests/${data.id}`;
+			setStepError(null); // Clear error on success
 			setAlert({
 				open: true,
 				severity: "success",
@@ -436,11 +424,11 @@ export default function StaffRequest({
 					description: error?.response?.data?.failedChecks[0].description,
 				}),
 			});
+			setStepError(1); // Set error on step 1
 		},
 	});
 
 	const validatePatron = () => {
-		console.log(selectedLibrary);
 		validatePatronMutation.mutate({
 			patronBarcode,
 			agencyCode: selectedLibrary?.value ?? agencyCode,
@@ -493,20 +481,13 @@ export default function StaffRequest({
 		placeRequestMutation.mutate(finalPayload);
 	};
 
-	// const handleClose = () => {
-	// 	reset();
-	// 	setPatronValidated(false);
-	// 	setPatronData(null);
-	// 	placeRequestMutation.reset();
-	// 	validatePatronMutation.reset();
-	// 	onClose();
-	// };
 	const handleClose = () => {
 		reset();
 		setActiveStep(0);
 		setPatronData(null);
 		placeRequestMutation.reset();
 		validatePatronMutation.reset();
+		setStepError(null); // Reset step error
 		onClose();
 	};
 
@@ -578,12 +559,45 @@ export default function StaffRequest({
 					<Close />
 				</IconButton>
 				<DialogContent>
-					<Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
-						{steps.map((label) => (
-							<Step key={label}>
-								<StepLabel>{label}</StepLabel>
-							</Step>
-						))}
+					{/* Same style as Expedited Checkout */}
+					<Stepper
+						activeStep={activeStep}
+						alternativeLabel
+						sx={{ mb: 4 }}
+						connector={
+							<StatusStepConnector
+								stepError={stepError}
+								activeStep={activeStep}
+							/>
+						}>
+						{steps.map((label, index) => {
+							const stepProps: { completed?: boolean } = {};
+							const labelProps: {
+								error?: boolean;
+							} = {};
+							const isActive = index === activeStep;
+							const isCompleted = index < activeStep;
+							const hasError = stepError === index;
+
+							if (isCompleted) {
+								stepProps.completed = true;
+							}
+							if (hasError) {
+								labelProps.error = true;
+							}
+
+							return (
+								<Step key={label} {...stepProps}>
+									<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
+										<Typography
+											color={getStepColors(isActive, hasError, isCompleted)}
+											fontWeight={getStepLabelFontWeight(isActive)}>
+											{label}
+										</Typography>
+									</StepLabel>
+								</Step>
+							);
+						})}
 					</Stepper>
 					<form onSubmit={handleSubmit(onSubmit)}>
 						{getStepContent(activeStep)}

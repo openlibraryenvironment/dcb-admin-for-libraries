@@ -59,7 +59,7 @@ export const Header = () => {
 					<Button
 						variant="outlined"
 						href={"/"}
-						startIcon={<Avatar src={"/favicon.ico"} />}
+						startIcon={<Avatar src={"/fallback-header.png"} />}
 					/>
 				</Tooltip>
 
