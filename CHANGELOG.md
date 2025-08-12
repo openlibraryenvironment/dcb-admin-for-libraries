@@ -1,3 +1,11 @@
+# [1.1.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.0.0...v1.1.0) (2025-08-12)
+
+
+### Features
+
+* Add feedback link [DCB-1836] ([5b68469](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/5b684696d3248e0db3b8443560f8b0895ee3c1f9))
+* Introduce supplier requests page [DCB-1982] ([86b3a78](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/86b3a7878a1a040371d3c926018beffd0798578f))
+
 # 1.0.0 (2025-08-05)
 
 
