@@ -442,15 +442,16 @@
 			"cluster": "Cluster",
 			"cluster_details": "Cluster details",
 			"items": "Items",
-			"items_for_cluster": "{{number}} item(s) for cluster {{id}}",
+			"items_for_cluster": "{{number}} item(s) available for requesting.",
 			"items_not_shown": "{{number}} item(s) unable to be shown",
 			"items_not_shown_helper_item": "Items without an item type are usually the result of a missing or misconfigured item type mapping. Please review the item type mappings for this library.",
 			"items_not_shown_helper_location": "Items without an 'Agency' value are usually the result of a missing or misconfigured Location mapping, or a missing agency. Please review the Location mappings for this library and the agency configuration.",
-			"items_not_shown_long": "{{number}} item(s) not shown for cluster {{id}}. You may have missing mappings or other configuration issues.",
+			"items_not_shown_long": "{{number}} item(s) unable to be shown. You may have missing mappings or other configuration issues.",
 			"items_not_shown_resolution": "If the item(s) below belong to your library and should be available to users, please review the mappings in the 'Mappings' section. There may be incorrect or missing mappings preventing DCB from showing the items below",
 			"items_unavailable": "No items are available for this cluster",
 			"return": "Return to shared index",
-			"title": "Shared index"
+			"title": "Shared index",
+			"title_details": "Title details for {{title}}"
 		},
 		"staff_request": {
 			"actions": {

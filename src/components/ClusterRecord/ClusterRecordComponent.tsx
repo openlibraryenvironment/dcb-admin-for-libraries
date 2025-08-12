@@ -288,14 +288,17 @@ export default function ClusterRecordComponent() {
 				alignItems="center"
 				sx={{ mb: 2 }}>
 				<Stack direction={"column"}>
-					<Typography variant="h4" component="h1">
+					<Typography variant="h1" mb={1}>
+						{data?.clusterDetail.title}
+					</Typography>
+
+					<Typography variant="h4">
 						{t("requesting.shared_index.items_for_cluster", {
 							number: itemCount,
-							id: recordId,
 						})}
 					</Typography>
 					{itemsNotShown?.length > 0 ? (
-						<Typography variant="h4" component="h1">
+						<Typography variant="h4">
 							{t("requesting.shared_index.items_not_shown_long", {
 								number: itemsNotShown?.length,
 								id: recordId,
