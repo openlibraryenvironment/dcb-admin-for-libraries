@@ -47,14 +47,14 @@ export default function PrivateData({
 						<Tooltip
 							title={
 								showPrivateData
-									? t("ui.visibility.hideShown", { field: clientConfigType })
-									: t("ui.visibility.showHidden", { field: clientConfigType })
+									? t("ui.actions.hide_shown", { field: clientConfigType })
+									: t("ui.actions.show_hidden", { field: clientConfigType })
 							}>
 							<IconButton
 								aria-label={
 									showPrivateData
-										? t("ui.visibility.hideShown", { field: clientConfigType })
-										: t("ui.visibility.showHidden", { field: clientConfigType })
+										? t("ui.actions.hide_shown", { field: clientConfigType })
+										: t("ui.actions.show_hidden", { field: clientConfigType })
 								}
 								onClick={() => setShowPrivateData((show) => !show)}
 								onMouseDown={handleMouseDownPrivateData}>

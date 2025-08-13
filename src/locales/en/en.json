@@ -514,12 +514,14 @@
 			"edit": "Edit",
 			"expand": "Expand",
 			"go_back": "Go back",
+			"hide_shown": "Hide shown",
 			"login": "Login",
 			"logout": "Logout",
 			"newer": "Newer",
 			"older": "Older",
 			"reload": "Reload",
 			"save": "Save",
+			"show_hidden": "Show hidden",
 			"submit": "Submit",
 			"submitting": "Submitting",
 			"title": "Actions"
@@ -531,7 +533,8 @@
 			"title": "Title"
 		},
 		"data_grid": {
-			"edit_summary": "Edit {{entity}}"
+			"edit_summary": "Edit {{entity}}",
+			"find_column": "Find column"
 		},
 		"feedback": {
 			"error": {
