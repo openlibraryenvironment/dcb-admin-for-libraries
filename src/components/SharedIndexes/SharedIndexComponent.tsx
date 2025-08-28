@@ -284,7 +284,7 @@ export function SharedIndexComponent() {
 					border: "none",
 					"& .MuiDataGrid-row": {
 						borderBottom: "none", // Remove row borders (some versions use this)
-						borderTop: "none", // Remove row borders (some versions use this)
+						borderTop: "none", // Remove row borders (some versions use this) // TO BE IMPROVED
 					},
 					"& .MuiDataGrid-virtualScrollerRenderZone": {
 						display: "flex",

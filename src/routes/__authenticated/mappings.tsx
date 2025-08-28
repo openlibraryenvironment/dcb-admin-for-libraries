@@ -187,6 +187,11 @@ function RouteComponent() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: [gridId] });
 		},
+		onError: (error) => {
+			// Set alerts
+			// Catch "Library mapping editing has been disabled by your consortium administrator" too just in case
+			console.log(error);
+		},
 	});
 
 	const { mutate: deleteMapping } = useMutation({

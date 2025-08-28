@@ -22,10 +22,12 @@ import {
 	nonClickableTypes,
 	specialRedirectionTypes,
 } from "@constants/dataGrid/types";
+import { SxProps, Theme } from "@mui/material/styles";
 
 interface DataGridProps {
 	checkboxSelection: boolean;
 	columns: GridColDef[];
+	columnHeaderDisabled?: boolean;
 	columnVisibilityModel?: GridColumnVisibilityModel;
 	disableAggregation: boolean;
 	disableHoverInteractions: boolean;
@@ -56,10 +58,11 @@ interface DataGridProps {
 	rows: GridRowsProp;
 	scrollbarVisible: boolean;
 	// sortModel: GridSortModel;
-	sortModel: any;
+	sortModel?: any;
 	sortingMode: GridFeatureMode;
 	toolbarVisible: boolean;
 	searchText: string;
+	styleOverrides?: SxProps<Theme>; // If you are providing style overrides for the Data Grid, you MUST include all styles as this will override everything specified by default in sx
 	type: string; // The general type - i.e. "Locations"
 }
 export default function DataGrid({
@@ -94,6 +97,7 @@ export default function DataGrid({
 	scrollbarVisible,
 	sortModel,
 	sortingMode,
+	styleOverrides,
 	toolbarVisible,
 	searchText,
 	type,
@@ -180,6 +184,7 @@ export default function DataGrid({
 				filterModel={filterModel}
 				getDetailPanelContent={getDetailPanelContent}
 				getDetailPanelHeight={getDetailPanelHeight}
+				getRowHeight={() => "auto"} // So cards can expand. May need to make this configurable
 				// May need initial state passed in like serverpaginated grid
 				listView={listViewEnabled}
 				loading={loading}
@@ -245,33 +250,41 @@ export default function DataGrid({
 						<NoResultsOverlay noResultsMessage={noResultsText} />
 					),
 				}}
-				sx={{
-					border: "0",
-					"@media print": {
-						".MuiDataGrid-main": { color: "rgba(0, 0, 0, 0.87)" },
-					},
-					// "& .MuiDataGrid-cell--editable": {
-					// 	bgcolor: theme.palette.primary.editableFieldBackground,
-					// }, // How to signal editable cells.
-					".MuiDataGrid-virtualScroller": {
-						overflow: scrollbarVisible ? "" : "hidden",
-					},
-					// both hover styles need to be added, otherwise a flashing effect appears when hovering
-					// https://stackoverflow.com/questions/76563478/disable-hover-effect-on-mui-datagrid
-					"& .MuiDataGrid-row.Mui-hovered": {
-						backgroundColor: disableHoverInteractions ? "transparent" : "",
-					},
-					"& .MuiDataGrid-row:hover": {
-						backgroundColor: disableHoverInteractions ? "transparent" : "",
-					},
-					"& .MuiDataGrid-cell:focus": {
-						outline: disableHoverInteractions ? "none" : "",
-					},
-					"& .MuiDataGrid-detailPanel": {
-						overflow: "hidden", // Prevent scrollbars in the detail panel
-						height: "auto", // Adjust height automatically
-					},
-				}}
+				sx={
+					styleOverrides
+						? styleOverrides
+						: {
+								border: "0",
+								"@media print": {
+									".MuiDataGrid-main": { color: "rgba(0, 0, 0, 0.87)" },
+								},
+								// "& .MuiDataGrid-cell--editable": {
+								// 	bgcolor: theme.palette.primary.editableFieldBackground,
+								// }, // How to signal editable cells.
+								".MuiDataGrid-virtualScroller": {
+									overflow: scrollbarVisible ? "" : "hidden",
+								},
+								// both hover styles need to be added, otherwise a flashing effect appears when hovering
+								// https://stackoverflow.com/questions/76563478/disable-hover-effect-on-mui-datagrid
+								"& .MuiDataGrid-row.Mui-hovered": {
+									backgroundColor: disableHoverInteractions
+										? "transparent"
+										: "",
+								},
+								"& .MuiDataGrid-row:hover": {
+									backgroundColor: disableHoverInteractions
+										? "transparent"
+										: "",
+								},
+								"& .MuiDataGrid-cell:focus": {
+									outline: disableHoverInteractions ? "none" : "",
+								},
+								"& .MuiDataGrid-detailPanel": {
+									overflow: "hidden", // Prevent scrollbars in the detail panel
+									height: "auto", // Adjust height automatically
+								},
+							}
+				}
 			/>
 		</div>
 	);

@@ -212,11 +212,14 @@ const theme = createTheme({
 			palette: {
 				primary: {
 					headerText: "#FFFFFF",
+					headingColour: "#0C4068",
+					hitCountText: "#333333",
 					iconSymbol: "#FFFFFF",
 					inactiveBackground: "#8C8C8C",
 					main: "#0C4068",
 					navigationText: "#E2EEF6",
 					navigationTextActive: "#FFFFFF",
+					searchResultBackground: "#F6F9FC",
 				},
 				secondary: {
 					main: "#1e7ebf",
@@ -230,9 +233,12 @@ const theme = createTheme({
 			palette: {
 				primary: {
 					headerText: "#FFFFFF",
+					headingColour: "#FFFFFF",
+					hitCountText: "#FFFFFF",
 					iconSymbol: "#FFFFFF",
 					inactiveBackground: "#8C8C8C",
 					main: "#35B7FF",
+					searchResultBackground: "#424242",
 				},
 				secondary: {
 					main: "#75BEDB",
@@ -247,20 +253,29 @@ const theme = createTheme({
 	typography: {
 		appTitle: {
 			fontSize: 20,
+			color: "var(--mui-palette-primary-headerText)",
 		},
 		h1: {
 			fontSize: 32,
 			fontWeight: 400,
+			color: "var(--mui-palette-primary-headingColour)",
 		},
 		h2: {
 			fontSize: 24,
 			fontWeight: 400,
+			color: "var(--mui-palette-primary-headingColour)",
 		},
 		h3: {
 			fontSize: 18,
+			color: "var(--mui-palette-primary-headingColour)",
 		},
 		h4: {
 			fontSize: 18,
+			color: "var(--mui-palette-primary-headingColour)",
+		},
+		hitCount: {
+			fontWeight: "bold",
+			color: "var(--mui-palette-primary-hitCountText)",
 		},
 		loginCardText: {
 			fontSize: 18,
@@ -335,6 +350,8 @@ declare module "@mui/material/styles" {
 		foreground1?: string;
 		header: string;
 		headerText?: string;
+		headingColour?: string;
+		hitCountText?: string;
 		hover?: string;
 		hoverOnSelectedPage: string;
 		iconSymbol?: string;
@@ -347,6 +364,7 @@ declare module "@mui/material/styles" {
 		loginText?: string;
 		navigationText?: string;
 		navigationTextActive?: string;
+		searchResultBackground?: string;
 		secondary?: {
 			main?: string;
 		};
@@ -374,6 +392,8 @@ declare module "@mui/material/styles" {
 		foreground1?: string;
 		header?: string;
 		headerText?: string;
+		headingColour?: string;
+		hitCountText?: string;
 		hover?: string;
 		hoverOnSelectedPage?: string;
 		iconSymbol?: string;
@@ -386,6 +406,7 @@ declare module "@mui/material/styles" {
 		loginText?: string;
 		navigationText?: string;
 		navigationTextActive?: string;
+		searchResultBackground?: string;
 		secondary?: {
 			main?: string;
 		};
@@ -410,6 +431,7 @@ declare module "@mui/material/styles" {
 		loginHeader?: React.CSSProperties;
 		modalTitle?: React.CSSProperties;
 		homePageText?: React.CSSProperties;
+		hitCount?: React.CSSProperties;
 		notFoundTitle?: React.CSSProperties;
 		notFoundText?: React.CSSProperties;
 		componentSubheading?: React.CSSProperties;
@@ -428,6 +450,7 @@ declare module "@mui/material/styles" {
 		attributeText?: React.CSSProperties;
 		loginHeader?: React.CSSProperties;
 		modalTitle?: React.CSSProperties;
+		hitCount?: React.CSSProperties;
 		homePageText?: React.CSSProperties;
 		notFoundTitle?: React.CSSProperties;
 		notFoundText?: React.CSSProperties;
@@ -489,6 +512,7 @@ declare module "@mui/material/Typography" {
 		loadingText: true;
 		accordionSummary: true;
 		subTabTitle: true;
+		hitCount: true;
 	}
 }
 

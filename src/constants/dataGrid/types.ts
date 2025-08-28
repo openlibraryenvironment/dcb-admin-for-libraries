@@ -53,6 +53,7 @@ export const nonClickableTypes = [
 	"referenceValueMappingsForLibraryAll",
 	"referenceValueMappingsForLibraryAllSecondHostLms",
 	"alarms",
+	"SharedIndexSearchGrid",
 ];
 
 // Types of data grid where users can click through to a details page,

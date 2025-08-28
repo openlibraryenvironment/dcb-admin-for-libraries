@@ -404,6 +404,7 @@
 		"record_updated": "Record updated",
 		"requestable": "Requestable",
 		"suppressed": "Suppressed",
+		"titles_found": "{{number}} titles found",
 		"volume_parsed": "Parsed volume statement",
 		"volume_raw": "Raw volume statement",
 		"expedited_checkout": {
@@ -441,6 +442,8 @@
 		"shared_index": {
 			"cluster": "Cluster",
 			"cluster_details": "Cluster details",
+			"error_connecting": "There was an error connecting to the search service. Please try again later.",
+			"error_connecting_title": "Could not connect to dcb-locate",
 			"items": "Items",
 			"items_for_cluster": "{{number}} item(s) available for requesting.",
 			"items_not_shown": "{{number}} item(s) unable to be shown",
@@ -508,7 +511,9 @@
 
 	"ui": {
 		"actions": {
+			"add_filter": "Add filter",
 			"cancel": "Cancel",
+			"clear_all": "Clear all",
 			"collapse": "Collapse",
 			"confirm_changes": "Confirm changes",
 			"edit": "Edit",
@@ -533,6 +538,7 @@
 			"title": "Title"
 		},
 		"data_grid": {
+			"active_filters": "{{number}} Active filters",
 			"edit_summary": "Edit {{entity}}",
 			"find_column": "Find column"
 		},

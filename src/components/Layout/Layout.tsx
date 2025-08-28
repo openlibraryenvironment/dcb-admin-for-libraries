@@ -41,17 +41,17 @@ export const Layout = ({ children }: LayoutProps) => {
 				label: t("nav.supplier_requests.title"),
 				value: `${basePath}supplierRequests`,
 			},
-			...(import.meta.env.DEV
-				? [
-						{ label: t("nav.contacts.title"), value: `${basePath}contacts` },
-						{ label: t("nav.locations.title"), value: `${basePath}locations` },
-						{
-							label: t("nav.data_change_log.title"),
-							value: `${basePath}dataChangeLog`,
-						},
-						{ label: t("nav.ill.title"), value: `${basePath}ill/login` },
-					]
-				: []),
+			// ...(import.meta.env.DEV
+			// 	? [
+			// 			{ label: t("nav.contacts.title"), value: `${basePath}contacts` },
+			// 			{ label: t("nav.locations.title"), value: `${basePath}locations` },
+			// 			{
+			// 				label: t("nav.data_change_log.title"),
+			// 				value: `${basePath}dataChangeLog`,
+			// 			},
+			// 			{ label: t("nav.ill.title"), value: `${basePath}ill/login` },
+			// 		]
+			// 	: []),
 		];
 	}, [basePath]); // This will only re-calculate if the basePath changes
 
