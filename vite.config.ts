@@ -3,6 +3,7 @@ import { defineConfig, loadEnv } from "vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+/// <reference types="vitest/config" />
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -58,6 +59,11 @@ export default defineConfig(({ mode }) => {
 					"@emotion/react",
 				],
 			},
+		},
+
+		test: {
+			include: ["**/*.test.ts"],
+			exclude: ["node_modules", "dist", "coverage", "playwright", "**/*.d.ts"],
 		},
 		resolve: {
 			alias: {
