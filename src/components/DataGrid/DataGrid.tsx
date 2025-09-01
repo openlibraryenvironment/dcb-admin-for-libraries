@@ -22,12 +22,12 @@ import {
 	nonClickableTypes,
 	specialRedirectionTypes,
 } from "@constants/dataGrid/types";
-import { SxProps, Theme } from "@mui/material/styles";
+import { SxProps, Theme } from "@mui/material";
 
 interface DataGridProps {
+	autoRowHeight?: boolean;
 	checkboxSelection: boolean;
 	columns: GridColDef[];
-	columnHeaderDisabled?: boolean;
 	columnVisibilityModel?: GridColumnVisibilityModel;
 	disableAggregation: boolean;
 	disableHoverInteractions: boolean;
@@ -66,6 +66,7 @@ interface DataGridProps {
 	type: string; // The general type - i.e. "Locations"
 }
 export default function DataGrid({
+	autoRowHeight,
 	checkboxSelection,
 	columns,
 	columnVisibilityModel,
@@ -98,8 +99,8 @@ export default function DataGrid({
 	sortModel,
 	sortingMode,
 	styleOverrides,
-	toolbarVisible,
 	searchText,
+	toolbarVisible,
 	type,
 }: DataGridProps) {
 	const { t } = useTranslation();
@@ -109,7 +110,7 @@ export default function DataGrid({
 		open: false,
 		severity: "success",
 		text: null,
-	});
+	}); // We do need to give feedback on editing s
 	const handleRowClick: GridEventListener<"rowClick"> = (params, event) => {
 		//UseNavigateResult<string>
 		console.log(type, params);
@@ -184,8 +185,8 @@ export default function DataGrid({
 				filterModel={filterModel}
 				getDetailPanelContent={getDetailPanelContent}
 				getDetailPanelHeight={getDetailPanelHeight}
-				getRowHeight={() => "auto"} // So cards can expand. May need to make this configurable
 				// May need initial state passed in like serverpaginated grid
+				getRowHeight={autoRowHeight ? () => "auto" : () => null}
 				listView={listViewEnabled}
 				loading={loading}
 				localeText={{
@@ -250,41 +251,35 @@ export default function DataGrid({
 						<NoResultsOverlay noResultsMessage={noResultsText} />
 					),
 				}}
-				sx={
-					styleOverrides
-						? styleOverrides
-						: {
-								border: "0",
-								"@media print": {
-									".MuiDataGrid-main": { color: "rgba(0, 0, 0, 0.87)" },
-								},
-								// "& .MuiDataGrid-cell--editable": {
-								// 	bgcolor: theme.palette.primary.editableFieldBackground,
-								// }, // How to signal editable cells.
-								".MuiDataGrid-virtualScroller": {
-									overflow: scrollbarVisible ? "" : "hidden",
-								},
-								// both hover styles need to be added, otherwise a flashing effect appears when hovering
-								// https://stackoverflow.com/questions/76563478/disable-hover-effect-on-mui-datagrid
-								"& .MuiDataGrid-row.Mui-hovered": {
-									backgroundColor: disableHoverInteractions
-										? "transparent"
-										: "",
-								},
-								"& .MuiDataGrid-row:hover": {
-									backgroundColor: disableHoverInteractions
-										? "transparent"
-										: "",
-								},
-								"& .MuiDataGrid-cell:focus": {
-									outline: disableHoverInteractions ? "none" : "",
-								},
-								"& .MuiDataGrid-detailPanel": {
-									overflow: "hidden", // Prevent scrollbars in the detail panel
-									height: "auto", // Adjust height automatically
-								},
-							}
-				}
+				sx={{
+					border: "0",
+					"@media print": {
+						".MuiDataGrid-main": { color: "rgba(0, 0, 0, 0.87)" },
+					},
+					// "& .MuiDataGrid-cell--editable": {
+					// 	bgcolor: theme.palette.primary.editableFieldBackground,
+					// }, // How to signal editable cells.
+					".MuiDataGrid-virtualScroller": {
+						overflow: scrollbarVisible ? "" : "hidden",
+					},
+					// both hover styles need to be added, otherwise a flashing effect appears when hovering
+					// https://stackoverflow.com/questions/76563478/disable-hover-effect-on-mui-datagrid
+					"& .MuiDataGrid-row.Mui-hovered": {
+						backgroundColor: disableHoverInteractions ? "transparent" : "",
+					},
+					"& .MuiDataGrid-row:hover": {
+						backgroundColor: disableHoverInteractions ? "transparent" : "",
+					},
+					"& .MuiDataGrid-cell:focus": {
+						outline: disableHoverInteractions ? "none" : "",
+					},
+					"& .MuiDataGrid-detailPanel": {
+						overflow: "hidden", // Prevent scrollbars in the detail panel
+						height: "auto", // Adjust height automatically
+					},
+					// --- CUSTOM OVERRIDES (will merge with and override base styles) ---
+					...styleOverrides,
+				}}
 			/>
 		</div>
 	);

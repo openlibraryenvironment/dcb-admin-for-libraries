@@ -11,6 +11,8 @@ import {
 	getSortOrderForServer,
 	checkIfFiltering,
 } from "@helpers/dataGrid/utilities";
+import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
+import { FunctionalSettingStatus } from "@models/FunctionalSetting";
 import {
 	LibrariesQueryData,
 	ReferenceValueMappingsQueryData,
@@ -133,6 +135,14 @@ function RouteComponent() {
 	});
 	const libraryHostLmsCode =
 		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.code;
+
+	// If the DENY_LIBRARY_MAPPING_EDIT setting is not explicitly disabled, library users cannot edit their mappings.
+	// As such, for editing to be enabled here, DENY_LIBRARY_MAPPING_EDIT must be disabled
+	const editingEnabled =
+		isFunctionalSettingEnabled(
+			librariesData?.libraries?.content?.[0],
+			"DENY_LIBRARY_MAPPING_EDIT"
+		) == FunctionalSettingStatus.DISABLED;
 
 	// Mappings query - using debounced filter model
 	const {
@@ -345,18 +355,22 @@ function RouteComponent() {
 						];
 					}
 					return [
-						<GridActionsCellItem
-							key="edit"
-							icon={<Edit />}
-							label="Edit"
-							onClick={handleEditClick(id)}
-						/>,
-						<GridActionsCellItem
-							key="delete"
-							icon={<Delete />}
-							label="Delete"
-							onClick={handleDeleteClick(id)}
-						/>,
+						<>
+							<GridActionsCellItem
+								key="edit"
+								icon={<Edit />}
+								label="Edit"
+								onClick={handleEditClick(id)}
+								disabled={!editingEnabled}
+							/>
+
+							<GridActionsCellItem
+								key="delete"
+								icon={<Delete />}
+								label="Delete"
+								onClick={handleDeleteClick(id)}
+							/>
+						</>,
 					];
 				},
 			},
@@ -364,7 +378,9 @@ function RouteComponent() {
 		[rowModesModel]
 	);
 
-	const refValueColumns = [...standardRefValueMappingColumns, ...actionsColumn];
+	const refValueColumns = editingEnabled
+		? [...standardRefValueMappingColumns, ...actionsColumn]
+		: standardRefValueMappingColumns;
 
 	// Show loading if initial load or libraries are loading
 	if ((mappingsLoading && !mappingsData) || librariesLoading) {

@@ -56,6 +56,11 @@ export const getLibrary = gql`
 						consortium {
 							id
 							name
+							functionalSettings {
+								id
+								name
+								enabled
+							}
 						}
 					}
 				}
