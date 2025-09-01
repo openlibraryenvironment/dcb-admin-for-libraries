@@ -8,10 +8,7 @@ import {
 	defaultPatronRequestColumnVisibility,
 	standardPatronRequestColumns,
 } from "@helpers/dataGrid/columns";
-import {
-	PatronRequestQueryData,
-	SupplierRequestQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import {
 	GridColumnVisibilityModel,
 	GridFilterModel,
@@ -20,7 +17,6 @@ import {
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
 import { getPatronRequests } from "@queries/getPatronRequests";
-import { getSupplierRequests } from "@queries/getSupplierRequests";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
@@ -32,6 +28,8 @@ export const Route = createFileRoute("/__authenticated/supplierRequests")({
 	component: RouteComponent,
 });
 
+// This can now just use supplying agency code filter
+// This should go into its own helper function
 const processMuiFilterModel = (
 	model: GridFilterModel,
 	baseQuery: string
@@ -175,88 +173,8 @@ function RouteComponent() {
 
 	const code = auth.user?.profile?.code;
 
-	// This is a work-around until the supplying agency code filter hits prod
+	const presetQuery = "supplyingAgencyCode:" + code;
 
-	const { data: supplierRequestData } = useQuery<SupplierRequestQueryData>({
-		queryKey: ["getSupplierRequests", dcbApiBase, headers, code],
-		queryFn: async () =>
-			request(
-				`${dcbApiBase}/graphql`,
-				getSupplierRequests,
-				{
-					query: `localAgency:"${code}"`,
-					pagesize: 100000, // Get all supplier requests to extract unique patron request UUIDs
-					pageno: 0,
-					order: "dateCreated",
-					orderBy: "DESC",
-				},
-				headers
-			),
-		enabled: !!token && !!dcbApiBase && !!code,
-		staleTime: 5 * 60 * 1000, // 5 minutes - cache this since it's expensive
-	});
-
-	// Extract patron request IDs
-	const patronRequestIds = useMemo(() => {
-		return (
-			supplierRequestData?.supplierRequests?.content
-				?.map((request: any) => request.patronRequest?.id)
-				.filter(Boolean) ?? []
-		);
-	}, [supplierRequestData]);
-
-	// Build the full ID query for filtering
-	const allIdsQuery = useMemo(() => {
-		return patronRequestIds.length > 0
-			? patronRequestIds.map((id: string) => `id:${id}`).join(" OR ")
-			: "id:NONE";
-	}, [patronRequestIds]);
-
-	// Get filtered count query - this gets the total count with filters applied
-	const { data: filteredCountData, isLoading: isCountLoading } =
-		useQuery<PatronRequestQueryData>({
-			queryKey: [
-				"getFilteredPatronRequestCount",
-				dcbApiBase,
-				headers,
-				allIdsQuery,
-				debouncedFilterModel, // Key on debounced filters
-			],
-			queryFn: async () => {
-				const additionalFilters = processMuiFilterModel(
-					debouncedFilterModel,
-					""
-				);
-				const finalQuery = additionalFilters
-					? `(${allIdsQuery}) AND (${additionalFilters})`
-					: allIdsQuery;
-
-				const queryVariables = {
-					query: finalQuery,
-					pagesize: 1, // We only want the count
-					pageno: 0,
-					order: "dateCreated",
-					orderBy: "DESC",
-				};
-
-				return request(
-					`${dcbApiBase}/graphql`,
-					getPatronRequests,
-					queryVariables,
-					headers
-				);
-			},
-			enabled: !!token && !!dcbApiBase && patronRequestIds.length > 0,
-			staleTime: 30000, // Cache for 30 seconds
-		});
-
-	// Get the actual filtered total count
-	const filteredTotalCount =
-		filteredCountData?.patronRequests?.totalSize ?? patronRequestIds.length;
-
-	// For server-side pagination, we need to calculate which IDs to fetch for the current page
-	// But we can't pre-slice because filtering might change the order/results
-	// Instead, we use server-side pagination with the full query
 	const {
 		data: patronRequestData,
 		isLoading: isPatronRequestLoading,
@@ -268,18 +186,21 @@ function RouteComponent() {
 			"getPatronRequestsByIds",
 			dcbApiBase,
 			headers,
-			allIdsQuery,
-			debouncedFilterModel, // Include filter model for additional filtering
+			debouncedFilterModel,
 			paginationModel.pageSize,
 			paginationModel.page,
 			sortModel[0]?.field,
 			sortModel[0]?.sort,
+			presetQuery,
 		],
 		queryFn: async () => {
-			const additionalFilters = processMuiFilterModel(debouncedFilterModel, "");
+			const additionalFilters = processMuiFilterModel(
+				debouncedFilterModel,
+				presetQuery
+			);
 			const finalQuery = additionalFilters
-				? `(${allIdsQuery}) AND (${additionalFilters})`
-				: allIdsQuery;
+				? `(${presetQuery}) AND (${additionalFilters})`
+				: presetQuery;
 
 			const queryVariables = {
 				query: finalQuery,
@@ -296,12 +217,11 @@ function RouteComponent() {
 				headers
 			);
 		},
-		enabled: !!token && !!dcbApiBase && patronRequestIds.length > 0,
+		enabled: !!token && !!dcbApiBase && !!code,
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
 	});
-
 	if (isPatronRequestLoading && !patronRequestData) {
 		return (
 			<Loading
@@ -329,7 +249,6 @@ function RouteComponent() {
 	const shouldShowLoading =
 		isFiltering ||
 		isPatronRequestLoading ||
-		isCountLoading ||
 		(isFetching && !!patronRequestData);
 	return (
 		<>
@@ -362,8 +281,7 @@ function RouteComponent() {
 				sortingMode="server"
 				sortModel={sortModel}
 				onSortModelChange={handleSortChange}
-				// rowCount={patronRequestIds.length ?? 0}
-				rowCount={filteredTotalCount}
+				rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 				rowModesModel={rowModesModel}
 				onRowModesModelChange={setRowModesModel}
 			/>

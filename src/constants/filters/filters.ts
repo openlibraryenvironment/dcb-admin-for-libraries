@@ -57,6 +57,10 @@ export const equalsOnly: GridFilterOperator[] = [
 	doesNotEqualFilter,
 ];
 
+export const equalsSingular: GridFilterOperator[] = [
+	...getGridStringOperators().filter(({ value }) => ["equals"].includes(value)),
+];
+
 export const containsOnly: GridFilterOperator[] = [
 	...getGridStringOperators().filter(({ value }) =>
 		["contains"].includes(value)

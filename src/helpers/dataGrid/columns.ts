@@ -332,10 +332,11 @@ export const standardPatronRequestColumns: GridColDef[] = [
 			row?.clusterRecord?.title,
 	},
 	{
-		field: "supplyingAgency",
+		field: "supplyingAgencyCode",
 		headerName: "Supplying agency",
-		filterable: false,
-		sortable: false,
+		filterable: true,
+		filterOperators: equalsOnly,
+		sortable: true,
 		flex: 0.75,
 		valueGetter: (value: string, row: PatronRequest) => {
 			// Check if suppliers array is not empty
@@ -533,10 +534,11 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 			row?.clusterRecord?.title,
 	},
 	{
-		field: "supplyingAgency",
+		field: "supplyingAgencyCode",
 		headerName: "Supplying agency",
-		filterable: false,
-		sortable: false,
+		filterable: true,
+		sortable: true,
+		filterOperators: equalsOnly,
 		valueGetter: (
 			value: string,
 			row: { suppliers: { localAgency: string }[] }
