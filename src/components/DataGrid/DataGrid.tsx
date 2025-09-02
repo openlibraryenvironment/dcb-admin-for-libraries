@@ -230,7 +230,7 @@ export default function DataGrid({
 				}}
 				onSortModelChange={finalOnSortModelChange}
 				onRowClick={handleRowClick}
-				pageSizeOptions={[5, 10, 20, 30, 40, 50, 100, 200]}
+				pageSizeOptions={[5, 10, 20, 25, 30, 40, 50, 100, 200]}
 				pagination={pagination}
 				paginationMode={paginationMode}
 				paginationModel={paginationModel}

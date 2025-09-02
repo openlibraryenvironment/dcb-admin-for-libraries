@@ -108,7 +108,7 @@ function RouteComponent() {
 
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
-			storedState.pagination ?? { page: 0, pageSize: 20 }
+			storedState.pagination ?? { page: 0, pageSize: 25 }
 		);
 	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
 		storedState.filter ?? { items: [] }

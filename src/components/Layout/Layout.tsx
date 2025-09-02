@@ -41,6 +41,8 @@ export const Layout = ({ children }: LayoutProps) => {
 				label: t("nav.supplier_requests.title"),
 				value: `${basePath}supplierRequests`,
 			},
+			{ label: t("nav.locations.title"), value: `${basePath}locations` },
+
 			// ...(import.meta.env.DEV
 			// 	? [
 			// 			{ label: t("nav.contacts.title"), value: `${basePath}contacts` },

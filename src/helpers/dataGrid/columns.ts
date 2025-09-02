@@ -916,3 +916,15 @@ export const locationPatronRequestColumnVisibility = {
 	pickupRequestStatus: false,
 	isExpeditedCheckout: false,
 };
+
+export const standardLocationsVisibility = {
+	id: false,
+	lastImported: false,
+	localId: false,
+	name: true,
+	isPickup: true,
+	isPickupAnywhere: true,
+	code: true,
+	hostSystemName: false,
+	printLabel: false,
+};

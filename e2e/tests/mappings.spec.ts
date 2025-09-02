@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { mockMappingsApi, mockMappings } from "../mocks/mappings";
-// WIP: Need to set up login etc before any of this can work
+// WIP: Need to set up login etc before any of this can work. And even then it'll need some work
 // Navigate to the page before each test
 test.beforeEach(async ({ page }) => {
 	// Replace with the actual route to your mappings page
@@ -9,6 +9,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe("Mappings Page", () => {
 	// --- Test 1: Visual Rendering in Light and Dark Modes ---
+	// Should map the colours
 	test("should render correctly in light and dark mode", async ({ page }) => {
 		// Mock API with editing disabled for a consistent visual state
 		await mockMappingsApi(page, { editingDisabled: true });

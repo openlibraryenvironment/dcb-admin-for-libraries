@@ -213,7 +213,10 @@
 	},
 	"location": {
 		"code": "Location code",
-		"name": "Location name"
+		"name": "Location name",
+		"not_set": "Not set",
+		"pickup_status": "Pickup status",
+		"pickup_anywhere_status": "Pickup anywhere status"
 	},
 	"login": {
 		"access": "To access DCB Admin for Libraries, please sign in with your library credentials",
@@ -549,6 +552,8 @@
 			"find_column": "Find column"
 		},
 		"feedback": {
+			"disabled": "Disabled",
+			"enabled": "Enabled",
 			"error": {
 				"cannot_retrieve_record": "Unable to retrieve the record",
 				"cannot_find_record": "Unable to find the record",
@@ -557,7 +562,8 @@
 				"loading": "Error loading {{entity}}",
 				"loading_message": "An error has occurred loading this page",
 				"too_long_load": "The record is taking too long to load"
-			}
+			},
+			"not_set": "Not set"
 		},
 		"info": {
 			"contact": "contact",
