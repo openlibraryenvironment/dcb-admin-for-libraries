@@ -37,6 +37,13 @@ interface CombinedData {
 	clusterDetail: ClusterDetailResponse;
 	comparisonItems: ItemAvailabilityResponse;
 }
+// Key info for this component
+// Title, Author, Format, Description, ISBN (or other identifier)
+// Bonus info
+// Language, No. of available items, Publisher, Top Subjects, Publication Date etc ..
+// Everything on the search result and more
+// Must be a schema in dcb-locate somewhere
+// Then we also need to think about graphql - can we query clusters by their source systems ...
 
 export default function ClusterRecordComponent() {
 	const { cfg } = useRouter().options.context as { cfg: any };

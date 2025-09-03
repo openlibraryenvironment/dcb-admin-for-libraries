@@ -8,7 +8,7 @@ export const CQL_FIELD_MAPPING = {
 	[SearchField.ISBN]: "isbn=",
 	[SearchField.Subject]: "subjects=",
 	[SearchField.Language]: "languages=",
-	[SearchField.Format]: "sourceTypes=",
+	[SearchField.Format]: "sourceTypes==",
 	[SearchField.PublicationYear]: "publicationYear=",
 	[SearchField.Publisher]: "instancePublishers=",
 	[SearchField.Library]: "items.effectiveLocationId=",

@@ -220,6 +220,7 @@ const theme = createTheme({
 					navigationText: "#E2EEF6",
 					navigationTextActive: "#FFFFFF",
 					searchResultBackground: "#F6F9FC",
+					searchResultTitle: "#186498",
 				},
 				secondary: {
 					main: "#1e7ebf",
@@ -239,6 +240,7 @@ const theme = createTheme({
 					inactiveBackground: "#8C8C8C",
 					main: "#35B7FF",
 					searchResultBackground: "#424242",
+					searchResultTitle: "#186498",
 				},
 				secondary: {
 					main: "#75BEDB",
@@ -276,6 +278,9 @@ const theme = createTheme({
 		hitCount: {
 			fontWeight: "bold",
 			color: "var(--mui-palette-primary-hitCountText)",
+		},
+		searchResultTitle: {
+			fontSize: "1.3rem",
 		},
 		loginCardText: {
 			fontSize: 18,
@@ -365,6 +370,7 @@ declare module "@mui/material/styles" {
 		navigationText?: string;
 		navigationTextActive?: string;
 		searchResultBackground?: string;
+		searchResultTitle?: string;
 		secondary?: {
 			main?: string;
 		};
@@ -407,6 +413,7 @@ declare module "@mui/material/styles" {
 		navigationText?: string;
 		navigationTextActive?: string;
 		searchResultBackground?: string;
+		searchResultTitle?: string;
 		secondary?: {
 			main?: string;
 		};
@@ -423,42 +430,45 @@ declare module "@mui/material/styles" {
 		errorBackground?: string;
 	}
 	interface TypographyVariants {
-		appTitle?: React.CSSProperties;
-		loginCardText?: React.CSSProperties;
-		subheading?: React.CSSProperties;
-		cardActionText?: React.CSSProperties;
-		attributeTitle?: React.CSSProperties;
-		loginHeader?: React.CSSProperties;
-		modalTitle?: React.CSSProperties;
-		homePageText?: React.CSSProperties;
-		hitCount?: React.CSSProperties;
-		notFoundTitle?: React.CSSProperties;
-		notFoundText?: React.CSSProperties;
-		componentSubheading?: React.CSSProperties;
-		linkedFooterTextSize?: React.CSSProperties;
-		linkedFooterHeader?: React.CSSProperties;
-		loadingText?: React.CSSProperties;
 		accordionSummary?: React.CSSProperties;
+		appTitle?: React.CSSProperties;
+		attributeText?: React.CSSProperties;
+		attributeTitle?: React.CSSProperties;
+		cardActionText?: React.CSSProperties;
+		componentSubheading?: React.CSSProperties;
+		hitCount?: React.CSSProperties;
+		homePageText?: React.CSSProperties;
+		loginCardText?: React.CSSProperties;
+		loginHeader?: React.CSSProperties;
+		loadingText?: React.CSSProperties;
+		linkedFooterHeader?: React.CSSProperties;
+		linkedFooterTextSize?: React.CSSProperties;
+		modalTitle?: React.CSSProperties;
+		notFoundText?: React.CSSProperties;
+		notFoundTitle?: React.CSSProperties;
+		searchResultTitle?: React.CSSProperties;
+		subheading?: React.CSSProperties;
 		subTabTitle?: React.CSSProperties;
 	}
 	interface TypographyVariantsOptions {
+		accordionSummary?: React.CSSProperties;
 		appTitle?: React.CSSProperties;
-		loginCardText?: React.CSSProperties;
-		subheading?: React.CSSProperties;
-		cardActionText?: React.CSSProperties;
-		attributeTitle?: React.CSSProperties;
 		attributeText?: React.CSSProperties;
-		loginHeader?: React.CSSProperties;
-		modalTitle?: React.CSSProperties;
+		attributeTitle?: React.CSSProperties;
+		cardActionText?: React.CSSProperties;
+		componentSubheading?: React.CSSProperties;
 		hitCount?: React.CSSProperties;
 		homePageText?: React.CSSProperties;
-		notFoundTitle?: React.CSSProperties;
-		notFoundText?: React.CSSProperties;
-		componentSubheading?: React.CSSProperties;
-		linkedFooterTextSize?: React.CSSProperties;
-		linkedFooterHeader?: React.CSSProperties;
+		loginCardText?: React.CSSProperties;
+		loginHeader?: React.CSSProperties;
 		loadingText?: React.CSSProperties;
-		accordionSummary?: React.CSSProperties;
+		linkedFooterHeader?: React.CSSProperties;
+		linkedFooterTextSize?: React.CSSProperties;
+		modalTitle?: React.CSSProperties;
+		notFoundText?: React.CSSProperties;
+		notFoundTitle?: React.CSSProperties;
+		searchResultTitle?: React.CSSProperties;
+		subheading?: React.CSSProperties;
 		subTabTitle?: React.CSSProperties;
 	}
 }

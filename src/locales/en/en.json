@@ -379,7 +379,7 @@
 		"title": "Patron request"
 	},
 	"requesting": {
-		"available_at": "Items are present at the following institutions: {{list}}",
+		"available_at": "Items exist at {{total}} institution(s)",
 		"available_to_request": "{{number}} items available to request.",
 		"barcode": "Barcode",
 		"bib_record": "Bib record",
@@ -392,10 +392,10 @@
 		"cluster_tooltip": "View cluster record",
 		"cluster_id": "Cluster UUID",
 		"cluster_deleted": "Is cluster deleted?",
+		"contributor": "Contributor(s): {{contributors}}",
 		"date_available": "Date available",
 		"date_due": "Date due",
-		"shared_index_unavailable_title": "Shared index is not configured on this system",
-		"shared_index_unavailable_message": "Please set a valid DCB_SEARCH_BASE environment variable for this deployment.",
+		"format": "Format: {{formats}}",
 		"hold_count": "Hold count",
 		"identifiers": "Identifiers",
 		"items": "Items",
@@ -408,9 +408,12 @@
 		"local_item_type_code": "Local item type code",
 		"local_item_type_name": "Local item type name",
 		"no_data": "No data available. Please enter a search term, or change your current search.",
+		"publication_date": "Publication date: {{publicationDate}} ",
 		"record_created": "Record created",
 		"record_updated": "Record updated",
 		"requestable": "Requestable",
+		"shared_index_unavailable_title": "Shared index is not configured on this system",
+		"shared_index_unavailable_message": "Please set a valid DCB_SEARCH_BASE environment variable for this deployment.",
 		"suppressed": "Suppressed",
 		"titles_found": "{{number}} titles found",
 		"volume_parsed": "Parsed volume statement",
@@ -563,7 +566,10 @@
 				"loading_message": "An error has occurred loading this page",
 				"too_long_load": "The record is taking too long to load"
 			},
-			"not_set": "Not set"
+			"not_set": "Not set",
+			"reveal_more": "and {{number}} more",
+			"show_less": "Show less",
+			"show_more": "Show more"
 		},
 		"info": {
 			"contact": "contact",

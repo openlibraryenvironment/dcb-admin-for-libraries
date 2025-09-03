@@ -1,4 +1,3 @@
-// Updated SharedIndexComponent.tsx (key changes)
 import { useRouter, useSearch } from "@tanstack/react-router";
 import { useState, useCallback, useEffect } from "react";
 import axios from "axios";
@@ -24,14 +23,16 @@ interface SharedIndexQueryParams {
 }
 
 // Need to improve:
-// Filters in URL
+// Filters in URL look horrible. Can we have a nicer URL and a filter store in zustand?
 // Presentation when empty (messaging etc)
 // Hiding sort buttons + improving grid integrations
+// Searches should really only run on Enter or Search
 
 // Features to add
 // Sorting
 // Faceting
 // Natural Language search (moonshot)
+// Suggestions
 // Possibly a separate filter panel
 
 export function SharedIndexV2() {
@@ -210,6 +211,7 @@ export function SharedIndexV2() {
 			)}
 
 			<DataGrid
+				autoRowHeight
 				rows={searchResults?.instances || []}
 				columns={columns}
 				pagination
