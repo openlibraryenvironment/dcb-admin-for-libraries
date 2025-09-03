@@ -79,6 +79,8 @@ export const SearchResult = ({ params, indexCode }: SearchResultProps) => {
 		: [];
 	const locationCount = allLocationNames.length;
 
+	// May end up doing "Available at, X, Y Z", "Present at X, Y, Z"M- available at could have green tick
+
 	// const fetchItemAvailability = useCallback(async () => {
 	// 	const response = await axios.get(
 	// 		`${cfg.VITE_DCB_API_BASE}/items/availability`,

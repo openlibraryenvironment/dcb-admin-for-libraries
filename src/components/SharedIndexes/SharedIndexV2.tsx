@@ -9,6 +9,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid-premium";
 import { useTranslation } from "react-i18next";
+import { Button } from "@mui/material"; // Change 2: Import Button
 
 import { Route } from "@/routes/__authenticated/indexes/$indexCode";
 import { AdvancedSearchFilter } from "./AdvancedSearchFilter";
@@ -52,8 +53,8 @@ export function SharedIndexV2() {
 		strict: false,
 	});
 
-	// These should be persisted to zustand
-	const [filters, setFilters] = useState<SearchFilter[]>(() => {
+	// This state holds the APPLIED filters that trigger the search
+	const [appliedFilters, setAppliedFilters] = useState<SearchFilter[]>(() => {
 		if (filtersParam) {
 			try {
 				const parsed = JSON.parse(filtersParam);
@@ -65,10 +66,14 @@ export function SharedIndexV2() {
 		return [];
 	});
 
+	// Holds the "current filters" - i.e. what is being typed
+	const [stagedFilters, setStagedFilters] =
+		useState<SearchFilter[]>(appliedFilters);
+
 	// Update URL when filters change
-	const handleFiltersChange = useCallback(
+	const handleApplyFilters = useCallback(
 		(newFilters: SearchFilter[]) => {
-			setFilters(newFilters);
+			setAppliedFilters(newFilters);
 
 			const filterState: FilterState = { filters: newFilters };
 			const filtersJson = JSON.stringify(filterState);
@@ -84,6 +89,12 @@ export function SharedIndexV2() {
 		},
 		[router, indexCode]
 	);
+
+	// Change 2: New submit handler for the form
+	const handleSearchSubmit = (event: React.FormEvent) => {
+		event.preventDefault(); // Prevent full page reload
+		handleApplyFilters(stagedFilters);
+	};
 
 	const fetchSearchResults = useCallback(
 		async ({ queryKey }: any) => {
@@ -137,19 +148,19 @@ export function SharedIndexV2() {
 	} = useQuery({
 		queryKey: [
 			"searchResults",
-			{ filters },
+			{ filters: appliedFilters }, // Query depends on APPLIED filters
 			paginationModel.page,
 			paginationModel.pageSize,
 		],
 		queryFn: fetchSearchResults,
-		enabled: !!auth.user?.access_token && filters.some((f) => f.value),
+		enabled: !!auth.user?.access_token && appliedFilters.some((f) => f.value),
 		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 
-	// Reset pagination when filters change
+	// Reset pagination when applied filters change
 	useEffect(() => {
 		setPaginationModel((prev) => ({ ...prev, page: 0 }));
-	}, [filters]);
+	}, [appliedFilters]);
 
 	if (!indexCode) {
 		return (
@@ -182,11 +193,21 @@ export function SharedIndexV2() {
 				<Typography variant="h1" gutterBottom>
 					{t("nav.titles.title")}
 				</Typography>
+				{/* Can we use react-hook-form here */}
+				<form onSubmit={handleSearchSubmit}>
+					<AdvancedSearchFilter
+						onFiltersChange={setStagedFilters}
+						initialFilters={stagedFilters}
+					/>
+					<Button
+						type="submit"
+						variant="contained"
+						color="primary"
+						sx={{ mt: 2 }}>
+						{t("ui.actions.apply_filters")}
+					</Button>
+				</form>
 
-				<AdvancedSearchFilter
-					onFiltersChange={handleFiltersChange}
-					initialFilters={filters}
-				/>
 				{searchResults?.totalRecords ? (
 					<Typography variant="hitCount">
 						{t("requesting.titles_found", {
@@ -266,8 +287,9 @@ export function SharedIndexV2() {
 					},
 					border: "none",
 					"& .MuiDataGrid-row": {
-						borderBottom: "none", // Remove row borders (some versions use this)
-						borderTop: "none", // Remove row borders (some versions use this)
+						borderBottom: "none", // These 2 remove the row borders
+						borderTop: "none",
+						marginBottom: "32px", // To add space between cards
 					},
 					// "& .MuiDataGrid-virtualScrollerRenderZone": {
 					// 	display: "flex",

@@ -523,6 +523,7 @@
 	"ui": {
 		"actions": {
 			"add_filter": "Add filter",
+			"apply_filters": "Apply filters",
 			"cancel": "Cancel",
 			"clear_all": "Clear all",
 			"collapse": "Collapse",
