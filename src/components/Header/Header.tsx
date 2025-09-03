@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import Avatar from "@mui/material/Avatar";
 import { Tooltip, useTheme } from "@mui/material";
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import { getLibrary } from "@queries/getLibrary";
 import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
@@ -31,6 +31,7 @@ export const Header = () => {
 
 	const { data } = useQuery<LibrariesQueryData>({
 		queryKey: ["libraryInfo", headers, code, cfg.VITE_DCB_API_BASE],
+		placeholderData: keepPreviousData,
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
