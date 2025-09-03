@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
 	Box,
 	TextField,
@@ -21,29 +20,18 @@ import {
 } from "@models/SearchTypes";
 import { LANGUAGE_OPTIONS } from "@constants/search/languageOptions";
 import { t } from "i18next";
+
+// Takes the filters array directly and a function to change it.
 interface AdvancedSearchFilterProps {
+	filters: SearchFilter[];
 	onFiltersChange: (filters: SearchFilter[]) => void;
-	initialFilters?: SearchFilter[];
 }
 
 export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
+	filters,
 	onFiltersChange,
-	initialFilters = [],
 }) => {
-	// Get the filters
-	const [filters, setFilters] = useState<SearchFilter[]>(
-		initialFilters.length > 0
-			? initialFilters
-			: [
-					{
-						id: Date.now().toString(),
-						field: SearchField.Title,
-						value: "",
-					},
-				]
-	);
-
-	// Our search options and boolean operators. Bring translation keys in for the labels
+	// Our search options and boolean operators.
 	const searchFieldOptions = [
 		{ value: SearchField.Keyword, label: "Keyword" },
 		{ value: SearchField.Title, label: "Title" },
@@ -66,9 +54,6 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 
 	const numberOfActiveFilters =
 		filters?.filter((f) => f?.value?.trim()).length ?? 0;
-	useEffect(() => {
-		onFiltersChange(filters);
-	}, [filters, onFiltersChange]);
 
 	const addFilter = () => {
 		const newFilter: SearchFilter = {
@@ -77,21 +62,24 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 			value: "",
 			operator: BooleanOperator.AND,
 		};
-		setFilters([...filters, newFilter]);
+		// Directly call the parent's update function with the new array.
+		onFiltersChange([...filters, newFilter]);
 	};
 
 	const removeFilter = (id: string) => {
 		if (filters.length > 1) {
-			setFilters(filters.filter((f) => f.id !== id));
+			onFiltersChange(filters.filter((f) => f.id !== id));
 		}
 	};
 
 	const updateFilter = (id: string, updates: Partial<SearchFilter>) => {
-		setFilters(filters.map((f) => (f.id === id ? { ...f, ...updates } : f)));
+		onFiltersChange(
+			filters.map((f) => (f.id === id ? { ...f, ...updates } : f))
+		);
 	};
 
 	const clearAllFilters = () => {
-		setFilters([
+		onFiltersChange([
 			{
 				id: Date.now().toString(),
 				field: SearchField.Title,
@@ -99,17 +87,6 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 			},
 		]);
 	};
-
-	// const handleSearch = () => {
-	// 	const activeFilters = filters.filter((f) => f.value.trim());
-	// 	// onSearch(activeFilters);
-	// };
-
-	// const handleKeyDown = (event: React.KeyboardEvent) => {
-	// 	if (event.key === "Enter" && hasActiveFilters) {
-	// 		handleSearch();
-	// 	}
-	// };
 
 	const renderValueInput = (filter: SearchFilter) => {
 		if (filter.field === SearchField.Language) {
@@ -148,7 +125,6 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 		);
 	};
 
-	// Colours need to be defined in the theme
 	return (
 		<Box sx={{ p: 2, border: "1px solid #e0e0e0", borderRadius: 1, mb: 2 }}>
 			<Stack spacing={2}>
@@ -239,7 +215,11 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 								.map((filter) => (
 									<Chip
 										key={filter.id}
-										label={`${searchFieldOptions.find((opt) => opt.value === filter.field)?.label}: ${filter.value}`}
+										label={`${
+											searchFieldOptions.find(
+												(opt) => opt.value === filter.field
+											)?.label
+										}: ${filter.value}`}
 										onDelete={() => updateFilter(filter.id, { value: "" })}
 										size="small"
 									/>

@@ -7,6 +7,7 @@ import {
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+// Persist all our grid options so we don't lose them on reload
 interface GridState {
 	// Sort model is stored directly for consistency
 	sortModel: Record<string, GridSortModel>;
@@ -27,7 +28,6 @@ interface GridActions {
 	clearGridState: () => void;
 }
 
-// The store now uses the official MUI types directly
 export const useGridStore = create<GridState & GridActions>()(
 	persist(
 		(set) => ({

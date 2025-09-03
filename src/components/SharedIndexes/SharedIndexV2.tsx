@@ -9,7 +9,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid-premium";
 import { useTranslation } from "react-i18next";
-import { Button } from "@mui/material"; // Change 2: Import Button
+import { Button } from "@mui/material";
 
 import { Route } from "@/routes/__authenticated/indexes/$indexCode";
 import { AdvancedSearchFilter } from "./AdvancedSearchFilter";
@@ -18,6 +18,8 @@ import { buildQuery } from "@helpers/search/queryBuilder";
 import DataGrid from "@components/DataGrid/DataGrid";
 import { SearchResult } from "@components/SearchResultComponent/SearchResultComponent";
 import Error from "@components/Error/Error";
+import { useSearchGridStore } from "@/hooks/useSearchGridStore";
+import { parseQuery } from "@helpers/search/queryParser";
 
 interface SharedIndexQueryParams {
 	filters?: string; // JSON stringified filters
@@ -48,76 +50,65 @@ export function SharedIndexV2() {
 		pageSize: 25,
 	});
 
-	// Get filters from URL search params
-	const { filters: filtersParam }: SharedIndexQueryParams = useSearch({
+	// Get the simplified query from URL search params
+	const { filters: queryParam }: SharedIndexQueryParams = useSearch({
 		strict: false,
 	});
 
-	// This state holds the APPLIED filters that trigger the search
-	const [appliedFilters, setAppliedFilters] = useState<SearchFilter[]>(() => {
-		if (filtersParam) {
-			try {
-				const parsed = JSON.parse(filtersParam);
-				return parsed.filters || [];
-			} catch {
-				return [];
-			}
-		}
-		return [];
-	});
+	// Get state from Zustand store
+	const { appliedFilters, setAppliedFilters } = useSearchGridStore();
 
-	// Holds the "current filters" - i.e. what is being typed
-	const [stagedFilters, setStagedFilters] =
-		useState<SearchFilter[]>(appliedFilters);
+	// This state holds the "current" filters being edited in the UI
+	const [stagedFilters, setStagedFilters] = useState<SearchFilter[]>([]);
+	const [isDirty, setIsDirty] = useState(false); // State to track if filters have changed
 
-	// Update URL when filters change
+	// On initial load, synchronize state from the URL
+	useEffect(() => {
+		const initialFilters = parseQuery(queryParam || "");
+		setAppliedFilters(initialFilters);
+		setStagedFilters(initialFilters);
+	}, [queryParam, setAppliedFilters]); // Dependency on queryParam ensures this runs on URL change
+
+	// Compare staged and applied filters to determine if UI is "dirty"
+	useEffect(() => {
+		// A simple deep comparison using JSON.stringify
+		const staged = JSON.stringify(stagedFilters.filter((f) => f.value));
+		const applied = JSON.stringify(appliedFilters.filter((f) => f.value));
+		setIsDirty(staged !== applied);
+	}, [stagedFilters, appliedFilters]);
+
 	const handleApplyFilters = useCallback(
 		(newFilters: SearchFilter[]) => {
-			setAppliedFilters(newFilters);
+			const activeFilters = newFilters.filter((f) => f.value);
+			setAppliedFilters(activeFilters);
 
-			const filterState: FilterState = { filters: newFilters };
-			const filtersJson = JSON.stringify(filterState);
+			// Build the simple query for the URL
+			const simpleQuery = buildQuery(activeFilters);
 
 			router.navigate({
 				to: "/indexes/$indexCode",
 				params: { indexCode: indexCode },
-				search: { filters: filtersJson },
-				replace: true, // Use replace to avoid cluttering browser history
-				// This needs more work as the URL just becomes a big mess
-				// I would rather have human-readable filters in the URL, and persist the filters to Zustand
+				search: { filters: simpleQuery }, // Use the simple query in the URL
+				replace: true,
 			});
 		},
-		[router, indexCode]
+		[router, indexCode, setAppliedFilters]
 	);
 
-	// Change 2: New submit handler for the form
 	const handleSearchSubmit = (event: React.FormEvent) => {
-		event.preventDefault(); // Prevent full page reload
+		event.preventDefault();
 		handleApplyFilters(stagedFilters);
 	};
 
 	const fetchSearchResults = useCallback(
 		async ({ queryKey }: any) => {
-			const [_, filterState, page, pageSize] = queryKey;
+			const [_, query] = queryKey;
 
-			if (
-				!filterState.filters ||
-				filterState.filters.length === 0 ||
-				!filterState.filters.some((f: SearchFilter) => f.value)
-			) {
+			if (!query) {
 				return { instances: [], totalRecords: 0 };
 			}
 
-			// Build CQL query from filters
-			const cqlQuery = buildQuery(
-				filterState.filters.filter((f: SearchFilter) => f.value)
-			);
-
-			if (!cqlQuery) {
-				return { instances: [], totalRecords: 0 };
-			}
-
-			console.log("Generated CQL Query:", cqlQuery);
+			console.log("Generated Query:", query);
 
 			const response = await axios.get(
 				`${cfg.VITE_DCB_SEARCH_BASE}/public/search/instances`,
@@ -126,9 +117,9 @@ export function SharedIndexV2() {
 						Authorization: `Bearer ${auth.user?.access_token}`,
 					},
 					params: {
-						query: cqlQuery,
-						offset: page * pageSize,
-						limit: pageSize,
+						query: query, // The query is now directly from the URL
+						offset: paginationModel.page * paginationModel.pageSize,
+						limit: paginationModel.pageSize,
 					},
 				}
 			);
@@ -138,7 +129,12 @@ export function SharedIndexV2() {
 				totalRecords: response.data.totalRecords || 0,
 			};
 		},
-		[auth.user?.access_token, cfg.VITE_DCB_SEARCH_BASE]
+		[
+			auth.user?.access_token,
+			cfg.VITE_DCB_SEARCH_BASE,
+			paginationModel.page,
+			paginationModel.pageSize,
+		]
 	);
 
 	const {
@@ -148,19 +144,19 @@ export function SharedIndexV2() {
 	} = useQuery({
 		queryKey: [
 			"searchResults",
-			{ filters: appliedFilters }, // Query depends on APPLIED filters
+			queryParam, // Query depends directly on the URL param
 			paginationModel.page,
 			paginationModel.pageSize,
 		],
 		queryFn: fetchSearchResults,
-		enabled: !!auth.user?.access_token && appliedFilters.some((f) => f.value),
+		enabled: !!auth.user?.access_token && !!queryParam,
 		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 
-	// Reset pagination when applied filters change
+	// Reset pagination when the query changes
 	useEffect(() => {
 		setPaginationModel((prev) => ({ ...prev, page: 0 }));
-	}, [appliedFilters]);
+	}, [queryParam]);
 
 	if (!indexCode) {
 		return (
@@ -196,14 +192,16 @@ export function SharedIndexV2() {
 				{/* Can we use react-hook-form here */}
 				<form onSubmit={handleSearchSubmit}>
 					<AdvancedSearchFilter
+						filters={stagedFilters} // Changed prop name from initialFilters
 						onFiltersChange={setStagedFilters}
-						initialFilters={stagedFilters}
 					/>
 					<Button
 						type="submit"
 						variant="contained"
 						color="primary"
-						sx={{ mt: 2 }}>
+						sx={{ mt: 2 }}
+						disabled={!isDirty} // Disable button if no changes have been made
+					>
 						{t("ui.actions.apply_filters")}
 					</Button>
 				</form>
