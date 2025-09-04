@@ -588,6 +588,18 @@
 		},
 		"data_grid": {
 			"active_filters": "{{number}} Active filters",
+			"filters": {
+				"days_from": "Days from",
+				"days_to": "Days to",
+				"equals": "Equals",
+				"from": "From",
+				"greater_than_exclusive": "Greater than",
+				"greater_than_inclusive": "Greater than or equal to",
+				"less_than_exclusive": "Less than",
+				"less_than_inclusive": "Less than or equal to",
+				"not_equal": "Does not equal",
+				"to": "To"
+			},
 			"edit_summary": "Edit {{entity}}",
 			"find_column": "Find column"
 		},
