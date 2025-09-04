@@ -262,13 +262,15 @@
 			"reference": "Reference value mappings"
 		},
 		"patron_requests": {
-			"title": "Patron requests"
+			"title": "Patron requests",
+			"tooltip": "The requests made by patrons of your library"
 		},
 		"settings": {
 			"title": "Settings"
 		},
 		"supplier_requests": {
-			"title": "Supplier requests"
+			"title": "Supplier requests",
+			"tooltip": "The requests for which your library is acting as a supplier"
 		},
 		"titles": {
 			"title": "Titles"
@@ -379,8 +381,12 @@
 		"title": "Patron request"
 	},
 	"requesting": {
-		"available_at": "Items exist at {{total}} institution(s)",
-		"available_to_request": "{{number}} items available to request.",
+		"available_at": "Items present at {{total}} institution(s)",
+		"available_for_walk_up": "Available for walk-up requesting",
+		"available_for_walk_up_description": "Available for walk-up requesting: at least one item for this record is available in your library.",
+		"available_for_staff_request": "Available for staff requesting",
+		"available_for_staff_request_description": "Available for staff requesting: at least one item for this record is available in your consortium.",
+		"available_to_request": "{{number}} available items at {{total}} institution(s)",
 		"barcode": "Barcode",
 		"bib_record": "Bib record",
 		"bib_record_id": "Bib record UUID",
@@ -398,6 +404,8 @@
 		"format": "Format: {{formats}}",
 		"hold_count": "Hold count",
 		"identifiers": "Identifiers",
+		"isbn": "ISBN identifier(s): {{isbn}}",
+		"issn": "ISSN identifier(s): {{issn}}",
 		"items": "Items",
 		"items_error_title": "We could not load the associated items",
 		"item_id": "Item ID",
@@ -408,7 +416,14 @@
 		"local_item_type_code": "Local item type code",
 		"local_item_type_name": "Local item type name",
 		"no_data": "No data available. Please enter a search term, or change your current search.",
+		"not_available_for_staff_request": "Not available for staff requesting",
+		"not_available_for_staff_request_description": "Not available for staff requesting: there is currently no available item for this record in your consortium.",
+		"not_available_for_walk_up": "Not available for walk up requesting",
+		"not_available_for_walk_up_description": "Not available for walk up requesting: there is currently no available item for this record at your library.",
+		"options": "Request options",
 		"publication_date": "Publication date: {{publicationDate}} ",
+		"place_description": "You have chosen to place a request for {{title}}. Please select a requesting option below.",
+		"place_title": "Place a request",
 		"record_created": "Record created",
 		"record_updated": "Record updated",
 		"requestable": "Requestable",
@@ -419,6 +434,9 @@
 		"volume_parsed": "Parsed volume statement",
 		"volume_raw": "Raw volume statement",
 		"expedited_checkout": {
+			"actions": {
+				"place": "Place an on-site borrowing request."
+			},
 			"create_request": "Create request",
 			"creating_request": "Creating request ...",
 			"description": "Welcome to DCB on-site borrowing. Please provide the barcode and the library of the patron you would like to make a request for. <paragraph>Provided that the patron's details are valid and the item exists and is available at your library, DCB will instantly check out this item to the specified patron.</paragraph>",
@@ -429,6 +447,7 @@
 				"success": "Your on-site borrowing request has been checked out successfully and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
 				"time_elapsed": "Time elapsed: {{time}}"
 			},
+			"option_description": "Place a walk-up request for an item at your library for a visiting OpenRS patron. This will instantly check out the item.",
 			"request_title": "On-site borrowing request",
 			"steps": {
 				"checkout": "Check out item",
@@ -472,6 +491,7 @@
 				"place": "Place a staff request"
 			},
 			"new": "New request",
+			"option_description": "Place a request on behalf of a patron at your institution. This request will follow the standard DCB workflow.",
 			"patron": {
 				"affiliated": "Affiliated institution",
 				"barcode": "Patron barcode",
@@ -528,6 +548,7 @@
 			"clear_all": "Clear all",
 			"collapse": "Collapse",
 			"confirm_changes": "Confirm changes",
+			"continue": "Continue",
 			"edit": "Edit",
 			"expand": "Expand",
 			"go_back": "Go back",
@@ -546,7 +567,10 @@
 		},
 		"common": {
 			"author": "Author",
+			"field": "Field",
 			"last_updated": "Last updated",
+			"none": "None",
+			"operator": "Operator",
 			"status": "Status",
 			"title": "Title"
 		},

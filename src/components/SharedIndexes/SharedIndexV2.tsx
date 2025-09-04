@@ -13,7 +13,7 @@ import { Button } from "@mui/material";
 
 import { Route } from "@/routes/__authenticated/indexes/$indexCode";
 import { AdvancedSearchFilter } from "./AdvancedSearchFilter";
-import { SearchFilter, FilterState } from "@models/SearchTypes";
+import { SearchFilter } from "@models/SearchTypes";
 import { buildQuery } from "@helpers/search/queryBuilder";
 import DataGrid from "@components/DataGrid/DataGrid";
 import { SearchResult } from "@components/SearchResultComponent/SearchResultComponent";
@@ -102,6 +102,8 @@ export function SharedIndexV2() {
 
 	const fetchSearchResults = useCallback(
 		async ({ queryKey }: any) => {
+			// Need this
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [_, query] = queryKey;
 
 			if (!query) {
@@ -192,7 +194,7 @@ export function SharedIndexV2() {
 				{/* Can we use react-hook-form here */}
 				<form onSubmit={handleSearchSubmit}>
 					<AdvancedSearchFilter
-						filters={stagedFilters} // Changed prop name from initialFilters
+						filters={stagedFilters}
 						onFiltersChange={setStagedFilters}
 					/>
 					<Button
@@ -200,7 +202,7 @@ export function SharedIndexV2() {
 						variant="contained"
 						color="primary"
 						sx={{ mt: 2 }}
-						disabled={!isDirty} // Disable button if no changes have been made
+						disabled={!isDirty} // Disable button if no changes have been made - i.e. we've just loaded filters from URL so nothing to apply
 					>
 						{t("ui.actions.apply_filters")}
 					</Button>

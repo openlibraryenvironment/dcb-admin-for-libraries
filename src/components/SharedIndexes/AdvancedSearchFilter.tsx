@@ -93,7 +93,7 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 			return (
 				<Autocomplete
 					value={
-						LANGUAGE_OPTIONS.find((opt) => opt.label === filter.value) || null
+						LANGUAGE_OPTIONS.find((opt) => opt.value === filter.value) || null
 					}
 					onChange={(_, newValue) => {
 						updateFilter(filter.id, { value: newValue?.label || "" });
@@ -136,7 +136,7 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 						alignItems="center">
 						{index > 0 && (
 							<FormControl size="small" sx={{ minWidth: 80 }}>
-								<InputLabel>Operator</InputLabel>
+								<InputLabel>{t("ui.common.operator")}</InputLabel>
 								<Select
 									value={filter.operator || BooleanOperator.AND}
 									onChange={(e) =>
@@ -155,7 +155,7 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 						)}
 
 						<FormControl size="small" sx={{ minWidth: 150 }}>
-							<InputLabel>Field</InputLabel>
+							<InputLabel>{t("ui.common.field")}</InputLabel>
 							<Select
 								value={filter.field}
 								onChange={(e) =>

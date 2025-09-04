@@ -30,18 +30,21 @@ export const Layout = ({ children }: LayoutProps) => {
 		return [
 			{ label: t("nav.home.title"), value: basePath },
 			{ label: t("nav.titles.title"), value: `${basePath}indexes/mobius` },
-			{ label: t("nav.library.service"), value: `${basePath}service` },
-			{ label: t("nav.settings.title"), value: `${basePath}settings` },
+			// { label: t("nav.titles.title"), value: `${basePath}indexes/consortium` }, // Make it generic for now - this should take the consortium code
+
 			{
 				label: t("nav.patron_requests.title"),
 				value: `${basePath}patronRequests`,
 			},
-			{ label: t("nav.mappings.title"), value: `${basePath}mappings` },
 			{
 				label: t("nav.supplier_requests.title"),
 				value: `${basePath}supplierRequests`,
 			},
+			{ label: t("nav.library.service"), value: `${basePath}service` },
+
+			{ label: t("nav.mappings.title"), value: `${basePath}mappings` },
 			{ label: t("nav.locations.title"), value: `${basePath}locations` },
+			{ label: t("nav.settings.title"), value: `${basePath}settings` },
 
 			// ...(import.meta.env.DEV
 			// 	? [

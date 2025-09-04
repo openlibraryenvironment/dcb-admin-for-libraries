@@ -3,7 +3,7 @@ import { Location } from "./Location";
 
 export interface Item {
 	id: string;
-	status: string;
+	status: Status;
 	dueDate: string;
 	location: Location;
 	barcode: string;
@@ -19,4 +19,8 @@ export interface Item {
 	agency: Agency;
 	owningContext: string;
 	availableDate: string;
+}
+
+interface Status {
+	code: string;
 }

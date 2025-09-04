@@ -10,4 +10,5 @@ export interface Agency {
 	latitude: number;
 	isSupplyingAgency: boolean;
 	isBorrowingAgency: boolean;
+	description?: string; // Only on Live Availability
 }
