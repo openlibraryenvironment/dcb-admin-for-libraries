@@ -9,20 +9,27 @@ import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import Box from "@mui/material/Box";
 import {
 	Button,
-	Menu,
-	MenuItem,
 	Typography,
 	Accordion,
 	AccordionSummary,
 	AccordionDetails,
 	Stack,
+	Tooltip,
+	Grid,
+	Chip,
+	Tab,
 } from "@mui/material";
+import TabContext from "@mui/lab/TabContext";
+import TabList from "@mui/lab/TabList";
+import TabPanel from "@mui/lab/TabPanel";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { CustomLink } from "../CustomLink";
 import MasterDetail from "../../components/MasterDetail/MasterDetail";
-import { ClusterDetailResponse } from "@models/ClusterDetailResponse";
-import ExpeditedCheckout from "@forms/ExpeditedCheckout/ExpeditedCheckout";
-import StaffRequest from "@forms/StaffRequest/StaffRequest";
+import {
+	ClusterDetailResponse,
+	Contributor,
+	Note,
+} from "@models/ClusterDetailResponse";
 import { useTranslation } from "react-i18next";
 import Loading from "../../components/Loading/Loading";
 import Error from "../../components/Error/Error";
@@ -31,6 +38,8 @@ import { GRID_DETAIL_PANEL_TOGGLE_COL_DEF } from "@mui/x-data-grid-premium";
 import { DetailPanelToggle } from "@components/MasterDetail/components/DetailPanelToggle/DetailPanelToggle";
 import DetailPanelHeader from "@components/MasterDetail/components/DetailPanelHeader/DetailPanelHeader";
 import { Route } from "@/routes/__authenticated/indexes/$indexCode/$recordId";
+import CombinedRequestingModal from "@forms/CombinedRequestingModal/CombinedRequestingModal";
+import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 
 interface CombinedData {
 	availability: ItemAvailabilityResponse;
@@ -50,23 +59,17 @@ export default function ClusterRecordComponent() {
 	const { indexCode, recordId } = Route.useParams();
 	const auth = useAuth();
 	const { t } = useTranslation();
-	const [showStaffRequest, setShowStaffRequest] = useState(false);
-	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+	const [showCombinedModal, setShowCombinedModal] = useState(false); // Determines whether the requesting modal is visible or not.
+
 	const [isAccordionExpanded, setIsAccordionExpanded] = useState(false);
 	const [isItemsAccordionExpanded, setIsItemsAccordionExpanded] =
 		useState(false);
 
-	const actionsMenuOpen = Boolean(anchorEl);
+	const [activeTab, setActiveTab] = useState(0);
 
-	const handleActionsClick = (event: React.MouseEvent<HTMLElement>) => {
-		setAnchorEl(event.currentTarget);
+	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+		setActiveTab(newValue);
 	};
-
-	const handleActionsClose = () => {
-		setAnchorEl(null);
-	};
-
-	const [showExpeditedCheckout, setShowExpeditedCheckout] = useState(false);
 
 	const fetchItemAvailability = useCallback(async () => {
 		if (!auth.user?.access_token) {
@@ -154,16 +157,9 @@ export default function ClusterRecordComponent() {
 			(comparisonItem) => !availabilityItemIds.has(comparisonItem.id)
 		);
 	}, [data]);
+	const requestableCount = data?.availability?.itemList?.length;
 
-	const handleShowStaffRequest = () => {
-		setShowStaffRequest(true);
-		handleActionsClose();
-	};
-
-	const handleShowExpeditedCheckout = () => {
-		setShowExpeditedCheckout(true);
-		handleActionsClose();
-	};
+	const canRequest = requestableCount !== undefined && requestableCount > 0;
 
 	const columns: GridColDef[] = [
 		{
@@ -287,198 +283,399 @@ export default function ClusterRecordComponent() {
 
 	const itemCount = data?.availability?.itemList?.length ?? 0;
 
+	// Make into a Material UI grid with two sections: "Items" and "Cluster Information" (this needs the source record but also author, language etc)
 	return (
-		<Box sx={{ width: "100%" }}>
-			<Stack
-				direction="row"
-				justifyContent="space-between"
-				alignItems="center"
-				sx={{ mb: 2 }}>
-				<Stack direction={"column"}>
-					<Typography variant="h1" mb={1}>
-						{data?.clusterDetail.title}
-					</Typography>
-
-					<Typography variant="h4">
-						{t("requesting.shared_index.items_for_cluster", {
-							number: itemCount,
-						})}
-					</Typography>
-					{itemsNotShown?.length > 0 ? (
-						<Typography variant="h4">
-							{t("requesting.shared_index.items_not_shown_long", {
-								number: itemsNotShown?.length,
-								id: recordId,
-							})}
+		<>
+			<Grid
+				container
+				spacing={{ xs: 2, md: 3 }}
+				columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
+				<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
+					<Stack
+						direction="row"
+						justifyContent="space-between"
+						alignItems="center"
+						sx={{ mb: 2 }}>
+						<Typography variant="h1" mb={1}>
+							{data?.clusterDetail.title}
 						</Typography>
-					) : null}
-				</Stack>
+						<Tooltip
+							title={
+								!canRequest ? t("requesting.cannot_request_no_items") : ""
+							}>
+							<span>
+								<Button
+									variant="contained"
+									color="primary"
+									disabled={!canRequest}
+									onClick={() => setShowCombinedModal(true)}>
+									{t("ui.actions.place_request")}
+								</Button>
+							</span>
+						</Tooltip>
+					</Stack>
+				</Grid>
+			</Grid>
+			<TabContext value={activeTab}>
+				<TabList
+					onChange={handleTabChange}
+					variant="scrollable"
+					className="secondary">
+					<Tab label={t("requesting.record_information")} />
+					<Tab label={t("requesting.items")} />
+				</TabList>
+				<TabPanel value={0}>
+					<Grid
+						container
+						spacing={{ xs: 2, md: 3 }}
+						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
+						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.contributors")}
+								</Typography>
+								<Typography>
+									{data?.clusterDetail.contributors
+										?.map((c: Contributor) => c.name)
+										.join(", ")}
+								</Typography>
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.format_title")}
+								</Typography>
+								<Typography>
+									{data?.clusterDetail?.sourceTypes?.join(",")}
+								</Typography>
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.publication_year")}
+								</Typography>
+								<RenderAttribute
+									attribute={data?.clusterDetail?.publicationYear}
+								/>
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.description")}
+								</Typography>
+								<RenderAttribute attribute={data?.clusterDetail?.description} />
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.languages")}
+								</Typography>
+								<Typography>
+									{data?.clusterDetail?.languages?.join(",")}
+								</Typography>
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.publisher")}
+								</Typography>
+								{data?.clusterDetail?.publication
+									?.map((pub: { publisher: string }) => pub.publisher)
+									.join(", ")}
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.physical_descriptions")}
+								</Typography>
+								{data?.clusterDetail?.physicalDescriptions}
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.notes")}
+								</Typography>
+								{data?.clusterDetail?.notes
+									?.map(
+										(note: { labelKey: string; note: string }) =>
+											note.labelKey + ": " + note.note
+									)
+									.join(", ")}
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.subjects")}
+								</Typography>
+								<Stack
+									direction="row"
+									spacing={1}
+									flexWrap="wrap"
+									useFlexGap
+									mb={2}>
+									{data?.clusterDetail?.subjects?.map(
+										(sub: { value: string }, index: number) => (
+											<Chip
+												key={
+													data?.clusterDetail?.id +
+													"." +
+													index +
+													"." +
+													sub.value
+												}
+												label={sub.value}
+											/>
+										)
+									)}
+								</Stack>
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.series")}
+								</Typography>
+								<Stack
+									direction="row"
+									spacing={1}
+									flexWrap="wrap"
+									useFlexGap
+									mb={2}>
+									{data?.clusterDetail?.series?.map(
+										(sub: { value: string }, index: number) => (
+											<Chip
+												key={
+													data?.clusterDetail?.id +
+													"." +
+													index +
+													"." +
+													sub.value
+												}
+												label={sub.value}
+											/>
+										)
+									)}
+								</Stack>
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.notes")}
+								</Typography>
+								<Stack
+									direction="row"
+									spacing={1}
+									flexWrap="wrap"
+									useFlexGap
+									mb={2}>
+									{data?.clusterDetail?.notes?.map(
+										(note: Note, index: number) => (
+											<Chip
+												key={
+													data?.clusterDetail?.id +
+													"." +
+													index +
+													"." +
+													note.note
+												}
+												label={note.labelKey + ": " + note.note}
+											/>
+										)
+									)}
+								</Stack>
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("requesting.identifiers")}
+								</Typography>
+								<Typography>
+									{t("requesting.isbn", {
+										isbn: data?.clusterDetail.isbns
+											? data?.clusterDetail.isbns
+													?.map((isbn: string) => isbn)
+													.join(", ")
+											: t("ui.common.none"),
+									})}
+								</Typography>
+								<Typography>
+									{t("requesting.issn", {
+										issn: data?.clusterDetail.issns
+											? data?.clusterDetail.issns
+													?.map((issn: string) => issn)
+													.join(", ")
+											: t("ui.common.none"),
+									})}
+								</Typography>
+							</Stack>
+						</Grid>
 
-				<Box>
-					<Button
-						id="actions-button"
-						aria-controls={actionsMenuOpen ? "actions-menu" : undefined}
-						aria-haspopup="true"
-						aria-expanded={actionsMenuOpen ? "true" : undefined}
-						variant="contained"
-						onClick={handleActionsClick}>
-						{t("ui.actions.title")}
-					</Button>
-					<Menu
-						id="actions-menu"
-						anchorEl={anchorEl}
-						open={actionsMenuOpen}
-						onClose={handleActionsClose}
-						MenuListProps={{
-							"aria-labelledby": "actions-button",
-						}}>
-						<MenuItem onClick={handleShowStaffRequest}>
-							{t("requesting.staff_request.actions.place")}
-						</MenuItem>
-						<MenuItem onClick={handleShowExpeditedCheckout}>
-							{t("requesting.expedited_checkout.steps.checkout")}
-						</MenuItem>
-					</Menu>
-				</Box>
-			</Stack>
+						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
+							<Accordion
+								expanded={isAccordionExpanded}
+								onChange={() => setIsAccordionExpanded(!isAccordionExpanded)}>
+								<AccordionSummary
+									expandIcon={<ExpandMoreIcon />}
+									aria-controls="cluster-details-content"
+									id="cluster-details-header">
+									<Typography variant="h6">
+										{t("requesting.shared_index.cluster_details")}
+									</Typography>
+								</AccordionSummary>
+								<AccordionDetails>
+									<Typography variant="h5">
+										{data?.clusterDetail.title}
+									</Typography>
+									<Typography variant="body1" sx={{ my: 2 }}>
+										{data?.clusterDetail.description}
+									</Typography>
 
-			<DataGrid
-				checkboxSelection={false}
-				columns={columns}
-				disableAggregation={true}
-				disableHoverInteractions={true}
-				disablePivoting
-				disableRowGrouping={true}
-				getDetailPanelContent={({ row }: GridRowParams) => (
-					<MasterDetail type="items" row={row} />
-				)}
-				identifier="ClusterRecordItems"
-				listViewEnabled={false}
-				loading={isLoading}
-				noResultsText={t("requesting.items_not_found")}
-				pagination
-				paginationMode="client"
-				paginationModel={{ page: 0, pageSize: 25 }}
-				pivotingEnabled={false}
-				rows={data?.availability?.itemList ?? []}
-				scrollbarVisible={false}
-				searchText={t("requesting.items_search")}
-				toolbarVisible={true}
-				type={"Items"}
-				rowCount={
-					data?.availability?.itemList
-						? data?.availability?.itemList?.length
-						: 0
-				}
-				rowModesModel={{}}
-				filterMode="client"
-				sortingMode="client"
-				sortModel={[{ field: "availabilityDate", sort: "desc" }]}
+									<Box sx={{ my: 2 }}>
+										<CustomLink
+											to="/indexes/$indexCode"
+											params={{ indexCode: indexCode }}>
+											{t("requesting.shared_index.return")}
+										</CustomLink>
+									</Box>
+
+									<pre>{JSON.stringify(data?.clusterDetail, null, 2)}</pre>
+								</AccordionDetails>
+							</Accordion>
+						</Grid>
+					</Grid>
+				</TabPanel>
+				<TabPanel value={1}>
+					<Grid
+						container
+						spacing={{ xs: 2, md: 3 }}
+						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
+						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
+							<Stack direction={"column"}>
+								<Typography variant="h4">
+									{t("requesting.shared_index.items_for_cluster", {
+										number: itemCount,
+									})}
+								</Typography>
+								{itemsNotShown?.length > 0 ? (
+									<Typography variant="h4">
+										{t("requesting.shared_index.items_not_shown_long", {
+											number: itemsNotShown?.length,
+											id: recordId,
+										})}
+									</Typography>
+								) : null}
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
+							<DataGrid
+								checkboxSelection={false}
+								columns={columns}
+								disableAggregation={true}
+								disableHoverInteractions={true}
+								disablePivoting
+								disableRowGrouping={true}
+								getDetailPanelContent={({ row }: GridRowParams) => (
+									<MasterDetail type="items" row={row} />
+								)}
+								identifier="ClusterRecordItems"
+								listViewEnabled={false}
+								loading={isLoading}
+								noResultsText={t("requesting.items_not_found")}
+								pagination
+								paginationMode="client"
+								paginationModel={{ page: 0, pageSize: 25 }}
+								pivotingEnabled={false}
+								rows={data?.availability?.itemList ?? []}
+								scrollbarVisible={false}
+								searchText={t("requesting.items_search")}
+								toolbarVisible={true}
+								type={"Items"}
+								rowCount={
+									data?.availability?.itemList
+										? data?.availability?.itemList?.length
+										: 0
+								}
+								rowModesModel={{}}
+								filterMode="client"
+								sortingMode="client"
+								sortModel={[{ field: "availabilityDate", sort: "desc" }]}
+							/>
+						</Grid>
+
+						{itemsNotShown?.length > 0 ? (
+							<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
+								<Accordion
+									expanded={isItemsAccordionExpanded}
+									onChange={() =>
+										setIsItemsAccordionExpanded(!isItemsAccordionExpanded)
+									}>
+									<AccordionSummary
+										expandIcon={<ExpandMoreIcon />}
+										aria-controls="items-not-shown-content"
+										id="not-shown-header">
+										<Typography variant="h6">
+											{t("requesting.shared_index.items_not_shown", {
+												number: itemsNotShown?.length,
+											})}
+										</Typography>
+									</AccordionSummary>
+									<AccordionDetails>
+										{/** Diagnosis for mappings */}
+										<Typography>
+											{t("requesting.shared_index.items_not_shown_resolution")}
+										</Typography>
+										<DataGrid
+											checkboxSelection={false}
+											columns={columns}
+											disableAggregation={true}
+											disableHoverInteractions={true}
+											disablePivoting
+											disableRowGrouping={true}
+											getDetailPanelContent={({ row }: any) => (
+												<MasterDetail type="items" row={row} />
+											)}
+											identifier="ClusterRecordItemsNotShown"
+											loading={isLoading}
+											listViewEnabled={false}
+											noResultsText={t("requesting.items_not_found")}
+											pagination
+											paginationMode="client"
+											paginationModel={{ page: 0, pageSize: 25 }}
+											pivotingEnabled={false}
+											scrollbarVisible={false}
+											searchText={t("requesting.items_search")}
+											toolbarVisible={false}
+											rows={itemsNotShown ?? []}
+											type={"Items"}
+											rowCount={itemsNotShown ? itemsNotShown.length : 0}
+											rowModesModel={{}}
+											filterMode="client"
+											sortingMode="client"
+											sortModel={[{ field: "availabilityDate", sort: "desc" }]}
+										/>
+									</AccordionDetails>
+								</Accordion>
+							</Grid>
+						) : null}
+					</Grid>
+				</TabPanel>
+			</TabContext>
+			<CombinedRequestingModal
+				show={showCombinedModal}
+				onClose={() => setShowCombinedModal(false)}
+				bibClusterId={recordId}
+				title={data?.clusterDetail.title}
 			/>
-
-			<Accordion
-				expanded={isAccordionExpanded}
-				onChange={() => setIsAccordionExpanded(!isAccordionExpanded)}>
-				<AccordionSummary
-					expandIcon={<ExpandMoreIcon />}
-					aria-controls="cluster-details-content"
-					id="cluster-details-header">
-					<Typography variant="h6">
-						{t("requesting.shared_index.cluster_details")}
-					</Typography>
-				</AccordionSummary>
-				<AccordionDetails>
-					<Typography variant="h5">{data?.clusterDetail.title}</Typography>
-					<Typography variant="body1" sx={{ my: 2 }}>
-						{data?.clusterDetail.description}
-					</Typography>
-
-					<Box sx={{ my: 2 }}>
-						<CustomLink
-							to="/indexes/$indexCode"
-							params={{ indexCode: indexCode }}>
-							{t("requesting.shared_index.return")}
-						</CustomLink>
-						{/* {" | "} */}
-						{/* <CustomLink
-							to="/indexes/$indexCode/$recordId"
-							params={{ indexCode: indexCode, recordId: recordId }}>
-							View Cluster Details Page (Legacy)
-						</CustomLink> */}
-					</Box>
-
-					<pre>{JSON.stringify(data?.clusterDetail, null, 2)}</pre>
-				</AccordionDetails>
-			</Accordion>
-			{itemsNotShown?.length > 0 ? (
-				<Accordion
-					expanded={isItemsAccordionExpanded}
-					onChange={() =>
-						setIsItemsAccordionExpanded(!isItemsAccordionExpanded)
-					}>
-					<AccordionSummary
-						expandIcon={<ExpandMoreIcon />}
-						aria-controls="items-not-shown-content"
-						id="not-shown-header">
-						<Typography variant="h6">
-							{t("requesting.shared_index.items_not_shown", {
-								number: itemsNotShown?.length,
-							})}
-						</Typography>
-					</AccordionSummary>
-					<AccordionDetails>
-						{/** Diagnosis for mappings */}
-						<Typography>
-							{t("requesting.shared_index.items_not_shown_resolution")}
-						</Typography>
-						<DataGrid
-							checkboxSelection={false}
-							columns={columns}
-							disableAggregation={true}
-							disableHoverInteractions={true}
-							disablePivoting
-							disableRowGrouping={true}
-							getDetailPanelContent={({ row }: any) => (
-								<MasterDetail type="items" row={row} />
-							)}
-							identifier="ClusterRecordItemsNotShown"
-							loading={isLoading}
-							listViewEnabled={false}
-							noResultsText={t("requesting.items_not_found")}
-							pagination
-							paginationMode="client"
-							paginationModel={{ page: 0, pageSize: 25 }}
-							pivotingEnabled={false}
-							scrollbarVisible={false}
-							searchText={t("requesting.items_search")}
-							toolbarVisible={false}
-							rows={itemsNotShown ?? []}
-							// sx={{ border: 0, mb: 2 }}
-							type={"Items"}
-							rowCount={itemsNotShown ? itemsNotShown.length : 0}
-							rowModesModel={{}}
-							filterMode="client"
-							sortingMode="client"
-							sortModel={[{ field: "availabilityDate", sort: "desc" }]}
-						/>
-					</AccordionDetails>
-				</Accordion>
-			) : null}
-			{showStaffRequest && (
-				<StaffRequest
-					show={showStaffRequest}
-					onClose={() => setShowStaffRequest(false)}
-					bibClusterId={recordId}
-				/>
-			)}
-
-			{showExpeditedCheckout && (
-				<ExpeditedCheckout
-					show={showExpeditedCheckout}
-					onClose={() => setShowExpeditedCheckout(false)}
-					bibClusterId={recordId}
-				/>
-			)}
-		</Box>
+		</>
 	);
 }

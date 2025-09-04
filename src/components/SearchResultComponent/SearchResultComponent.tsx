@@ -121,7 +121,6 @@ export const SearchResult = ({ params, indexCode }: SearchResultProps) => {
 
 	const staffRequestingLocationCount = availableStaffRequestingLocations.size;
 	const isAvailableForStaffRequesting = staffRequestingLocationCount > 0;
-	console.log(availableStaffRequestingLocations);
 
 	// May end up doing "Available at, X, Y Z", "Present at X, Y, Z"M- available at could have green tick
 
