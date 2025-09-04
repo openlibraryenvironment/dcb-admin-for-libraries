@@ -3,10 +3,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import {
-	Dialog,
 	DialogContent,
-	DialogTitle,
-	IconButton,
 	Link,
 	Step,
 	StepLabel,
@@ -14,7 +11,6 @@ import {
 	Typography,
 } from "@mui/material";
 import { Trans, useTranslation } from "react-i18next";
-import Close from "@mui/icons-material/Close";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import { getLibraries } from "@queries/getLibraries";
 import { getLocations } from "@queries/getLocations";
@@ -48,7 +44,6 @@ import {
 } from "@helpers/getStepLabelStyles";
 
 export default function StaffRequest({
-	show,
 	onClose,
 	bibClusterId,
 }: PatronRequestFormType) {
@@ -538,7 +533,7 @@ export default function StaffRequest({
 
 	return (
 		<>
-			<Dialog
+			{/* <Dialog
 				open={show}
 				onClose={handleClose}
 				aria-labelledby="patron-request-modal"
@@ -557,53 +552,53 @@ export default function StaffRequest({
 						color: (theme) => theme.palette.grey[500],
 					}}>
 					<Close />
-				</IconButton>
-				<DialogContent>
-					{/* Same style as Expedited Checkout */}
-					<Stepper
-						activeStep={activeStep}
-						alternativeLabel
-						sx={{ mb: 4 }}
-						connector={
-							<StatusStepConnector
-								stepError={stepError}
-								activeStep={activeStep}
-							/>
-						}>
-						{steps.map((label, index) => {
-							const stepProps: { completed?: boolean } = {};
-							const labelProps: {
-								error?: boolean;
-							} = {};
-							const isActive = index === activeStep;
-							const isCompleted = index < activeStep;
-							const hasError = stepError === index;
+				</IconButton> */}
+			<DialogContent>
+				{/* Same style as Expedited Checkout */}
+				<Stepper
+					activeStep={activeStep}
+					alternativeLabel
+					sx={{ mb: 4 }}
+					connector={
+						<StatusStepConnector
+							stepError={stepError}
+							activeStep={activeStep}
+						/>
+					}>
+					{steps.map((label, index) => {
+						const stepProps: { completed?: boolean } = {};
+						const labelProps: {
+							error?: boolean;
+						} = {};
+						const isActive = index === activeStep;
+						const isCompleted = index < activeStep;
+						const hasError = stepError === index;
 
-							if (isCompleted) {
-								stepProps.completed = true;
-							}
-							if (hasError) {
-								labelProps.error = true;
-							}
+						if (isCompleted) {
+							stepProps.completed = true;
+						}
+						if (hasError) {
+							labelProps.error = true;
+						}
 
-							return (
-								<Step key={label} {...stepProps}>
-									<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
-										<Typography
-											color={getStepColors(isActive, hasError, isCompleted)}
-											fontWeight={getStepLabelFontWeight(isActive)}>
-											{label}
-										</Typography>
-									</StepLabel>
-								</Step>
-							);
-						})}
-					</Stepper>
-					<form onSubmit={handleSubmit(onSubmit)}>
-						{getStepContent(activeStep)}
-					</form>
-				</DialogContent>
-			</Dialog>
+						return (
+							<Step key={label} {...stepProps}>
+								<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
+									<Typography
+										color={getStepColors(isActive, hasError, isCompleted)}
+										fontWeight={getStepLabelFontWeight(isActive)}>
+										{label}
+									</Typography>
+								</StepLabel>
+							</Step>
+						);
+					})}
+				</Stepper>
+				<form onSubmit={handleSubmit(onSubmit)}>
+					{getStepContent(activeStep)}
+				</form>
+			</DialogContent>
+			{/* </Dialog> */}
 			<TimedAlert
 				severityType={alert.severity}
 				open={alert.open}

@@ -5,10 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as Yup from "yup";
 import {
-	Dialog,
 	DialogContent,
-	DialogTitle,
-	IconButton,
 	Step,
 	StepIconProps,
 	StepLabel,
@@ -31,7 +28,6 @@ import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocomple
 import { PlaceRequestResponse } from "@models/PlaceRequestResponse";
 import { PatronLookupResponse } from "@models/PatronLookupResponse";
 import { OnSiteBorrowingFormData } from "@models/OnSiteBorrowingFormData";
-import Close from "@mui/icons-material/Close";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import DCBStepIcon from "@components/DCBStepIcon/DCBStepIcon";
 import { PatronValidationStep } from "./steps/PatronValidationStep";
@@ -54,7 +50,7 @@ import {
 } from "@helpers/getStepLabelStyles";
 
 export default function ExpeditedCheckout({
-	show,
+	// show,
 	onClose,
 	bibClusterId,
 }: PatronRequestFormType) {
@@ -617,7 +613,7 @@ export default function ExpeditedCheckout({
 
 	return (
 		<>
-			<Dialog
+			{/* <Dialog
 				open={show}
 				onClose={handleClose}
 				aria-labelledby="patron-request-modal"
@@ -639,64 +635,64 @@ export default function ExpeditedCheckout({
 						}}>
 						<Close />
 					</IconButton>
-				)}
+				)} */}
 
-				<DialogContent sx={{ overflow: "visible" }}>
-					<Stepper
-						activeStep={activeStep}
-						alternativeLabel
-						sx={{ mb: 4 }}
-						connector={
-							<StatusStepConnector
-								stepError={stepError}
-								activeStep={activeStep}
-							/>
-						}>
-						{steps.map((label, index) => {
-							const stepProps: { completed?: boolean } = {};
-							const labelProps: {
-								optional?: React.ReactNode;
-								error?: boolean;
-								StepIconComponent?: React.ElementType<StepIconProps>;
-							} = {};
-							const isActive = index === activeStep;
-							const isCompleted =
-								index < activeStep ||
-								(index === steps.length - 1 && checkoutCompleted);
-							const hasError = stepError === index;
+			<DialogContent sx={{ overflow: "visible" }}>
+				<Stepper
+					activeStep={activeStep}
+					alternativeLabel
+					sx={{ mb: 4 }}
+					connector={
+						<StatusStepConnector
+							stepError={stepError}
+							activeStep={activeStep}
+						/>
+					}>
+					{steps.map((label, index) => {
+						const stepProps: { completed?: boolean } = {};
+						const labelProps: {
+							optional?: React.ReactNode;
+							error?: boolean;
+							StepIconComponent?: React.ElementType<StepIconProps>;
+						} = {};
+						const isActive = index === activeStep;
+						const isCompleted =
+							index < activeStep ||
+							(index === steps.length - 1 && checkoutCompleted);
+						const hasError = stepError === index;
 
-							if (isCompleted) {
-								stepProps.completed = true;
-							}
-							if (hasError) {
-								labelProps.error = true;
-							}
-							if (index === 2 && checkoutCompleted) {
-								labelProps.optional = (
-									<Typography variant="caption" color="success.main">
-										{t("requesting.expedited_checkout.steps.complete")}
-									</Typography>
-								);
-							}
-
-							return (
-								<Step key={label} {...stepProps}>
-									<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
-										<Typography
-											color={getStepColors(isActive, hasError, isCompleted)}
-											fontWeight={getStepLabelFontWeight(isActive)}>
-											{label}
-										</Typography>
-									</StepLabel>
-								</Step>
+						if (isCompleted) {
+							stepProps.completed = true;
+						}
+						if (hasError) {
+							labelProps.error = true;
+						}
+						if (index === 2 && checkoutCompleted) {
+							labelProps.optional = (
+								<Typography variant="caption" color="success.main">
+									{t("requesting.expedited_checkout.steps.complete")}
+								</Typography>
 							);
-						})}
-					</Stepper>
-					<form onSubmit={handleSubmit(onSubmit)}>
-						{getStepContent(activeStep)}
-					</form>
-				</DialogContent>
-			</Dialog>
+						}
+
+						return (
+							<Step key={label} {...stepProps}>
+								<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
+									<Typography
+										color={getStepColors(isActive, hasError, isCompleted)}
+										fontWeight={getStepLabelFontWeight(isActive)}>
+										{label}
+									</Typography>
+								</StepLabel>
+							</Step>
+						);
+					})}
+				</Stepper>
+				<form onSubmit={handleSubmit(onSubmit)}>
+					{getStepContent(activeStep)}
+				</form>
+			</DialogContent>
+			{/* </Dialog> */}
 			<TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
