@@ -20,6 +20,7 @@ import { SearchResult } from "@components/SearchResultComponent/SearchResultComp
 import Error from "@components/Error/Error";
 import { useSearchGridStore } from "@/hooks/useSearchGridStore";
 import { parseQuery } from "@helpers/search/queryParser";
+import { validate } from "uuid";
 
 interface SharedIndexQueryParams {
 	filters?: string; // JSON stringified filters
@@ -57,9 +58,11 @@ export function SharedIndexV2() {
 	});
 
 	// Get the simplified query from URL search params
+	// We should really store the queryType in the URL
 	const { filters: queryParam }: SharedIndexQueryParams = useSearch({
 		strict: false,
 	});
+	console.log(queryParam);
 
 	// Get state from Zustand store
 	const { appliedFilters, setAppliedFilters } = useSearchGridStore();
@@ -68,8 +71,12 @@ export function SharedIndexV2() {
 	const [stagedFilters, setStagedFilters] = useState<SearchFilter[]>([
 		createDefaultFilter(),
 	]);
+
 	const [isDirty, setIsDirty] = useState(false); // State to track if filters have changed
 	const [isAdvancedMode, setIsAdvancedMode] = useState(false); // <-- State for mode
+	console.log(stagedFilters);
+	const isAdvancedSearchAvailable =
+		stagedFilters[0].field !== SearchField.ClusterRecordID;
 
 	// On initial load, synchronize state from the URL
 	// Dependency on queryParam ensures this runs on URL change
@@ -131,32 +138,65 @@ export function SharedIndexV2() {
 		async ({ queryKey }: any) => {
 			// Need this
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const [_, query] = queryKey;
+			const [_, query, queryType, page, pageSize] = queryKey;
+			const isUUID = query.length === 36 ? validate(query) : false;
 
 			if (!query) {
 				return { instances: [], totalRecords: 0 };
 			}
 
 			console.log("Generated Query:", query);
+			let url: string;
+			let params: Record<string, any>;
 
-			const response = await axios.get(
-				`${cfg.VITE_DCB_SEARCH_BASE}/public/search/instances`,
-				{
-					headers: {
-						Authorization: `Bearer ${auth.user?.access_token}`,
-					},
-					params: {
-						query: query, // The query is now directly from the URL
-						offset: paginationModel.page * paginationModel.pageSize,
-						limit: paginationModel.pageSize,
-					},
-				}
-			);
+			// Conditional URL and params logic
+			if (isUUID) {
+				// If searching by Cluster Record ID, use the specific instance endpoint
+				url = `${cfg.VITE_DCB_SEARCH_BASE}/public/opac-inventory/instances/${query}`;
+				params = {
+					limit: 25,
+				};
+			} else {
+				// Otherwise, use the general search endpoint
+				url = `${cfg.VITE_DCB_SEARCH_BASE}/public/search/instances`;
+				params = {
+					query: query,
+					// queryType: queryType,
+					offset: page * pageSize,
+					limit: pageSize,
+				};
+			}
+			const response = await axios.get(url, {
+				headers: {
+					Authorization: `Bearer ${auth.user?.access_token}`,
+				},
+				params: params,
+			});
 
-			return {
-				instances: response.data.instances || [],
-				totalRecords: response.data.totalRecords || 0,
-			};
+			// const response = await axios.get(
+			// 	`${cfg.VITE_DCB_SEARCH_BASE}/public/search/instances`,
+			// 	{
+			// 		headers: {
+			// 			Authorization: `Bearer ${auth.user?.access_token}`,
+			// 		},
+			// 		params: {
+			// 			query: query, // The query is now directly from the URL
+			// 			offset: paginationModel.page * paginationModel.pageSize,
+			// 			limit: paginationModel.pageSize,
+			// 		},
+			// 	}
+			// );
+			if (isUUID && response.data) {
+				return {
+					instances: [response.data], // Wrap single object in an array
+					totalRecords: 1,
+				};
+			} else {
+				return {
+					instances: response.data.instances || [],
+					totalRecords: response.data.totalRecords || 0,
+				};
+			}
 		},
 		[
 			auth.user?.access_token,
@@ -243,11 +283,13 @@ export function SharedIndexV2() {
 								{t("ui.actions.search")}
 							</Button>
 						)}
-						<Button variant="outlined" onClick={toggleAdvancedMode}>
-							{isAdvancedMode
-								? t("ui.actions.hide_advanced_search")
-								: t("ui.actions.show_advanced_search")}
-						</Button>
+						{isAdvancedSearchAvailable ? (
+							<Button variant="outlined" onClick={toggleAdvancedMode}>
+								{isAdvancedMode
+									? t("ui.actions.hide_advanced_search")
+									: t("ui.actions.show_advanced_search")}
+							</Button>
+						) : null}
 					</Stack>
 				</form>
 

@@ -18,6 +18,10 @@ export const buildQuery = (filters: SearchFilter[]): string => {
 		(f) => f.field === SearchField.PublicationYear && f.value
 	); // There are some filters we need Lucene for. This is to track those
 
+	if (filters.length == 1 && filters[0].field == SearchField.ClusterRecordID) {
+		return filters[0].value;
+	}
+
 	const queryType: "cql" | "lucene" = hasLuceneOnlyFilter ? "lucene" : "cql";
 
 	const queryParts: string[] = [];
@@ -82,6 +86,7 @@ const buildLuceneFieldQuery = (field: SearchField, value: string): string => {
 		[SearchField.PublicationYear]: "dateOfPublication",
 		[SearchField.Publisher]: "instancePublishers",
 		[SearchField.Library]: "items.effectiveLocationId",
+		[SearchField.ClusterRecordID]: "",
 	};
 
 	const luceneField = luceneFieldMap[field];

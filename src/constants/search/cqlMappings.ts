@@ -12,4 +12,5 @@ export const CQL_FIELD_MAPPING = {
 	[SearchField.PublicationYear]: "publicationYear=",
 	[SearchField.Publisher]: "instancePublishers=",
 	[SearchField.Library]: "items.effectiveLocationId=",
+	[SearchField.ClusterRecordID]: "",
 };

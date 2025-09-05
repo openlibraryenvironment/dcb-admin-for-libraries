@@ -10,6 +10,7 @@ export enum SearchField {
 	Format = "format",
 	PublicationYear = "publicationYear",
 	Library = "library",
+	ClusterRecordID = "clusterRecordId",
 }
 
 export enum BooleanOperator {
