@@ -21,17 +21,17 @@ import {
 import { LANGUAGE_OPTIONS } from "@constants/search/languageOptions";
 import { t } from "i18next";
 
-// Takes the filters array directly and a function to change it.
 interface AdvancedSearchFilterProps {
 	filters: SearchFilter[];
 	onFiltersChange: (filters: SearchFilter[]) => void;
+	isAdvancedMode: boolean;
 }
 
-export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
+export const AdvancedSearchFilter = ({
 	filters,
 	onFiltersChange,
-}) => {
-	// Our search options and boolean operators.
+	isAdvancedMode,
+}: AdvancedSearchFilterProps) => {
 	const searchFieldOptions = [
 		{ value: SearchField.Keyword, label: "Keyword" },
 		{ value: SearchField.Title, label: "Title" },
@@ -62,7 +62,6 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 			value: "",
 			operator: BooleanOperator.AND,
 		};
-		// Directly call the parent's update function with the new array.
 		onFiltersChange([...filters, newFilter]);
 	};
 
@@ -108,7 +107,7 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 							size="small"
 						/>
 					)}
-					sx={{ minWidth: 200 }}
+					sx={{ minWidth: 200, flexGrow: 1 }}
 				/>
 			);
 		}
@@ -120,21 +119,25 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 				label="Search term"
 				variant="outlined"
 				size="small"
-				sx={{ minWidth: 200 }}
+				sx={{ minWidth: 200, flexGrow: 1 }}
 			/>
 		);
 	};
 
+	// Determine which filters to render based on the mode
+	const filtersToRender = isAdvancedMode ? filters : filters.slice(0, 1);
+
 	return (
-		<Box sx={{ p: 2, border: "1px solid #e0e0e0", borderRadius: 1, mb: 2 }}>
+		<Box sx={{ p: 2, border: "1px solid #e0e0e0", borderRadius: 1 }}>
 			<Stack spacing={2}>
-				{filters.map((filter, index) => (
+				{filtersToRender.map((filter, index) => (
 					<Stack
 						key={filter.id}
 						direction="row"
 						spacing={2}
 						alignItems="center">
-						{index > 0 && (
+						{/* Only show boolean operator in advanced mode for subsequent filters */}
+						{isAdvancedMode && index > 0 && (
 							<FormControl size="small" sx={{ minWidth: 80 }}>
 								<InputLabel>{t("ui.common.operator")}</InputLabel>
 								<Select
@@ -175,34 +178,41 @@ export const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 
 						{renderValueInput(filter)}
 
-						<IconButton
-							onClick={() => removeFilter(filter.id)}
-							disabled={filters.length === 1}
-							color="error">
-							<Delete />
-						</IconButton>
+						{/* Only show delete button in advanced mode */}
+						{isAdvancedMode && (
+							<IconButton
+								onClick={() => removeFilter(filter.id)}
+								disabled={filters.length === 1}
+								color="error">
+								<Delete />
+							</IconButton>
+						)}
 					</Stack>
 				))}
 
-				<Stack direction="row" spacing={2}>
-					<Button
-						startIcon={<Add />}
-						onClick={addFilter}
-						variant="outlined"
-						size="small">
-						{t("ui.actions.add_filter")}
-					</Button>
-					<Button
-						onClick={clearAllFilters}
-						variant="outlined"
-						color="secondary"
-						size="small"
-						disabled={numberOfActiveFilters == 0}>
-						{t("ui.actions.clear_all")}
-					</Button>
-				</Stack>
+				{/* Only show action buttons in advanced mode */}
+				{isAdvancedMode && (
+					<Stack direction="row" spacing={2}>
+						<Button
+							startIcon={<Add />}
+							onClick={addFilter}
+							variant="outlined"
+							size="small">
+							{t("ui.actions.add_filter")}
+						</Button>
+						<Button
+							onClick={clearAllFilters}
+							variant="outlined"
+							color="secondary"
+							size="small"
+							disabled={numberOfActiveFilters === 0}>
+							{t("ui.actions.clear_all")}
+						</Button>
+					</Stack>
+				)}
 
-				{filters.some((f) => f.value) && (
+				{/* Only show active filter chips in advanced mode */}
+				{isAdvancedMode && filters.some((f) => f.value) && (
 					<Box>
 						<Typography variant="hitCount">
 							{t("ui.data_grid.active_filters", {

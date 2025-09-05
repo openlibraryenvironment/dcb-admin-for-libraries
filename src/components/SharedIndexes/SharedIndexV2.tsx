@@ -13,7 +13,7 @@ import { Button } from "@mui/material";
 
 import { Route } from "@/routes/__authenticated/indexes/$indexCode";
 import { AdvancedSearchFilter } from "./AdvancedSearchFilter";
-import { SearchFilter } from "@models/SearchTypes";
+import { SearchField, SearchFilter } from "@models/SearchTypes";
 import { buildQuery } from "@helpers/search/queryBuilder";
 import DataGrid from "@components/DataGrid/DataGrid";
 import { SearchResult } from "@components/SearchResultComponent/SearchResultComponent";
@@ -38,6 +38,12 @@ interface SharedIndexQueryParams {
 // Suggestions
 // Possibly a separate filter panel
 
+const createDefaultFilter = (): SearchFilter => ({
+	id: Date.now().toString(),
+	field: SearchField.Title,
+	value: "",
+});
+
 export function SharedIndexV2() {
 	const { indexCode } = Route.useParams();
 	const auth = useAuth();
@@ -61,6 +67,7 @@ export function SharedIndexV2() {
 	// This state holds the "current" filters being edited in the UI
 	const [stagedFilters, setStagedFilters] = useState<SearchFilter[]>([]);
 	const [isDirty, setIsDirty] = useState(false); // State to track if filters have changed
+	const [isAdvancedMode, setIsAdvancedMode] = useState(false); // <-- State for mode
 
 	// On initial load, synchronize state from the URL
 	useEffect(() => {
@@ -98,6 +105,18 @@ export function SharedIndexV2() {
 	const handleSearchSubmit = (event: React.FormEvent) => {
 		event.preventDefault();
 		handleApplyFilters(stagedFilters);
+	};
+	const toggleAdvancedMode = () => {
+		setIsAdvancedMode((prev) => {
+			const nextMode = !prev;
+			// If switching from advanced to simple, keep only the first filter
+			if (!nextMode) {
+				setStagedFilters((currentFilters) => [
+					currentFilters[0] || createDefaultFilter(),
+				]);
+			}
+			return nextMode;
+		});
 	};
 
 	const fetchSearchResults = useCallback(
@@ -196,16 +215,32 @@ export function SharedIndexV2() {
 					<AdvancedSearchFilter
 						filters={stagedFilters}
 						onFiltersChange={setStagedFilters}
+						isAdvancedMode={isAdvancedMode}
 					/>
-					<Button
-						type="submit"
-						variant="contained"
-						color="primary"
-						sx={{ mt: 2 }}
-						disabled={!isDirty} // Disable button if no changes have been made - i.e. we've just loaded filters from URL so nothing to apply
-					>
-						{t("ui.actions.apply_filters")}
-					</Button>
+					<Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 2 }}>
+						{isAdvancedMode ? (
+							<Button
+								type="submit"
+								variant="contained"
+								color="primary"
+								disabled={!isDirty}>
+								{t("ui.actions.apply_filters")}
+							</Button>
+						) : (
+							<Button
+								type="submit"
+								variant="contained"
+								color="primary"
+								disabled={!stagedFilters[0]?.value?.trim()}>
+								{t("ui.actions.search")}
+							</Button>
+						)}
+						<Button variant="outlined" onClick={toggleAdvancedMode}>
+							{isAdvancedMode
+								? t("ui.actions.hide_advanced_search")
+								: t("ui.actions.show_advanced_search")}
+						</Button>
+					</Stack>
 				</form>
 
 				{searchResults?.totalRecords ? (
