@@ -42,7 +42,7 @@ export const AdvancedSearchFilter = ({
 		{ value: SearchField.Language, label: "Language" },
 		{ value: SearchField.Publisher, label: "Publisher" },
 		{ value: SearchField.Format, label: "Format" },
-		{ value: SearchField.PublicationYear, label: "Publication Year" },
+		// { value: SearchField.PublicationYear, label: "Publication Year" }, //
 		// { value: SearchField.Library, label: "Library" },
 	];
 
