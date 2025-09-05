@@ -65,17 +65,25 @@ export function SharedIndexV2() {
 	const { appliedFilters, setAppliedFilters } = useSearchGridStore();
 
 	// This state holds the "current" filters being edited in the UI
-	const [stagedFilters, setStagedFilters] = useState<SearchFilter[]>([]);
+	const [stagedFilters, setStagedFilters] = useState<SearchFilter[]>([
+		createDefaultFilter(),
+	]);
 	const [isDirty, setIsDirty] = useState(false); // State to track if filters have changed
 	const [isAdvancedMode, setIsAdvancedMode] = useState(false); // <-- State for mode
 
 	// On initial load, synchronize state from the URL
+	// Dependency on queryParam ensures this runs on URL change
+
 	useEffect(() => {
 		const initialFilters = parseQuery(queryParam || "");
-		setAppliedFilters(initialFilters);
-		setStagedFilters(initialFilters);
-	}, [queryParam, setAppliedFilters]); // Dependency on queryParam ensures this runs on URL change
 
+		// If parsing the URL results in an empty array, use a default filter instead.
+		const filtersToSet =
+			initialFilters.length > 0 ? initialFilters : [createDefaultFilter()];
+
+		setAppliedFilters(filtersToSet);
+		setStagedFilters(filtersToSet);
+	}, [queryParam, setAppliedFilters]);
 	// Compare staged and applied filters to determine if UI is "dirty"
 	useEffect(() => {
 		// A simple deep comparison using JSON.stringify
