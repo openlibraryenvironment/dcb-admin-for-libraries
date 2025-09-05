@@ -588,6 +588,17 @@
 		},
 		"data_grid": {
 			"active_filters": "{{number}} Active filters",
+			"export": {
+				"all": "Export all",
+				"all_csv": "Export all as CSV",
+				"all_tsv": "Export all as TSV",
+				"current": "Export current page",
+				"failed": "The data grid export has failed. Please try again.",
+				"success": "Successfully exported {{count}} records from the data grid.",
+				"filtered": "Export filtered",
+				"modal_title": "Exporting data",
+				"records": "Exporting {{count}} records from the data grid."
+			},
 			"filters": {
 				"days_from": "Days from",
 				"days_to": "Days to",
@@ -604,6 +615,7 @@
 			"find_column": "Find column"
 		},
 		"feedback": {
+			"complete": "{{percentage}} complete",
 			"disabled": "Disabled",
 			"enabled": "Enabled",
 			"error": {
