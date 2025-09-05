@@ -33,6 +33,7 @@ export const presetTypes = [
 
 // Types of data grid where users cannot click through to a details page
 export const nonClickableTypes = [
+	"locations", // TEMPORARY
 	"referenceValueMappings",
 	"ReferenceValueMappings",
 	"numericRangeMappings",
