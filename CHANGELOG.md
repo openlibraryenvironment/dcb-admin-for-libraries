@@ -1,3 +1,23 @@
+# [1.2.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.1.0...v1.2.0) (2025-09-05)
+
+
+### Bug Fixes
+
+* Fix bug where search did not show ([be6731f](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/be6731fd3550b92f363f34547220ab86eae2fd2d))
+
+
+### Features
+
+* Add item availability indicators, improve layout [DCB-1999] ([a882e92](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/a882e92b934cc4a3a8e6ad93a080fb30cfcb3ed9))
+* Add locations page, standardise page sizes [DCB-1993] ([9a7a45a](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/9a7a45a8bd6a730e651ccb10b4aa1a953639c59c))
+* Add new fields to cluster record page, split tabs [DCB-1999] ([49e029b](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/49e029bfecb74f40c1295da668beb4d60b5e2154))
+* Advanced search toggle [DCB-1999] ([2cb43dd](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/2cb43dd5b91e67a409b08688d37b2e0cd35cf6bd))
+* Cluster record UUID search [DCB-1999] ([9f42dbb](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/9f42dbbb2cc9825ef49e798a2b04495bc8b8f7e4))
+* Combined request modal for one click requesting [DCB-1999] ([f0aaef1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/f0aaef118068f1a7ba506637aa5324b01be26b48))
+* Improvements to search [DCB-1999] ([1cb4201](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/1cb4201c88cba7bcff99561d9d6055f328204e57))
+* Library mappings edit now regulated by consortium [DCB-1995] ([6fe6a99](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/6fe6a9922363d8e08a7d6229897e1857b8a2d33f))
+* Search results now show live availability info [DCB-1999] ([eab2edb](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/eab2edb40f9e2ca16aca378ce52667468613c187))
+
 # [1.1.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.0.0...v1.1.0) (2025-08-12)
 
 
