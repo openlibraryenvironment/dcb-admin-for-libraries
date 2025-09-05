@@ -1,3 +1,10 @@
+## [1.2.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.2.0...v1.2.1) (2025-09-05)
+
+
+### Bug Fixes
+
+* Temporarily disable locations click-through ([51091b5](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/51091b5f8475d80d37ab544584aad690a345add6))
+
 # [1.2.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.1.0...v1.2.0) (2025-09-05)
 
 
