@@ -338,7 +338,7 @@ function HomeComponent() {
 								{t("ui.actions.cancel")}
 							</Button>
 						</>
-					) : (
+					) : auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
 						<Button
 							variant="contained"
 							color="primary"
@@ -346,7 +346,7 @@ function HomeComponent() {
 							onClick={handleEdit}>
 							{t("ui.actions.edit")}
 						</Button>
-					)}
+					) : null}
 				</>
 			</Grid>
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
