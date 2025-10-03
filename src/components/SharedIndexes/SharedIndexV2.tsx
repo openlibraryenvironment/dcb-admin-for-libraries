@@ -1,7 +1,7 @@
 import { useRouter, useSearch } from "@tanstack/react-router";
 import { useState, useCallback, useEffect } from "react";
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAuth } from "react-oidc-context";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -24,6 +24,8 @@ import { validate } from "uuid";
 
 interface SharedIndexQueryParams {
 	filters?: string; // JSON stringified filters
+	pageno?: number;
+	pagesize?: number;
 }
 
 // Need to improve:
@@ -52,20 +54,38 @@ export function SharedIndexV2() {
 	const { cfg } = router.options.context as { cfg: any };
 	const { t } = useTranslation();
 
-	const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-		page: 0,
-		pageSize: 25,
-	});
-
 	// Get the simplified query from URL search params
 	// We should really store the queryType in the URL
-	const { filters: queryParam }: SharedIndexQueryParams = useSearch({
+	const {
+		filters: queryParam,
+		pageno = 0,
+		pagesize = 25,
+	}: SharedIndexQueryParams = useSearch({
 		strict: false,
 	});
-	console.log(queryParam);
+	// Cards still cut off
 
 	// Get state from Zustand store
 	const { appliedFilters, setAppliedFilters } = useSearchGridStore();
+	// But keep pagination in URL only for now because of weird conflicts.
+	const paginationModel: GridPaginationModel = {
+		page: pageno,
+		pageSize: pagesize,
+	};
+
+	const handlePaginationModelChange = (newModel: GridPaginationModel) => {
+		// setPaginationModel(newModel);
+		router.navigate({
+			to: "/indexes/$indexCode",
+			params: { indexCode: indexCode },
+			search: {
+				filters: queryParam, // Keep the existing search filters
+				pageno: newModel.page,
+				pagesize: newModel.pageSize,
+			},
+			replace: true, // Use replace to avoid adding a new entry to the browser's history
+		});
+	};
 
 	// This state holds the "current" filters being edited in the UI
 	const [stagedFilters, setStagedFilters] = useState<SearchFilter[]>([
@@ -74,7 +94,7 @@ export function SharedIndexV2() {
 
 	const [isDirty, setIsDirty] = useState(false); // State to track if filters have changed
 	const [isAdvancedMode, setIsAdvancedMode] = useState(false); // <-- State for mode
-	console.log(stagedFilters);
+
 	const isAdvancedSearchAvailable =
 		stagedFilters[0].field !== SearchField.ClusterRecordID;
 
@@ -101,6 +121,7 @@ export function SharedIndexV2() {
 
 	const handleApplyFilters = useCallback(
 		(newFilters: SearchFilter[]) => {
+			console.log("Handle apply filters triggered");
 			const activeFilters = newFilters.filter((f) => f.value);
 			setAppliedFilters(activeFilters);
 
@@ -110,7 +131,11 @@ export function SharedIndexV2() {
 			router.navigate({
 				to: "/indexes/$indexCode",
 				params: { indexCode: indexCode },
-				search: { filters: simpleQuery }, // Use the simple query in the URL
+				search: {
+					filters: simpleQuery,
+					pagesize: paginationModel.pageSize,
+					pageno: paginationModel.page,
+				}, // Use the simple query in the URL
 				replace: true,
 			});
 		},
@@ -137,8 +162,8 @@ export function SharedIndexV2() {
 	const fetchSearchResults = useCallback(
 		async ({ queryKey }: any) => {
 			// Need this
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const [_, query, queryType, page, pageSize] = queryKey;
+
+			const [_, query, pageno, pagesize] = queryKey;
 			const isUUID = query.length === 36 ? validate(query) : false;
 
 			if (!query) {
@@ -162,8 +187,8 @@ export function SharedIndexV2() {
 				params = {
 					query: query,
 					// queryType: queryType,
-					offset: page * pageSize,
-					limit: pageSize,
+					offset: pageno * pagesize,
+					limit: pagesize,
 				};
 			}
 			const response = await axios.get(url, {
@@ -201,8 +226,8 @@ export function SharedIndexV2() {
 		[
 			auth.user?.access_token,
 			cfg.VITE_DCB_SEARCH_BASE,
-			paginationModel.page,
-			paginationModel.pageSize,
+			paginationModel.page, // pageno
+			paginationModel.pageSize, // pagesize
 		]
 	);
 
@@ -214,18 +239,19 @@ export function SharedIndexV2() {
 		queryKey: [
 			"searchResults",
 			queryParam, // Query depends directly on the URL param
-			paginationModel.page,
-			paginationModel.pageSize,
+			pageno,
+			pagesize,
 		],
 		queryFn: fetchSearchResults,
 		enabled: !!auth.user?.access_token && !!queryParam,
-		staleTime: 1000 * 60 * 5, // 5 minutes
+		staleTime: 1000 * 60 * 5, // 5 minutes,
+		placeholderData: keepPreviousData,
 	});
 
-	// Reset pagination when the query changes
-	useEffect(() => {
-		setPaginationModel((prev) => ({ ...prev, page: 0 }));
-	}, [queryParam]);
+	// // Reset pagination when the query changes ???????
+	// useEffect(() => {
+	// 	setPaginationModel((prev) => ({ ...prev, page: 0 }));
+	// }, [queryParam]);
 
 	if (!indexCode) {
 		return (
@@ -256,7 +282,7 @@ export function SharedIndexV2() {
 		<Box sx={{ width: "100%" }}>
 			<Stack spacing={2} direction={"column"}>
 				<Typography variant="h1" gutterBottom>
-					{t("nav.titles.title")}
+					{t("nav.requesting.title")}
 				</Typography>
 				{/* Can we use react-hook-form here */}
 				<form onSubmit={handleSearchSubmit}>
@@ -322,7 +348,7 @@ export function SharedIndexV2() {
 				columns={columns}
 				pagination
 				paginationModel={paginationModel}
-				onPaginationModelChange={setPaginationModel}
+				onPaginationModelChange={handlePaginationModelChange} // Need a pagination handler. Solve first. Then get it to persist.
 				rowCount={searchResults?.totalRecords || 0}
 				paginationMode="server"
 				pivotingEnabled={false}
@@ -374,13 +400,8 @@ export function SharedIndexV2() {
 					"& .MuiDataGrid-row": {
 						borderBottom: "none", // These 2 remove the row borders
 						borderTop: "none",
-						marginBottom: "32px", // To add space between cards
+						paddingBottom: "32px", // Add space while respecting virtualisation! Very important lesson NOT to use margin
 					},
-					// "& .MuiDataGrid-virtualScrollerRenderZone": {
-					// 	display: "flex",
-					// 	flexDirection: "column",
-					// 	rowGap: "16px", // optional: adds clean spacing instead of margins
-					// },
 					"@media print": {
 						".MuiDataGrid-main": { color: "rgba(0, 0, 0, 0.87)" },
 					},
