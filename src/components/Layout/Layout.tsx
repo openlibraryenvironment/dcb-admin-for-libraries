@@ -23,41 +23,53 @@ export const Layout = ({ children }: LayoutProps) => {
 	const basePath = cfg?.VITE_PUBLIC_URL || "/";
 	const [activeTab, setActiveTab] = useState<string | false>(basePath);
 	const { t } = useTranslation();
+	const tabsReadOnly = useMemo(() => {
+		return [
+			{ label: t("nav.home.title"), value: basePath },
+			{ label: t("nav.requesting.title"), value: `${basePath}indexes/mobius` },
+		];
+	}, [basePath]);
 
 	// Tabs below marked with import.meta.env.DEV means that these tabs will only show up in DEV mode,
 	// remove the conditon to make then show up in prod.
+	// Library admin check makes sure only requesting tabs show up for non-admin users. Then we need to put the redirect in to make sure they only get directed to that tab.
 	const tabsConfig = useMemo(() => {
-		return [
-			{ label: t("nav.home.title"), value: basePath },
-			{ label: t("nav.titles.title"), value: `${basePath}indexes/mobius` },
-			// { label: t("nav.titles.title"), value: `${basePath}indexes/consortium` }, // Make it generic for now - this should take the consortium code
+		return auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN")
+			? [
+					{ label: t("nav.home.title"), value: basePath },
+					{
+						label: t("nav.requesting.title"),
+						value: `${basePath}indexes/mobius`,
+					},
+					// { label: t("nav.titles.title"), value: `${basePath}indexes/consortium` }, // Make it generic for now - this should take the consortium code
 
-			{
-				label: t("nav.patron_requests.title"),
-				value: `${basePath}patronRequests`,
-			},
-			{
-				label: t("nav.supplier_requests.title"),
-				value: `${basePath}supplierRequests`,
-			},
-			{ label: t("nav.library.service"), value: `${basePath}service` },
+					{
+						label: t("nav.patron_requests.title"),
+						value: `${basePath}patronRequests`,
+					},
+					{
+						label: t("nav.supplier_requests.title"),
+						value: `${basePath}supplierRequests`,
+					},
+					{ label: t("nav.library.service"), value: `${basePath}service` },
 
-			{ label: t("nav.mappings.title"), value: `${basePath}mappings` },
-			{ label: t("nav.locations.title"), value: `${basePath}locations` },
-			{ label: t("nav.settings.title"), value: `${basePath}settings` },
+					{ label: t("nav.mappings.title"), value: `${basePath}mappings` },
+					{ label: t("nav.locations.title"), value: `${basePath}locations` },
+					{ label: t("nav.settings.title"), value: `${basePath}settings` },
 
-			// ...(import.meta.env.DEV
-			// 	? [
-			// 			{ label: t("nav.contacts.title"), value: `${basePath}contacts` },
-			// 			{ label: t("nav.locations.title"), value: `${basePath}locations` },
-			// 			{
-			// 				label: t("nav.data_change_log.title"),
-			// 				value: `${basePath}dataChangeLog`,
-			// 			},
-			// 			{ label: t("nav.ill.title"), value: `${basePath}ill/login` },
-			// 		]
-			// 	: []),
-		];
+					// ...(import.meta.env.DEV
+					// 	? [
+					// 			{ label: t("nav.contacts.title"), value: `${basePath}contacts` },
+					// 			{ label: t("nav.locations.title"), value: `${basePath}locations` },
+					// 			{
+					// 				label: t("nav.data_change_log.title"),
+					// 				value: `${basePath}dataChangeLog`,
+					// 			},
+					// 			{ label: t("nav.ill.title"), value: `${basePath}ill/login` },
+					// 		]
+					// 	: []),
+				]
+			: tabsReadOnly;
 	}, [basePath]); // This will only re-calculate if the basePath changes
 
 	// This effect sets the active tab based on the current route

@@ -265,15 +265,15 @@
 			"title": "Patron requests",
 			"tooltip": "The requests made by patrons of your library"
 		},
+		"requesting": {
+			"title": "Requesting"
+		},
 		"settings": {
 			"title": "Settings"
 		},
 		"supplier_requests": {
 			"title": "Supplier requests",
 			"tooltip": "The requests for which your library is acting as a supplier"
-		},
-		"titles": {
-			"title": "Titles"
 		}
 	},
 	"patron_request": {
