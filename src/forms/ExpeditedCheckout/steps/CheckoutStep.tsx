@@ -3,12 +3,14 @@
 import { Box, Button, LinearProgress, Stack, Typography } from "@mui/material";
 import { TFunction } from "i18next";
 import dayjs from "dayjs";
+import { useAuth } from "react-oidc-context";
 
 // The align items on the stack is to prevent the button taking up full width of the container.
 interface CheckoutStep {
 	checkoutCompleted: boolean;
 	stepError: number | null;
 	handleViewRequest: () => void;
+	handleReadOnlyReturn: () => void;
 	t: TFunction;
 	dueDate: string;
 }
@@ -16,6 +18,7 @@ export const CheckoutStep = ({
 	checkoutCompleted,
 	stepError,
 	handleViewRequest,
+	handleReadOnlyReturn,
 	t,
 	dueDate,
 }: CheckoutStep) => {
@@ -26,6 +29,10 @@ export const CheckoutStep = ({
 		if (stepError === 2) return "error"; // Use error color for progress bar on timeout
 		return "primary";
 	};
+	const auth = useAuth();
+	const roles = auth?.user?.profile?.roles ? auth?.user?.profile?.roles : [];
+	const isReadOnly = roles.includes("LIBRARY_READ_ONLY");
+
 	return (
 		<Stack direction="column" spacing={2}>
 			<Typography>
@@ -64,12 +71,21 @@ export const CheckoutStep = ({
 					width: "100%",
 					pt: 2,
 				}}>
-				<Button
-					variant="contained"
-					onClick={handleViewRequest}
-					disabled={!isButtonEnabled}>
-					{t("requesting.expedited_checkout.view_request")}
-				</Button>
+				{isReadOnly ? (
+					<Button
+						variant="contained"
+						onClick={handleReadOnlyReturn}
+						disabled={!isButtonEnabled}>
+						{t("requesting.expedited_checkout.return")}
+					</Button>
+				) : (
+					<Button
+						variant="contained"
+						onClick={handleViewRequest}
+						disabled={!isButtonEnabled}>
+						{t("requesting.expedited_checkout.view_request")}
+					</Button>
+				)}
 			</Box>
 		</Stack>
 	);

@@ -461,6 +461,7 @@
 			},
 			"option_description": "Place a walk-up request for an item at your library for a visiting OpenRS patron. This will instantly check out the item.",
 			"request_title": "On-site borrowing request",
+			"return": "Return to requesting",
 			"steps": {
 				"checkout": "Check out item",
 				"checkout_failure": "Item checkout is taking too long. Please view the request and use the 'check for updates' option to refresh its status.",

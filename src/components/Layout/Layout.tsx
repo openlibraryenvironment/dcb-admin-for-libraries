@@ -25,8 +25,8 @@ export const Layout = ({ children }: LayoutProps) => {
 	const { t } = useTranslation();
 	const tabsReadOnly = useMemo(() => {
 		return [
-			{ label: t("nav.home.title"), value: basePath },
-			{ label: t("nav.requesting.title"), value: `${basePath}indexes/mobius` },
+			// { label: t("nav.home.title"), value: basePath },
+			{ label: t("nav.requesting.title"), value: `${basePath}requesting` },
 		];
 	}, [basePath]);
 
@@ -39,7 +39,7 @@ export const Layout = ({ children }: LayoutProps) => {
 					{ label: t("nav.home.title"), value: basePath },
 					{
 						label: t("nav.requesting.title"),
-						value: `${basePath}indexes/mobius`,
+						value: `${basePath}requesting`,
 					},
 					// { label: t("nav.titles.title"), value: `${basePath}indexes/consortium` }, // Make it generic for now - this should take the consortium code
 

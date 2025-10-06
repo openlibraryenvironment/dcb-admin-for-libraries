@@ -116,9 +116,17 @@ async function bootstrap() {
 		automaticSilentRenew: true,
 		onSigninCallback: (_user: User | void): void => {
 			console.log("Sign in for ", _user);
+			const isReadOnly = _user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
 			const afterLoginRedirectPath = sessionStorage.getItem(
 				"afterLoginRedirectPath"
 			);
+			if (isReadOnly) {
+				// If user is LIBRARY_READ_ONLY, they can only access requesting.
+				// So they don't get their after login redirect path
+				// Although if it is a sub path we could save it
+				window.location.replace("/requesting");
+				return;
+			}
 			if (afterLoginRedirectPath) {
 				sessionStorage.removeItem("afterLoginRedirectPath");
 				window.location.replace(afterLoginRedirectPath);

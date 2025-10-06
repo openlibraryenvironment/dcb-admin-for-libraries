@@ -20,10 +20,12 @@ import { Route as _authenticatedMappingsRouteImport } from './routes/__authentic
 import { Route as _authenticatedIllRouteImport } from './routes/__authenticated/ill'
 import { Route as _authenticatedDataChangeLogRouteImport } from './routes/__authenticated/dataChangeLog'
 import { Route as _authenticatedContactsRouteImport } from './routes/__authenticated/contacts'
+import { Route as _authenticatedRequestingIndexRouteImport } from './routes/__authenticated/requesting/index'
 import { Route as _authenticatedPatronRequestsIndexRouteImport } from './routes/__authenticated/patronRequests/index'
 import { Route as _authenticatedLocationsIndexRouteImport } from './routes/__authenticated/locations/index'
 import { Route as _authenticatedIllPatronRequestsRouteImport } from './routes/__authenticated/ill.patronRequests'
 import { Route as _authenticatedIllLoginRouteImport } from './routes/__authenticated/ill.login'
+import { Route as _authenticatedRequestingRecordIdIndexRouteImport } from './routes/__authenticated/requesting/$recordId/index'
 import { Route as _authenticatedPatronRequestsIdIndexRouteImport } from './routes/__authenticated/patronRequests/$id/index'
 import { Route as _authenticatedLocationsIdIndexRouteImport } from './routes/__authenticated/locations/$id/index'
 import { Route as _authenticatedIndexesIndexCodeIndexRouteImport } from './routes/__authenticated/indexes/$indexCode/index'
@@ -86,6 +88,12 @@ const _authenticatedContactsRoute = _authenticatedContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => _authenticatedRoute,
 } as any)
+const _authenticatedRequestingIndexRoute =
+  _authenticatedRequestingIndexRouteImport.update({
+    id: '/requesting/',
+    path: '/requesting/',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
 const _authenticatedPatronRequestsIndexRoute =
   _authenticatedPatronRequestsIndexRouteImport.update({
     id: '/patronRequests/',
@@ -109,6 +117,12 @@ const _authenticatedIllLoginRoute = _authenticatedIllLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => _authenticatedIllRoute,
 } as any)
+const _authenticatedRequestingRecordIdIndexRoute =
+  _authenticatedRequestingRecordIdIndexRouteImport.update({
+    id: '/requesting/$recordId/',
+    path: '/requesting/$recordId/',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
 const _authenticatedPatronRequestsIdIndexRoute =
   _authenticatedPatronRequestsIdIndexRouteImport.update({
     id: '/patronRequests/$id/',
@@ -155,9 +169,11 @@ export interface FileRoutesByFullPath {
   '/ill/patronRequests': typeof _authenticatedIllPatronRequestsRoute
   '/locations': typeof _authenticatedLocationsIndexRoute
   '/patronRequests': typeof _authenticatedPatronRequestsIndexRoute
+  '/requesting': typeof _authenticatedRequestingIndexRoute
   '/indexes/$indexCode': typeof _authenticatedIndexesIndexCodeIndexRoute
   '/locations/$id': typeof _authenticatedLocationsIdIndexRoute
   '/patronRequests/$id': typeof _authenticatedPatronRequestsIdIndexRoute
+  '/requesting/$recordId': typeof _authenticatedRequestingRecordIdIndexRoute
   '/indexes/$indexCode/$recordId': typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
   '/patronRequests/audits/$auditId': typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
 }
@@ -176,9 +192,11 @@ export interface FileRoutesByTo {
   '/ill/patronRequests': typeof _authenticatedIllPatronRequestsRoute
   '/locations': typeof _authenticatedLocationsIndexRoute
   '/patronRequests': typeof _authenticatedPatronRequestsIndexRoute
+  '/requesting': typeof _authenticatedRequestingIndexRoute
   '/indexes/$indexCode': typeof _authenticatedIndexesIndexCodeIndexRoute
   '/locations/$id': typeof _authenticatedLocationsIdIndexRoute
   '/patronRequests/$id': typeof _authenticatedPatronRequestsIdIndexRoute
+  '/requesting/$recordId': typeof _authenticatedRequestingRecordIdIndexRoute
   '/indexes/$indexCode/$recordId': typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
   '/patronRequests/audits/$auditId': typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
 }
@@ -199,9 +217,11 @@ export interface FileRoutesById {
   '/__authenticated/ill/patronRequests': typeof _authenticatedIllPatronRequestsRoute
   '/__authenticated/locations/': typeof _authenticatedLocationsIndexRoute
   '/__authenticated/patronRequests/': typeof _authenticatedPatronRequestsIndexRoute
+  '/__authenticated/requesting/': typeof _authenticatedRequestingIndexRoute
   '/__authenticated/indexes/$indexCode/': typeof _authenticatedIndexesIndexCodeIndexRoute
   '/__authenticated/locations/$id/': typeof _authenticatedLocationsIdIndexRoute
   '/__authenticated/patronRequests/$id/': typeof _authenticatedPatronRequestsIdIndexRoute
+  '/__authenticated/requesting/$recordId/': typeof _authenticatedRequestingRecordIdIndexRoute
   '/__authenticated/indexes/$indexCode/$recordId/': typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
   '/__authenticated/patronRequests/audits/$auditId/': typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
 }
@@ -222,9 +242,11 @@ export interface FileRouteTypes {
     | '/ill/patronRequests'
     | '/locations'
     | '/patronRequests'
+    | '/requesting'
     | '/indexes/$indexCode'
     | '/locations/$id'
     | '/patronRequests/$id'
+    | '/requesting/$recordId'
     | '/indexes/$indexCode/$recordId'
     | '/patronRequests/audits/$auditId'
   fileRoutesByTo: FileRoutesByTo
@@ -243,9 +265,11 @@ export interface FileRouteTypes {
     | '/ill/patronRequests'
     | '/locations'
     | '/patronRequests'
+    | '/requesting'
     | '/indexes/$indexCode'
     | '/locations/$id'
     | '/patronRequests/$id'
+    | '/requesting/$recordId'
     | '/indexes/$indexCode/$recordId'
     | '/patronRequests/audits/$auditId'
   id:
@@ -265,9 +289,11 @@ export interface FileRouteTypes {
     | '/__authenticated/ill/patronRequests'
     | '/__authenticated/locations/'
     | '/__authenticated/patronRequests/'
+    | '/__authenticated/requesting/'
     | '/__authenticated/indexes/$indexCode/'
     | '/__authenticated/locations/$id/'
     | '/__authenticated/patronRequests/$id/'
+    | '/__authenticated/requesting/$recordId/'
     | '/__authenticated/indexes/$indexCode/$recordId/'
     | '/__authenticated/patronRequests/audits/$auditId/'
   fileRoutesById: FileRoutesById
@@ -357,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authenticatedContactsRouteImport
       parentRoute: typeof _authenticatedRoute
     }
+    '/__authenticated/requesting/': {
+      id: '/__authenticated/requesting/'
+      path: '/requesting'
+      fullPath: '/requesting'
+      preLoaderRoute: typeof _authenticatedRequestingIndexRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
     '/__authenticated/patronRequests/': {
       id: '/__authenticated/patronRequests/'
       path: '/patronRequests'
@@ -384,6 +417,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/ill/login'
       preLoaderRoute: typeof _authenticatedIllLoginRouteImport
       parentRoute: typeof _authenticatedIllRoute
+    }
+    '/__authenticated/requesting/$recordId/': {
+      id: '/__authenticated/requesting/$recordId/'
+      path: '/requesting/$recordId'
+      fullPath: '/requesting/$recordId'
+      preLoaderRoute: typeof _authenticatedRequestingRecordIdIndexRouteImport
+      parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/patronRequests/$id/': {
       id: '/__authenticated/patronRequests/$id/'
@@ -447,9 +487,11 @@ interface _authenticatedRouteChildren {
   _authenticatedIndexRoute: typeof _authenticatedIndexRoute
   _authenticatedLocationsIndexRoute: typeof _authenticatedLocationsIndexRoute
   _authenticatedPatronRequestsIndexRoute: typeof _authenticatedPatronRequestsIndexRoute
+  _authenticatedRequestingIndexRoute: typeof _authenticatedRequestingIndexRoute
   _authenticatedIndexesIndexCodeIndexRoute: typeof _authenticatedIndexesIndexCodeIndexRoute
   _authenticatedLocationsIdIndexRoute: typeof _authenticatedLocationsIdIndexRoute
   _authenticatedPatronRequestsIdIndexRoute: typeof _authenticatedPatronRequestsIdIndexRoute
+  _authenticatedRequestingRecordIdIndexRoute: typeof _authenticatedRequestingRecordIdIndexRoute
   _authenticatedIndexesIndexCodeRecordIdIndexRoute: typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
   _authenticatedPatronRequestsAuditsAuditIdIndexRoute: typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
 }
@@ -466,11 +508,14 @@ const _authenticatedRouteChildren: _authenticatedRouteChildren = {
   _authenticatedLocationsIndexRoute: _authenticatedLocationsIndexRoute,
   _authenticatedPatronRequestsIndexRoute:
     _authenticatedPatronRequestsIndexRoute,
+  _authenticatedRequestingIndexRoute: _authenticatedRequestingIndexRoute,
   _authenticatedIndexesIndexCodeIndexRoute:
     _authenticatedIndexesIndexCodeIndexRoute,
   _authenticatedLocationsIdIndexRoute: _authenticatedLocationsIdIndexRoute,
   _authenticatedPatronRequestsIdIndexRoute:
     _authenticatedPatronRequestsIdIndexRoute,
+  _authenticatedRequestingRecordIdIndexRoute:
+    _authenticatedRequestingRecordIdIndexRoute,
   _authenticatedIndexesIndexCodeRecordIdIndexRoute:
     _authenticatedIndexesIndexCodeRecordIdIndexRoute,
   _authenticatedPatronRequestsAuditsAuditIdIndexRoute:

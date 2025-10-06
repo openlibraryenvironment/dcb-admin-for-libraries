@@ -4,14 +4,14 @@ import axios from "axios";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAuth } from "react-oidc-context";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
+// import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid-premium";
 import { useTranslation } from "react-i18next";
 import { Button } from "@mui/material";
 
-import { Route } from "@/routes/__authenticated/indexes/$indexCode";
+// import { Route } from "@/routes/__authenticated/requesting";
 import { AdvancedSearchFilter } from "./AdvancedSearchFilter";
 import { SearchField, SearchFilter } from "@models/SearchTypes";
 import { buildQuery } from "@helpers/search/queryBuilder";
@@ -48,7 +48,7 @@ const createDefaultFilter = (): SearchFilter => ({
 });
 
 export function SharedIndexV2() {
-	const { indexCode } = Route.useParams();
+	// const { indexCode } = Route.useParams();
 	const auth = useAuth();
 	const router = useRouter();
 	const { cfg } = router.options.context as { cfg: any };
@@ -76,8 +76,8 @@ export function SharedIndexV2() {
 	const handlePaginationModelChange = (newModel: GridPaginationModel) => {
 		// setPaginationModel(newModel);
 		router.navigate({
-			to: "/indexes/$indexCode",
-			params: { indexCode: indexCode },
+			to: "/requesting",
+			// params: { indexCode: indexCode },
 			search: {
 				filters: queryParam, // Keep the existing search filters
 				pageno: newModel.page,
@@ -129,8 +129,8 @@ export function SharedIndexV2() {
 			const simpleQuery = buildQuery(activeFilters);
 
 			router.navigate({
-				to: "/indexes/$indexCode",
-				params: { indexCode: indexCode },
+				to: "/requesting",
+				// params: { indexCode: indexCode },
 				search: {
 					filters: simpleQuery,
 					pagesize: paginationModel.pageSize,
@@ -139,7 +139,7 @@ export function SharedIndexV2() {
 				replace: true,
 			});
 		},
-		[router, indexCode, setAppliedFilters]
+		[router, setAppliedFilters]
 	);
 
 	const handleSearchSubmit = (event: React.FormEvent) => {
@@ -253,28 +253,26 @@ export function SharedIndexV2() {
 	// 	setPaginationModel((prev) => ({ ...prev, page: 0 }));
 	// }, [queryParam]);
 
-	if (!indexCode) {
-		return (
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "center",
-					alignItems: "center",
-					height: "80vh",
-				}}>
-				<CircularProgress />
-			</Box>
-		);
-	}
+	// if (!indexCode) {
+	// 	return (
+	// 		<Box
+	// 			sx={{
+	// 				display: "flex",
+	// 				justifyContent: "center",
+	// 				alignItems: "center",
+	// 				height: "80vh",
+	// 			}}>
+	// 			<CircularProgress />
+	// 		</Box>
+	// 	);
+	// }
 	const columns: GridColDef[] = [
 		{
 			field: "card",
 			flex: 1,
 			disableColumnMenu: true,
 			renderHeader: () => null,
-			renderCell: (params) => (
-				<SearchResult params={params} indexCode={indexCode} />
-			),
+			renderCell: (params) => <SearchResult params={params} />,
 		},
 	];
 

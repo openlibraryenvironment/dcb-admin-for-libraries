@@ -37,7 +37,8 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import { GRID_DETAIL_PANEL_TOGGLE_COL_DEF } from "@mui/x-data-grid-premium";
 import { DetailPanelToggle } from "@components/MasterDetail/components/DetailPanelToggle/DetailPanelToggle";
 import DetailPanelHeader from "@components/MasterDetail/components/DetailPanelHeader/DetailPanelHeader";
-import { Route } from "@/routes/__authenticated/indexes/$indexCode/$recordId";
+// import { Route } from "@/routes/__authenticated/indexes/$indexCode/$recordId";
+import { Route } from "@/routes/__authenticated/requesting/$recordId";
 import CombinedRequestingModal from "@forms/CombinedRequestingModal/CombinedRequestingModal";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 
@@ -56,7 +57,8 @@ interface CombinedData {
 
 export default function ClusterRecordComponent() {
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const { indexCode, recordId } = Route.useParams();
+	// const { indexCode, recordId } = Route.useParams();
+	const { recordId } = Route.useParams();
 	const auth = useAuth();
 	const { t } = useTranslation();
 	const [showCombinedModal, setShowCombinedModal] = useState(false); // Determines whether the requesting modal is visible or not.
@@ -542,8 +544,9 @@ export default function ClusterRecordComponent() {
 
 									<Box sx={{ my: 2 }}>
 										<CustomLink
-											to="/indexes/$indexCode"
-											params={{ indexCode: indexCode }}>
+											// to="/indexes/$indexCode"
+											to="/requesting">
+											{/* params={{ indexCode: indexCode }} */}
 											{t("requesting.shared_index.return")}
 										</CustomLink>
 									</Box>

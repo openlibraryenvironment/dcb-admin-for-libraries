@@ -22,7 +22,7 @@ import {
 
 interface SearchResultProps {
 	params: GridRenderCellParams;
-	indexCode: string;
+	// indexCode: string;
 }
 // Key information for this component to display - note that description might change
 // Title, Author, Format, Description, ISBN (or other identifier)
@@ -32,7 +32,8 @@ interface SearchResultProps {
 
 // Potential actions
 // One-click request button IF we can check live availability sensibly (to grey it out if no items are available)
-export const SearchResult = ({ params, indexCode }: SearchResultProps) => {
+// export const SearchResult = ({ params, indexCode }: SearchResultProps) => {
+export const SearchResult = ({ params }: SearchResultProps) => {
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const recordId = params?.row?.id;
 	const auth = useAuth();
@@ -156,8 +157,10 @@ export const SearchResult = ({ params, indexCode }: SearchResultProps) => {
 							variant="h6"
 							color="var(--mui-palette-primary-searchResultTitle)">
 							<CustomLink
-								to="/indexes/$indexCode/$recordId"
-								params={{ indexCode: indexCode, recordId: params.row.id }}>
+								// to="/indexes/$indexCode/$recordId"
+								to="/requesting/$recordId"
+								params={{ recordId: params.row.id }}>
+								{/* params={{ indexCode: indexCode, recordId: params.row.id }}> */}
 								{params.row.title}
 							</CustomLink>
 						</Typography>

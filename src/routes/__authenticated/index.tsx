@@ -34,7 +34,7 @@ export const Route = createFileRoute("/__authenticated/")({
 function HomeComponent() {
 	const auth = useAuth();
 	const { t } = useTranslation();
-	console.log(auth);
+	// console.log(auth);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
 
