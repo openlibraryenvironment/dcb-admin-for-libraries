@@ -1,3 +1,16 @@
+# [1.3.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.2.1...v1.3.0) (2025-10-07)
+
+
+### Bug Fixes
+
+* Fix broken pagination and cut-off-cards ([c470db0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/c470db017feccbb3dd03c351fe5d6a9a7c98e08c))
+
+
+### Features
+
+* Initial requesting-only mode [DCB-2035] ([9fb5eba](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/9fb5ebaa1ed1ba142710056fe6cf7bd9f76f3303))
+* Introduce limited requesting-only mode [DCB-2035] ([b0ab0fb](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/b0ab0fb08cb646f9977053f4d9c58bd1a4a8d137))
+
 ## [1.2.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.2.0...v1.2.1) (2025-09-05)
 
 
