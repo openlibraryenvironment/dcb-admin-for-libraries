@@ -27,6 +27,8 @@ export const Header = () => {
 	);
 
 	const code = auth.user?.profile?.code;
+	const isReadOnly = auth.user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
+
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const { data } = useQuery<LibrariesQueryData>({
@@ -68,9 +70,13 @@ export const Header = () => {
 					variant="h6"
 					component="div"
 					sx={{ flexGrow: 1, color: theme.palette.primary.headerText }}>
-					{t("header.title", {
-						library: library ? library?.fullName : "Libraries",
-					})}
+					{isReadOnly
+						? t("header.title_requesting", {
+								library: library ? library?.fullName : "Libraries",
+							})
+						: t("header.title", {
+								library: library ? library?.fullName : "Libraries",
+							})}
 				</Typography>
 				{auth.isAuthenticated && auth.user && (
 					<Box sx={{ display: "flex", alignItems: "center" }}>

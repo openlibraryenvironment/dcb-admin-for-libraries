@@ -95,6 +95,7 @@
 	},
 	"header": {
 		"title": "DCB Admin for {{library}}",
+		"title_requesting": "DCB Admin for {{library}} - requesting only mode",
 		"user": "Welcome, {{user}}",
 		"welcome": "Welcome to DCB Admin for {{name}}"
 	},
