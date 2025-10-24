@@ -611,11 +611,12 @@
 				"all": "Export all",
 				"all_csv": "Export all as CSV",
 				"all_tsv": "Export all as TSV",
-				"current": "Export current page",
+				"current": "Export current page as CSV",
 				"failed": "The data grid export has failed. Please try again.",
 				"success": "Successfully exported {{count}} records from the data grid.",
 				"filtered": "Export filtered",
 				"modal_title": "Exporting data",
+				"print": "Print current page",
 				"records": "Exporting {{count}} records from the data grid."
 			},
 			"filters": {

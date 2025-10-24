@@ -192,8 +192,8 @@ export default function DataGrid({
 				localeText={{
 					toolbarQuickFilterPlaceholder: searchText ?? t("general.search"),
 					columnsManagementSearchTitle: t("ui.data_grid.find_column"),
-					toolbarExportCSV: t("ui.data_grid.download_current_page"),
-					toolbarExportPrint: t("ui.data_grid.print_current_page"),
+					toolbarExportCSV: t("ui.data_grid.export.current"),
+					toolbarExportPrint: t("ui.data_grid.export.print"),
 					filterOperatorDoesNotEqual: t("ui.data_grid.filters.not_equal"),
 					"filterOperator!=": t("ui.data_grid.filters.not_equal"),
 					"filterOperator=": t("ui.data_grid.filters.equals"),

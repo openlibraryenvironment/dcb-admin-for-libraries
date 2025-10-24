@@ -352,14 +352,14 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		headerName: "Pickup request UUID",
 		minWidth: 100,
 		sortable: true,
-		filterable: true,
+		filterable: false,
 	},
 	{
 		field: "pickupRequestStatus",
 		headerName: "Pickup request status",
 		minWidth: 100,
 		sortable: true,
-		filterable: true,
+		filterable: false,
 	},
 	{
 		field: "canonicalPtype",
@@ -556,14 +556,14 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		headerName: "Pickup request UUID",
 		minWidth: 100,
 		sortable: true,
-		filterable: true,
+		filterable: false, // For now. We need a better way of communicating this to library users.
 	},
 	{
 		field: "pickupRequestStatus",
 		headerName: "Pickup request status",
 		minWidth: 100,
 		sortable: true,
-		filterable: true,
+		filterable: false,
 	},
 	{
 		field: "canonicalPtype",
