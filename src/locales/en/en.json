@@ -459,24 +459,26 @@
 		"volume_raw": "Raw volume statement",
 		"expedited_checkout": {
 			"actions": {
-				"place": "Place an on-site borrowing request."
+				"place": "Place a walk-up request."
 			},
 			"create_request": "Create request",
 			"creating_request": "Creating request ...",
-			"description": "Welcome to DCB on-site borrowing. Please provide the barcode and the library of the patron you would like to make a request for. <paragraph>Provided that the patron's details are valid and the item exists and is available at your library, DCB will instantly check out this item to the specified patron.</paragraph>",
+			"description": "Welcome to DCB walk-up requesting. Please provide the barcode and the library of the patron you would like to make a request for. <paragraph>Provided that the patron's details are valid and the item exists and is available at your library, DCB will instantly check out this item to the specified patron.</paragraph>",
 			"feedback": {
 				"current_status": "Current status: {{status}}",
-				"in_progress": "Your on-site borrowing request has been successfully placed and DCB is now attempting to check it out.",
-				"in_progress_explanation": "Your on-site borrowing request has been successfully placed and DCB is now attempting to check it out.",
-				"success": "Your on-site borrowing request has been checked out successfully and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
+				"in_progress": "Your walk-up request has been successfully placed and DCB is now attempting to check it out.",
+				"in_progress_explanation": "Your walk-up request has been successfully placed and DCB is now attempting to check it out.",
+				"success": "Your walk-up request has been checked out successfully and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
+				"success_requesting_only": "Your walk-up request has been checked out successfully.",
 				"time_elapsed": "Time elapsed: {{time}}"
 			},
 			"option_description": "Place a walk-up request for an item at your library for a visiting OpenRS patron. This will instantly check out the item.",
-			"request_title": "On-site borrowing request",
+			"request_title": "Walk-up request",
 			"return": "Return to requesting",
 			"steps": {
 				"checkout": "Check out item",
 				"checkout_failure": "Item checkout is taking too long. Please view the request and use the 'check for updates' option to refresh its status.",
+				"checkout_failure_request_only": "Item checkout is taking too long. Please ask a library admin to view this request.",
 				"checkout_success": "The item has been successfully checked out, and all steps are complete. The due date for this item is {{dueDate}}.",
 				"checkout_waiting": "The request has been created. Please wait while we attempt to check out the item.",
 				"complete": "All steps complete!",
@@ -485,7 +487,7 @@
 				"request_creation": "Request creation",
 				"request_creation_instruction": "The patron barcode is valid. Please now provide the remaining details."
 			},
-			"title_on_site": "Item checkout",
+			"title_on_site": "Walk-up request",
 			"view_request": "View request"
 		},
 		"search_types": {

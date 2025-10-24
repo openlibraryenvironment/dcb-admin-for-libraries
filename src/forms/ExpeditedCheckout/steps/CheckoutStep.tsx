@@ -45,7 +45,11 @@ export const CheckoutStep = ({
 					t("requesting.expedited_checkout.steps.checkout_waiting")}
 				{!checkoutCompleted &&
 					stepError === 2 &&
-					t("requesting.expedited_checkout.steps.checkout_failure")}
+					(isReadOnly
+						? t(
+								"requesting.expedited_checkout.steps.checkout_failure_request_only"
+							)
+						: t("requesting.expedited_checkout.steps.checkout_failure"))}
 			</Typography>
 
 			<LinearProgress
