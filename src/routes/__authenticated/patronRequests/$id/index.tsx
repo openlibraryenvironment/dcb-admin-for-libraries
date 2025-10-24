@@ -96,8 +96,8 @@ function RouteComponent() {
 	// URLs for our various operations
 	const cleanupUrl =
 		cfg.VITE_DCB_API_BASE + "/patrons/requests/" + id + "/transition/cleanup";
-	const bibClusterRecordUrl = cfg.VITE_DCB_SEARCH_BASE
-		? "/search?q=" + patronRequest?.bibClusterId
+	const bibClusterRecordUrl = cfg.VITE_DCB_SEARCH_BASE // This needs fixing
+		? "/requesting/" + patronRequest?.bibClusterId
 		: "";
 	const updateUrl =
 		cfg.VITE_DCB_API_BASE + "/patrons/requests/" + id + "/update";
@@ -704,13 +704,21 @@ function RouteComponent() {
 								{bibClusterRecordUrl == "" ? (
 									<RenderAttribute attribute={patronRequest?.bibClusterId} />
 								) : (
-									<CustomLink
-										to={bibClusterRecordUrl}
-										href={bibClusterRecordUrl}
-										key="bibClusterRecordLink"
-										title={t("common.discovery")}>
-										<RenderAttribute attribute={patronRequest?.bibClusterId} />
-									</CustomLink>
+									<Tooltip
+										title={t("bib_record.view_cluster_record", {
+											id: patronRequest?.bibClusterId,
+											title: patronRequest?.clusterRecord?.title,
+										})}>
+										<CustomLink
+											to={bibClusterRecordUrl}
+											href={bibClusterRecordUrl}
+											key="bibClusterRecordLink"
+											title={t("common.discovery")}>
+											<RenderAttribute
+												attribute={patronRequest?.bibClusterId}
+											/>
+										</CustomLink>
+									</Tooltip>
 								)}
 							</Stack>
 						</Grid>

@@ -30,7 +30,8 @@
 		"source_record": "Source record",
 		"source_record_id": "Source record ID",
 		"source_system_id": "Source system UUID",
-		"title": "Bib record"
+		"title": "Bib record",
+		"view_cluster_record": "Click to view the page for this record, which has the title {{title}}"
 	},
 	"common": {
 		"discovery": "Link to discovery",
