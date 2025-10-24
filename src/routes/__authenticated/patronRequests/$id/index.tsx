@@ -355,14 +355,16 @@ function RouteComponent() {
 										size={13}
 										sx={{ marginLeft: "10px" }}
 									/>
+								) : pickupLocationDataError ? (
+									t("patron_request.error_pickup")
+								) : auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
+									<Tooltip title={t("location.view_location")}>
+										<CustomLink to={`/locations/${pickupLocation?.id}`}>
+											{pickupLocation?.name}
+										</CustomLink>
+									</Tooltip>
 								) : (
-									<RenderAttribute
-										attribute={
-											pickupLocationDataError
-												? t("patron_request.error_pickup")
-												: pickupLocation?.name
-										}
-									/>
+									<RenderAttribute attribute={pickupLocation?.name} />
 								)}
 							</Stack>
 						</Grid>
@@ -1270,11 +1272,23 @@ function RouteComponent() {
 								<Typography variant="attributeTitle">
 									{t("patron_request.pickup_location_name")}
 								</Typography>
-								<RenderAttribute
-									attribute={`/locations/${patronRequest?.pickupLocationCode}`}
-									title={pickupLocation?.name}
-									type="url"
-								/>
+								{pickupLocationDataLoading ? (
+									<CircularProgress
+										color="inherit"
+										size={13}
+										sx={{ marginLeft: "10px" }}
+									/>
+								) : pickupLocationDataError ? (
+									t("patron_request.error_pickup")
+								) : auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
+									<Tooltip title={t("location.view_location")}>
+										<CustomLink to={`/locations/${pickupLocation?.id}`}>
+											{pickupLocation?.name}
+										</CustomLink>
+									</Tooltip>
+								) : (
+									<RenderAttribute attribute={pickupLocation?.name} />
+								)}
 							</Stack>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>

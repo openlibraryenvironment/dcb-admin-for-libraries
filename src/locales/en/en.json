@@ -227,7 +227,8 @@
 		"print_label": "Print label",
 		"service_point": "FOLIO service point ID",
 		"sierra": "Sierra location ID",
-		"type": "Location type"
+		"type": "Location type",
+		"view_location": "View pickup location"
 	},
 	"login": {
 		"access": "To access DCB Admin for Libraries, please sign in with your library credentials",
