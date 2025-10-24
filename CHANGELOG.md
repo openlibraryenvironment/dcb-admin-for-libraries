@@ -1,3 +1,18 @@
+# [1.4.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.3.0...v1.4.0) (2025-10-24)
+
+
+### Bug Fixes
+
+* Data grid text fixes [DCB-1997] ([cdec7b6](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/cdec7b69c61a5d75979239d3cf0c65eee3c430f8))
+* Fix cluster record link and add title tooltip ([8ad19a6](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/8ad19a6558af3995752f6c654220ed9076456a76))
+* Fix patron request pickup location link [DCB-1993] ([65a1d78](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/65a1d7869717d832cd4ba6d86121ffbe20bc2089))
+
+
+### Features
+
+* Introduce patron, supplier and pickup library names [DCB-2054] ([28c29d2](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/28c29d247cf578a08bbe89dea511f9967fe55840))
+* Read-only individual location page [DCB-1993] ([78bd94d](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/78bd94d543bcc6d46a626d3e9f834e5a898fa383))
+
 # [1.3.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.2.1...v1.3.0) (2025-10-07)
 
 
