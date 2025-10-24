@@ -1,6 +1,9 @@
 import Error from "@components/Error/Error";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import {
+	AgencyQueryData,
+	HostLmsQueryData,
+	LibrariesQueryData,
 	LocationsQueryData,
 	PatronIdentitiesQueryData,
 	PatronRequestQueryData,
@@ -39,6 +42,14 @@ import Loading from "@components/Loading/Loading";
 import { GridRowModesModel } from "@mui/x-data-grid-premium";
 import { CustomLink } from "@components/CustomLink";
 import { SourceRecord } from "@models/SourceRecord";
+import { getLibraryBasics } from "@queries/getLibraryBasics";
+import { Library } from "@models/Library";
+import { getILS } from "@helpers/getILS";
+import { findPrimaryContacts } from "@helpers/findPrimaryContacts";
+import { HostLMS } from "@models/HostLMS";
+import { getHostLms } from "@queries/getHostLms";
+import { getAgency } from "@queries/getAgency";
+import { Agency } from "@models/Agency";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
 	component: RouteComponent,
@@ -103,6 +114,41 @@ function RouteComponent() {
 		cfg.VITE_DCB_API_BASE + "/patrons/requests/" + id + "/update";
 
 	const {
+		data: supplierLibraryData,
+		isError: supplierLibraryError,
+		isLoading: supplierLibraryLoading,
+	} = useQuery<LibrariesQueryData>({
+		// The dependencies are now restored in the queryKey
+		queryKey: [
+			"patronRequestSupplierLibrary",
+			id,
+			headers,
+			cfg.VITE_DCB_API_BASE,
+			patronRequest?.suppliers[0]?.localAgency,
+		],
+		enabled: !!patronRequest?.suppliers[0]?.localAgency,
+
+		queryFn: async () =>
+			request(
+				cfg.VITE_DCB_API_BASE + "/graphql",
+				getLibraryBasics,
+				{
+					query: "agencyCode:" + patronRequest?.suppliers[0]?.localAgency,
+					pageno: 0,
+					pagesize: 10,
+					order: "agencyCode",
+					orderBy: "ASC",
+				},
+				headers
+			),
+	});
+
+	console.log(supplierLibraryError);
+	const supplierLibraries: Library[] =
+		supplierLibraryData?.libraries?.content ?? [];
+	const supplierLibrary = supplierLibraries?.[0];
+
+	const {
 		data: patronIdentitiesData,
 		isError: patronIdentitiesError,
 		isLoading: patronIdentitiesLoading,
@@ -165,6 +211,144 @@ function RouteComponent() {
 	});
 
 	const pickupLocation = pickupLocationData?.locations?.content?.[0];
+	const {
+		data: pickupLibraryData,
+		isError: pickupLibraryError,
+		isLoading: pickupLibraryLoading,
+	} = useQuery<LibrariesQueryData>({
+		// The dependencies are now restored in the queryKey
+		queryKey: [
+			"patronRequestPickupLibrary",
+			id,
+			headers,
+			cfg.VITE_DCB_API_BASE,
+			pickupLocation?.agency?.code,
+		],
+		enabled: !!pickupLocation?.agency?.code,
+		queryFn: async () =>
+			request(
+				cfg.VITE_DCB_API_BASE + "/graphql",
+				getLibraryBasics,
+				{
+					query: "agencyCode:" + pickupLocation?.agency?.code,
+					pageno: 0,
+					pagesize: 10,
+					order: "agencyCode",
+					orderBy: "ASC",
+				},
+				headers
+			),
+	});
+	console.log(pickupLibraryError);
+
+	const pickupLibraries: Library[] =
+		pickupLibraryData?.libraries?.content ?? [];
+	const pickupLibrary = pickupLibraries?.[0];
+
+	// Patron library is a little harder ...
+	// Get Host LMS code, ID, then agency, then library
+	const {
+		data: patronLmsData,
+		isError: patronLmsError,
+		isLoading: patronLmsLoading,
+	} = useQuery<HostLmsQueryData>({
+		// The dependencies are now restored in the queryKey
+		queryKey: [
+			"patronRequestPatronLms",
+			id,
+			headers,
+			cfg.VITE_DCB_API_BASE,
+			patronRequest?.patronHostlmsCode,
+		],
+		enabled: !!patronRequest?.patronHostlmsCode,
+		queryFn: async () =>
+			request(
+				cfg.VITE_DCB_API_BASE + "/graphql",
+				getHostLms,
+				{
+					query: "code:" + patronRequest?.patronHostlmsCode,
+					pageno: 0,
+					pagesize: 10,
+					order: "name",
+					orderBy: "ASC",
+				},
+				headers
+			),
+	});
+	const patronHostLmss: HostLMS[] = patronLmsData?.hostLms?.content ?? [];
+	console.log(patronLmsError);
+
+	const patronHostLms: HostLMS = patronHostLmss?.[0];
+
+	const {
+		data: patronAgencyData,
+		isError: patronAgencyError,
+		isLoading: patronAgencyLoading,
+	} = useQuery<AgencyQueryData>({
+		// The dependencies are now restored in the queryKey
+		queryKey: [
+			"patronRequestAgency",
+			id,
+			headers,
+			cfg.VITE_DCB_API_BASE,
+			patronHostLms?.id,
+		],
+		enabled: !!patronHostLms?.id,
+		queryFn: async () =>
+			request(
+				cfg.VITE_DCB_API_BASE + "/graphql",
+				getAgency,
+				{
+					query: "hostLms:" + patronHostLms?.id,
+					pageno: 0,
+					pagesize: 10,
+					order: "name",
+					orderBy: "ASC",
+				},
+				headers
+			),
+	});
+	console.log(patronAgencyError);
+
+	// Which we can then use to get library. When we combine library and agency we can eliminate this but for now we're stuck with it
+	const patronAgencies = patronAgencyData?.agencies?.content ?? [];
+	const patronAgency: Agency = patronAgencies?.[0];
+
+	const {
+		data: patronLibraryData,
+		isError: patronLibraryError,
+		isLoading: patronLibraryLoading,
+	} = useQuery<LibrariesQueryData>({
+		// The dependencies are now restored in the queryKey
+		queryKey: [
+			"patronRequestLibrary",
+			id,
+			headers,
+			cfg.VITE_DCB_API_BASE,
+			patronAgency?.code,
+		],
+		enabled: !!patronAgency?.code,
+		queryFn: async () =>
+			request(
+				cfg.VITE_DCB_API_BASE + "/graphql",
+				getLibraryBasics,
+				{
+					query: "agencyCode:" + patronAgency?.code,
+					pageno: 0,
+					pagesize: 10,
+					order: "agencyCode",
+					orderBy: "ASC",
+				},
+				headers
+			),
+	});
+
+	const patronLibraries: Library[] =
+		patronLibraryData?.libraries?.content ?? [];
+	console.log(patronLibraries);
+	const patronLibrary = patronLibraries?.[0];
+
+	console.log(patronLibraryError);
 
 	// Mutation for updating the patron request
 	const updateMutation = useMutation({
@@ -272,6 +456,81 @@ function RouteComponent() {
 								{t("patron_request.general")}
 							</Typography>
 						</Grid>
+						{patronLibrary?.fullName ? (
+							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+								<Stack direction={"column"}>
+									<Typography variant="attributeTitle">
+										{t("patron_request.patron_library")}
+									</Typography>
+									<Tooltip
+										title={t("patron_request.request_tooltip", {
+											ils: getILS(
+												patronLibrary?.agency?.hostLms?.lmsClientClass
+											),
+											contact: patronLibrary?.contacts
+												? findPrimaryContacts(patronLibrary?.contacts)
+												: t("libraries.no_contact"),
+										})}>
+										<span>
+											<RenderAttribute attribute={patronLibrary?.fullName} />
+										</span>
+									</Tooltip>
+								</Stack>
+							</Grid>
+						) : patronLibraryLoading ||
+						  patronLmsLoading ||
+						  patronAgencyLoading ? (
+							<CircularProgress size="small" />
+						) : null}
+						{supplierLibrary?.fullName ? (
+							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+								<Stack direction={"column"}>
+									<Typography variant="attributeTitle">
+										{t("patron_request.supplier_library")}
+									</Typography>
+									<Tooltip
+										title={t("patron_request.request_tooltip", {
+											ils: getILS(
+												supplierLibrary?.agency?.hostLms?.lmsClientClass
+											),
+											contact: supplierLibrary?.contacts
+												? findPrimaryContacts(supplierLibrary?.contacts)
+												: t("libraries.no_contact"),
+										})}>
+										<span>
+											<RenderAttribute attribute={supplierLibrary?.fullName} />
+										</span>
+									</Tooltip>
+								</Stack>
+							</Grid>
+						) : supplierLibraryLoading ? (
+							<CircularProgress size="small" />
+						) : null}
+						{pickupLibrary?.fullName ? (
+							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+								<Stack direction={"column"}>
+									<Typography variant="attributeTitle">
+										{t("patron_request.pickup_library")}
+									</Typography>
+									<Tooltip
+										title={t("patron_request.request_tooltip", {
+											ils: getILS(
+												pickupLibrary?.agency?.hostLms?.lmsClientClass
+											),
+											contact: pickupLibrary?.contacts
+												? findPrimaryContacts(pickupLibrary?.contacts)
+												: t("libraries.no_contact"),
+										})}>
+										<span>
+											<RenderAttribute attribute={pickupLibrary?.fullName} />
+										</span>
+									</Tooltip>
+								</Stack>
+							</Grid>
+						) : pickupLibraryLoading ? (
+							<CircularProgress size="small" />
+						) : null}
+
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Stack direction={"column"}>
 								<Typography variant="attributeTitle">

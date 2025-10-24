@@ -7,6 +7,8 @@ import { PatronIdentity } from "./PatronIdentity";
 import { PatronRequest } from "./PatronRequest";
 import { AuditItem } from "./AuditItem";
 import { SupplierRequest } from "./SupplierRequest";
+import { HostLMS } from "./HostLMS";
+import { Agency } from "./Agency";
 
 // Helper types for our GraphQL responses - previously this was taken care of by Apollo
 // Bridges the gap between react-query, typescript and GraphQL.
@@ -54,6 +56,20 @@ export interface AuditQueryData {
 export interface SupplierRequestQueryData {
 	supplierRequests?: {
 		content: SupplierRequest[];
+		totalSize: number;
+	};
+}
+
+export interface HostLmsQueryData {
+	hostLms: {
+		content: HostLMS[];
+		totalSize: number;
+	};
+}
+
+export interface AgencyQueryData {
+	agencies: {
+		content: Agency[];
 		totalSize: number;
 	};
 }
