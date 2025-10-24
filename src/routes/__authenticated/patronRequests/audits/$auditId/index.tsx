@@ -156,12 +156,12 @@ function AuditDetailsComponent() {
 		}
 	};
 
-	// 5. Render loading and error states
+	// Render loading and error states
 	if (isAuditLoading || (areOtherAuditsLoading && patronRequestId)) {
 		return (
 			<Loading
 				title={t("ui.info.loading.document", {
-					document_type: t("audit.").toLowerCase(),
+					document_type: t("audit.entry").toLowerCase(),
 				})}
 				subtitle={t("ui.info.wait")}
 			/>

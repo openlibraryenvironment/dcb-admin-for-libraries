@@ -7,6 +7,7 @@
 	"audit": {
 		"no_results": "No audits found",
 		"audit": "Audit data",
+		"audit_entry": "Audit entry",
 		"data": "Audit data (JSON)",
 		"date": "Audit date",
 		"description": "Brief description",
@@ -214,10 +215,19 @@
 	},
 	"location": {
 		"code": "Location code",
+		"latitude": "Latitude",
+		"local_id": "Local ID",
+		"location_id": "Location UUID",
+		"longitude": "Longitude",
 		"name": "Location name",
 		"not_set": "Not set",
 		"pickup_status": "Pickup status",
-		"pickup_anywhere_status": "Pickup anywhere status"
+		"pickup_anywhere_status": "Pickup anywhere status",
+		"polaris_org": "Polaris org ID",
+		"print_label": "Print label",
+		"service_point": "FOLIO service point ID",
+		"sierra": "Sierra location ID",
+		"type": "Location type"
 	},
 	"login": {
 		"access": "To access DCB Admin for Libraries, please sign in with your library credentials",

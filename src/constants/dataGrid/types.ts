@@ -28,12 +28,12 @@ export const presetTypes = [
 	"referenceValueMappingsForLibraryAll",
 	"referenceValueMappingsForLibraryAllSecondHostLms",
 	"libraryLocations",
+	"locations",
 	"supplierRequestsLibrary",
 ];
 
 // Types of data grid where users cannot click through to a details page
 export const nonClickableTypes = [
-	"locations", // VERY TEMPORARY
 	"referenceValueMappings",
 	"ReferenceValueMappings",
 	"numericRangeMappings",

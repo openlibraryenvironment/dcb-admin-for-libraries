@@ -11,6 +11,7 @@ export interface Location {
 	latitude: number;
 	localId: string;
 	isPickup: boolean;
+	isPickupAnywhere: boolean;
 	locationReference: string;
 	deliveryStops: string;
 	printLabel: string;
