@@ -1,3 +1,10 @@
+## [1.4.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.4.0...v1.4.1) (2025-10-30)
+
+
+### Bug Fixes
+
+* Fix location not displaying in non-PUA systems ([8dba411](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/8dba41157cb4bb4976512b5adfb5411cd3696adf))
+
 # [1.4.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.3.0...v1.4.0) (2025-10-24)
 
 
