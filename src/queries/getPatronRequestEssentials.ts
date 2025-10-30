@@ -34,6 +34,7 @@ export const getPatronRequestEssentials = gql`
 				isManuallySelectedItem
 				resolutionCount
 				renewalCount
+				renewalStatus
 				localRenewalCount
 				dateCreated
 				activeWorkflow

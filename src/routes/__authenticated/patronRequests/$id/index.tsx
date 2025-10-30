@@ -859,6 +859,14 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Stack direction={"column"}>
 								<Typography variant="attributeTitle">
+									{t("patron_request.renewal_status")}
+								</Typography>
+								<RenderAttribute attribute={patronRequest?.renewalStatus} />
+							</Stack>
+						</Grid>
+						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
 									{t("patron_request.renewal_count")}
 								</Typography>
 								<RenderAttribute

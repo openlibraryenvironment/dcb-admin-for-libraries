@@ -39,6 +39,7 @@ export const getPatronRequest = gql`
 				isManuallySelectedItem
 				resolutionCount
 				renewalCount
+				renewalStatus
 				localRenewalCount
 				patron {
 					id

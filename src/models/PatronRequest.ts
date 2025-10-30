@@ -2,6 +2,7 @@ import { AuditItem } from "./AuditItem";
 import { ClusterRecord } from "./ClusterRecord";
 import { Patron } from "./Patron";
 import { PatronIdentity } from "./PatronIdentity";
+import { RenewalStatus } from "./RenewalStatus";
 import { SupplierRequest } from "./SupplierRequest";
 
 export interface PatronRequest {
@@ -57,4 +58,5 @@ export interface PatronRequest {
 	isExpeditedCheckout: boolean;
 	localHoldingId: string;
 	pickupHoldingId: string;
+	renewalStatus: RenewalStatus;
 }
