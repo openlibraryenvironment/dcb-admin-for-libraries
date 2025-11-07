@@ -1,3 +1,15 @@
+# [1.5.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.4.1...v1.5.0) (2025-11-07)
+
+
+### Bug Fixes
+
+* Temporarily disable searching on the grids ([5a22561](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/5a225616b59d672cc6d2275d8fad6aae29895e21))
+
+
+### Features
+
+* Provide a supplying library filter ([b829b0b](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/b829b0b1ab3f40c585c05989120d4653e5b62530))
+
 ## [1.4.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.4.0...v1.4.1) (2025-10-30)
 
 
