@@ -10,6 +10,7 @@ import {
 	containsOnly,
 	durationFilters,
 	equalsOnly,
+	isOnly,
 	standardFilters,
 } from "@constants/filters/filters";
 
@@ -333,11 +334,12 @@ export const standardPatronRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "supplyingAgencyCode",
-		headerName: "Supplying agency",
+		headerName: "Supplying library",
 		filterable: true,
-		filterOperators: equalsOnly,
 		sortable: true,
 		flex: 0.75,
+		type: "singleSelect",
+		filterOperators: isOnly,
 		valueGetter: (value: string, row: PatronRequest) => {
 			// Check if suppliers array is not empty
 			if (row.suppliers.length > 0) {

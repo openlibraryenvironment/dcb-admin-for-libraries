@@ -40,7 +40,7 @@ export const Header = () => {
 				getLibrary,
 				{
 					query: "agencyCode:" + code,
-					pagesize: 10,
+					pagesize: 1000,
 					pageno: 0,
 					orderBy: "fullName",
 					order: "DESC",

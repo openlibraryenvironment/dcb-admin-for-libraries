@@ -8,18 +8,20 @@ import {
 	defaultPatronRequestColumnVisibility,
 	standardPatronRequestColumns,
 } from "@helpers/dataGrid/columns";
+import { Library } from "@models/Library";
 import {
 	LibrariesQueryData,
 	PatronRequestQueryData,
 } from "@models/ReactQueryHelperTypes";
 import {
+	GridColDef,
 	GridColumnVisibilityModel,
 	GridFilterModel,
 	GridPaginationModel,
 	GridRowModesModel,
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
-import { getLibrary } from "@queries/getLibrary";
+import { getLibraries } from "@queries/getLibraries";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -188,23 +190,59 @@ function RouteComponent() {
 		isLoading: librariesLoading,
 		isError: librariesError,
 	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", headers, code, dcbApiBase],
+		queryKey: ["allLibraries", headers, code, dcbApiBase],
 		queryFn: async () =>
 			request(
 				`${dcbApiBase}/graphql`,
-				getLibrary,
+				getLibraries,
 				{
-					query: "agencyCode:" + code,
-					pagesize: 10,
+					query: "",
+					pagesize: 1000,
 					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
+					order: "fullName",
+					orderBy: "ASC",
 				},
 				headers
 			),
 	});
-	const libraryHostLmsCode =
-		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.code;
+
+	const libraries = librariesData?.libraries?.content ?? []; // This is all of the libraries, to be supplied to filters.
+	const userLibrary = libraries.find((library) => library.agencyCode === code); // This is the user's library
+
+	const userLibraryHostLmsCode = userLibrary?.agency?.hostLms?.code;
+
+	const libraryFilterOptions = useMemo(() => {
+		if (!libraries) return [];
+		console.log("Libraries is", libraries);
+
+		return libraries.map((lib: Library) => ({
+			value: lib.agencyCode, // The value to be used in the filter (e.g., 'agency-code-123')
+			label: lib.fullName, // The human-readable name (e.g., 'Main Library')
+		}));
+	}, [libraries]);
+
+	// Columns that have dynamic options for their filters
+	const dynamicPatronRequestColumns = useMemo(() => {
+		const supplyingAgencyField = "supplyingAgencyCode";
+
+		return standardPatronRequestColumns.map((col) => {
+			if (col.field === supplyingAgencyField) {
+				console.log("Field is found");
+				const { ...baseColProps } = col;
+				const selectCol: GridColDef = {
+					...baseColProps, // Spread the "safe" base properties
+					type: "singleSelect",
+					valueOptions: libraryFilterOptions,
+				};
+				// Keep all of the existing properties, but change type to single select
+				// And provide the names as the actual thing the user sees.
+				return selectCol;
+			}
+			console.log("Field not found");
+			// Return all other columns unchanged for now. Other columns might benefit from this approach
+			return col;
+		});
+	}, [libraryFilterOptions]);
 
 	// Patron requests query - using debounced filter model
 	const {
@@ -218,7 +256,7 @@ function RouteComponent() {
 			"getPatronRequests",
 			dcbApiBase,
 			headers,
-			libraryHostLmsCode,
+			userLibraryHostLmsCode,
 			debouncedFilterModel, // Use debounced filter model
 			paginationModel.pageSize,
 			paginationModel.page,
@@ -226,7 +264,7 @@ function RouteComponent() {
 			sortModel[0]?.sort,
 		],
 		queryFn: async () => {
-			const baseQuery = `patronHostlmsCode:${libraryHostLmsCode}`;
+			const baseQuery = `patronHostlmsCode:${userLibraryHostLmsCode}`;
 			const queryVariables = {
 				query: processMuiFilterModel(debouncedFilterModel, baseQuery) ?? "",
 				pagesize: paginationModel.pageSize ?? 200,
@@ -241,7 +279,7 @@ function RouteComponent() {
 				headers
 			);
 		},
-		enabled: !!token && !!dcbApiBase && !!libraryHostLmsCode,
+		enabled: !!token && !!dcbApiBase && !!userLibraryHostLmsCode,
 		// refetchInterval: 1000000, // milliseconds
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
@@ -277,7 +315,7 @@ function RouteComponent() {
 			<DataGrid
 				disablePivoting
 				rows={patronRequestData?.patronRequests?.content ?? []}
-				columns={standardPatronRequestColumns}
+				columns={dynamicPatronRequestColumns}
 				columnVisibilityModel={columnVisibilityModel}
 				onColumnVisibilityModelChange={handleColumnVisibilityChange}
 				type="patronRequests"

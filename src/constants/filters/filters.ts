@@ -1,6 +1,7 @@
 import { betweenFilterOperator } from "./rangeFilterOperator";
 import {
 	getGridNumericOperators,
+	getGridSingleSelectOperators,
 	getGridStringOperators,
 	GridCellParams,
 	GridFilterInputValue,
@@ -50,6 +51,12 @@ export const standardFilters: GridFilterOperator[] = [
 	),
 	doesNotEqualFilter,
 	doesNotContainFilter,
+];
+
+export const isOnly: GridFilterOperator[] = [
+	...getGridSingleSelectOperators().filter(({ value }) =>
+		["is"].includes(value)
+	),
 ];
 
 export const equalsOnly: GridFilterOperator[] = [
