@@ -13,6 +13,7 @@ import {
 	isOnly,
 	standardFilters,
 } from "@constants/filters/filters";
+import { dcbStatusValueOptions } from "@constants/statuses/DCBStatuses";
 
 // Handles standard columns so we don't have to re-declare them everywhere
 
@@ -310,7 +311,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 	{
 		field: "patronHostlmsCode",
 		headerName: "Patron host LMS code",
-		filterable: false,
+		filterable: false, // Should present library options but with the HOST LMS code as a mapping.
 		sortable: false,
 	},
 	{
@@ -337,7 +338,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		headerName: "Supplying library",
 		filterable: true,
 		sortable: true,
-		flex: 0.75,
+		flex: 1,
 		type: "singleSelect",
 		filterOperators: isOnly,
 		valueGetter: (value: string, row: PatronRequest) => {
@@ -360,8 +361,10 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		field: "pickupRequestStatus",
 		headerName: "Pickup request status",
 		minWidth: 100,
-		sortable: true,
-		filterable: false,
+		sortable: true, // Maybe this shouldn't be filterable. one to check
+		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
+		filterOperators: undefined,
+		valueOptions: dcbStatusValueOptions,
 	},
 	{
 		field: "canonicalPtype",
@@ -398,32 +401,38 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		headerName: "Previous status",
 		minWidth: 100,
 		flex: 1.5,
-		filterOperators: standardFilters,
+		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
+		filterOperators: undefined,
+		valueOptions: dcbStatusValueOptions,
 	},
 	{
 		field: "status",
 		headerName: "Status",
 		minWidth: 100,
-		flex: 1.5,
-		filterOperators: standardFilters,
+		flex: 1.0,
+		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
+		filterOperators: undefined,
+		valueOptions: dcbStatusValueOptions,
 	},
 	{
 		field: "nextExpectedStatus",
 		headerName: "Next status",
 		minWidth: 100,
 		flex: 1.5,
-		filterOperators: standardFilters,
+		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
+		filterOperators: undefined,
+		valueOptions: dcbStatusValueOptions,
 	},
 	{
 		field: "errorMessage",
 		headerName: "Error message",
 		minWidth: 100,
 		flex: 1.5,
-		filterOperators: containsOnly,
+		filterOperators: containsOnly, // Should probably still be free text
 	},
 	{
 		field: "outOfSequenceFlag",
-		headerName: "Out of sequence",
+		headerName: "Out of sequence", // Should be true/false
 		flex: 0.75,
 		filterOperators: equalsOnly,
 	},
@@ -431,13 +440,13 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		field: "pollCountForCurrentStatus",
 		headerName: "Polling count",
 		flex: 0.75,
-		filterOperators: equalsOnly,
+		filterOperators: equalsOnly, // Should be numeric
 	},
 	{
 		field: "elapsedTimeInCurrentStatus",
 		headerName: "Time in state (days)",
 		description:
-			"The time the request has been in its current status, in the format dd:hh:mm:ss",
+			"The time the request has been in its current status, in the format dd:hh:mm:ss", // Can we replicate this elsewhere?
 		minWidth: 50,
 		type: "number",
 		filterOperators: durationFilters,
@@ -451,13 +460,13 @@ export const standardPatronRequestColumns: GridColDef[] = [
 	{
 		field: "isManuallySelectedItem",
 		headerName: "Manually selected?",
-		flex: 0.75,
+		flex: 0.75, // true false
 		filterOperators: equalsOnly,
 	},
 	{
 		field: "dateUpdated",
 		headerName: "Request updated",
-		minWidth: 150,
+		minWidth: 150, // date picker candidate
 		filterable: false,
 		valueGetter: (value: string, row: { dateUpdated: string }) => {
 			const requestUpdated = row.dateUpdated;
@@ -466,33 +475,33 @@ export const standardPatronRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "description",
-		headerName: "Description",
+		headerName: "Description", // free text
 		filterOperators: standardFilters,
 		flex: 0.5,
 	},
 	{
 		field: "requesterNote",
-		headerName: "Requester note",
+		headerName: "Requester note", // free text
 		filterOperators: standardFilters,
 		flex: 0.5,
 	},
 	{
 		field: "id",
-		headerName: "Request UUID",
+		headerName: "Request UUID", // free text
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: equalsOnly,
 	},
 	{
 		field: "activeWorkflow",
-		headerName: "Active workflow",
+		headerName: "Active workflow", // should have options
 		minWidth: 100,
 		sortable: true,
 		filterable: true,
 	},
 	{
 		field: "isExpeditedCheckout",
-		headerName: "On-site borrowing request?",
+		headerName: "On-site borrowing request?", // true false
 		flex: 0.5,
 		filterOperators: equalsOnly,
 		filterable: true,
