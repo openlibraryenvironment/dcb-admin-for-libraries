@@ -251,6 +251,7 @@ export default function DataGrid({
 						<NoResultsOverlay noResultsMessage={noResultsText} />
 					),
 				}}
+				slotProps={{ toolbar: { showQuickFilter: false } }}
 				sx={{
 					border: "0",
 					"@media print": {
