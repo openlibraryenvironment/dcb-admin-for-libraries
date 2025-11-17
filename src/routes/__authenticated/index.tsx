@@ -25,6 +25,8 @@ import Cancel from "@mui/icons-material/Cancel";
 import Edit from "@mui/icons-material/Edit";
 import Save from "@mui/icons-material/Save";
 import { isEmpty } from "lodash";
+import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
+import { FunctionalSettingStatus } from "@models/FunctionalSetting";
 
 // Landing page, also library information page
 export const Route = createFileRoute("/__authenticated/")({
@@ -109,6 +111,10 @@ function HomeComponent() {
 
 	//@ts-expect-error TYPING
 	const library: Library = data?.libraries?.content?.[0];
+
+	const editingEnabled =
+		isFunctionalSettingEnabled(library, "DENY_LIBRARY_MAPPING_EDIT") ==
+		FunctionalSettingStatus.DISABLED;
 
 	const updateLibraryMutation = useMutation({
 		mutationFn: async (formData: UpdateLibraryFormData) => {
@@ -317,38 +323,40 @@ function HomeComponent() {
 				</Typography>
 			</Grid>
 
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<>
-					{editMode ? (
-						<>
+			{editingEnabled ? (
+				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+					<>
+						{editMode ? (
+							<>
+								<Button
+									variant="contained"
+									color="primary"
+									startIcon={<Save />}
+									onClick={handleSubmit(onSubmit)}
+									disabled={!isEmpty(errors) || !isDirty}
+									ref={saveButtonRef}
+									sx={{ mr: 1 }}>
+									{t("ui.actions.save")}
+								</Button>
+								<Button
+									variant="outlined"
+									startIcon={<Cancel />}
+									onClick={handleCancel}>
+									{t("ui.actions.cancel")}
+								</Button>
+							</>
+						) : auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
 							<Button
 								variant="contained"
 								color="primary"
-								startIcon={<Save />}
-								onClick={handleSubmit(onSubmit)}
-								disabled={!isEmpty(errors) || !isDirty}
-								ref={saveButtonRef}
-								sx={{ mr: 1 }}>
-								{t("ui.actions.save")}
+								startIcon={<Edit />}
+								onClick={handleEdit}>
+								{t("ui.actions.edit")}
 							</Button>
-							<Button
-								variant="outlined"
-								startIcon={<Cancel />}
-								onClick={handleCancel}>
-								{t("ui.actions.cancel")}
-							</Button>
-						</>
-					) : auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
-						<Button
-							variant="contained"
-							color="primary"
-							startIcon={<Edit />}
-							onClick={handleEdit}>
-							{t("ui.actions.edit")}
-						</Button>
-					) : null}
-				</>
-			</Grid>
+						) : null}
+					</>
+				</Grid>
+			) : null}
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography variant="h3" fontWeight={"bold"}>
 					{t("welcome.library", { library: library?.fullName })}
