@@ -93,7 +93,6 @@ function ServiceComponent() {
 						<RenderAttribute
 							attribute={library?.patronWebsite}
 							title="Link to patron website"
-							type="url"
 						/>
 					) : (
 						<Typography variant="attributeText">-</Typography>
@@ -207,7 +206,6 @@ function ServiceComponent() {
 					<RenderAttribute
 						attribute={firstHostLms?.clientConfig?.["base-url"]}
 						title={firstHostLms?.clientConfig?.["base-url"]}
-						type="url"
 					/>
 				</Stack>
 			</Grid>
@@ -409,7 +407,6 @@ function ServiceComponent() {
 						<RenderAttribute
 							attribute={firstHostLms?.clientConfig?.["user-base-url"]}
 							title={firstHostLms?.clientConfig?.["user-base-url"]}
-							type="url"
 						/>
 					</Stack>
 				</Grid>
@@ -491,7 +488,6 @@ function ServiceComponent() {
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.["base-url"]}
 							title={secondHostLms?.clientConfig?.["base-url"]}
-							type="url"
 						/>
 					</Stack>
 				</Grid>
@@ -652,7 +648,6 @@ function ServiceComponent() {
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.["user-base-url"]}
 							title={secondHostLms?.clientConfig?.["user-base-url"]}
-							type="url"
 						/>
 					</Stack>
 				</Grid>
