@@ -6,12 +6,11 @@ import request from "graphql-request";
 import { getLibrary } from "../../queries/getLibrary";
 import { useAuth } from "react-oidc-context";
 import { Library } from "@models/Library";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import RenderAttribute from "../../components/RenderAttribute/RenderAttribute";
 import {
 	Button,
 	CircularProgress,
-	Link,
 	Stack,
 	TextField,
 	useTheme,
@@ -64,7 +63,7 @@ function HomeComponent() {
 	const firstEditableFieldRef = useRef<HTMLInputElement>(null);
 	const [changedFields, setChangedFields] = useState<Partial<Library>>({});
 	const saveButtonRef = useRef<HTMLButtonElement>(null);
-	const FEEDBACK_LINK = "https://forms.gle/pc5yVDufGRdrGz6Y7";
+	// const FEEDBACK_LINK = "https://forms.gle/pc5yVDufGRdrGz6Y7";
 	const handleCancel = () => {
 		setEditMode(false);
 		setChangedFields({});
@@ -384,7 +383,7 @@ function HomeComponent() {
 					})}
 				</Typography>
 			</Grid>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+			{/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography>
 					<Trans
 						i18nKey="welcome.background"
@@ -397,7 +396,7 @@ function HomeComponent() {
 						}}
 					/>
 				</Typography>
-			</Grid>
+			</Grid> */}
 
 			{editingEnabled ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
@@ -435,7 +434,8 @@ function HomeComponent() {
 			) : null}
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography variant="h3" fontWeight={"bold"}>
-					{t("welcome.library", { library: library?.fullName })}
+					{/* {t("welcome.library", { library: library?.fullName })} */}
+					{t("welcome.library_short")}
 				</Typography>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
@@ -633,11 +633,11 @@ function HomeComponent() {
 				</Stack>
 			</Grid>
 			{/* /* 'Primary location' title goes here/* */}
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+			{/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography variant="h3" fontWeight={"bold"}>
 					{t("library.primary_location.title")}
 				</Typography>
-			</Grid>
+			</Grid> */}
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
