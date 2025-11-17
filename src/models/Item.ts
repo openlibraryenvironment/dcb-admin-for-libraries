@@ -19,6 +19,13 @@ export interface Item {
 	agency: Agency;
 	owningContext: string;
 	availableDate: string;
+	parsedVolumeStatement: string;
+	rawVolumeStatement: string;
+	hostLmsCode: string;
+	sourceHostLmsCode: string;
+	rawDataValues: Map<string, string>;
+	decisionLogEntries: string[];
+	statusCorrectAsOf: string;
 }
 
 interface Status {
