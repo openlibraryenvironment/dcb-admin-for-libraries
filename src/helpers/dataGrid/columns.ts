@@ -297,6 +297,8 @@ export const numRangeMappingColumnsNoCategoryFilter: GridColDef[] = [
 	},
 ];
 
+// We need to separate these columns for supplier and patron views
+
 export const standardPatronRequestColumns: GridColDef[] = [
 	{
 		field: "dateCreated",
@@ -310,9 +312,12 @@ export const standardPatronRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "patronHostlmsCode",
-		headerName: "Patron host LMS code",
-		filterable: false, // Should present library options but with the HOST LMS code as a mapping.
+		headerName: "Patron library",
+		filterable: true, // Should present library options but with the HOST LMS code as a mapping.
 		sortable: false,
+		type: "singleSelect",
+		filterOperators: isOnly,
+		flex: 1,
 	},
 	{
 		field: "localBarcode",
@@ -846,9 +851,13 @@ export const defaultSupplierRequestLibraryColumnVisibility: GridColumnVisibility
 		dateUpdated: false,
 		id: false,
 		suppliers: false,
+		supplyingAgencyCode: false,
 		pickupRequestId: false,
 		pickupRequestStatus: false,
 		isExpeditedCheckout: false,
+		description: false,
+		requesterNote: false,
+		pollCountForCurrentStatus: false,
 	};
 
 export const defaultPatronRequestColumnVisibility: GridColumnVisibilityModel = {
