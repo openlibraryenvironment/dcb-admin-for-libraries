@@ -721,5 +721,11 @@
 		"library": "Library information for {{library}}",
 		"library_short": "Your library information",
 		"title": "Welcome to DCB Admin for {{library}}, {{name}}."
+	},
+	"workflows": {
+		"RET-STD": "Standard",
+		"RET-EXP": "Walk-up",
+		"RET-PUA": "Pickup anywhere",
+		"RET-LOCAL": "Local"
 	}
 }

@@ -14,6 +14,7 @@ import {
 	standardFilters,
 } from "@constants/filters/filters";
 import { dcbStatusValueOptions } from "@constants/statuses/DCBStatuses";
+import { dcbWorkflowOptions } from "@constants/workflows/DCBWorkflows";
 
 // Handles standard columns so we don't have to re-declare them everywhere
 
@@ -440,12 +441,14 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		headerName: "Out of sequence", // Should be true/false
 		flex: 0.75,
 		filterOperators: equalsOnly,
+		type: "boolean",
 	},
 	{
 		field: "pollCountForCurrentStatus",
 		headerName: "Polling count",
 		flex: 0.75,
 		filterOperators: equalsOnly, // Should be numeric
+		type: "number",
 	},
 	{
 		field: "elapsedTimeInCurrentStatus",
@@ -467,6 +470,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		headerName: "Manually selected?",
 		flex: 0.75, // true false
 		filterOperators: equalsOnly,
+		type: "boolean",
 	},
 	{
 		field: "dateUpdated",
@@ -503,14 +507,18 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		minWidth: 100,
 		sortable: true,
 		filterable: true,
+		type: "singleSelect",
+		valueOptions: dcbWorkflowOptions,
+		filterOperators: isOnly,
 	},
 	{
 		field: "isExpeditedCheckout",
-		headerName: "On-site borrowing request?", // true false
+		headerName: "Walk-up request?", // true false
 		flex: 0.5,
 		filterOperators: equalsOnly,
 		filterable: true,
 		sortable: true,
+		type: "boolean",
 	},
 ];
 
@@ -704,6 +712,9 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		minWidth: 100,
 		sortable: true,
 		filterable: true,
+		type: "singleSelect",
+		valueOptions: dcbWorkflowOptions,
+		filterOperators: isOnly,
 	},
 	{
 		field: "isExpeditedCheckout",
