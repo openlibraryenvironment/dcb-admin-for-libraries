@@ -1,3 +1,22 @@
+# [1.6.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.5.0...v1.6.0) (2025-11-20)
+
+
+### Bug Fixes
+
+* Don't allow editing of library info if DENY_MAPPING_EDIT is on ([68fc9fd](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/68fc9fd6770954f2cc95274c0dca1d3ffdf3e93c))
+* Fix call number presentation [DCB-2087] ([bd7805b](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/bd7805bf555cf9207453635e4bac611e343f73ce))
+* Improve text on Items page ([a935483](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/a935483dd04131f3449376a9897ed7de919764ad))
+* Make service URLs non clickable ([a36f835](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/a36f835aebebf228bd668da0d43bf1a6c6984987))
+
+
+### Features
+
+* Add basic stats to library page ([af1e713](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/af1e713575665a3913f3eee91d387ced336ce2eb))
+* Add patron library filter [DCB-2064] ([fad189f](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/fad189feadcc752fcb917237bbe2677c57ddc322))
+* Add workflow options filter [DCB-2064] ([ce4fc55](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/ce4fc55b698b75cc387eae0a1f62ef7ecff054d9))
+* Improve item presentation [DCB-2087] ([cc0a91d](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/cc0a91d0cf4c64be6dddb46497182f48b72b92d0))
+* Provide a status drop-down filter ([c9686d6](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/c9686d69cb1ef38da4b8f9b7dc242593e4a70cb1))
+
 # [1.5.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.4.1...v1.5.0) (2025-11-07)
 
 
