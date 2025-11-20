@@ -210,6 +210,11 @@
 		},
 		"short_name": "Short name",
 		"site_designation": "Site designation",
+		"statistics": {
+			"requests_made": "Requests made",
+			"requests_supplied": "Requests supplied",
+			"title": "Your library's DCB experience"
+		},
 		"support_hours": "Support hours",
 		"title": "Information for {{library}}",
 		"type": "Type"
@@ -384,6 +389,28 @@
 		"resolution_count": "Resolution count",
 		"return": "Return to patron request",
 		"status": "Current status",
+		"statuses": {
+			"SUBMITTED_TO_DCB": "Submitted to DCB",
+			"PATRON_VERIFIED": "Patron verified",
+			"RESOLVED": "Resolved",
+			"NOT_SUPPLIED_CURRENT_SUPPLIER": "Not supplied by current supplier",
+			"NO_ITEMS_SELECTABLE_AT_ANY_AGENCY": "No items selectable at any agency",
+			"REQUEST_PLACED_AT_SUPPLYING_AGENCY": "Request placed at supplying agency",
+			"CONFIRMED": "Confirmed",
+			"HANDED_OFF_AS_LOCAL": "Handed off as local",
+			"REQUEST_PLACED_AT_BORROWING_AGENCY": "Request placed at borrowing agency",
+			"REQUEST_PLACED_AT_PICKUP_AGENCY": "Request placed at pickup agency",
+			"RECEIVED_AT_PICKUP": "Received at pickup",
+			"READY_FOR_PICKUP": "Ready for pickup",
+			"LOANED": "Loaned",
+			"PICKUP_TRANSIT": "Pickup transit",
+			"RETURN_TRANSIT": "Return transit",
+			"CANCELLED": "Cancelled",
+			"COMPLETED": "Completed",
+			"FINALISED": "Finalised",
+			"ERROR": "Error",
+			"ARCHIVED": "Archived"
+		},
 		"status_changed": "Status changed",
 		"supplier": "Supplier",
 		"supplier_library": "Supplier library",
@@ -508,7 +535,7 @@
 			"error_connecting": "There was an error connecting to the search service. Please try again later.",
 			"error_connecting_title": "Could not connect to dcb-locate",
 			"items": "Items",
-			"items_for_cluster": "{{number}} item(s) available for requesting.",
+			"items_for_cluster": "{{number}} item(s) associated with this record.",
 			"items_not_shown": "{{number}} item(s) unable to be shown",
 			"items_not_shown_helper_item": "Items without an item type are usually the result of a missing or misconfigured item type mapping. Please review the item type mappings for this library.",
 			"items_not_shown_helper_location": "Items without an 'Agency' value are usually the result of a missing or misconfigured Location mapping, or a missing agency. Please review the Location mappings for this library and the agency configuration.",
@@ -542,7 +569,8 @@
 				"item_host_lms": "Item Host LMS",
 				"item_library": "Item library",
 				"item_local_id": "Item local ID",
-				"item_select": "Item {{id}} - Location: {{name}}, Barcode: {{barcode}}",
+				"item_select": "Item Barcode: {{barcode}}, Location: {{name}}, Call number: {{callNo}}",
+				"item_select_volume": "Item Barcode: {{barcode}}, Location: {{name}}, Call number: {{callNo}}, Volume: {{volumeStatement}}",
 				"pickup_location": "Pickup location",
 				"pickup_location_no_agency": "Other locations",
 				"requester_note": "Requester note",
@@ -646,6 +674,7 @@
 			"error": {
 				"cannot_retrieve_record": "Unable to retrieve the record",
 				"cannot_find_record": "Unable to find the record",
+				"fetching": "Error fetching value",
 				"general": "Something went wrong",
 				"invalid_UUID": "The record might have been deleted or the identifier could be wrong",
 				"loading": "Error loading {{entity}}",
@@ -660,6 +689,7 @@
 		"info": {
 			"contact": "contact",
 			"connection_issue": "There may be a connection issue",
+			"correct_as_of": "Status correct as of",
 			"description": "Description: {{description}}",
 			"loading": {
 				"document": "Loading {{document_type}}"
@@ -691,6 +721,13 @@
 	"welcome": {
 		"background": "Thank you for participating in the DCB Admin for Libraries pre-release! DCB Admin for Libraries is an all-new part of the DCB experience, tailored to the tasks library staff do every day. Expect this pre-release to change constantly as we add new functionality and continue to improve the product. You can provide feedback <linkComponent>here</linkComponent>.",
 		"library": "Library information for {{library}}",
+		"library_short": "Your library information",
 		"title": "Welcome to DCB Admin for {{library}}, {{name}}."
+	},
+	"workflows": {
+		"RET-STD": "Standard",
+		"RET-EXP": "Walk-up",
+		"RET-PUA": "Pickup anywhere",
+		"RET-LOCAL": "Local"
 	}
 }

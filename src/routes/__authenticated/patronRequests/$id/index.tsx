@@ -480,7 +480,7 @@ function RouteComponent() {
 						) : patronLibraryLoading ||
 						  patronLmsLoading ||
 						  patronAgencyLoading ? (
-							<CircularProgress size="small" />
+							<CircularProgress size="1rem" />
 						) : null}
 						{supplierLibrary?.fullName ? (
 							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
@@ -504,7 +504,7 @@ function RouteComponent() {
 								</Stack>
 							</Grid>
 						) : supplierLibraryLoading ? (
-							<CircularProgress size="small" />
+							<CircularProgress size="1rem" />
 						) : null}
 						{pickupLibrary?.fullName ? (
 							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
@@ -528,7 +528,7 @@ function RouteComponent() {
 								</Stack>
 							</Grid>
 						) : pickupLibraryLoading ? (
-							<CircularProgress size="small" />
+							<CircularProgress size="1rem" />
 						) : null}
 
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>

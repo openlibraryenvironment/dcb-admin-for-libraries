@@ -5,17 +5,23 @@ import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
 import {
-	defaultPatronRequestColumnVisibility,
+	defaultSupplierRequestLibraryColumnVisibility,
 	standardPatronRequestColumns,
 } from "@helpers/dataGrid/columns";
-import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
+import { Library } from "@models/Library";
 import {
+	LibrariesQueryData,
+	PatronRequestQueryData,
+} from "@models/ReactQueryHelperTypes";
+import {
+	GridColDef,
 	GridColumnVisibilityModel,
 	GridFilterModel,
 	GridPaginationModel,
 	GridRowModesModel,
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
+import { getLibraries } from "@queries/getLibraries";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -30,6 +36,7 @@ export const Route = createFileRoute("/__authenticated/supplierRequests")({
 
 // This can now just use supplying agency code filter
 // This should go into its own helper function
+// Also we can now use the same principle from patron requests to introduce a patron library filter!
 const processMuiFilterModel = (
 	model: GridFilterModel,
 	baseQuery: string
@@ -114,7 +121,8 @@ function RouteComponent() {
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? defaultPatronRequestColumnVisibility
+		storedState.columnVisibility ??
+			defaultSupplierRequestLibraryColumnVisibility
 	);
 
 	const [isFiltering, setIsFiltering] = useState(false);
@@ -222,6 +230,57 @@ function RouteComponent() {
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
 	});
+
+	const { data: librariesData } = useQuery<LibrariesQueryData>({
+		queryKey: ["allLibraries", headers, dcbApiBase],
+		queryFn: async () =>
+			request(
+				`${dcbApiBase}/graphql`,
+				getLibraries,
+				{
+					query: "",
+					pagesize: 10000,
+					pageno: 0,
+					orderBy: "DESC",
+					order: "fullName",
+				},
+				headers
+			),
+		enabled: !!token && !!dcbApiBase,
+		refetchOnWindowFocus: false,
+	});
+
+	const libraries = librariesData?.libraries?.content ?? [];
+
+	const libraryHostLmsOptions = useMemo(() => {
+		if (!libraries) return [];
+		return libraries
+			.filter((lib: Library) => lib?.agency?.hostLms?.code) // Libraries must have a Host LMS code
+			.map((lib: Library) => ({
+				value: lib.agency.hostLms.code,
+				label: lib.fullName,
+			}));
+	}, [libraries]);
+
+	const dynamicColumns = useMemo(() => {
+		const targetField = "patronHostlmsCode";
+
+		return standardPatronRequestColumns.map((col) => {
+			if (col.field === targetField) {
+				const { ...baseColProps } = col;
+
+				const selectCol: GridColDef = {
+					...baseColProps,
+					type: "singleSelect",
+					valueOptions: libraryHostLmsOptions,
+					filterOperators: undefined, // Reset operators to allow singleSelect defaults
+				};
+				return selectCol;
+			}
+			return col;
+		});
+	}, [libraryHostLmsOptions]);
+
 	if (isPatronRequestLoading && !patronRequestData) {
 		return (
 			<Loading
@@ -255,7 +314,7 @@ function RouteComponent() {
 			<DataGrid
 				disablePivoting
 				rows={patronRequestData?.patronRequests?.content ?? []}
-				columns={standardPatronRequestColumns}
+				columns={dynamicColumns}
 				columnVisibilityModel={columnVisibilityModel}
 				onColumnVisibilityModelChange={handleColumnVisibilityChange}
 				type="patronRequests"

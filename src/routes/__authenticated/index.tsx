@@ -6,9 +6,15 @@ import request from "graphql-request";
 import { getLibrary } from "../../queries/getLibrary";
 import { useAuth } from "react-oidc-context";
 import { Library } from "@models/Library";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import RenderAttribute from "../../components/RenderAttribute/RenderAttribute";
-import { Button, Link, Stack, TextField, useTheme } from "@mui/material";
+import {
+	Button,
+	CircularProgress,
+	Stack,
+	TextField,
+	useTheme,
+} from "@mui/material";
 import AddressLink from "../../components/Address/AddressLink";
 import { Controller, useForm } from "react-hook-form";
 import { UpdateLibraryFormData } from "../../models/UpdateLibraryFormData";
@@ -25,6 +31,10 @@ import Cancel from "@mui/icons-material/Cancel";
 import Edit from "@mui/icons-material/Edit";
 import Save from "@mui/icons-material/Save";
 import { isEmpty } from "lodash";
+import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
+import { FunctionalSettingStatus } from "@models/FunctionalSetting";
+import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
+import { getPatronRequestStats } from "@queries/getPatronRequestStats";
 
 // Landing page, also library information page
 export const Route = createFileRoute("/__authenticated/")({
@@ -53,7 +63,7 @@ function HomeComponent() {
 	const firstEditableFieldRef = useRef<HTMLInputElement>(null);
 	const [changedFields, setChangedFields] = useState<Partial<Library>>({});
 	const saveButtonRef = useRef<HTMLButtonElement>(null);
-	const FEEDBACK_LINK = "https://forms.gle/pc5yVDufGRdrGz6Y7";
+	// const FEEDBACK_LINK = "https://forms.gle/pc5yVDufGRdrGz6Y7";
 	const handleCancel = () => {
 		setEditMode(false);
 		setChangedFields({});
@@ -61,6 +71,7 @@ function HomeComponent() {
 	};
 
 	console.log(showConfirmationEdit);
+	const DCB_API_BASE = cfg?.VITE_DCB_API_BASE;
 
 	const [alert, setAlert] = useState<AlertObject>({
 		open: false,
@@ -87,10 +98,10 @@ function HomeComponent() {
 	// need a better way of handling tokens as this causes a request to be sent (almost) every time
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const { data, isError, isLoading, refetch } = useQuery({
-		queryKey: ["libraryInfo", headers, code, cfg.VITE_DCB_API_BASE],
+		queryKey: ["libraryInfo", headers, code, DCB_API_BASE],
 		queryFn: async () =>
 			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+				DCB_API_BASE + "/graphql",
 				getLibrary,
 				{
 					query: "agencyCode:" + code,
@@ -105,10 +116,80 @@ function HomeComponent() {
 	});
 	// on success
 
-	// Sort out types for graphql queries - we don't have apollo to do this for us any more
-
 	//@ts-expect-error TYPING
 	const library: Library = data?.libraries?.content?.[0];
+	const userLibraryHostLmsCode = library?.agency?.hostLms?.code;
+
+	const {
+		data: supplierRequestStats,
+		isLoading: supplierRequestStatsLoading,
+		isError: supplierRequestStatsError,
+		isFetching: supplierRequestFetching,
+	} = useQuery<PatronRequestQueryData>({
+		queryKey: ["LoadSupplierRequestStats", DCB_API_BASE, headers, code],
+		queryFn: async () => {
+			const baseQuery = `supplyingAgencyCode:${code}`;
+			const queryVariables = {
+				query: baseQuery ?? "",
+				pagesize: 20,
+				pageno: 0,
+				order: "dateCreated",
+				orderBy: "DESC",
+			};
+			return request(
+				`${DCB_API_BASE}/graphql`,
+				getPatronRequestStats,
+				queryVariables,
+				headers
+			);
+		},
+		enabled: !!headers && !!DCB_API_BASE && !!userLibraryHostLmsCode,
+		// refetchInterval: 1000000, // milliseconds
+		refetchOnWindowFocus: true,
+		refetchIntervalInBackground: false,
+		placeholderData: (previousData) => previousData,
+	});
+
+	const {
+		data: patronRequestStats,
+		isLoading: patronRequestStatsLoading,
+		error: patronRequestStatsError,
+		isFetching: patronRequestStatsFetching,
+	} = useQuery<PatronRequestQueryData>({
+		queryKey: [
+			"LoadPatronRequestStats",
+			DCB_API_BASE,
+			headers,
+			userLibraryHostLmsCode,
+		],
+		queryFn: async () => {
+			const baseQuery = `patronHostlmsCode:${userLibraryHostLmsCode}`;
+			const queryVariables = {
+				query: baseQuery ?? "",
+				pagesize: 20,
+				pageno: 0,
+				order: "dateCreated",
+				orderBy: "DESC",
+			};
+			return request(
+				`${DCB_API_BASE}/graphql`,
+				getPatronRequestStats,
+				queryVariables,
+				headers
+			);
+		},
+		enabled: !!headers && !!DCB_API_BASE && !!userLibraryHostLmsCode,
+		// refetchInterval: 1000000, // milliseconds
+		refetchOnWindowFocus: true,
+		refetchIntervalInBackground: false,
+		placeholderData: (previousData) => previousData,
+	});
+
+	// Sort out types for graphql queries - we don't have apollo to do this for us any more
+
+	const editingEnabled =
+		isFunctionalSettingEnabled(library, "DENY_LIBRARY_MAPPING_EDIT") ==
+		FunctionalSettingStatus.DISABLED;
 
 	const updateLibraryMutation = useMutation({
 		mutationFn: async (formData: UpdateLibraryFormData) => {
@@ -302,7 +383,7 @@ function HomeComponent() {
 					})}
 				</Typography>
 			</Grid>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+			{/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography>
 					<Trans
 						i18nKey="welcome.background"
@@ -315,43 +396,46 @@ function HomeComponent() {
 						}}
 					/>
 				</Typography>
-			</Grid>
+			</Grid> */}
 
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<>
-					{editMode ? (
-						<>
+			{editingEnabled ? (
+				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+					<>
+						{editMode ? (
+							<>
+								<Button
+									variant="contained"
+									color="primary"
+									startIcon={<Save />}
+									onClick={handleSubmit(onSubmit)}
+									disabled={!isEmpty(errors) || !isDirty}
+									ref={saveButtonRef}
+									sx={{ mr: 1 }}>
+									{t("ui.actions.save")}
+								</Button>
+								<Button
+									variant="outlined"
+									startIcon={<Cancel />}
+									onClick={handleCancel}>
+									{t("ui.actions.cancel")}
+								</Button>
+							</>
+						) : auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
 							<Button
 								variant="contained"
 								color="primary"
-								startIcon={<Save />}
-								onClick={handleSubmit(onSubmit)}
-								disabled={!isEmpty(errors) || !isDirty}
-								ref={saveButtonRef}
-								sx={{ mr: 1 }}>
-								{t("ui.actions.save")}
+								startIcon={<Edit />}
+								onClick={handleEdit}>
+								{t("ui.actions.edit")}
 							</Button>
-							<Button
-								variant="outlined"
-								startIcon={<Cancel />}
-								onClick={handleCancel}>
-								{t("ui.actions.cancel")}
-							</Button>
-						</>
-					) : auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
-						<Button
-							variant="contained"
-							color="primary"
-							startIcon={<Edit />}
-							onClick={handleEdit}>
-							{t("ui.actions.edit")}
-						</Button>
-					) : null}
-				</>
-			</Grid>
+						) : null}
+					</>
+				</Grid>
+			) : null}
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography variant="h3" fontWeight={"bold"}>
-					{t("welcome.library", { library: library?.fullName })}
+					{/* {t("welcome.library", { library: library?.fullName })} */}
+					{t("welcome.library_short")}
 				</Typography>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
@@ -549,11 +633,11 @@ function HomeComponent() {
 				</Stack>
 			</Grid>
 			{/* /* 'Primary location' title goes here/* */}
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+			{/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography variant="h3" fontWeight={"bold"}>
 					{t("library.primary_location.title")}
 				</Typography>
-			</Grid>
+			</Grid> */}
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
@@ -625,6 +709,47 @@ function HomeComponent() {
 							)
 						}
 					/>
+				</Stack>
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Typography variant="h3" fontWeight={"bold"}>
+					{t("library.statistics.title")}
+				</Typography>
+			</Grid>
+			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Stack direction={"column"}>
+					<Typography variant="attributeTitle">
+						{t("library.statistics.requests_made")}
+					</Typography>
+					{patronRequestStatsLoading || patronRequestStatsFetching ? (
+						<CircularProgress size="1rem" />
+					) : (
+						<RenderAttribute
+							attribute={
+								patronRequestStatsError
+									? t("ui.feedback.error.fetching")
+									: patronRequestStats?.patronRequests?.totalSize
+							}
+						/>
+					)}
+				</Stack>
+			</Grid>
+			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Stack direction={"column"}>
+					<Typography variant="attributeTitle">
+						{t("library.statistics.requests_supplied")}
+					</Typography>
+					{supplierRequestStatsLoading || supplierRequestFetching ? (
+						<CircularProgress size="1rem" />
+					) : (
+						<RenderAttribute
+							attribute={
+								supplierRequestStatsError
+									? t("ui.feedback.error.fetching")
+									: supplierRequestStats?.patronRequests?.totalSize
+							}
+						/>
+					)}
 				</Stack>
 			</Grid>
 			<TimedAlert

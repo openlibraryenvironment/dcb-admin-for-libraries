@@ -20,6 +20,7 @@ import MasterDetailLayout from "./MasterDetailLayout";
 // import ChangesSummary from "@components/ChangesSummary/ChangesSummary";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import ChangesSummary from "../ChangesSummary/ChangesSummary";
+import dayjs from "dayjs";
 
 interface MasterDetailType {
 	row: any;
@@ -217,6 +218,20 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 							<RenderAttribute attribute={row?.localItemType} />
 						</Stack>
 					</Grid>
+					{row?.statusCorrectAsOf ? (
+						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Stack direction={"column"}>
+								<Typography variant="attributeTitle">
+									{t("ui.info.correct_as_of")}
+								</Typography>
+								<RenderAttribute
+									attribute={dayjs(row?.statusCorrectAsOf).format(
+										"YYYY-MM-DD HH:mm"
+									)}
+								/>
+							</Stack>
+						</Grid>
+					) : null}
 				</MasterDetailLayout>
 			);
 

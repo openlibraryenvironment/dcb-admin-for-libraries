@@ -221,6 +221,16 @@ function RouteComponent() {
 		}));
 	}, [libraries]);
 
+	const patronLibraryFilterOptions = useMemo(() => {
+		if (!libraries) return [];
+		console.log("Libraries is", libraries);
+
+		return libraries.map((lib: Library) => ({
+			value: lib.agency?.hostLms?.code,
+			label: lib.fullName,
+		}));
+	}, [libraries]);
+
 	// Columns that have dynamic options for their filters
 	const dynamicPatronRequestColumns = useMemo(() => {
 		const supplyingAgencyField = "supplyingAgencyCode";
@@ -236,6 +246,14 @@ function RouteComponent() {
 				};
 				// Keep all of the existing properties, but change type to single select
 				// And provide the names as the actual thing the user sees.
+				return selectCol;
+			} else if (col.field == "patronHostlmsCode") {
+				const { ...baseColProps } = col;
+				const selectCol: GridColDef = {
+					...baseColProps, // Spread the "safe" base properties
+					type: "singleSelect",
+					valueOptions: patronLibraryFilterOptions,
+				};
 				return selectCol;
 			}
 			console.log("Field not found");
