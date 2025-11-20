@@ -325,13 +325,25 @@ export default function StaffRequest({
 				agency: Agency;
 				location: Location;
 				barcode: string;
+				dueDate?: string;
+				callNumber?: string;
+				parsedVolumeStatement?: string;
 			}) => ({
-				label: t("requesting.staff_request.patron.item_select", {
-					id: item.id,
-					name: item.location.name,
-					barcode: item.barcode,
-				}),
+				label: item?.parsedVolumeStatement
+					? t("requesting.staff_request.patron.item_select_volume", {
+							name: item?.location.name,
+							barcode: item.barcode,
+							callNo: item?.callNumber,
+							volumeStatement: item?.parsedVolumeStatement,
+						})
+					: t("requesting.staff_request.patron.item_select", {
+							name: item?.location.name,
+							barcode: item.barcode,
+							callNo: item?.callNumber,
+						}),
+
 				value: item.id,
+				dueDate: item?.dueDate,
 			})
 		) || [];
 
