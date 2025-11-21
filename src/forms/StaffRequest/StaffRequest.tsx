@@ -83,6 +83,7 @@ export default function StaffRequest({
 		t("requesting.expedited_checkout.steps.patron_validation"),
 		t("requesting.expedited_checkout.steps.request_creation"),
 	];
+	const isReadOnly = auth.user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
 
 	const validationSchema = Yup.object().shape({
 		patronBarcode: Yup.string()
@@ -414,7 +415,9 @@ export default function StaffRequest({
 			setAlert({
 				open: true,
 				severity: "success",
-				text: t("requesting.staff_request.patron.success.request"),
+				text: isReadOnly
+					? t("requesting.staff_request.patron.success.request_requesting_only")
+					: t("requesting.staff_request.patron.success.request"),
 				patronRequestLink,
 			});
 			setTimeout(() => {

@@ -583,7 +583,8 @@
 				},
 				"success": {
 					"lookup": "The patron {{barcode}} has been successfully validated for {{library}}.",
-					"request": "Your staff request has been successfully placed and can be tracked in DCB Admin <linkComponent> here </linkComponent>."
+					"request": "Your staff request has been successfully placed and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
+					"request_requesting_only": "Your staff request has been successfully placed."
 				},
 				"validate": "Validate patron",
 				"validating": "Validating patron"
