@@ -52,6 +52,7 @@ export const getPatronRequests = gql`
 				suppliers {
 					localAgency
 					canonicalItemType
+					localItemBarcode
 				}
 				clusterRecord {
 					id
