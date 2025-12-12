@@ -1,3 +1,10 @@
+## [1.7.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.7.0...v1.7.1) (2025-12-12)
+
+
+### Bug Fixes
+
+* Make item barcode show in the data grid ([33dc871](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/33dc871a4a12f10d8ec5fd6781f08bf09ea8c77b))
+
 # [1.7.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.6.0...v1.7.0) (2025-12-12)
 
 
