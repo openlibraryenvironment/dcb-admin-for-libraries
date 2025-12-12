@@ -7,9 +7,9 @@ import Loading from "@components/Loading/Loading";
 import { standardRefValueMappingColumns } from "@helpers/dataGrid/columns";
 import { computeMutation } from "@helpers/dataGrid/computeMutation";
 import {
-	processMuiFilterModel,
 	getSortOrderForServer,
 	checkIfFiltering,
+	processGridFilterModel,
 } from "@helpers/dataGrid/utilities";
 import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
 import { FunctionalSettingStatus } from "@models/FunctionalSetting";
@@ -167,7 +167,13 @@ function RouteComponent() {
 			const baseQuery = `(toContext:"${libraryHostLmsCode}" OR fromContext:${libraryHostLmsCode}) AND NOT deleted:true`;
 			// Second Host LMS to come.
 			const queryVariables = {
-				query: processMuiFilterModel(debouncedFilterModel, baseQuery) ?? "",
+				query:
+					processGridFilterModel(debouncedFilterModel, baseQuery, [
+						"fromValue",
+						"toValue",
+						"fromCategory",
+						"toCategory",
+					]) ?? "",
 				pagesize: paginationModel.pageSize ?? 200,
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "lastImported",

@@ -312,15 +312,6 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		},
 	},
 	{
-		field: "patronHostlmsCode",
-		headerName: "Patron library",
-		filterable: true, // Should present library options but with the HOST LMS code as a mapping.
-		sortable: false,
-		type: "singleSelect",
-		filterOperators: isOnly,
-		flex: 1,
-	},
-	{
 		field: "localBarcode",
 		headerName: "Patron barcode",
 		filterable: false,
@@ -520,9 +511,89 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		sortable: true,
 		type: "boolean",
 	},
+	{
+		field: "renewalCount",
+		headerName: "Renewal count",
+		flex: 0.5,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	// Item values
+	{
+		field: "itemBarcode",
+		headerName: "Item barcode",
+		filterable: false,
+		sortable: false,
+		flex: 0.3,
+		valueGetter: (value: any, row: PatronRequest) => {
+			if (row.suppliers.length > 0) {
+				return row.suppliers[0].localItemBarcode;
+			} else {
+				return "";
+			}
+		},
+	},
+	{
+		field: "localItemStatus",
+		headerName: "Local item status",
+		flex: 0.3,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	{
+		field: "rawLocalItemStatus",
+		headerName: "Raw local item status",
+		flex: 0.3,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	{
+		field: "localItemType",
+		headerName: "Local item type",
+		flex: 0.3,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	{
+		field: "localItemId",
+		headerName: "Local item ID",
+		flex: 0.3,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	// Local requests
+	{
+		field: "localRequestStatus",
+		headerName: "Local request status",
+		flex: 0.5,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	{
+		field: "rawLocalRequestStatus",
+		headerName: "Raw local request status",
+		flex: 0.5,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	{
+		field: "localRequestId",
+		headerName: "Local request ID",
+		flex: 0.3,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
 ];
 
-export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
+export const standardSupplierRequestColumns: GridColDef[] = [
 	{
 		field: "dateCreated",
 		headerName: "Request created",
@@ -535,15 +606,19 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 	},
 	{
 		field: "patronHostlmsCode",
-		headerName: "Patron host LMS code",
-		filterable: false,
+		headerName: "Patron library",
+		filterable: true, // Should present library options but with the HOST LMS code as a mapping.
 		sortable: false,
+		type: "singleSelect",
+		filterOperators: isOnly,
+		flex: 1,
 	},
 	{
 		field: "localBarcode",
 		headerName: "Patron barcode",
 		filterable: false,
 		sortable: false,
+		flex: 0.75,
 		valueGetter: (value: string, row: PatronRequest) =>
 			row?.requestingIdentity?.localBarcode,
 	},
@@ -551,43 +626,27 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		field: "clusterRecordTitle",
 		headerName: "Title",
 		minWidth: 100,
-		flex: 1.25,
+		flex: 1.5,
 		filterable: false, // Cannot currently filter on nested properties.
 		sortable: false,
 		valueGetter: (value: string, row: { clusterRecord: { title: string } }) =>
 			row?.clusterRecord?.title,
 	},
 	{
-		field: "supplyingAgencyCode",
-		headerName: "Supplying agency",
-		filterable: true,
-		sortable: true,
-		filterOperators: equalsOnly,
-		valueGetter: (
-			value: string,
-			row: { suppliers: { localAgency: string }[] }
-		) => {
-			// Check if suppliers array is not empty
-			if (row.suppliers.length > 0) {
-				return row.suppliers[0].localAgency;
-			} else {
-				return ""; // This allows us to handle the array being empty, and any related type errors.
-			}
-		},
-	},
-	{
 		field: "pickupRequestId",
 		headerName: "Pickup request UUID",
 		minWidth: 100,
 		sortable: true,
-		filterable: false, // For now. We need a better way of communicating this to library users.
+		filterable: false,
 	},
 	{
 		field: "pickupRequestStatus",
 		headerName: "Pickup request status",
 		minWidth: 100,
-		sortable: true,
-		filterable: false,
+		sortable: true, // Maybe this shouldn't be filterable. one to check
+		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
+		filterOperators: undefined,
+		valueOptions: dcbStatusValueOptions,
 	},
 	{
 		field: "canonicalPtype",
@@ -624,63 +683,75 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 		headerName: "Previous status",
 		minWidth: 100,
 		flex: 1.5,
-		filterOperators: standardFilters,
+		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
+		filterOperators: undefined,
+		valueOptions: dcbStatusValueOptions,
 	},
 	{
 		field: "status",
 		headerName: "Status",
 		minWidth: 100,
-		flex: 1.5,
-		filterOperators: standardFilters,
-		filterable: false,
+		flex: 1.0,
+		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
+		filterOperators: undefined,
+		valueOptions: dcbStatusValueOptions,
 	},
 	{
 		field: "nextExpectedStatus",
 		headerName: "Next status",
 		minWidth: 100,
 		flex: 1.5,
-		filterOperators: standardFilters,
+		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
+		filterOperators: undefined,
+		valueOptions: dcbStatusValueOptions,
 	},
 	{
 		field: "errorMessage",
 		headerName: "Error message",
 		minWidth: 100,
 		flex: 1.5,
-		filterOperators: containsOnly,
+		filterOperators: containsOnly, // Should probably still be free text
 	},
 	{
 		field: "outOfSequenceFlag",
-		headerName: "Out of sequence",
+		headerName: "Out of sequence", // Should be true/false
 		flex: 0.75,
 		filterOperators: equalsOnly,
+		type: "boolean",
 	},
 	{
 		field: "pollCountForCurrentStatus",
 		headerName: "Polling count",
-		flex: 0.25,
-		filterOperators: equalsOnly,
+		flex: 0.75,
+		filterOperators: equalsOnly, // Should be numeric
+		type: "number",
 	},
 	{
 		field: "elapsedTimeInCurrentStatus",
 		headerName: "Time in state (days)",
 		description:
-			"The time the request has been in its current status, measured in days",
+			"The time the request has been in its current status, in the format dd:hh:mm:ss", // Can we replicate this elsewhere?
 		minWidth: 50,
 		type: "number",
 		filterOperators: durationFilters,
-		valueGetter: (value: string, row: { elapsedTimeInCurrentStatus: number }) =>
-			formatDuration(row.elapsedTimeInCurrentStatus),
+		valueGetter: (
+			value: string,
+			row: { elapsedTimeInCurrentStatus: number }
+		) => {
+			return formatDuration(row.elapsedTimeInCurrentStatus);
+		},
 	},
 	{
 		field: "isManuallySelectedItem",
 		headerName: "Manually selected?",
-		flex: 0.75,
+		flex: 0.75, // true false
 		filterOperators: equalsOnly,
+		type: "boolean",
 	},
 	{
 		field: "dateUpdated",
 		headerName: "Request updated",
-		minWidth: 150,
+		minWidth: 150, // date picker candidate
 		filterable: false,
 		valueGetter: (value: string, row: { dateUpdated: string }) => {
 			const requestUpdated = row.dateUpdated;
@@ -689,26 +760,26 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 	},
 	{
 		field: "description",
-		headerName: "Description",
+		headerName: "Description", // free text
 		filterOperators: standardFilters,
 		flex: 0.5,
 	},
 	{
 		field: "requesterNote",
-		headerName: "Requester note",
+		headerName: "Requester note", // free text
 		filterOperators: standardFilters,
 		flex: 0.5,
 	},
 	{
 		field: "id",
-		headerName: "Request UUID",
+		headerName: "Request UUID", // free text
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: equalsOnly,
 	},
 	{
 		field: "activeWorkflow",
-		headerName: "Active workflow",
+		headerName: "Active workflow", // should have options
 		minWidth: 100,
 		sortable: true,
 		filterable: true,
@@ -718,137 +789,96 @@ export const patronRequestColumnsNoStatusFilter: GridColDef[] = [
 	},
 	{
 		field: "isExpeditedCheckout",
-		headerName: "On-site borrowing request?",
+		headerName: "Walk-up request?", // true false
 		flex: 0.5,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+		type: "boolean",
+	},
+	{
+		field: "renewalCount",
+		headerName: "Renewal count",
+		flex: 0.5,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	// Item values
+	{
+		field: "itemBarcode",
+		headerName: "Item barcode",
+		filterable: false,
+		sortable: false,
+		flex: 0.3,
+		valueGetter: (value: any, row: PatronRequest) => {
+			if (row.suppliers.length > 0) {
+				return row.suppliers[0].localItemBarcode;
+			} else {
+				return "";
+			}
+		},
+	},
+	{
+		field: "localItemStatus",
+		headerName: "Local item status",
+		flex: 0.3,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	{
+		field: "rawLocalItemStatus",
+		headerName: "Raw local item status",
+		flex: 0.3,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	{
+		field: "localItemType",
+		headerName: "Local item type",
+		flex: 0.3,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	{
+		field: "localItemId",
+		headerName: "Local item ID",
+		flex: 0.3,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	// Local requests
+	{
+		field: "localRequestStatus",
+		headerName: "Local request status",
+		flex: 0.5,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	{
+		field: "rawLocalRequestStatus",
+		headerName: "Raw local request status",
+		flex: 0.5,
+		filterOperators: equalsOnly,
+		filterable: true,
+		sortable: true,
+	},
+	{
+		field: "localRequestId",
+		headerName: "Local request ID",
+		flex: 0.3,
 		filterOperators: equalsOnly,
 		filterable: true,
 		sortable: true,
 	},
 ];
 
-export const supplierRequestColumnsLibrary: GridColDef[] = [
-	{
-		field: "dateCreated",
-		headerName: "Request created",
-		minWidth: 150,
-		filterable: false,
-		valueGetter: (value: string, row: { dateCreated: string }) => {
-			const requestCreated = row.dateCreated;
-			return dayjs(requestCreated).format("YYYY-MM-DD HH:mm");
-		},
-	},
-	{
-		field: "dateUpdated",
-		headerName: "Request updated",
-		minWidth: 150,
-		filterable: false,
-		valueGetter: (value: string, row: { dateUpdated: string }) => {
-			const requestUpdated = row.dateUpdated;
-			return dayjs(requestUpdated).format("YYYY-MM-DD HH:mm");
-		},
-	},
-	{
-		field: "canonicalItemType",
-		headerName: "DCB canonical item type",
-		filterOperators: standardFilters,
-		flex: 0.5,
-	},
-	{
-		field: "hostLmsCode",
-		headerName: "Host LMS code",
-		filterable: false,
-		sortable: false,
-		flex: 0.5,
-	},
-	{
-		field: "isActive",
-		headerName: "Is active?",
-		filterOperators: equalsOnly,
-		flex: 0.5,
-	},
-	{
-		field: "localItemId",
-		headerName: "Local item ID",
-		filterOperators: standardFilters,
-		flex: 0.5,
-	},
-	{
-		field: "localBibId",
-		headerName: "Local bib ID",
-		filterOperators: standardFilters,
-		flex: 0.5,
-	},
-	{
-		field: "localStatus",
-		headerName: "Local status",
-		filterOperators: standardFilters,
-		flex: 0.5,
-	},
-	{
-		field: "localAgency",
-		headerName: "Local agency",
-		filterOperators: standardFilters,
-		flex: 0.5,
-	},
-	{
-		field: "rawLocalStatus",
-		headerName: "Raw local status",
-		filterOperators: standardFilters,
-		flex: 0.5,
-	},
-	{
-		field: "description",
-		headerName: "Description",
-		filterOperators: standardFilters,
-		flex: 0.5,
-	},
-	{
-		field: "requesterNote",
-		headerName: "Requester note",
-		filterOperators: standardFilters,
-		flex: 0.5,
-	},
-	{
-		field: "patronRequestId",
-		headerName: "Patron request UUID",
-		filterable: false,
-		groupable: true,
-		flex: 0.5,
-		valueGetter: (value: string, row: { patronRequest: PatronRequest }) => {
-			const id = row?.patronRequest.id;
-			return id;
-		},
-	},
-	{
-		field: "isExpeditedCheckout",
-		headerName: "On-site borrowing request?",
-		flex: 0.5,
-		valueGetter: (value: string, row: { patronRequest: PatronRequest }) => {
-			const isExpeditedCheckout = row?.patronRequest?.isExpeditedCheckout;
-			return isExpeditedCheckout;
-		},
-	},
-];
-
-export const defaultPatronRequestLibraryColumnVisibility: GridColumnVisibilityModel =
-	{
-		canonicalItemType: false,
-		canonicalPtype: false,
-		pickupLocationCode: false,
-		patronHostlmsCode: false,
-		previousStatus: false,
-		nextExpectedStatus: false,
-		errorMessage: false,
-		outOfSequenceFlag: false,
-		isManuallySelectedItem: false,
-		dateUpdated: false,
-		id: false,
-		pickupRequestId: false,
-		pickupRequestStatus: false,
-		isExpeditedCheckout: false,
-	};
-
-export const defaultSupplierRequestLibraryColumnVisibility: GridColumnVisibilityModel =
+export const defaultSupplierRequestColumnVisibility: GridColumnVisibilityModel =
 	{
 		canonicalItemType: false,
 		canonicalPtype: false,
@@ -869,6 +899,15 @@ export const defaultSupplierRequestLibraryColumnVisibility: GridColumnVisibility
 		description: false,
 		requesterNote: false,
 		pollCountForCurrentStatus: false,
+		itemBarcode: false,
+		localItemStatus: false,
+		rawLocalItemStatus: false,
+		localItemId: false,
+		localItemType: false,
+		localRequestStatus: false,
+		rawLocalRequestStatus: false,
+		localRequestId: false,
+		renewalCount: false,
 	};
 
 export const defaultPatronRequestColumnVisibility: GridColumnVisibilityModel = {
@@ -889,66 +928,18 @@ export const defaultPatronRequestColumnVisibility: GridColumnVisibilityModel = {
 	pickupRequestId: false,
 	pickupRequestStatus: false,
 	isExpeditedCheckout: false,
+	itemBarcode: false,
+	localItemStatus: false,
+	rawLocalItemStatus: false,
+	localItemId: false,
+	localItemType: false,
+	localRequestStatus: false,
+	rawLocalRequestStatus: false,
+	localRequestId: false,
+	renewalCount: false,
 };
 
-export const finishedPatronRequestColumnVisibility: GridColumnVisibilityModel =
-	{
-		canonicalItemType: false,
-		canonicalPtype: false,
-		pickupLocationCode: false,
-		elapsedTimeInCurrentStatus: false,
-		pollCountForCurrentStatus: false,
-		outOfSequenceFlag: false,
-		pickupRequestId: false,
-		pickupRequestStatus: false,
-		isExpeditedCheckout: false,
-		patronHostlmsCode: false,
-	};
-
-export const exceptionPatronRequestColumnVisibility = {
-	canonicalItemType: false,
-	canonicalPtype: false,
-	pickupLocationCode: false,
-	previousStatus: true,
-	status: false,
-	errorMessage: true,
-	elapsedTimeInCurrentStatus: false,
-	pollCountForCurrentStatus: false,
-	outOfSequenceFlag: false,
-	dateUpdated: true,
-	description: false,
-	requesterNote: false,
-	pickupRequestId: false,
-	pickupRequestStatus: false,
-	isExpeditedCheckout: false,
-	patronHostlmsCode: false,
-};
-
-export const locationPatronRequestColumnVisibility = {
-	canonicalItemType: false,
-	canonicalPtype: false,
-	pickupLocationCode: false,
-	status: true,
-	previousStatus: false,
-	nextExpectedStatus: false,
-	patronHostlmsCode: false,
-	errorMessage: false,
-	elapsedTimeInCurrentStatus: false,
-	pollCountForCurrentStatus: false,
-	dateUpdated: false,
-	dateCreated: true,
-	suppliers: false,
-	id: false,
-	outOfSequenceFlag: false,
-	isManuallySelectedItem: false,
-	description: false,
-	requesterNote: false,
-	pickupRequestId: false,
-	pickupRequestStatus: false,
-	isExpeditedCheckout: false,
-};
-
-export const standardLocationsVisibility = {
+export const standardLocationsColumnVisibility = {
 	id: false,
 	lastImported: false,
 	localId: false,

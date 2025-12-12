@@ -34,10 +34,10 @@ import request from "graphql-request";
 import { standardPatronRequestColumns } from "@helpers/dataGrid/columns";
 import DataGrid from "@components/DataGrid/DataGrid";
 import { useGridStore } from "@/hooks/useDataGridStore";
-import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
 import { getLibrary } from "@queries/getLibrary";
 import { useILLAuth } from "@/lib/illAuth";
 import Loading from "@components/Loading/Loading";
+import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 
 interface ILLPatronRequest {
 	id: string;
@@ -87,7 +87,6 @@ const illPatronRequestsQueryOptions = {
 	},
 };
 
-// --- Route Definition ---
 export const Route = createFileRoute("/__authenticated/ill/patronRequests")({
 	// We only pre-fetch the ILL data now, as DCB data needs client-side context.
 	loader: ({ context: { queryClient } }) => {
@@ -96,45 +95,6 @@ export const Route = createFileRoute("/__authenticated/ill/patronRequests")({
 	component: PatronRequestsComponent,
 });
 
-const processMuiFilterModel = (
-	model: GridFilterModel,
-	baseQuery: string
-): string => {
-	const { items, logicOperator = "AND", quickFilterValues = [] } = model;
-
-	const columnFilterQueries = items
-		.map((item) => buildFilterQuery(item.field, item.operator, item.value))
-		.filter(Boolean);
-
-	let finalQuery = ""; // Must default to the library specific host lms in all situations.
-	// we will need more context to infer
-	// and we should make this generic - perhaps pass in a preset for each one
-	if (columnFilterQueries.length > 0) {
-		finalQuery = `(${columnFilterQueries.join(` ${logicOperator.toUpperCase()} `)})`;
-	}
-
-	if (quickFilterValues.length > 0) {
-		const quickFilterQuery = quickFilterValues
-			.map(
-				(val) =>
-					`(fromValue:*${val}* OR toValue:*${val}* OR fromCategory:*${val}* OR toCategory:*${val}*)`
-			)
-			.join(" AND ");
-
-		if (finalQuery) {
-			finalQuery += ` AND (${quickFilterQuery})`;
-		} else {
-			finalQuery = quickFilterQuery;
-		}
-	}
-
-	if (baseQuery) {
-		return finalQuery ? `${baseQuery} AND (${finalQuery})` : baseQuery;
-	}
-	return finalQuery;
-};
-
-// --- Component ---
 function PatronRequestsComponent() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
@@ -255,7 +215,11 @@ function PatronRequestsComponent() {
 		queryFn: async () => {
 			const baseQuery = `patronHostlmsCode:${libraryHostLmsCode}`;
 			const queryVariables = {
-				query: processMuiFilterModel(filterModel, baseQuery) ?? "",
+				query:
+					processGridFilterModel(filterModel, baseQuery, [
+						"status",
+						"description",
+					]) ?? "",
 				pagesize: paginationModel.pageSize ?? 200,
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "dateCreated",

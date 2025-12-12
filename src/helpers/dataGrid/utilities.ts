@@ -5,9 +5,10 @@ import {
 } from "@mui/x-data-grid-premium";
 import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
 
-export const processMuiFilterModel = (
+export const processGridFilterModel = (
 	model: GridFilterModel,
-	baseQuery: string
+	baseQuery: string,
+	quickFilterFields: string[] = []
 ): string => {
 	const { items, logicOperator = "AND", quickFilterValues = [] } = model;
 
@@ -19,13 +20,16 @@ export const processMuiFilterModel = (
 	if (columnFilterQueries.length > 0) {
 		finalQuery = `(${columnFilterQueries.join(` ${logicOperator.toUpperCase()} `)})`;
 	}
-
-	if (quickFilterValues.length > 0) {
+	if (quickFilterValues.length > 0 && quickFilterFields.length > 0) {
 		const quickFilterQuery = quickFilterValues
-			.map(
-				(val) =>
-					`(fromValue:*${val}* OR toValue:*${val}* OR fromCategory:*${val}* OR toCategory:*${val}*)`
-			)
+			.map((val) => {
+				// Create an OR condition for every field provided in quickFilterFields
+				// To be refined into a "universal search" at some point
+				const fieldSearches = quickFilterFields.map(
+					(field) => `${field}:*${val}*`
+				);
+				return `(${fieldSearches.join(" OR ")})`;
+			})
 			.join(" AND ");
 
 		if (finalQuery) {
@@ -34,7 +38,6 @@ export const processMuiFilterModel = (
 			finalQuery = quickFilterQuery;
 		}
 	}
-
 	if (baseQuery) {
 		return finalQuery ? `${baseQuery} AND (${finalQuery})` : baseQuery;
 	}

@@ -3,11 +3,11 @@ import { useDebounce } from "@/hooks/useDebounce";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
-import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
 import {
-	defaultSupplierRequestLibraryColumnVisibility,
-	standardPatronRequestColumns,
+	defaultSupplierRequestColumnVisibility,
+	standardSupplierRequestColumns,
 } from "@helpers/dataGrid/columns";
+import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import { Library } from "@models/Library";
 import {
 	LibrariesQueryData,
@@ -33,45 +33,6 @@ import { useAuth } from "react-oidc-context";
 export const Route = createFileRoute("/__authenticated/supplierRequests")({
 	component: RouteComponent,
 });
-
-// This can now just use supplying agency code filter
-// This should go into its own helper function
-// Also we can now use the same principle from patron requests to introduce a patron library filter!
-const processMuiFilterModel = (
-	model: GridFilterModel,
-	baseQuery: string
-): string => {
-	const { items, logicOperator = "AND", quickFilterValues = [] } = model;
-
-	const columnFilterQueries = items
-		.map((item) => buildFilterQuery(item.field, item.operator, item.value))
-		.filter(Boolean);
-
-	let finalQuery = "";
-	if (columnFilterQueries.length > 0) {
-		finalQuery = `(${columnFilterQueries.join(` ${logicOperator.toUpperCase()} `)})`;
-	}
-
-	if (quickFilterValues.length > 0) {
-		const quickFilterQuery = quickFilterValues
-			.map(
-				(val) =>
-					`(fromValue:*${val}* OR toValue:*${val}* OR fromCategory:*${val}* OR toCategory:*${val}*)`
-			)
-			.join(" AND ");
-
-		if (finalQuery) {
-			finalQuery += ` AND (${quickFilterQuery})`;
-		} else {
-			finalQuery = quickFilterQuery;
-		}
-	}
-
-	if (baseQuery) {
-		return finalQuery ? `${baseQuery} AND (${finalQuery})` : baseQuery;
-	}
-	return finalQuery;
-};
 
 function RouteComponent() {
 	const { t } = useTranslation();
@@ -121,8 +82,7 @@ function RouteComponent() {
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ??
-			defaultSupplierRequestLibraryColumnVisibility
+		storedState.columnVisibility ?? defaultSupplierRequestColumnVisibility
 	);
 
 	const [isFiltering, setIsFiltering] = useState(false);
@@ -202,9 +162,10 @@ function RouteComponent() {
 			presetQuery,
 		],
 		queryFn: async () => {
-			const additionalFilters = processMuiFilterModel(
+			const additionalFilters = processGridFilterModel(
 				debouncedFilterModel,
-				presetQuery
+				presetQuery,
+				["status", "description"]
 			);
 			const finalQuery = additionalFilters
 				? `(${presetQuery}) AND (${additionalFilters})`
@@ -265,7 +226,7 @@ function RouteComponent() {
 	const dynamicColumns = useMemo(() => {
 		const targetField = "patronHostlmsCode";
 
-		return standardPatronRequestColumns.map((col) => {
+		return standardSupplierRequestColumns.map((col) => {
 			if (col.field === targetField) {
 				const { ...baseColProps } = col;
 

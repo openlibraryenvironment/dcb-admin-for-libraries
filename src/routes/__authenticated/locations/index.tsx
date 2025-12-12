@@ -4,8 +4,8 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import { equalsOnly, standardFilters } from "@constants/filters/filters";
-import { standardLocationsVisibility } from "@helpers/dataGrid/columns";
-import { processMuiFilterModel } from "@helpers/dataGrid/utilities";
+import { standardLocationsColumnVisibility } from "@helpers/dataGrid/columns";
+import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import {
 	LibrariesQueryData,
 	LocationsQueryData,
@@ -84,7 +84,7 @@ function RouteComponent() {
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? standardLocationsVisibility
+		storedState.columnVisibility ?? standardLocationsColumnVisibility
 	);
 
 	// Add state to track if we're filtering
@@ -290,7 +290,11 @@ function RouteComponent() {
 		queryFn: async () => {
 			const baseQuery = `agency:${agencyId}`;
 			const queryVariables = {
-				query: processMuiFilterModel(debouncedFilterModel, baseQuery) ?? "",
+				query:
+					processGridFilterModel(debouncedFilterModel, baseQuery, [
+						"name",
+						"code",
+					]) ?? "",
 				pagesize: paginationModel.pageSize ?? 200,
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "name",

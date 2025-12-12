@@ -3,11 +3,11 @@ import { useDebounce } from "@/hooks/useDebounce";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
-import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
 import {
 	defaultPatronRequestColumnVisibility,
 	standardPatronRequestColumns,
 } from "@helpers/dataGrid/columns";
+import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import { Library } from "@models/Library";
 import {
 	LibrariesQueryData,
@@ -37,42 +37,6 @@ import { useAuth } from "react-oidc-context";
 export const Route = createFileRoute("/__authenticated/patronRequests/")({
 	component: RouteComponent,
 });
-
-const processMuiFilterModel = (
-	model: GridFilterModel,
-	baseQuery: string
-): string => {
-	const { items, logicOperator = "AND", quickFilterValues = [] } = model;
-
-	const columnFilterQueries = items
-		.map((item) => buildFilterQuery(item.field, item.operator, item.value))
-		.filter(Boolean);
-
-	let finalQuery = "";
-	if (columnFilterQueries.length > 0) {
-		finalQuery = `(${columnFilterQueries.join(` ${logicOperator.toUpperCase()} `)})`;
-	}
-
-	if (quickFilterValues.length > 0) {
-		const quickFilterQuery = quickFilterValues
-			.map(
-				(val) =>
-					`(fromValue:*${val}* OR toValue:*${val}* OR fromCategory:*${val}* OR toCategory:*${val}*)`
-			)
-			.join(" AND ");
-
-		if (finalQuery) {
-			finalQuery += ` AND (${quickFilterQuery})`;
-		} else {
-			finalQuery = quickFilterQuery;
-		}
-	}
-
-	if (baseQuery) {
-		return finalQuery ? `${baseQuery} AND (${finalQuery})` : baseQuery;
-	}
-	return finalQuery;
-};
 
 function RouteComponent() {
 	const { t } = useTranslation();
@@ -221,16 +185,6 @@ function RouteComponent() {
 		}));
 	}, [libraries]);
 
-	const patronLibraryFilterOptions = useMemo(() => {
-		if (!libraries) return [];
-		console.log("Libraries is", libraries);
-
-		return libraries.map((lib: Library) => ({
-			value: lib.agency?.hostLms?.code,
-			label: lib.fullName,
-		}));
-	}, [libraries]);
-
 	// Columns that have dynamic options for their filters
 	const dynamicPatronRequestColumns = useMemo(() => {
 		const supplyingAgencyField = "supplyingAgencyCode";
@@ -246,14 +200,6 @@ function RouteComponent() {
 				};
 				// Keep all of the existing properties, but change type to single select
 				// And provide the names as the actual thing the user sees.
-				return selectCol;
-			} else if (col.field == "patronHostlmsCode") {
-				const { ...baseColProps } = col;
-				const selectCol: GridColDef = {
-					...baseColProps, // Spread the "safe" base properties
-					type: "singleSelect",
-					valueOptions: patronLibraryFilterOptions,
-				};
 				return selectCol;
 			}
 			console.log("Field not found");
@@ -284,7 +230,11 @@ function RouteComponent() {
 		queryFn: async () => {
 			const baseQuery = `patronHostlmsCode:${userLibraryHostLmsCode}`;
 			const queryVariables = {
-				query: processMuiFilterModel(debouncedFilterModel, baseQuery) ?? "",
+				query:
+					processGridFilterModel(debouncedFilterModel, baseQuery, [
+						"status",
+						"description",
+					]) ?? "",
 				pagesize: paginationModel.pageSize ?? 200,
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "dateCreated",

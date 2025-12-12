@@ -17,6 +17,16 @@ export const buildFilterQuery = (
 		}
 		// If the value is actually zero, this is valid so don't return null
 	}
+	if (operator === "isAnyOf") {
+		if (Array.isArray(value) && value.length > 0) {
+			// Lucene syntax: field:("Val1" OR "Val2" OR "Val3")
+			// We quote values to handle spaces/special chars safely
+			const options = value.map((v) => `"${v}"`).join(" OR ");
+			return `${field}:(${options})`;
+		}
+		return null; // Empty array -> no filter
+	}
+
 	const fromValue = value[0];
 	const toValue = value[1];
 	const isConversionField = conversionFields.includes(field);
@@ -85,10 +95,13 @@ export const buildFilterQuery = (
 			return containsQuery;
 		case "equals":
 		case "=":
+		case "is":
 			return equalsQuery;
 		case "does not equal":
 		case "!=":
 		case "Does not equal":
+		case "is not":
+		case "not": //See MUI X github for operators https://github.com/mui/mui-x/blob/9bda61c7fa7876b0f3cce60378fe3b560408e399/packages/x-data-grid/src/colDef/gridSingleSelectOperators.ts
 			// Note - the NOT operator can not be used with just one term. So we have to improvise
 			// https://lucene.apache.org/core/9_9_1/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#not-heading
 			return doesNotEqualQuery;
@@ -102,6 +115,11 @@ export const buildFilterQuery = (
 			return greaterThanQueryInclusive;
 		case ">":
 			return greaterThanQueryExclusive;
+		// We're pushing it a bit here - the bottom two aren't explicitly supported yet. Consider as experimental
+		case "startsWith":
+			return `${field}:${isConversionField ? convertedValue : replacedValue}*`;
+		case "endsWith":
+			return `${field}:*${isConversionField ? convertedValue : replacedValue}`;
 		default:
 			return equalsQuery;
 	}
