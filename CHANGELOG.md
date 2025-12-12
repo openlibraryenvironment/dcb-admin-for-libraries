@@ -1,3 +1,17 @@
+# [1.7.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.6.0...v1.7.0) (2025-12-12)
+
+
+### Bug Fixes
+
+* Don't show request link to read-only users ([a9ab407](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/a9ab407e5b7f5898b063a7cb7b57bfd2205c16f1))
+* Improve handling of live availability errors ([1420824](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/14208249118473ab4c701d4a8535a8ecf0c5f6ad))
+
+
+### Features
+
+* Add better error handling for filters and sorts [DCB-2100] ([4c9947c](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/4c9947cd14785dae9619d1b0f3dbdb43217a4e32))
+* Improve the filtering experience [DCB-2064] ([ef43a64](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/ef43a64a27f3755bc01fe64b5ea9908d0853dd47))
+
 # [1.6.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.5.0...v1.6.0) (2025-11-20)
 
 
