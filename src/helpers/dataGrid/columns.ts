@@ -334,7 +334,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		field: "supplyingAgencyCode",
 		headerName: "Supplying library",
 		filterable: true,
-		sortable: true,
+		sortable: false,
 		flex: 1,
 		type: "singleSelect",
 		filterOperators: isOnly,

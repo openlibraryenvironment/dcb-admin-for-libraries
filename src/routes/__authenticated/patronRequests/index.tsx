@@ -1,8 +1,10 @@
+import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
+import TimedAlert from "@components/TimedAlert/TimedAlert";
 import {
 	defaultPatronRequestColumnVisibility,
 	standardPatronRequestColumns,
@@ -76,6 +78,18 @@ function RouteComponent() {
 		useState<GridPaginationModel>(
 			storedState.pagination ?? { page: 0, pageSize: 25 }
 		);
+
+	const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+	const handleSnackbarClose = (
+		event?: React.SyntheticEvent | Event,
+		reason?: string
+	) => {
+		if (reason === "clickaway") {
+			return;
+		}
+		setSnackbarOpen(false);
+	};
 	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
 		storedState.filter ?? { items: [] }
 	);
@@ -255,6 +269,15 @@ function RouteComponent() {
 		placeholderData: (previousData) => previousData,
 	});
 
+	useDataGridErrorSafely(
+		gridId,
+		isPatronRequestError,
+		error,
+		setLocalFilterModel,
+		setLocalSortModel,
+		() => setSnackbarOpen(true)
+	);
+
 	// Show loading if initial load or libraries are loading
 	if ((isPatronRequestLoading && !patronRequestData) || librariesLoading) {
 		return <Loading title="Patron requests loading" subtitle="Please wait" />;
@@ -280,39 +303,57 @@ function RouteComponent() {
 
 	return (
 		<>
-			<DataGrid
-				disablePivoting
-				rows={patronRequestData?.patronRequests?.content ?? []}
-				columns={dynamicPatronRequestColumns}
-				columnVisibilityModel={columnVisibilityModel}
-				onColumnVisibilityModelChange={handleColumnVisibilityChange}
-				type="patronRequests"
-				identifier="patronRequestsMain"
-				checkboxSelection={false}
-				disableAggregation={true}
-				disableHoverInteractions={true}
-				disableRowGrouping={true}
-				loading={shouldShowLoading} // Show loading when filtering or fetching
-				listViewEnabled={false}
-				noResultsText={t("audit.no_results")}
-				pagination
-				pivotingEnabled={false}
-				toolbarVisible
-				searchText="Search by patron request"
-				scrollbarVisible={false}
-				paginationMode="server"
-				paginationModel={paginationModel}
-				onPaginationModelChange={handlePaginationChange}
-				filterMode="server"
-				filterModel={filterModel} // Use immediate filter model for UI
-				onFilterModelChange={handleFilterChange}
-				sortingMode="server"
-				sortModel={sortModel}
-				onSortModelChange={handleSortChange}
-				rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
-				rowModesModel={rowModesModel}
-				onRowModesModelChange={setRowModesModel}
-			/>
+			{
+				<DataGrid
+					disablePivoting
+					rows={patronRequestData?.patronRequests?.content ?? []}
+					columns={dynamicPatronRequestColumns}
+					columnVisibilityModel={columnVisibilityModel}
+					onColumnVisibilityModelChange={handleColumnVisibilityChange}
+					type="patronRequests"
+					identifier="patronRequestsMain"
+					checkboxSelection={false}
+					disableAggregation={true}
+					disableHoverInteractions={true}
+					disableRowGrouping={true}
+					loading={shouldShowLoading} // Show loading when filtering or fetching
+					listViewEnabled={false}
+					noResultsText={t("audit.no_results")}
+					pagination
+					pivotingEnabled={false}
+					toolbarVisible
+					searchText="Search by patron request"
+					scrollbarVisible={false}
+					paginationMode="server"
+					paginationModel={paginationModel}
+					onPaginationModelChange={handlePaginationChange}
+					filterMode="server"
+					filterModel={filterModel} // Use immediate filter model for UI
+					onFilterModelChange={handleFilterChange}
+					sortingMode="server"
+					sortModel={sortModel}
+					onSortModelChange={handleSortChange}
+					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
+					rowModesModel={rowModesModel}
+					onRowModesModelChange={setRowModesModel}
+				/>
+			}
+
+			{/* // Anchor to bottom-center or bottom-left to avoid covering grid headers
+				// anchorOrigin={{ vertical: "bottom", horizontal: "center" }}> */}
+			{
+				<TimedAlert
+					open={snackbarOpen}
+					onCloseFunc={handleSnackbarClose}
+					severityType="warning"
+					// variant="filled"
+					// sx={{ width: "100%" }}
+					autoHideDuration={6000}
+					alertText={
+						t("ui.feedback.error.cannot_process") ||
+						"We could not process that operation, so we have reset the data grid options."
+					}></TimedAlert>
+			}
 		</>
 	);
 }

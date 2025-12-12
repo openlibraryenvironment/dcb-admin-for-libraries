@@ -1,9 +1,11 @@
+import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
 import Confirmation from "@components/Confirmation/Confirmation";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
+import TimedAlert from "@components/TimedAlert/TimedAlert";
 import { standardRefValueMappingColumns } from "@helpers/dataGrid/columns";
 import { computeMutation } from "@helpers/dataGrid/computeMutation";
 import {
@@ -100,6 +102,17 @@ function RouteComponent() {
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
 		storedState.columnVisibility ?? {}
 	);
+	const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+	const handleSnackbarClose = (
+		event?: React.SyntheticEvent | Event,
+		reason?: string
+	) => {
+		if (reason === "clickaway") {
+			return;
+		}
+		setSnackbarOpen(false);
+	};
 
 	// Add state to track if we're filtering
 	const [isFiltering, setIsFiltering] = useState(false);
@@ -388,6 +401,14 @@ function RouteComponent() {
 		? [...standardRefValueMappingColumns, ...actionsColumn]
 		: standardRefValueMappingColumns;
 
+	useDataGridErrorSafely(
+		gridId,
+		mappingsError,
+		error,
+		setLocalFilterModel,
+		setLocalSortModel,
+		() => setSnackbarOpen(true)
+	);
 	// Show loading if initial load or libraries are loading
 	if ((mappingsLoading && !mappingsData) || librariesLoading) {
 		return (
@@ -421,58 +442,77 @@ function RouteComponent() {
 
 	return (
 		<>
-			<DataGrid
-				disablePivoting
-				identifier={gridId}
-				type="ReferenceValueMappings"
-				columns={refValueColumns}
-				rows={mappingsData?.referenceValueMappings?.content ?? []}
-				rowCount={mappingsData?.referenceValueMappings?.totalSize ?? 0}
-				loading={shouldShowLoading} // Show loading when filtering or fetching
-				paginationMode="server"
-				paginationModel={paginationModel}
-				onPaginationModelChange={handlePaginationChange}
-				filterMode="server"
-				filterModel={filterModel} // Use immediate filter model for UI
-				onFilterModelChange={handleFilterChange}
-				sortingMode="server"
-				sortModel={sortModel}
-				onSortModelChange={handleSortChange}
-				columnVisibilityModel={columnVisibilityModel}
-				onColumnVisibilityModelChange={handleColumnVisibilityChange}
-				editMode="row"
-				rowModesModel={rowModesModel}
-				onRowModesModelChange={setRowModesModel}
-				processRowUpdate={processRowUpdate}
-				checkboxSelection={false}
-				disableAggregation
-				disableHoverInteractions
-				disableRowGrouping
-				listViewEnabled={false}
-				pivotingEnabled={false}
-				pagination
-				toolbarVisible
-				noResultsText={t("audit.no_results")}
-				searchText="Search by mappings"
-				scrollbarVisible={false}
-			/>
-			<Confirmation
-				open={!!promiseArguments}
-				onClose={handleModalCancel}
-				onConfirm={handleModalConfirm}
-				gridEdit={true}
-				entityName="ReferenceValueMapping"
-				action="gridEdit"
-				editInformation={editRecord}
-			/>
-			<Confirmation
-				open={!!deleteConfirmationId}
-				onClose={() => setDeleteConfirmationId(null)}
-				onConfirm={handleConfirmDelete}
-				gridEdit={false}
-				entityName="ReferenceValueMapping"
-				action="deletion"
-			/>
+			{
+				<DataGrid
+					disablePivoting
+					identifier={gridId}
+					type="ReferenceValueMappings"
+					columns={refValueColumns}
+					rows={mappingsData?.referenceValueMappings?.content ?? []}
+					rowCount={mappingsData?.referenceValueMappings?.totalSize ?? 0}
+					loading={shouldShowLoading} // Show loading when filtering or fetching
+					paginationMode="server"
+					paginationModel={paginationModel}
+					onPaginationModelChange={handlePaginationChange}
+					filterMode="server"
+					filterModel={filterModel} // Use immediate filter model for UI
+					onFilterModelChange={handleFilterChange}
+					sortingMode="server"
+					sortModel={sortModel}
+					onSortModelChange={handleSortChange}
+					columnVisibilityModel={columnVisibilityModel}
+					onColumnVisibilityModelChange={handleColumnVisibilityChange}
+					editMode="row"
+					rowModesModel={rowModesModel}
+					onRowModesModelChange={setRowModesModel}
+					processRowUpdate={processRowUpdate}
+					checkboxSelection={false}
+					disableAggregation
+					disableHoverInteractions
+					disableRowGrouping
+					listViewEnabled={false}
+					pivotingEnabled={false}
+					pagination
+					toolbarVisible
+					noResultsText={t("audit.no_results")}
+					searchText="Search by mappings"
+					scrollbarVisible={false}
+				/>
+			}
+			{
+				<Confirmation
+					open={!!promiseArguments}
+					onClose={handleModalCancel}
+					onConfirm={handleModalConfirm}
+					gridEdit={true}
+					entityName="ReferenceValueMapping"
+					action="gridEdit"
+					editInformation={editRecord}
+				/>
+			}
+			{
+				<Confirmation
+					open={!!deleteConfirmationId}
+					onClose={() => setDeleteConfirmationId(null)}
+					onConfirm={handleConfirmDelete}
+					gridEdit={false}
+					entityName="ReferenceValueMapping"
+					action="deletion"
+				/>
+			}
+			{
+				<TimedAlert
+					open={snackbarOpen}
+					onCloseFunc={handleSnackbarClose}
+					severityType="warning"
+					// variant="filled"
+					// sx={{ width: "100%" }}
+					autoHideDuration={6000}
+					alertText={
+						t("ui.feedback.error.cannot_process") ||
+						"We could not process that operation, so we have reset the data grid options."
+					}></TimedAlert>
+			}
 		</>
 	);
 }

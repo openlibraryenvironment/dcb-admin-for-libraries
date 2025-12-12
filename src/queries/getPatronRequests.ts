@@ -33,6 +33,13 @@ export const getPatronRequests = gql`
 				isManuallySelectedItem
 				requesterNote
 				activeWorkflow
+				rawLocalRequestStatus
+				rawLocalItemStatus
+				localRequestId
+				localRequestStatus
+				localItemId
+				localItemStatus
+				localItemType
 				patron {
 					id
 				}

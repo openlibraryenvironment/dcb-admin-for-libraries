@@ -1,8 +1,10 @@
+import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
+import TimedAlert from "@components/TimedAlert/TimedAlert";
 import {
 	defaultSupplierRequestColumnVisibility,
 	standardSupplierRequestColumns,
@@ -139,6 +141,18 @@ function RouteComponent() {
 		[gridId, setColumnVisibilityModel]
 	);
 
+	const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+	const handleSnackbarClose = (
+		event?: React.SyntheticEvent | Event,
+		reason?: string
+	) => {
+		if (reason === "clickaway") {
+			return;
+		}
+		setSnackbarOpen(false);
+	};
+
 	const code = auth.user?.profile?.code;
 
 	const presetQuery = "supplyingAgencyCode:" + code;
@@ -151,7 +165,7 @@ function RouteComponent() {
 		isFetching,
 	} = useQuery<PatronRequestQueryData>({
 		queryKey: [
-			"getPatronRequestsByIds",
+			"getSupplierRequestsByIds",
 			dcbApiBase,
 			headers,
 			debouncedFilterModel,
@@ -242,6 +256,15 @@ function RouteComponent() {
 		});
 	}, [libraryHostLmsOptions]);
 
+	useDataGridErrorSafely(
+		gridId,
+		isPatronRequestError,
+		error,
+		setLocalFilterModel,
+		setLocalSortModel,
+		() => setSnackbarOpen(true)
+	);
+
 	if (isPatronRequestLoading && !patronRequestData) {
 		return (
 			<Loading
@@ -272,39 +295,54 @@ function RouteComponent() {
 		(isFetching && !!patronRequestData);
 	return (
 		<>
-			<DataGrid
-				disablePivoting
-				rows={patronRequestData?.patronRequests?.content ?? []}
-				columns={dynamicColumns}
-				columnVisibilityModel={columnVisibilityModel}
-				onColumnVisibilityModelChange={handleColumnVisibilityChange}
-				type="patronRequests"
-				identifier="supplierPatronRequests"
-				checkboxSelection={false}
-				disableAggregation={true}
-				disableHoverInteractions={true}
-				disableRowGrouping={true}
-				loading={shouldShowLoading}
-				listViewEnabled={false}
-				noResultsText={t("patron_requests.no_results")}
-				pagination
-				pivotingEnabled={false}
-				toolbarVisible
-				searchText="Search supplier patron requests"
-				scrollbarVisible={false}
-				paginationMode="server"
-				paginationModel={paginationModel}
-				onPaginationModelChange={handlePaginationChange}
-				filterMode="server"
-				filterModel={filterModel}
-				onFilterModelChange={handleFilterChange}
-				sortingMode="server"
-				sortModel={sortModel}
-				onSortModelChange={handleSortChange}
-				rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
-				rowModesModel={rowModesModel}
-				onRowModesModelChange={setRowModesModel}
-			/>
+			{
+				<DataGrid
+					disablePivoting
+					rows={patronRequestData?.patronRequests?.content ?? []}
+					columns={dynamicColumns}
+					columnVisibilityModel={columnVisibilityModel}
+					onColumnVisibilityModelChange={handleColumnVisibilityChange}
+					type="patronRequests"
+					identifier="supplierPatronRequests"
+					checkboxSelection={false}
+					disableAggregation={true}
+					disableHoverInteractions={true}
+					disableRowGrouping={true}
+					loading={shouldShowLoading}
+					listViewEnabled={false}
+					noResultsText={t("patron_requests.no_results")}
+					pagination
+					pivotingEnabled={false}
+					toolbarVisible
+					searchText="Search supplier patron requests"
+					scrollbarVisible={false}
+					paginationMode="server"
+					paginationModel={paginationModel}
+					onPaginationModelChange={handlePaginationChange}
+					filterMode="server"
+					filterModel={filterModel}
+					onFilterModelChange={handleFilterChange}
+					sortingMode="server"
+					sortModel={sortModel}
+					onSortModelChange={handleSortChange}
+					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
+					rowModesModel={rowModesModel}
+					onRowModesModelChange={setRowModesModel}
+				/>
+			}
+			{
+				<TimedAlert
+					open={snackbarOpen}
+					onCloseFunc={handleSnackbarClose}
+					severityType="warning"
+					// variant="filled"
+					// sx={{ width: "100%" }}
+					autoHideDuration={6000}
+					alertText={
+						t("ui.feedback.error.cannot_process") ||
+						"We could not process that operation, so we have reset the data grid options."
+					}></TimedAlert>
+			}
 		</>
 	);
 }

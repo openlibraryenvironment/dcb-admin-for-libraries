@@ -1,8 +1,10 @@
+import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
+import TimedAlert from "@components/TimedAlert/TimedAlert";
 import { equalsOnly, standardFilters } from "@constants/filters/filters";
 import { standardLocationsColumnVisibility } from "@helpers/dataGrid/columns";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
@@ -86,6 +88,18 @@ function RouteComponent() {
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
 		storedState.columnVisibility ?? standardLocationsColumnVisibility
 	);
+
+	const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+	const handleSnackbarClose = (
+		event?: React.SyntheticEvent | Event,
+		reason?: string
+	) => {
+		if (reason === "clickaway") {
+			return;
+		}
+		setSnackbarOpen(false);
+	};
 
 	// Add state to track if we're filtering
 	const [isFiltering, setIsFiltering] = useState(false);
@@ -209,6 +223,7 @@ function RouteComponent() {
 			minWidth: 50,
 			flex: 0.4,
 			filterOperators: equalsOnly,
+			sortable: false,
 			valueFormatter: (value: boolean) => {
 				if (value == true) {
 					return t("ui.feedback.enabled");
@@ -225,6 +240,7 @@ function RouteComponent() {
 			minWidth: 50,
 			flex: 0.8,
 			filterOperators: equalsOnly,
+			sortable: false,
 			editable: true,
 		},
 		{
@@ -232,6 +248,7 @@ function RouteComponent() {
 			headerName: "Location UUID",
 			minWidth: 50,
 			flex: 0.8,
+			sortable: false,
 			filterOperators: equalsOnly,
 		},
 		{
@@ -239,6 +256,7 @@ function RouteComponent() {
 			headerName: "Last imported",
 			minWidth: 100,
 			flex: 0.5,
+			sortable: true,
 			filterOperators: standardFilters,
 			valueGetter: (value: any, row: { lastImported: any }) => {
 				const lastImported = row.lastImported;
@@ -255,6 +273,7 @@ function RouteComponent() {
 			headerName: t("location.pickup_anywhere_status"),
 			minWidth: 50,
 			flex: 0.4,
+			sortable: false,
 			filterOperators: equalsOnly,
 			valueFormatter: (value: boolean) => {
 				if (value == true) {
@@ -315,6 +334,15 @@ function RouteComponent() {
 		placeholderData: (previousData) => previousData,
 	});
 
+	useDataGridErrorSafely(
+		gridId,
+		locationsError,
+		error,
+		setLocalFilterModel,
+		setLocalSortModel,
+		() => setSnackbarOpen(true)
+	);
+
 	// Show loading if initial load or libraries are loading
 	if ((locationsDataLoading && !locationsData) || librariesLoading) {
 		return <Loading title="Locations loading" subtitle="Please wait" />; // TRANSLATION NEEDED
@@ -338,39 +366,54 @@ function RouteComponent() {
 
 	return (
 		<>
-			<DataGrid
-				disablePivoting
-				rows={locationsData?.locations?.content ?? []}
-				columns={defaultLocationColumns}
-				columnVisibilityModel={columnVisibilityModel}
-				onColumnVisibilityModelChange={handleColumnVisibilityChange}
-				type="locations"
-				identifier="locations"
-				checkboxSelection={false}
-				disableAggregation={true}
-				disableHoverInteractions={true}
-				disableRowGrouping={true}
-				loading={shouldShowLoading} // Show loading when filtering or fetching
-				listViewEnabled={false}
-				noResultsText={t("audit.no_results")}
-				pagination
-				pivotingEnabled={false}
-				toolbarVisible
-				searchText="Search by location"
-				scrollbarVisible={false}
-				paginationMode="server"
-				paginationModel={paginationModel}
-				onPaginationModelChange={handlePaginationChange}
-				filterMode="server"
-				filterModel={filterModel} // Use immediate filter model for UI
-				onFilterModelChange={handleFilterChange}
-				sortingMode="server"
-				sortModel={sortModel}
-				onSortModelChange={handleSortChange}
-				rowCount={locationsData?.locations?.totalSize ?? 0}
-				rowModesModel={rowModesModel}
-				onRowModesModelChange={setRowModesModel}
-			/>
+			{
+				<DataGrid
+					disablePivoting
+					rows={locationsData?.locations?.content ?? []}
+					columns={defaultLocationColumns}
+					columnVisibilityModel={columnVisibilityModel}
+					onColumnVisibilityModelChange={handleColumnVisibilityChange}
+					type="locations"
+					identifier="locations"
+					checkboxSelection={false}
+					disableAggregation={true}
+					disableHoverInteractions={true}
+					disableRowGrouping={true}
+					loading={shouldShowLoading} // Show loading when filtering or fetching
+					listViewEnabled={false}
+					noResultsText={t("audit.no_results")}
+					pagination
+					pivotingEnabled={false}
+					toolbarVisible
+					searchText="Search by location"
+					scrollbarVisible={false}
+					paginationMode="server"
+					paginationModel={paginationModel}
+					onPaginationModelChange={handlePaginationChange}
+					filterMode="server"
+					filterModel={filterModel} // Use immediate filter model for UI
+					onFilterModelChange={handleFilterChange}
+					sortingMode="server"
+					sortModel={sortModel}
+					onSortModelChange={handleSortChange}
+					rowCount={locationsData?.locations?.totalSize ?? 0}
+					rowModesModel={rowModesModel}
+					onRowModesModelChange={setRowModesModel}
+				/>
+			}
+			{
+				<TimedAlert
+					open={snackbarOpen}
+					onCloseFunc={handleSnackbarClose}
+					severityType="warning"
+					// variant="filled"
+					// sx={{ width: "100%" }}
+					autoHideDuration={6000}
+					alertText={
+						t("ui.feedback.error.cannot_process") ||
+						"We could not process that operation, so we have reset the data grid options."
+					}></TimedAlert>
+			}
 		</>
 	);
 }

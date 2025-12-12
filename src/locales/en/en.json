@@ -673,6 +673,7 @@
 			"disabled": "Disabled",
 			"enabled": "Enabled",
 			"error": {
+				"cannot_process": "We could not process that operation, so we have reset the data grid options.",
 				"cannot_retrieve_record": "Unable to retrieve the record",
 				"cannot_find_record": "Unable to find the record",
 				"fetching": "Error fetching value",
