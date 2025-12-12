@@ -18,6 +18,8 @@ import {
 	Grid,
 	Chip,
 	Tab,
+	AlertTitle,
+	Alert,
 } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
@@ -41,6 +43,7 @@ import DetailPanelHeader from "@components/MasterDetail/components/DetailPanelHe
 import { Route } from "@/routes/__authenticated/requesting/$recordId";
 import CombinedRequestingModal from "@forms/CombinedRequestingModal/CombinedRequestingModal";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
+import { getAggregatedErrorMessage } from "@helpers/liveAvailabilityErrorMapper";
 
 interface CombinedData {
 	availability: ItemAvailabilityResponse;
@@ -128,12 +131,45 @@ export default function ClusterRecordComponent() {
 		return response.data;
 	}, [auth.user?.access_token, recordId, cfg.VITE_DCB_SEARCH_BASE]);
 
+	// const fetchCombinedData: QueryFunction<CombinedData> = async () => {
+	// 	const clusterDetailPromise = fetchClusterDetail();
+
+	// 	// We fetch this first to see if we even need to fetch the other one
+	// 	const comparisonItems = await fetchComparisonItems();
+
+	// 	let availability: ItemAvailabilityResponse;
+
+	// 	const [availability, clusterDetail, comparisonItems] = await Promise.all([
+	// 		fetchItemAvailability(),
+	// 		fetchClusterDetail(),
+	// 		fetchComparisonItems(),
+	// 	]);
+	// 	return { availability, clusterDetail, comparisonItems };
+	// };
+
 	const fetchCombinedData: QueryFunction<CombinedData> = async () => {
-		const [availability, clusterDetail, comparisonItems] = await Promise.all([
-			fetchItemAvailability(),
-			fetchClusterDetail(),
-			fetchComparisonItems(),
-		]);
+		const clusterDetailPromise = fetchClusterDetail();
+
+		// We fetch this first to see if we even need to fetch the other one
+		const comparisonItems = await fetchComparisonItems();
+
+		let availability: ItemAvailabilityResponse;
+
+		if (comparisonItems?.itemList && comparisonItems.itemList.length > 0) {
+			// If there are "items not shown", we need to then fetch the standard list to compare
+			availability = await fetchItemAvailability();
+		} else {
+			// If no items are returned in our "comparisonItems", proceed to return the response
+			availability = {
+				itemList: comparisonItems?.itemList ?? [],
+				timings: comparisonItems?.timings ?? 0,
+				bibClusterId: recordId,
+				errors: comparisonItems?.errors || [],
+			} as ItemAvailabilityResponse;
+		}
+
+		const clusterDetail = await clusterDetailPromise;
+
 		return { availability, clusterDetail, comparisonItems };
 	};
 
@@ -162,6 +198,9 @@ export default function ClusterRecordComponent() {
 	const requestableCount = data?.availability?.itemList?.length;
 
 	const canRequest = requestableCount !== undefined && requestableCount > 0;
+	const totalItemsCount = data?.comparisonItems?.itemList?.length ?? 0;
+	const hasZeroItems = !isLoading && data && totalItemsCount === 0;
+	const responseErrors = data?.comparisonItems?.errors || [];
 
 	const columns: GridColDef[] = [
 		{
@@ -563,12 +602,33 @@ export default function ClusterRecordComponent() {
 						spacing={{ xs: 2, md: 3 }}
 						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
 						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
+							{responseErrors != null && responseErrors?.length > 0 ? (
+								<Grid size={{ xs: 12 }}>
+									<Alert severity="error" sx={{ mb: 2 }}>
+										<AlertTitle>{t("ui.feedback.error.general")}</AlertTitle>
+										{/* Pass the errors array and the translation function */}
+										{getAggregatedErrorMessage(responseErrors, t)}
+									</Alert>
+								</Grid>
+							) : null}
+							{hasZeroItems ? (
+								<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
+									<Alert severity="info">
+										<AlertTitle>{t("ui.feedback.info.general")}</AlertTitle>
+										{t("requesting.live_availability_no_items") ||
+											"Live availability could not find any items for this record."}
+									</Alert>
+								</Grid>
+							) : null}
+
 							<Stack direction={"column"}>
-								<Typography variant="h4">
-									{t("requesting.shared_index.items_for_cluster", {
-										number: itemCount,
-									})}
-								</Typography>
+								{!hasZeroItems ? (
+									<Typography variant="h4">
+										{t("requesting.shared_index.items_for_cluster", {
+											number: itemCount,
+										})}
+									</Typography>
+								) : null}
 								{itemsNotShown?.length > 0 ? (
 									<Typography variant="h4">
 										{t("requesting.shared_index.items_not_shown_long", {
@@ -614,7 +674,6 @@ export default function ClusterRecordComponent() {
 								sortModel={[{ field: "availabilityDate", sort: "desc" }]}
 							/>
 						</Grid>
-
 						{itemsNotShown?.length > 0 ? (
 							<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
 								<Accordion

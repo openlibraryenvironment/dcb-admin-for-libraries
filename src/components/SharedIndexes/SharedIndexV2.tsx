@@ -121,7 +121,6 @@ export function SharedIndexV2() {
 
 	const handleApplyFilters = useCallback(
 		(newFilters: SearchFilter[]) => {
-			console.log("Handle apply filters triggered");
 			const activeFilters = newFilters.filter((f) => f.value);
 			setAppliedFilters(activeFilters);
 
@@ -170,7 +169,7 @@ export function SharedIndexV2() {
 				return { instances: [], totalRecords: 0 };
 			}
 
-			console.log("Generated Query:", query);
+			// console.log("Generated Query:", query);
 			let url: string;
 			let params: Record<string, any>;
 
@@ -234,6 +233,7 @@ export function SharedIndexV2() {
 	const {
 		data: searchResults,
 		isLoading,
+		isFetching,
 		isError,
 	} = useQuery({
 		queryKey: [
@@ -247,6 +247,7 @@ export function SharedIndexV2() {
 		staleTime: 1000 * 60 * 5, // 5 minutes,
 		placeholderData: keepPreviousData,
 	});
+	console.log(isFetching);
 
 	// // Reset pagination when the query changes ???????
 	// useEffect(() => {
@@ -350,7 +351,7 @@ export function SharedIndexV2() {
 				rowCount={searchResults?.totalRecords || 0}
 				paginationMode="server"
 				pivotingEnabled={false}
-				loading={isLoading}
+				loading={isFetching || isLoading}
 				checkboxSelection={false}
 				disableHoverInteractions={true} // But we must also specify in style overrides for this case only
 				filterMode="server"

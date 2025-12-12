@@ -254,6 +254,7 @@ export default function DataGrid({
 				slotProps={{ toolbar: { showQuickFilter: false } }}
 				sx={{
 					border: "0",
+					minHeight: rows.length === 0 ? "400px" : undefined, // ensures that if there's nothing there, we still see loading etc
 					"@media print": {
 						".MuiDataGrid-main": { color: "rgba(0, 0, 0, 0.87)" },
 					},
