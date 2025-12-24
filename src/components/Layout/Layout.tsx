@@ -55,6 +55,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
 					{ label: t("nav.mappings.title"), value: `${basePath}mappings` },
 					{ label: t("nav.locations.title"), value: `${basePath}locations` },
+					{ label: t("nav.bibs.title"), value: `${basePath}bibs` },
 					{ label: t("nav.settings.title"), value: `${basePath}settings` },
 
 					// ...(import.meta.env.DEV

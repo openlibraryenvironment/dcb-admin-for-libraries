@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-
+import i18n from "@/i18n";
 import { formatDuration } from "../formatDuration";
 import { PatronRequest } from "@models/PatronRequest";
 import {
@@ -878,6 +878,72 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 ];
 
+export const standardBibColumns: GridColDef[] = [
+	{
+		field: "title",
+		headerName: i18n.t("bibs.title_actual"),
+		minWidth: 150,
+		flex: 1,
+		sortable: false,
+		filterOperators: standardFilters,
+	},
+	{
+		field: "clusterRecordId",
+		headerName: i18n.t("bibs.cluster_uuid"),
+		minWidth: 50,
+		flex: 0.5,
+		sortable: false,
+		filterOperators: equalsOnly,
+		filterable: false,
+		valueGetter: (value: any, row: { contributesTo: { id: string } }) =>
+			row?.contributesTo?.id,
+	},
+	{
+		field: "sourceRecordId",
+		headerName: i18n.t("bibs.source_record_id"),
+		minWidth: 50,
+		sortable: false,
+		filterOperators: standardFilters,
+		flex: 0.5,
+	},
+	{
+		field: "sourceSystemId",
+		headerName: i18n.t("bibs.source_system_id"),
+		minWidth: 50,
+		sortable: false,
+		filterOperators: equalsOnly,
+		flex: 0.5,
+	},
+	{
+		field: "id",
+		headerName: i18n.t("bibs.id"),
+		minWidth: 100,
+		flex: 0.5,
+		sortable: false,
+		filterOperators: equalsOnly,
+	},
+	{
+		field: "dateUpdated",
+		headerName: i18n.t("bibs.date_updated"),
+		minWidth: 50,
+		flex: 0.6,
+		sortable: false,
+		filterable: false,
+		valueGetter: (value: string, row: { dateUpdated: string }) => {
+			const requestUpdated = row.dateUpdated;
+			return dayjs(requestUpdated).format("YYYY-MM-DD HH:mm");
+		},
+	},
+	{
+		field: "processVersion",
+		headerName: i18n.t("bibs.process_version"),
+		minWidth: 50,
+		sortable: false,
+		filterOperators: equalsOnly,
+		flex: 0.5,
+	},
+];
+
 export const defaultSupplierRequestColumnVisibility: GridColumnVisibilityModel =
 	{
 		canonicalItemType: false,
@@ -949,4 +1015,23 @@ export const standardLocationsColumnVisibility = {
 	code: true,
 	hostSystemName: false,
 	printLabel: false,
+};
+
+export const standardBibColumnVisibility = {
+	id: false,
+	dateCreated: false,
+	dateUpdated: true,
+	title: true,
+	author: false,
+	placeOfPublication: false,
+	publisher: false,
+	dateOfPublication: false,
+	edition: false,
+	isLargePrint: false,
+	typeOfRecord: false,
+	metadataScore: false,
+	processVersion: false,
+	contributesTo: false,
+	sourceSystemId: false,
+	sourceRecordId: true,
 };

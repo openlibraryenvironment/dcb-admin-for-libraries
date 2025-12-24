@@ -21,16 +21,32 @@
 	"a11y": {
 		"empty": "This field is empty"
 	},
-	"bib_record": {
+	"bibs": {
+		"author": "Author",
+		"canonical_metadata": "Canonical metadata",
 		"cluster_uuid": "Bib cluster UUID",
+		"date_created": "Date created",
+		"date_of_publication": "Date of publication",
+		"date_updated": "Date updated",
+		"edition": "Edition",
+		"id": "Bib record UUID",
+		"large_print": "Is large print?",
+		"metadata_score": "Metadata score",
+		"place_of_publication": "Place of publication",
+		"process_version": "Process version",
+		"publisher": "Publisher",
 		"record_created": "Record created",
 		"record_title": "Record title",
+		"record_type": "Type of record",
 		"record_updated": "Record updated",
+		"search": "Search by title",
 		"selected_bib_uuid": "Selected bib UUID",
+		"source_error": "An error occurred loading the source record for this bib",
 		"source_record": "Source record",
 		"source_record_id": "Source record ID",
 		"source_system_id": "Source system UUID",
 		"title": "Bib record",
+		"title_actual": "Title",
 		"view_cluster_record": "Click to view the page for this record, which has the title {{title}}"
 	},
 	"common": {
@@ -255,6 +271,9 @@
 		"to_value": "To value"
 	},
 	"nav": {
+		"bibs": {
+			"title": "Bib records"
+		},
 		"contacts": {
 			"title": "Contacts"
 		},
@@ -689,6 +708,7 @@
 				"general": "Information"
 			},
 			"not_set": "Not set",
+			"please_wait": "Please wait",
 			"reveal_more": "and {{number}} more",
 			"show_less": "Show less",
 			"show_more": "Show more",

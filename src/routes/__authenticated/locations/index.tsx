@@ -82,7 +82,7 @@ function RouteComponent() {
 	const debouncedFilterModel = useDebounce(filterModel, 500);
 
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
-		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }]
+		storedState.sort ?? [{ field: "lastImported", sort: "desc" }]
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
@@ -287,7 +287,6 @@ function RouteComponent() {
 		},
 	];
 
-	// Patron requests query - using debounced filter model
 	const {
 		data: locationsData,
 		isLoading: locationsDataLoading,
@@ -300,7 +299,7 @@ function RouteComponent() {
 			dcbApiBase,
 			headers,
 			agencyId,
-			debouncedFilterModel, // Use debounced filter model
+			debouncedFilterModel,
 			paginationModel.pageSize,
 			paginationModel.page,
 			sortModel[0]?.field,
@@ -330,7 +329,6 @@ function RouteComponent() {
 		// refetchInterval: 1000000, // milliseconds
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
-		// Keep previous data while new data is loading (v5 syntax)
 		placeholderData: (previousData) => previousData,
 	});
 
@@ -343,9 +341,15 @@ function RouteComponent() {
 		() => setSnackbarOpen(true)
 	);
 
-	// Show loading if initial load or libraries are loading
 	if ((locationsDataLoading && !locationsData) || librariesLoading) {
-		return <Loading title="Locations loading" subtitle="Please wait" />; // TRANSLATION NEEDED
+		return (
+			<Loading
+				title={t("ui.info.loading.document", {
+					document_type: t("nav.patronRequests.title").toLowerCase(),
+				})}
+				subtitle={t("ui.feedback.please_wait")}
+			/>
+		);
 	}
 	if (locationsError || librariesError) {
 		console.log(error, locationsError, librariesError);

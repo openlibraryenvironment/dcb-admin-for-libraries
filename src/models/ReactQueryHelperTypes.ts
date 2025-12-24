@@ -9,6 +9,7 @@ import { AuditItem } from "./AuditItem";
 import { SupplierRequest } from "./SupplierRequest";
 import { HostLMS } from "./HostLMS";
 import { Agency } from "./Agency";
+import { Bib } from "./Bib";
 
 // Helper types for our GraphQL responses - previously this was taken care of by Apollo
 // Bridges the gap between react-query, typescript and GraphQL.
@@ -70,6 +71,13 @@ export interface HostLmsQueryData {
 export interface AgencyQueryData {
 	agencies: {
 		content: Agency[];
+		totalSize: number;
+	};
+}
+
+export interface BibsQueryData {
+	sourceBibs: {
+		content: Bib[];
 		totalSize: number;
 	};
 }

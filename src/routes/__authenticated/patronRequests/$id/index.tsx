@@ -932,7 +932,7 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Stack direction={"column"}>
 								<Typography variant="attributeTitle">
-									{t("bib_record.record_title")}
+									{t("bibs.record_title")}
 								</Typography>
 								<RenderAttribute
 									attribute={patronRequest?.clusterRecord?.title}
@@ -942,7 +942,7 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Stack direction={"column"}>
 								<Typography variant="attributeTitle">
-									{t("bib_record.record_created")}
+									{t("bibs.record_created")}
 								</Typography>
 								<RenderAttribute
 									attribute={dayjs(
@@ -954,7 +954,7 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Stack direction={"column"}>
 								<Typography variant="attributeTitle">
-									{t("bib_record.record_updated")}
+									{t("bibs.record_updated")}
 								</Typography>
 								<RenderAttribute
 									attribute={dayjs(
@@ -966,13 +966,13 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Stack direction={"column"}>
 								<Typography variant="attributeTitle">
-									{t("bib_record.cluster_uuid")}
+									{t("bibs.cluster_uuid")}
 								</Typography>
 								{bibClusterRecordUrl == "" ? (
 									<RenderAttribute attribute={patronRequest?.bibClusterId} />
 								) : (
 									<Tooltip
-										title={t("bib_record.view_cluster_record", {
+										title={t("bibs.view_cluster_record", {
 											id: patronRequest?.bibClusterId,
 											title: patronRequest?.clusterRecord?.title,
 										})}>
@@ -992,7 +992,7 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Stack direction={"column"}>
 								<Typography variant="attributeTitle">
-									{t("bib_record.selected_bib_uuid")}
+									{t("bibs.selected_bib_uuid")}
 								</Typography>
 								<RenderAttribute
 									attribute={patronRequest?.clusterRecord?.selectedBib}
@@ -1002,7 +1002,7 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Stack direction={"column"}>
 								<Typography variant="attributeTitle">
-									{t("bib_record.source_record_id")}
+									{t("bibs.source_record_id")}
 								</Typography>
 								<RenderAttribute
 									attribute={
@@ -1014,7 +1014,7 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Stack direction={"column"}>
 								<Typography variant="attributeTitle">
-									{t("bib_record.source_system_id")}
+									{t("bibs.source_system_id")}
 								</Typography>
 								<RenderAttribute
 									attribute={
@@ -1037,7 +1037,7 @@ function RouteComponent() {
 							id="request_source_record"
 							expandIcon={<ExpandMore fontSize="large" />}>
 							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
-								{t("bib_record.source_record")}
+								{t("bibs.source_record")}
 							</Typography>
 						</AccordionSummary>
 						<AccordionDetails>

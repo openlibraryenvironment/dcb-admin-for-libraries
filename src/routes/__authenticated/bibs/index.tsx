@@ -6,25 +6,23 @@ import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import {
-	defaultPatronRequestColumnVisibility,
-	standardPatronRequestColumns,
+	standardBibColumns,
+	standardBibColumnVisibility,
 } from "@helpers/dataGrid/columns";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
-import { Library } from "@models/Library";
 import {
+	BibsQueryData,
 	LibrariesQueryData,
-	PatronRequestQueryData,
 } from "@models/ReactQueryHelperTypes";
 import {
-	GridColDef,
 	GridColumnVisibilityModel,
 	GridFilterModel,
 	GridPaginationModel,
 	GridRowModesModel,
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
-import { getLibraries } from "@queries/getLibraries";
-import { getPatronRequests } from "@queries/getPatronRequests";
+import { getBibs } from "@queries/getBibs";
+import { getLibrary } from "@queries/getLibrary";
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
@@ -36,13 +34,12 @@ import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 
-export const Route = createFileRoute("/__authenticated/patronRequests/")({
+export const Route = createFileRoute("/__authenticated/bibs/")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	// const navigate = useNavigate();
 	const auth = useAuth();
 
 	const { cfg } = useRouter().options.context as { cfg: any };
@@ -55,7 +52,7 @@ function RouteComponent() {
 		}),
 		[token]
 	);
-	const gridId = "mainPatronRequests";
+	const gridId = "bibs";
 	const {
 		sortModel: storedSortModel,
 		filterModel: storedFilterModel,
@@ -78,6 +75,18 @@ function RouteComponent() {
 		useState<GridPaginationModel>(
 			storedState.pagination ?? { page: 0, pageSize: 25 }
 		);
+	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
+		storedState.filter ?? { items: [] }
+	);
+	const debouncedFilterModel = useDebounce(filterModel, 500);
+
+	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
+		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }]
+	);
+	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
+		storedState.columnVisibility ?? standardBibColumnVisibility
+	);
 
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -90,18 +99,6 @@ function RouteComponent() {
 		}
 		setSnackbarOpen(false);
 	};
-	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
-		storedState.filter ?? { items: [] }
-	);
-	const debouncedFilterModel = useDebounce(filterModel, 500);
-
-	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
-		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }]
-	);
-	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? defaultPatronRequestColumnVisibility
-	);
 
 	// Add state to track if we're filtering
 	const [isFiltering, setIsFiltering] = useState(false);
@@ -162,79 +159,42 @@ function RouteComponent() {
 
 	const code = auth.user?.profile?.code;
 
-	// Library query
 	const {
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
 	} = useQuery<LibrariesQueryData>({
-		queryKey: ["allLibraries", headers, code, dcbApiBase],
+		queryKey: ["libraryInfo", headers, code, dcbApiBase],
 		queryFn: async () =>
 			request(
 				`${dcbApiBase}/graphql`,
-				getLibraries,
+				getLibrary,
 				{
-					query: "",
-					pagesize: 1000,
+					query: "agencyCode:" + code,
+					pagesize: 10,
 					pageno: 0,
-					order: "fullName",
-					orderBy: "ASC",
+					orderBy: "fullName",
+					order: "DESC",
 				},
 				headers
 			),
 	});
+	const sourceSystemId =
+		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.id;
+	// Bib Columns
 
-	const libraries = librariesData?.libraries?.content ?? []; // This is all of the libraries, to be supplied to filters.
-	const userLibrary = libraries.find((library) => library.agencyCode === code); // This is the user's library
-
-	const userLibraryHostLmsCode = userLibrary?.agency?.hostLms?.code;
-
-	const libraryFilterOptions = useMemo(() => {
-		if (!libraries) return [];
-		console.log("Libraries is", libraries);
-
-		return libraries.map((lib: Library) => ({
-			value: lib.agencyCode, // The value to be used in the filter (e.g., 'agency-code-123')
-			label: lib.fullName, // The human-readable name (e.g., 'Main Library')
-		}));
-	}, [libraries]);
-
-	// Columns that have dynamic options for their filters
-	const dynamicPatronRequestColumns = useMemo(() => {
-		const supplyingAgencyField = "supplyingAgencyCode";
-
-		return standardPatronRequestColumns.map((col) => {
-			if (col.field === supplyingAgencyField) {
-				console.log("Field is found");
-				const { ...baseColProps } = col;
-				const selectCol: GridColDef = {
-					...baseColProps, // Spread the "safe" base properties
-					type: "singleSelect",
-					valueOptions: libraryFilterOptions,
-				};
-				// Keep all of the existing properties, but change type to single select
-				// And provide the names as the actual thing the user sees.
-				return selectCol;
-			}
-			console.log("Field not found");
-			// Return all other columns unchanged for now. Other columns might benefit from this approach
-			return col;
-		});
-	}, [libraryFilterOptions]);
-
-	// Patron requests query - using debounced filter model
 	const {
-		data: patronRequestData,
-		isLoading: isPatronRequestLoading,
-		isError: isPatronRequestError,
+		data: bibsData,
+		isLoading: bibsDataLoading,
+		isError: bibsError,
 		error,
 		isFetching,
-	} = useQuery<PatronRequestQueryData>({
+	} = useQuery<BibsQueryData>({
 		queryKey: [
-			"getPatronRequests",
+			"getBibs",
 			dcbApiBase,
 			headers,
-			userLibraryHostLmsCode,
+			sourceSystemId,
 			debouncedFilterModel, // Use debounced filter model
 			paginationModel.pageSize,
 			paginationModel.page,
@@ -242,26 +202,19 @@ function RouteComponent() {
 			sortModel[0]?.sort,
 		],
 		queryFn: async () => {
-			const baseQuery = `patronHostlmsCode:${userLibraryHostLmsCode}`;
+			const baseQuery = `sourceSystemId:${sourceSystemId}`;
 			const queryVariables = {
 				query:
-					processGridFilterModel(debouncedFilterModel, baseQuery, [
-						"status",
-						"description",
-					]) ?? "",
+					processGridFilterModel(debouncedFilterModel, baseQuery, ["title"]) ??
+					"",
 				pagesize: paginationModel.pageSize ?? 200,
 				pageno: paginationModel.page ?? 0,
-				order: sortModel[0]?.field ?? "dateCreated",
+				order: sortModel[0]?.field ?? "dateUpdated",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
 			};
-			return request(
-				`${dcbApiBase}/graphql`,
-				getPatronRequests,
-				queryVariables,
-				headers
-			);
+			return request(`${dcbApiBase}/graphql`, getBibs, queryVariables, headers);
 		},
-		enabled: !!token && !!dcbApiBase && !!userLibraryHostLmsCode,
+		enabled: !!token && !!dcbApiBase && !!sourceSystemId,
 		// refetchInterval: 1000000, // milliseconds
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
@@ -271,26 +224,25 @@ function RouteComponent() {
 
 	useDataGridErrorSafely(
 		gridId,
-		isPatronRequestError,
+		bibsError,
 		error,
 		setLocalFilterModel,
 		setLocalSortModel,
 		() => setSnackbarOpen(true)
 	);
 
-	// Show loading if initial load or libraries are loading
-	if ((isPatronRequestLoading && !patronRequestData) || librariesLoading) {
+	if ((bibsDataLoading && !bibsData) || librariesLoading) {
 		return (
 			<Loading
 				title={t("ui.info.loading.document", {
-					document_type: t("nav.patronRequests.title").toLowerCase(),
+					document_type: t("nav.bibs.title").toLowerCase(),
 				})}
 				subtitle={t("ui.feedback.please_wait")}
 			/>
 		);
 	}
-	if (isPatronRequestError) {
-		console.log(error, isPatronRequestError, librariesError);
+	if (bibsError || librariesError) {
+		console.log(error, bibsError, librariesError);
 		return (
 			<Error
 				title={t("ui.feedback.error.cannot_retrieve_record")}
@@ -302,52 +254,46 @@ function RouteComponent() {
 		);
 	}
 
-	// Determine if we should show loading state
 	const shouldShowLoading =
-		isFiltering ||
-		isPatronRequestLoading ||
-		(isFetching && !!patronRequestData);
+		isFiltering || bibsDataLoading || (isFetching && !!bibsData);
 
 	return (
 		<>
 			{
 				<DataGrid
 					disablePivoting
-					rows={patronRequestData?.patronRequests?.content ?? []}
-					columns={dynamicPatronRequestColumns}
+					rows={bibsData?.sourceBibs?.content ?? []}
+					columns={standardBibColumns}
 					columnVisibilityModel={columnVisibilityModel}
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
-					type="patronRequests"
-					identifier="patronRequestsMain"
+					type="bibs"
+					identifier="bibs"
 					checkboxSelection={false}
 					disableAggregation={true}
 					disableHoverInteractions={true}
 					disableRowGrouping={true}
-					loading={shouldShowLoading} // Show loading when filtering or fetching
+					loading={shouldShowLoading}
 					listViewEnabled={false}
 					noResultsText={t("audit.no_results")}
 					pagination
 					pivotingEnabled={false}
 					toolbarVisible
-					searchText="Search by patron request"
+					searchText={"bibs.search"}
 					scrollbarVisible={false}
 					paginationMode="server"
 					paginationModel={paginationModel}
 					onPaginationModelChange={handlePaginationChange}
 					filterMode="server"
-					filterModel={filterModel} // Use immediate filter model for UI
+					filterModel={filterModel}
 					onFilterModelChange={handleFilterChange}
 					sortingMode="server"
 					sortModel={sortModel}
 					onSortModelChange={handleSortChange}
-					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
+					rowCount={bibsData?.sourceBibs?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
 				/>
 			}
-
-			{/* // Anchor to bottom-center or bottom-left to avoid covering grid headers
-				// anchorOrigin={{ vertical: "bottom", horizontal: "center" }}> */}
 			{
 				<TimedAlert
 					open={snackbarOpen}
