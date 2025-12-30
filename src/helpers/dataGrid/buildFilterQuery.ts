@@ -3,6 +3,7 @@ import {
 	conversionFieldsMap,
 	numericOperators,
 } from "@constants/dataGrid/fields";
+import dayjs from "dayjs";
 
 export const buildFilterQuery = (
 	field: string,
@@ -59,6 +60,38 @@ export const buildFilterQuery = (
 				return `${field}:[* TO ${toValue}]`;
 			}
 			return "";
+		}
+	}
+	// Date range handling
+	// We want to handle is ON OR after, is on or before,range,
+	// On or after - range with open bound (Date TO *)
+	// On or before - range with open bound (Date TO *)
+	// We should also handle "Today"
+	if (operator === "luceneDateRange" && Array.isArray(value)) {
+		const [start, end] = value;
+
+		// We need to handle open bounds (*) and we also need to convert to UTC. But can't convert null to UTC so we must check
+		// In the absence of a value, assume open bounds.
+		// In the absence of both values, ignore input entirely.
+		const startStr = start ? dayjs(start).toISOString() : "*";
+		const endStr = end ? dayjs(end).toISOString() : "*";
+
+		if (startStr === "*" && endStr === "*") return "";
+
+		return `${field}:[${startStr} TO ${endStr}]`;
+	}
+
+	// Handle date-time "before" or "after" operations
+	if (operator === "onOrAfter" || operator === "onOrBefore") {
+		if (!value) return "";
+		const dateStr = dayjs(value).toISOString();
+
+		if (operator === "onOrAfter") {
+			// Essentially this is just from X (inclusive) to now
+			return `${field}:[${dateStr} TO *]`;
+		}
+		if (operator === "onOrBefore") {
+			return `${field}:[* TO ${dateStr}]`;
 		}
 	}
 

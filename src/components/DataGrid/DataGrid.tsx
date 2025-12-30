@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { NoResultsOverlay } from "./components/NoResultsOverlay";
 import { useNavigate } from "@tanstack/react-router";
 import {
+	expandedFilterPanelTypes,
 	nonClickableTypes,
 	specialRedirectionTypes,
 } from "@constants/dataGrid/types";
@@ -105,6 +106,7 @@ export default function DataGrid({
 }: DataGridProps) {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
+	const expandedFilterPanel = expandedFilterPanelTypes.includes(type);
 	const getDetailPanelHeight = useCallback(() => "auto", []); // Only necessary because master detail is not applicable to all grids yet
 	const [alert, setAlert] = useState<any>({
 		open: false,
@@ -251,7 +253,16 @@ export default function DataGrid({
 						<NoResultsOverlay noResultsMessage={noResultsText} />
 					),
 				}}
-				slotProps={{ toolbar: { showQuickFilter: false } }}
+				slotProps={{
+					toolbar: { showQuickFilter: false },
+					filterPanel: expandedFilterPanel
+						? {
+								sx: {
+									"& .MuiDataGrid-filterFormValueInput": { minWidth: 420 }, // ideally this would be dynamic. something stopping the date-time-range picker from accepting this. If it can't be dynamic it should only apply to grids of that nature
+								},
+							}
+						: undefined,
+				}}
 				sx={{
 					border: "0",
 					minHeight: rows.length === 0 ? "400px" : undefined, // ensures that if there's nothing there, we still see loading etc
@@ -279,7 +290,8 @@ export default function DataGrid({
 						overflow: "hidden", // Prevent scrollbars in the detail panel
 						height: "auto", // Adjust height automatically
 					},
-					// --- CUSTOM OVERRIDES (will merge with and override base styles) ---
+
+					// CUSTOM OVERRIDES (will merge with and override base styles so be careful)
 					...styleOverrides,
 				}}
 			/>

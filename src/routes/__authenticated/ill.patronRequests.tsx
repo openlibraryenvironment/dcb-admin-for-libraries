@@ -31,13 +31,13 @@ import {
 } from "@models/ReactQueryHelperTypes";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import request from "graphql-request";
-import { standardPatronRequestColumns } from "@helpers/dataGrid/columns";
 import DataGrid from "@components/DataGrid/DataGrid";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { getLibrary } from "@queries/getLibrary";
 import { useILLAuth } from "@/lib/illAuth";
 import Loading from "@components/Loading/Loading";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
+import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
 
 interface ILLPatronRequest {
 	id: string;

@@ -7,8 +7,6 @@ export function determineDataGridPathOnClick(type: string, rowId: string) {
 	if (specialRedirectionTypes.includes(type)) {
 		if (type === "dataChangeLog") {
 			return `/serviceInfo/dataChangeLog/${rowId}`;
-		} else if (type == "welcomeLibraries") {
-			return `/libraries/${rowId}`;
 		} else {
 			return `/patronRequests/${rowId}`;
 		}

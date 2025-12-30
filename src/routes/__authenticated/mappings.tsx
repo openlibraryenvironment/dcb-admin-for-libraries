@@ -6,7 +6,8 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import { standardRefValueMappingColumns } from "@helpers/dataGrid/columns";
+import { standardRefValueMappingColumns } from "@helpers/dataGrid/columns/referenceValueMappingColumns";
+import { referenceValueMappingColumnVisibility } from "@helpers/dataGrid/columnVisibility/referenceValueMappingColumnVisibilityModel";
 import { computeMutation } from "@helpers/dataGrid/computeMutation";
 import {
 	getSortOrderForServer,
@@ -100,7 +101,7 @@ function RouteComponent() {
 	const [deleteConfirmationId, setDeleteConfirmationId] =
 		useState<GridRowId | null>(null);
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? {}
+		storedState.columnVisibility ?? referenceValueMappingColumnVisibility
 	);
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -446,7 +447,7 @@ function RouteComponent() {
 				<DataGrid
 					disablePivoting
 					identifier={gridId}
-					type="ReferenceValueMappings"
+					type="referenceValueMappings"
 					columns={refValueColumns}
 					rows={mappingsData?.referenceValueMappings?.content ?? []}
 					rowCount={mappingsData?.referenceValueMappings?.totalSize ?? 0}

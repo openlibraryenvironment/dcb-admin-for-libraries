@@ -5,15 +5,14 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import { equalsOnly, standardFilters } from "@constants/filters/filters";
-import { standardLocationsColumnVisibility } from "@helpers/dataGrid/columns";
+import { defaultLocationColumns } from "@helpers/dataGrid/columns/locationColumns";
+import { standardLocationsColumnVisibility } from "@helpers/dataGrid/columnVisibility/locationColumnVisibility";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import {
 	LibrariesQueryData,
 	LocationsQueryData,
 } from "@models/ReactQueryHelperTypes";
 import {
-	GridColDef,
 	GridColumnVisibilityModel,
 	GridFilterModel,
 	GridPaginationModel,
@@ -28,7 +27,6 @@ import {
 	// useNavigate,
 	useRouter,
 } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import request from "graphql-request";
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -182,110 +180,6 @@ function RouteComponent() {
 			),
 	});
 	const agencyId = librariesData?.libraries?.content?.[0]?.agency?.id;
-	const defaultLocationColumns: GridColDef[] = [
-		// ...customColumns,
-		{
-			field: "hostSystemName",
-			headerName: "Host LMS name",
-			minWidth: 150,
-			flex: 0.6,
-			filterable: false,
-			sortable: false,
-			valueGetter: (value, row: { hostSystem: { name: string } }) =>
-				row?.hostSystem?.name,
-		},
-		{
-			field: "name",
-			headerName: "Location name",
-			minWidth: 150,
-			flex: 0.6,
-			editable: true,
-			filterOperators: standardFilters,
-		},
-		{
-			field: "printLabel",
-			headerName: "Print label",
-			minWidth: 150,
-			flex: 0.6,
-			editable: true,
-			filterOperators: standardFilters,
-		},
-		{
-			field: "code",
-			headerName: "Location code",
-			minWidth: 50,
-			flex: 0.4,
-			filterOperators: standardFilters,
-		},
-		{
-			field: "isPickup",
-			headerName: t("location.pickup_status"),
-			minWidth: 50,
-			flex: 0.4,
-			filterOperators: equalsOnly,
-			sortable: false,
-			valueFormatter: (value: boolean) => {
-				if (value == true) {
-					return t("ui.feedback.enabled");
-				} else if (value == false) {
-					return t("ui.feedback.disabled");
-				} else {
-					return t("ui.feedback.not_set");
-				}
-			},
-		},
-		{
-			field: "localId",
-			headerName: t("details.local_id"),
-			minWidth: 50,
-			flex: 0.8,
-			filterOperators: equalsOnly,
-			sortable: false,
-			editable: true,
-		},
-		{
-			field: "id",
-			headerName: "Location UUID",
-			minWidth: 50,
-			flex: 0.8,
-			sortable: false,
-			filterOperators: equalsOnly,
-		},
-		{
-			field: "lastImported",
-			headerName: "Last imported",
-			minWidth: 100,
-			flex: 0.5,
-			sortable: true,
-			filterOperators: standardFilters,
-			valueGetter: (value: any, row: { lastImported: any }) => {
-				const lastImported = row.lastImported;
-				const formattedDate = dayjs(lastImported).format("YYYY-MM-DD HH:mm");
-				if (formattedDate == "Invalid Date") {
-					return "";
-				} else {
-					return formattedDate;
-				}
-			},
-		},
-		{
-			field: "isPickupAnywhere",
-			headerName: t("location.pickup_anywhere_status"),
-			minWidth: 50,
-			flex: 0.4,
-			sortable: false,
-			filterOperators: equalsOnly,
-			valueFormatter: (value: boolean) => {
-				if (value == true) {
-					return t("ui.feedback.enabled");
-				} else if (value == false) {
-					return t("ui.feedback.disabled");
-				} else {
-					return t("ui.feedback.not_set");
-				}
-			},
-		},
-	];
 
 	const {
 		data: locationsData,
@@ -345,7 +239,7 @@ function RouteComponent() {
 		return (
 			<Loading
 				title={t("ui.info.loading.document", {
-					document_type: t("nav.patronRequests.title").toLowerCase(),
+					document_type: t("nav.patron_requests.title").toLowerCase(),
 				})}
 				subtitle={t("ui.feedback.please_wait")}
 			/>

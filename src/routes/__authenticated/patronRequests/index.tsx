@@ -5,10 +5,8 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import {
-	defaultPatronRequestColumnVisibility,
-	standardPatronRequestColumns,
-} from "@helpers/dataGrid/columns";
+import { defaultPatronRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/patronRequestColumnVisibility";
+import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import { Library } from "@models/Library";
 import {
@@ -216,7 +214,6 @@ function RouteComponent() {
 				// And provide the names as the actual thing the user sees.
 				return selectCol;
 			}
-			console.log("Field not found");
 			// Return all other columns unchanged for now. Other columns might benefit from this approach
 			return col;
 		});
@@ -283,7 +280,7 @@ function RouteComponent() {
 		return (
 			<Loading
 				title={t("ui.info.loading.document", {
-					document_type: t("nav.patronRequests.title").toLowerCase(),
+					document_type: t("nav.patron_requests.title").toLowerCase(),
 				})}
 				subtitle={t("ui.feedback.please_wait")}
 			/>

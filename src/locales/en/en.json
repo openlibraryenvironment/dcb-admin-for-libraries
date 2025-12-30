@@ -674,15 +674,20 @@
 				"records": "Exporting {{count}} records from the data grid."
 			},
 			"filters": {
+				"between": "Between",
 				"days_from": "Days from",
 				"days_to": "Days to",
 				"equals": "Equals",
 				"from": "From",
 				"greater_than_exclusive": "Greater than",
 				"greater_than_inclusive": "Greater than or equal to",
+				"last_thirty_days": "Last 30 days",
+				"last_ninety_days": "Last 90 days",
 				"less_than_exclusive": "Less than",
 				"less_than_inclusive": "Less than or equal to",
 				"not_equal": "Does not equal",
+				"on_or_after": "On or after",
+				"on_or_before": "On or before",
 				"to": "To"
 			},
 			"edit_summary": "Edit {{entity}}",

@@ -5,10 +5,8 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import {
-	defaultSupplierRequestColumnVisibility,
-	standardSupplierRequestColumns,
-} from "@helpers/dataGrid/columns";
+import { standardSupplierRequestColumns } from "@helpers/dataGrid/columns/supplierRequestColumns";
+import { defaultSupplierRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/supplierRequestColumnVisibility";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import { Library } from "@models/Library";
 import {

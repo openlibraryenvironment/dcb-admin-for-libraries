@@ -5,10 +5,8 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import {
-	standardBibColumns,
-	standardBibColumnVisibility,
-} from "@helpers/dataGrid/columns";
+import { standardBibColumns } from "@helpers/dataGrid/columns/bibColumns";
+import { standardBibColumnVisibility } from "@helpers/dataGrid/columnVisibility/bibColumnVisbility";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import {
 	BibsQueryData,
