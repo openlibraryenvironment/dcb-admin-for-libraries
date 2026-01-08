@@ -1,3 +1,17 @@
+# [1.8.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.7.1...v1.8.0) (2026-01-08)
+
+
+### Bug Fixes
+
+* Fix for last 30 / 90 days filter [DCB-2110] ([5690292](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/569029266fed53d19092502546dee5fff6050073))
+* Improvements to searching [DCB-2114] ([105d729](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/105d729f3a5bfcba0904ff097ebc35fd069157af))
+
+
+### Features
+
+* Add bib records section [DCB-2088] ([fa5de4c](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/fa5de4c14459fd5a0912e2a795bdd38d4d8e5ef3))
+* Implement date-time range filtering [DCB-2110] ([b4fffcf](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/b4fffcf0d2fe29bbf9dc134478135173caa3a36f))
+
 ## [1.7.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.7.0...v1.7.1) (2025-12-12)
 
 
