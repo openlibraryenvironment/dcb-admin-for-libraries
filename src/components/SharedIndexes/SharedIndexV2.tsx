@@ -182,7 +182,7 @@ export function SharedIndexV2() {
 				};
 			} else {
 				// Otherwise, use the general search endpoint
-				url = `${cfg.VITE_DCB_SEARCH_BASE}/public/search/instances`;
+				url = `${cfg.VITE_DCB_SEARCH_BASE}/search/instances`;
 				params = {
 					query: query,
 					// queryType: queryType,

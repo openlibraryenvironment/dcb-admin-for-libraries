@@ -46,7 +46,10 @@ export const buildQuery = (filters: SearchFilter[]): string => {
 		if (queryType === "lucene") {
 			fieldQuery = buildLuceneFieldQuery(filter.field, value);
 		} else {
-			fieldQuery = `(${fieldMapping} ${value})`;
+			fieldQuery =
+				fieldMapping == CQL_FIELD_MAPPING.isbn
+					? `${fieldMapping} "${value}"`
+					: `(${fieldMapping} ${value})`;
 		}
 
 		// Handle our Boolean operators for chained filters. AND, OR, NOT currently supported.
