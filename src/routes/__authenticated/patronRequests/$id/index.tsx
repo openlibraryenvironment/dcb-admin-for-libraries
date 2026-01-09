@@ -50,13 +50,12 @@ import { HostLMS } from "@models/HostLMS";
 import { getHostLms } from "@queries/getHostLms";
 import { getAgency } from "@queries/getAgency";
 import { Agency } from "@models/Agency";
+import { cleanupStatuses } from "@constants/statuses/cleanupStatuses";
+import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
 	component: RouteComponent,
 });
-
-const untrackedStatuses = ["COMPLETED", "FINALISED", "CANCELLED", "ERROR"];
-const cleanupStatuses = ["ERROR"];
 
 function RouteComponent() {
 	const { id } = Route.useParams();
@@ -752,11 +751,11 @@ function RouteComponent() {
 								</Typography>
 								<RenderAttribute attribute={patronRequest?.status} />
 							</Stack>
-							{auth?.user?.profile?.roles?.includes("CONSORTIUM_ADMIN") ? (
+							{auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
 								<Tooltip
 									title={
 										cleanupStatuses.includes(patronRequest?.status)
-											? // Must be both request with ERROR or non-terminal state and a user with CONSORTIUM_ADMIN
+											? // Must be both request with ERROR or non-terminal state and a user with LIBRARY_ADMIN
 												t("patron_request.cleanup_info")
 											: t("patron_request.cleanup_disabled") // Tooltip text when disabled
 									}>

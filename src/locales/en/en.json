@@ -363,7 +363,7 @@
 		"local_item_type": "Local item type",
 		"local_request_status": "Local request status",
 		"local_request_status_raw": "Raw local request status",
-		"local_supplier_id": "Local supplier ID",
+		"local_supplier_id": "Supplier request ID",
 		"next_expected_status": "Next expected status",
 		"next_poll": "Next status check after",
 		"out_of_sequence": "Out of sequence",
