@@ -1,3 +1,10 @@
+## [1.8.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.8.0...v1.8.1) (2026-01-09)
+
+
+### Bug Fixes
+
+* Improve cleanup behaviour [DCB-2063] ([6d5a9c9](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/6d5a9c919688bebeea74c7d33c51d56e971c4098))
+
 # [1.8.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.7.1...v1.8.0) (2026-01-08)
 
 
