@@ -210,7 +210,7 @@ function HomeComponent() {
 			setChangedFields({});
 			setEditMode(false);
 			refetch();
-			console.log(data);
+			// console.log(data);
 			setAlert({
 				open: true,
 				severity: "success",

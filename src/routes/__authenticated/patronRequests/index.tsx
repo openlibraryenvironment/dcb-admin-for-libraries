@@ -189,7 +189,6 @@ function RouteComponent() {
 
 	const libraryFilterOptions = useMemo(() => {
 		if (!libraries) return [];
-		console.log("Libraries is", libraries);
 
 		return libraries.map((lib: Library) => ({
 			value: lib.agencyCode, // The value to be used in the filter (e.g., 'agency-code-123')
@@ -203,7 +202,6 @@ function RouteComponent() {
 
 		return standardPatronRequestColumns.map((col) => {
 			if (col.field === supplyingAgencyField) {
-				console.log("Field is found");
 				const { ...baseColProps } = col;
 				const selectCol: GridColDef = {
 					...baseColProps, // Spread the "safe" base properties

@@ -344,7 +344,6 @@ function RouteComponent() {
 
 	const patronLibraries: Library[] =
 		patronLibraryData?.libraries?.content ?? [];
-	console.log(patronLibraries);
 	const patronLibrary = patronLibraries?.[0];
 
 	console.log(patronLibraryError);

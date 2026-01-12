@@ -405,7 +405,6 @@ export default function ExpeditedCheckout({
 		};
 	}, [activeStep, checkoutCompleted, stepError]);
 	console.log(errors);
-	console.log(formValues);
 
 	const validatePatronMutation = useMutation<
 		PatronLookupResponse,
