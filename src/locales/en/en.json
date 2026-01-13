@@ -469,6 +469,7 @@
 		"description": "Description",
 		"format": "Format: {{formats}}",
 		"format_title": "Format(s)",
+		"history": "Requesting history",
 		"hold_count": "Hold count",
 		"identifiers": "Identifiers",
 		"isbn_title": "ISBN identifiers",

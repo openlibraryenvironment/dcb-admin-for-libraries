@@ -58,6 +58,9 @@ interface CombinedData {
 // Must be a schema in dcb-locate somewhere
 // Then we also need to think about graphql - can we query clusters by their source systems ...
 
+// requesting history - query is bibClusterId AND (patron | supplying | pickup )
+// 3 columns: Supplying, Borrowing, Pickup
+
 export default function ClusterRecordComponent() {
 	const { cfg } = useRouter().options.context as { cfg: any };
 	// const { indexCode, recordId } = Route.useParams();
@@ -364,6 +367,7 @@ export default function ClusterRecordComponent() {
 					className="secondary">
 					<Tab label={t("requesting.record_information")} />
 					<Tab label={t("requesting.items")} />
+					<Tab label={t("requesting.history")} />
 				</TabList>
 				<TabPanel value={0}>
 					<Grid

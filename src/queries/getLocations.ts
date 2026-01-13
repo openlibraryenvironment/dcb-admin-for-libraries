@@ -25,6 +25,7 @@ export const getLocations = gql`
 				name
 				type
 				isPickup
+				isEnabledForPickupAnywhere
 				printLabel
 				localId
 				deliveryStops

@@ -227,7 +227,7 @@ export default function StaffRequest({
 		],
 		queryFn: () => {
 			const locationQuery = isPickupAnywhere
-				? ""
+				? "isEnabledForPickupAnywhere:true"
 				: `agency:${selectedLibrary?.agencyId}`;
 			return request(
 				`${cfg.VITE_DCB_API_BASE}/graphql`,
