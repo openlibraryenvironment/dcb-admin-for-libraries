@@ -324,7 +324,7 @@ function RouteComponent() {
 					pagination
 					pivotingEnabled={false}
 					toolbarVisible
-					searchText="Search by patron request"
+					searchText={t("ui.actions.search")}
 					scrollbarVisible={false}
 					paginationMode="server"
 					paginationModel={paginationModel}
@@ -341,8 +341,6 @@ function RouteComponent() {
 				/>
 			}
 
-			{/* // Anchor to bottom-center or bottom-left to avoid covering grid headers
-				// anchorOrigin={{ vertical: "bottom", horizontal: "center" }}> */}
 			{
 				<TimedAlert
 					open={snackbarOpen}
@@ -351,10 +349,7 @@ function RouteComponent() {
 					// variant="filled"
 					// sx={{ width: "100%" }}
 					autoHideDuration={6000}
-					alertText={
-						t("ui.feedback.error.cannot_process") ||
-						"We could not process that operation, so we have reset the data grid options."
-					}></TimedAlert>
+					alertText={t("ui.feedback.error.cannot_process")}></TimedAlert>
 			}
 		</>
 	);
