@@ -44,7 +44,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 	useEffect(() => {
 		return apiRef.current.subscribeEvent(
 			"viewportInnerSizeChange",
-			handleViewportInnerSizeChange
+			handleViewportInnerSizeChange,
 		);
 	}, [apiRef, handleViewportInnerSizeChange]);
 
@@ -98,7 +98,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 													primary={`${id.namespace}: ${id.value}`}
 												/>
 											</ListItem>
-										)
+										),
 									)}
 								</List>
 							</Stack>
@@ -218,6 +218,23 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 							<RenderAttribute attribute={row?.localItemType} />
 						</Stack>
 					</Grid>
+					<Grid size={4}>
+						<Stack direction={"column"}>
+							<Typography variant="attributeTitle">
+								{t("requesting.supplier_type")}
+							</Typography>
+							<RenderAttribute attribute={row?.canonicalItemType} />
+						</Stack>
+					</Grid>
+					<Grid size={4}>
+						<Stack direction={"column"}>
+							<Typography variant="attributeTitle">
+								{t("requesting.source_system_code")}
+							</Typography>
+							<RenderAttribute attribute={row?.sourceHostLmsCode} />{" "}
+							{/** This could include a link to the bib record, if we can establish source LMS */}
+						</Stack>
+					</Grid>
 					{row?.statusCorrectAsOf ? (
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Stack direction={"column"}>
@@ -226,7 +243,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 								</Typography>
 								<RenderAttribute
 									attribute={dayjs(row?.statusCorrectAsOf).format(
-										"YYYY-MM-DD HH:mm"
+										"YYYY-MM-DD HH:mm",
 									)}
 								/>
 							</Stack>

@@ -6,7 +6,7 @@ export const handleTabChange = (
 	newValue: number,
 	setTabIndex: Dispatch<SetStateAction<number>>,
 	navigate: UseNavigateResult<string>,
-	id?: string
+	id?: string,
 ) => {
 	setTabIndex(newValue);
 	switch (newValue) {
@@ -42,7 +42,7 @@ export const handlePatronRequestTabChange = (
 	newValue: number,
 	navigate: UseNavigateResult<string>,
 	setTabIndex: Dispatch<SetStateAction<number>>,
-	id?: string
+	id?: string,
 ) => {
 	setTabIndex(newValue);
 	switch (newValue) {
@@ -69,7 +69,7 @@ export const handleSupplierRequestTabChange = (
 	newValue: number,
 	navigate: UseNavigateResult<string>,
 	setTabIndex: Dispatch<SetStateAction<number>>,
-	id?: string
+	id?: string,
 ) => {
 	setTabIndex(newValue);
 	switch (newValue) {
@@ -84,7 +84,7 @@ export const handleMappingsTabChange = (
 	newValue: number,
 	navigate: UseNavigateResult<string>,
 	setTabIndex: Dispatch<SetStateAction<number>>,
-	id?: string
+	id?: string,
 ) => {
 	setTabIndex(newValue);
 	switch (newValue) {
@@ -112,6 +112,19 @@ export const handleMappingsTabChange = (
 	}
 };
 
+export const handleClusterTabChange = (
+	event: React.SyntheticEvent,
+	newValue: string,
+	recordId: string,
+	navigate: UseNavigateResult<string>,
+) => {
+	const targetPath =
+		newValue === "info"
+			? `/requesting/${recordId}`
+			: `/requesting/${recordId}/${newValue}`;
+
+	navigate({ to: targetPath });
+};
 // export const handleTopLevelPatronRequestTabChange = (
 // 	event: React.SyntheticEvent,
 // 	newValue: number,

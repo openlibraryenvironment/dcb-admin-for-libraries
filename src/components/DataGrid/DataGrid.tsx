@@ -126,7 +126,7 @@ export default function DataGrid({
 						if (event.ctrlKey || event.metaKey) {
 							window.open(
 								`/patronRequests/audits/${params?.row?.id}`,
-								"_blank"
+								"_blank",
 							);
 						} else {
 							navigate({ to: `/patronRequests/audits/${params?.row?.id}` });
@@ -140,7 +140,7 @@ export default function DataGrid({
 						if (event.ctrlKey || event.metaKey) {
 							window.open(
 								`/patronRequests/audits/${params?.row?.id}`,
-								"_blank"
+								"_blank",
 							);
 						} else {
 							navigate({ to: `/patronRequests/audits/${params?.row?.id}` });
@@ -249,6 +249,9 @@ export default function DataGrid({
 				slots={{
 					detailPanelExpandIcon: GridExpandMoreIcon,
 					detailPanelCollapseIcon: GridExpandLessIcon,
+					noRowsOverlay: () => (
+						<NoResultsOverlay noResultsMessage={noResultsText} />
+					),
 					noResultsOverlay: () => (
 						<NoResultsOverlay noResultsMessage={noResultsText} />
 					),

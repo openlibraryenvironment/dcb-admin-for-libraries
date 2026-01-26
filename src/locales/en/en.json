@@ -366,6 +366,7 @@
 		"local_supplier_id": "Supplier request ID",
 		"next_expected_status": "Next expected status",
 		"next_poll": "Next status check after",
+		"no_requests": "No patron requests to display",
 		"out_of_sequence": "Out of sequence",
 		"patron": "Patron",
 		"patron_home_id": "Home identity",
@@ -487,6 +488,7 @@
 		"local_item_type_code": "Local item type code",
 		"local_item_type_name": "Local item type name",
 		"no_data": "No data available. Please enter a search term, or change your current search.",
+		"no_history": "Your patrons haven't placed any OpenRS requests for this record.",
 		"not_available_for_staff_request": "Not available for staff requesting",
 		"not_available_for_staff_request_description": "Not available for staff requesting: there is currently no available item for this record in your consortium.",
 		"not_available_for_walk_up": "Not available for walk up requesting",
@@ -506,7 +508,9 @@
 		"series": "Series",
 		"shared_index_unavailable_title": "Shared index is not configured on this system",
 		"shared_index_unavailable_message": "Please set a valid DCB_SEARCH_BASE environment variable for this deployment.",
+		"source_system_code": "Source system code",
 		"subjects": "Subjects",
+		"supplier_type": "Supplier type",
 		"suppressed": "Suppressed",
 		"titles_found": "{{number}} titles found",
 		"volume_parsed": "Parsed volume statement",
@@ -692,7 +696,8 @@
 				"to": "To"
 			},
 			"edit_summary": "Edit {{entity}}",
-			"find_column": "Find column"
+			"find_column": "Find column",
+			"no_data": "No data available"
 		},
 		"feedback": {
 			"complete": "{{percentage}} complete",
