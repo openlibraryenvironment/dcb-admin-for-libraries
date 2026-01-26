@@ -1,3 +1,17 @@
+# [1.9.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.8.1...v1.9.0) (2026-01-26)
+
+
+### Bug Fixes
+
+* If filters are present, advanced search should open by default ([39a1a08](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/39a1a0878a021caa886ff9715908fbb667f14eb0))
+* Prevent future issues with isEnabledForPickupAnywhere [DCB-2116] ([01100dc](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/01100dcffd66f7a38ffb4098e8228b28ae84a615))
+* Properly escape search queries [DCB-2118] ([aa0a836](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/aa0a8369c04e3776670538202ba13fa43f705274))
+
+
+### Features
+
+* Patron requesting history [DCB-2063] ([649fc40](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/649fc40f6a75b54b0ba06f36ade6f131c2954bd6))
+
 ## [1.8.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.8.0...v1.8.1) (2026-01-09)
 
 
