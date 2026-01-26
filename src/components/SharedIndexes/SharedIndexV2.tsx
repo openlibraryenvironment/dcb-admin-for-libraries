@@ -110,6 +110,9 @@ export function SharedIndexV2() {
 
 		setAppliedFilters(filtersToSet);
 		setStagedFilters(filtersToSet);
+		if (filtersToSet.length > 1) {
+			setIsAdvancedMode(true);
+		}
 	}, [queryParam, setAppliedFilters]);
 	// Compare staged and applied filters to determine if UI is "dirty"
 	useEffect(() => {
@@ -138,7 +141,7 @@ export function SharedIndexV2() {
 				replace: true,
 			});
 		},
-		[router, setAppliedFilters]
+		[router, setAppliedFilters],
 	);
 
 	const handleSearchSubmit = (event: React.FormEvent) => {
@@ -227,7 +230,7 @@ export function SharedIndexV2() {
 			cfg.VITE_DCB_SEARCH_BASE,
 			paginationModel.page, // pageno
 			paginationModel.pageSize, // pagesize
-		]
+		],
 	);
 
 	const {
