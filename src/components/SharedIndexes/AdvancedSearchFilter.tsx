@@ -74,7 +74,7 @@ export const AdvancedSearchFilter = ({
 
 	const updateFilter = (id: string, updates: Partial<SearchFilter>) => {
 		onFiltersChange(
-			filters.map((f) => (f.id === id ? { ...f, ...updates } : f))
+			filters.map((f) => (f.id === id ? { ...f, ...updates } : f)),
 		);
 	};
 
@@ -96,7 +96,7 @@ export const AdvancedSearchFilter = ({
 						LANGUAGE_OPTIONS.find((opt) => opt.value === filter.value) || null
 					}
 					onChange={(_, newValue) => {
-						updateFilter(filter.id, { value: newValue?.label || "" });
+						updateFilter(filter.id, { value: newValue?.value || "" });
 					}}
 					options={LANGUAGE_OPTIONS}
 					getOptionLabel={(option) => option.label}
@@ -128,6 +128,7 @@ export const AdvancedSearchFilter = ({
 	// Determine which filters to render based on the mode
 	const filtersToRender = isAdvancedMode ? filters : filters.slice(0, 1);
 
+	//fix this styling
 	return (
 		<Box sx={{ p: 2, border: "1px solid #e0e0e0", borderRadius: 1 }}>
 			<Stack spacing={2}>
@@ -228,7 +229,7 @@ export const AdvancedSearchFilter = ({
 										key={filter.id}
 										label={`${
 											searchFieldOptions.find(
-												(opt) => opt.value === filter.field
+												(opt) => opt.value === filter.field,
 											)?.label
 										}: ${filter.value}`}
 										onDelete={() => updateFilter(filter.id, { value: "" })}

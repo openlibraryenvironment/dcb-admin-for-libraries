@@ -1,5 +1,4 @@
 import { CQL_FIELD_MAPPING } from "@constants/search/cqlMappings";
-import { LANGUAGE_OPTIONS } from "@constants/search/languageOptions";
 import {
 	BooleanOperator,
 	SearchField,
@@ -15,7 +14,7 @@ export const buildQuery = (filters: SearchFilter[]): string => {
 	if (filters.length === 0) return ""; // No filters, no query
 
 	const hasLuceneOnlyFilter = filters.some(
-		(f) => f.field === SearchField.PublicationYear && f.value
+		(f) => f.field === SearchField.PublicationYear && f.value,
 	); // There are some filters we need Lucene for. This is to track those
 
 	if (filters.length == 1 && filters[0].field == SearchField.ClusterRecordID) {
@@ -28,17 +27,18 @@ export const buildQuery = (filters: SearchFilter[]): string => {
 
 	filters.forEach((filter, index) => {
 		const fieldMapping = CQL_FIELD_MAPPING[filter.field];
-		let value = filter.value;
+		const value = filter.value;
 
 		// Language field needs special handling
 		// Translate the drop-down to something the server will understand.
 		// And bear in mind that there could be multiple server values for one language.
-		if (filter.field === SearchField.Language) {
-			const languageOption = LANGUAGE_OPTIONS.find(
-				(opt) => opt.label === value
-			);
-			value = languageOption?.value || value;
-		}
+		// if (filter.field === SearchField.Language) {
+		// 	const languageOption = LANGUAGE_OPTIONS.find(
+		// 		(opt) => opt.label === value,
+		// 	);
+		// 	value = languageOption?.value || value;
+		// }
+		const safelyQuotedValue = JSON.stringify(value);
 		let fieldQuery = "";
 
 		// Build field query based on query type - CQL is current default, but some can only be parsed with Lucene
@@ -48,8 +48,8 @@ export const buildQuery = (filters: SearchFilter[]): string => {
 		} else {
 			fieldQuery =
 				fieldMapping == CQL_FIELD_MAPPING.isbn
-					? `${fieldMapping} "${value}"`
-					: `(${fieldMapping} ${value})`;
+					? `${fieldMapping} ${safelyQuotedValue}`
+					: `(${fieldMapping} ${safelyQuotedValue})`;
 		}
 
 		// Handle our Boolean operators for chained filters. AND, OR, NOT currently supported.
