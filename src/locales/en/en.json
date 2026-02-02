@@ -697,6 +697,7 @@
 			},
 			"edit_summary": "Edit {{entity}}",
 			"find_column": "Find column",
+			"master_detail": "Master detail",
 			"no_data": "No data available"
 		},
 		"feedback": {

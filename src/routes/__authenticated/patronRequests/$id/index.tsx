@@ -39,7 +39,10 @@ import TimedAlert from "@components/TimedAlert/TimedAlert";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import { formatDuration } from "@helpers/formatDuration";
 import Loading from "@components/Loading/Loading";
-import { GridRowModesModel } from "@mui/x-data-grid-premium";
+import {
+	GridPaginationModel,
+	GridRowModesModel,
+} from "@mui/x-data-grid-premium";
 import { CustomLink } from "@components/CustomLink";
 import { SourceRecord } from "@models/SourceRecord";
 import { getLibraryBasics } from "@queries/getLibraryBasics";
@@ -52,6 +55,7 @@ import { getAgency } from "@queries/getAgency";
 import { Agency } from "@models/Agency";
 import { cleanupStatuses } from "@constants/statuses/cleanupStatuses";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
+import { useGridStore } from "@/hooks/useDataGridStore";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
 	component: RouteComponent,
@@ -74,9 +78,30 @@ function RouteComponent() {
 		() => ({
 			Authorization: `Bearer ${auth.user?.access_token}`,
 		}),
-		[auth.user?.access_token]
+		[auth.user?.access_token],
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+	// const [auditPaginationModel, setAuditPaginationModel] = useState({
+	// 	page: 0,
+	// 	pageSize: 25,
+	// });
+	const auditGridId = `audit-log-${id}`; // Unique ID for each request
+	const {
+		paginationModel: auditPaginationModel,
+		setPaginationModel: setAuditPaginationModel,
+		filterModel: auditFilterModel,
+		setFilterModel: setAuditFilterModel,
+		sortModel: auditSortModel,
+		setSortModel: setAuditSortModel,
+	} = useGridStore();
+	const currentPagination = auditPaginationModel[auditGridId] ?? {
+		page: 0,
+		pageSize: 25,
+	};
+	const currentFilter = auditFilterModel[auditGridId] ?? { items: [] };
+	const currentSort = auditSortModel[auditGridId] ?? [
+		{ field: "auditDate", sort: "desc" },
+	];
 
 	const {
 		data,
@@ -96,7 +121,7 @@ function RouteComponent() {
 					orderBy: "dateUpdated",
 					order: "DESC",
 				},
-				headers
+				headers,
 			),
 	});
 	const patronRequest = data?.patronRequests?.content?.[0];
@@ -138,7 +163,7 @@ function RouteComponent() {
 					order: "agencyCode",
 					orderBy: "ASC",
 				},
-				headers
+				headers,
 			),
 	});
 
@@ -172,7 +197,7 @@ function RouteComponent() {
 					order: "localId",
 					orderBy: "ASC",
 				},
-				headers
+				headers,
 			),
 	});
 
@@ -205,7 +230,7 @@ function RouteComponent() {
 					order: "id",
 					orderBy: "ASC",
 				},
-				headers
+				headers,
 			),
 	});
 
@@ -235,7 +260,7 @@ function RouteComponent() {
 					order: "agencyCode",
 					orderBy: "ASC",
 				},
-				headers
+				headers,
 			),
 	});
 	console.log(pickupLibraryError);
@@ -271,7 +296,7 @@ function RouteComponent() {
 					order: "name",
 					orderBy: "ASC",
 				},
-				headers
+				headers,
 			),
 	});
 	const patronHostLmss: HostLMS[] = patronLmsData?.hostLms?.content ?? [];
@@ -304,7 +329,7 @@ function RouteComponent() {
 					order: "name",
 					orderBy: "ASC",
 				},
-				headers
+				headers,
 			),
 	});
 	console.log(patronAgencyError);
@@ -338,7 +363,7 @@ function RouteComponent() {
 					order: "agencyCode",
 					orderBy: "ASC",
 				},
-				headers
+				headers,
 			),
 	});
 
@@ -463,7 +488,7 @@ function RouteComponent() {
 									<Tooltip
 										title={t("patron_request.request_tooltip", {
 											ils: getILS(
-												patronLibrary?.agency?.hostLms?.lmsClientClass
+												patronLibrary?.agency?.hostLms?.lmsClientClass,
 											),
 											contact: patronLibrary?.contacts
 												? findPrimaryContacts(patronLibrary?.contacts)
@@ -489,7 +514,7 @@ function RouteComponent() {
 									<Tooltip
 										title={t("patron_request.request_tooltip", {
 											ils: getILS(
-												supplierLibrary?.agency?.hostLms?.lmsClientClass
+												supplierLibrary?.agency?.hostLms?.lmsClientClass,
 											),
 											contact: supplierLibrary?.contacts
 												? findPrimaryContacts(supplierLibrary?.contacts)
@@ -513,7 +538,7 @@ function RouteComponent() {
 									<Tooltip
 										title={t("patron_request.request_tooltip", {
 											ils: getILS(
-												pickupLibrary?.agency?.hostLms?.lmsClientClass
+												pickupLibrary?.agency?.hostLms?.lmsClientClass,
 											),
 											contact: pickupLibrary?.contacts
 												? findPrimaryContacts(pickupLibrary?.contacts)
@@ -632,7 +657,7 @@ function RouteComponent() {
 								</Typography>
 								<RenderAttribute
 									attribute={dayjs(patronRequest?.dateCreated).format(
-										"YYYY-MM-DD HH:mm"
+										"YYYY-MM-DD HH:mm",
 									)}
 								/>
 							</Stack>
@@ -644,7 +669,7 @@ function RouteComponent() {
 								</Typography>
 								<RenderAttribute
 									attribute={dayjs(patronRequest?.dateUpdated).format(
-										"YYYY-MM-DD HH:mm"
+										"YYYY-MM-DD HH:mm",
 									)}
 								/>
 							</Stack>
@@ -656,7 +681,7 @@ function RouteComponent() {
 								</Typography>
 								<RenderAttribute
 									attribute={dayjs(patronRequest?.nextScheduledPoll).format(
-										"YYYY-MM-DD HH:mm"
+										"YYYY-MM-DD HH:mm",
 									)}
 								/>
 							</Stack>
@@ -799,7 +824,7 @@ function RouteComponent() {
 								</Typography>
 								<RenderAttribute
 									attribute={dayjs(
-										patronRequest?.currentStatusTimestamp
+										patronRequest?.currentStatusTimestamp,
 									).format("YYYY-MM-DD HH:mm:ss.SSS")}
 								/>
 							</Stack>
@@ -811,7 +836,7 @@ function RouteComponent() {
 								</Typography>
 								<RenderAttribute
 									attribute={formatDuration(
-										patronRequest?.elapsedTimeInCurrentStatus
+										patronRequest?.elapsedTimeInCurrentStatus,
 									)}
 								/>
 							</Stack>
@@ -944,7 +969,7 @@ function RouteComponent() {
 								</Typography>
 								<RenderAttribute
 									attribute={dayjs(
-										patronRequest?.clusterRecord?.dateCreated
+										patronRequest?.clusterRecord?.dateCreated,
 									).format("YYYY-MM-DD HH:mm")}
 								/>
 							</Stack>
@@ -956,7 +981,7 @@ function RouteComponent() {
 								</Typography>
 								<RenderAttribute
 									attribute={dayjs(
-										patronRequest?.clusterRecord?.dateUpdated
+										patronRequest?.clusterRecord?.dateUpdated,
 									).format("YYYY-MM-DD HH:mm")}
 								/>
 							</Stack>
@@ -1042,7 +1067,7 @@ function RouteComponent() {
 							{members &&
 							members.some(
 								(member: { sourceRecord: SourceRecord }) =>
-									member.sourceRecord !== null
+									member.sourceRecord !== null,
 							) ? (
 								members.map(
 									(member: { sourceRecord: SourceRecord }, index: number) =>
@@ -1050,7 +1075,7 @@ function RouteComponent() {
 											<pre key={index}>
 												{JSON.stringify(member.sourceRecord, null, 2)}
 											</pre>
-										)
+										),
 								)
 							) : (
 								<Typography variant="body1">
@@ -1109,7 +1134,7 @@ function RouteComponent() {
 								</Typography>
 								<RenderAttribute
 									attribute={dayjs(
-										patronRequest?.suppliers[0]?.dateCreated
+										patronRequest?.suppliers[0]?.dateCreated,
 									).format("YYYY-MM-DD HH:mm")}
 								/>
 							</Stack>
@@ -1121,7 +1146,7 @@ function RouteComponent() {
 								</Typography>
 								<RenderAttribute
 									attribute={dayjs(
-										patronRequest?.suppliers[0]?.dateUpdated
+										patronRequest?.suppliers[0]?.dateUpdated,
 									).format("YYYY-MM-DD HH:mm")}
 								/>
 							</Stack>
@@ -1777,6 +1802,11 @@ function RouteComponent() {
 						// noDataMessage={t("patron_request.audit_log_no_rows")}
 						// sortModel={[{ field: "auditDate", sort: "desc" }]}
 						// operationDataType="Audit"
+						filterMode="client"
+						filterModel={currentFilter}
+						onFilterModelChange={(newModel) =>
+							setAuditFilterModel(auditGridId, newModel)
+						}
 						disableAggregation={true}
 						disableHoverInteractions={true}
 						disableRowGrouping={true}
@@ -1785,17 +1815,21 @@ function RouteComponent() {
 						noResultsText={t("audit.no_results")}
 						pagination
 						paginationMode="client"
-						paginationModel={{ page: 0, pageSize: 25 }}
+						paginationModel={currentPagination}
+						onPaginationModelChange={(newModel: GridPaginationModel) =>
+							setAuditPaginationModel(auditGridId, newModel)
+						}
 						pivotingEnabled={false}
 						onRowModesModelChange={setRowModesModel}
 						toolbarVisible
-						rowCount={patronRequest?.audit ? patronRequest?.audit.length : 0}
 						rowModesModel={rowModesModel}
 						searchText="Search by audit"
 						scrollbarVisible={false}
-						filterMode="client"
 						sortingMode="client"
-						sortModel={[{ field: "auditDate", sort: "desc" }]}
+						sortModel={currentSort}
+						onSortModelChange={(newModel) =>
+							setAuditSortModel(auditGridId, newModel)
+						}
 					/>
 				</TabPanel>
 			</TabContext>

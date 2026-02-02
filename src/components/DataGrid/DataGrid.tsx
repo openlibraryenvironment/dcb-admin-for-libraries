@@ -54,7 +54,7 @@ interface DataGridProps {
 	paginationModel: GridPaginationModel;
 	pivotingEnabled: boolean;
 	processRowUpdate?: (newRow: any, oldRow: any) => Promise<any> | any;
-	rowCount: number;
+	rowCount?: number;
 	rowModesModel: GridRowModesModel;
 	rows: GridRowsProp;
 	scrollbarVisible: boolean;
@@ -163,14 +163,6 @@ export default function DataGrid({
 		}
 	};
 
-	// To make it really explicit that these things are only meant to be undefined if pagination mode is not srver
-	const finalOnPaginationModelChange =
-		paginationMode === "server" ? onPaginationModelChange : undefined;
-	const finalOnFilterModelChange =
-		filterMode === "server" ? onFilterModelChange : undefined;
-	const finalOnSortModelChange =
-		sortingMode === "server" ? onSortModelChange : undefined;
-
 	//identifier may not be needed
 	return (
 		<div style={{ display: "flex", flexDirection: "column" }}>
@@ -209,8 +201,8 @@ export default function DataGrid({
 					event.defaultMuiPrevented = true;
 				}}
 				onColumnVisibilityModelChange={onColumnVisibilityModelChange}
-				onFilterModelChange={finalOnFilterModelChange}
-				onPaginationModelChange={finalOnPaginationModelChange}
+				onFilterModelChange={onFilterModelChange}
+				onPaginationModelChange={onPaginationModelChange}
 				//@ts-expect-error Until we fix the typing issues, expect an error here.
 				onProcessRowUpdateError={(params: GridRowParams, error: string) => {
 					// fix typing
@@ -230,7 +222,7 @@ export default function DataGrid({
 						}),
 					});
 				}}
-				onSortModelChange={finalOnSortModelChange}
+				onSortModelChange={onSortModelChange}
 				onRowClick={handleRowClick}
 				pageSizeOptions={[5, 10, 20, 25, 30, 40, 50, 100, 200]}
 				pagination={pagination}
@@ -241,7 +233,7 @@ export default function DataGrid({
 				rowModesModel={rowModesModel}
 				onRowEditStop={onRowEditStop}
 				onRowModesModelChange={onRowModesModelChange}
-				rowCount={rowCount}
+				rowCount={paginationMode === "server" ? rowCount : undefined}
 				rows={rows}
 				showToolbar={toolbarVisible}
 				sortingMode={sortingMode}

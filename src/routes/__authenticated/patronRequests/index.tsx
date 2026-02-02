@@ -51,7 +51,7 @@ function RouteComponent() {
 		() => ({
 			Authorization: `Bearer ${auth?.user?.access_token}`,
 		}),
-		[token]
+		[token],
 	);
 	const gridId = "mainPatronRequests";
 	const {
@@ -74,14 +74,14 @@ function RouteComponent() {
 
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
-			storedState.pagination ?? { page: 0, pageSize: 25 }
+			storedState.pagination ?? { page: 0, pageSize: 25 },
 		);
 
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
 
 	const handleSnackbarClose = (
 		event?: React.SyntheticEvent | Event,
-		reason?: string
+		reason?: string,
 	) => {
 		if (reason === "clickaway") {
 			return;
@@ -89,16 +89,16 @@ function RouteComponent() {
 		setSnackbarOpen(false);
 	};
 	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
-		storedState.filter ?? { items: [] }
+		storedState.filter ?? { items: [] },
 	);
 	const debouncedFilterModel = useDebounce(filterModel, 500);
 
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
-		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }]
+		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }],
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? defaultPatronRequestColumnVisibility
+		storedState.columnVisibility ?? defaultPatronRequestColumnVisibility,
 	);
 
 	// Add state to track if we're filtering
@@ -108,14 +108,14 @@ function RouteComponent() {
 	useEffect(() => {
 		const hasActiveFilters =
 			filterModel.items.some(
-				(item) => item.value && item.value !== "" && item.value !== null
+				(item) => item.value && item.value !== "" && item.value !== null,
 			) ||
 			(filterModel.quickFilterValues &&
 				filterModel.quickFilterValues.length > 0);
 
 		const hasActiveDebounceFilters =
 			debouncedFilterModel.items.some(
-				(item) => item.value && item.value !== "" && item.value !== null
+				(item) => item.value && item.value !== "" && item.value !== null,
 			) ||
 			(debouncedFilterModel.quickFilterValues &&
 				debouncedFilterModel.quickFilterValues.length > 0);
@@ -131,7 +131,7 @@ function RouteComponent() {
 			setLocalPaginationModel(model);
 			setPaginationModel(gridId, model);
 		},
-		[gridId, setPaginationModel]
+		[gridId, setPaginationModel],
 	);
 
 	const handleFilterChange = useCallback(
@@ -139,7 +139,7 @@ function RouteComponent() {
 			setLocalFilterModel(model);
 			setFilterModel(gridId, model);
 		},
-		[gridId, setFilterModel]
+		[gridId, setFilterModel],
 	);
 
 	const handleSortChange = useCallback(
@@ -147,7 +147,7 @@ function RouteComponent() {
 			setLocalSortModel(model);
 			setSortModel(gridId, model);
 		},
-		[gridId, setSortModel]
+		[gridId, setSortModel],
 	);
 
 	const handleColumnVisibilityChange = useCallback(
@@ -155,7 +155,7 @@ function RouteComponent() {
 			setLocalColumnVisibilityModel(model);
 			setColumnVisibilityModel(gridId, model);
 		},
-		[gridId, setColumnVisibilityModel]
+		[gridId, setColumnVisibilityModel],
 	);
 
 	const code = auth.user?.profile?.code;
@@ -178,7 +178,7 @@ function RouteComponent() {
 					order: "fullName",
 					orderBy: "ASC",
 				},
-				headers
+				headers,
 			),
 	});
 
@@ -253,7 +253,7 @@ function RouteComponent() {
 				`${dcbApiBase}/graphql`,
 				getPatronRequests,
 				queryVariables,
-				headers
+				headers,
 			);
 		},
 		enabled: !!token && !!dcbApiBase && !!userLibraryHostLmsCode,
@@ -270,7 +270,7 @@ function RouteComponent() {
 		error,
 		setLocalFilterModel,
 		setLocalSortModel,
-		() => setSnackbarOpen(true)
+		() => setSnackbarOpen(true),
 	);
 
 	// Show loading if initial load or libraries are loading
@@ -320,7 +320,7 @@ function RouteComponent() {
 					disableRowGrouping={true}
 					loading={shouldShowLoading} // Show loading when filtering or fetching
 					listViewEnabled={false}
-					noResultsText={t("audit.no_results")}
+					noResultsText={t("patron_request.no_requests")}
 					pagination
 					pivotingEnabled={false}
 					toolbarVisible

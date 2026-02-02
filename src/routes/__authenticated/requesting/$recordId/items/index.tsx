@@ -21,6 +21,7 @@ import Loading from "@components/Loading/Loading";
 import { getAggregatedErrorMessage } from "@helpers/liveAvailabilityErrorMapper";
 import { itemColumns } from "@helpers/dataGrid/columns/itemColumns";
 import { useClusterDetail } from "@/hooks/useClusterDetail";
+import { useGridStore } from "@/hooks/useDataGridStore";
 
 export const Route = createFileRoute(
 	"/__authenticated/requesting/$recordId/items/",
@@ -37,6 +38,52 @@ function ItemsPageComponent() {
 	// The unified hook only needs to grab us the item info here
 	const { items, itemsNotShown, isLoading, totalItemsCount, responseErrors } =
 		useClusterDetail(recordId, { mode: "items" });
+	const itemsGridId = "ClusterRecordItems";
+	const itemsNotShownGridId = "ClusterRecordItemsNotShown";
+
+	const {
+		paginationModel: itemsPaginationModel,
+		setPaginationModel: setItemsPaginationModel,
+		filterModel: itemsFilterModel,
+		setFilterModel: setItemsFilterModel,
+		sortModel: itemsSortModel,
+		setSortModel: setItemsSortModel,
+	} = useGridStore();
+
+	const {
+		paginationModel: itemsNotShownPaginationModel,
+		setPaginationModel: setItemsNotShownPaginationModel,
+		filterModel: itemsNotShownFilterModel,
+		setFilterModel: setItemsNotShownFilterModel,
+		sortModel: itemsNotShownSortModel,
+		setSortModel: setItemsNotShownSortModel,
+	} = useGridStore();
+
+	const itemsCurrentPagination = itemsPaginationModel[itemsGridId] ?? {
+		page: 0,
+		pageSize: 25,
+	};
+	const itemsCurrentFilterModel = itemsFilterModel[itemsGridId] ?? {
+		items: [],
+	};
+	const itemsCurrentSortModel = itemsSortModel[itemsGridId] ?? [
+		{ field: "availabilityDate", sort: "desc" },
+	];
+
+	const itemsNotShownCurrentPagination = itemsNotShownPaginationModel[
+		itemsGridId
+	] ?? {
+		page: 0,
+		pageSize: 25,
+	};
+	const itemsNotShownCurrentFilterModel = itemsNotShownFilterModel[
+		itemsGridId
+	] ?? {
+		items: [],
+	};
+	const itemsNotShownCurrentSortModel = itemsNotShownSortModel[itemsGridId] ?? [
+		{ field: "availabilityDate", sort: "desc" },
+	];
 
 	if (isLoading) {
 		return (
@@ -103,6 +150,11 @@ function ItemsPageComponent() {
 					disableHoverInteractions={true}
 					disablePivoting
 					disableRowGrouping={true}
+					filterMode="client"
+					filterModel={itemsCurrentFilterModel}
+					onFilterModelChange={(newModel) =>
+						setItemsFilterModel(itemsGridId, newModel)
+					}
 					getDetailPanelContent={({ row }: GridRowParams) => (
 						<MasterDetail type="items" row={row} />
 					)}
@@ -110,20 +162,22 @@ function ItemsPageComponent() {
 					listViewEnabled={false}
 					loading={isLoading}
 					noResultsText={t("requesting.items_not_found")}
+					onPaginationModelChange={setItemsPaginationModel}
 					pagination
 					paginationMode="client"
-					paginationModel={{ page: 0, pageSize: 25 }} // Still need to make the client-side pagination persistent
+					paginationModel={itemsCurrentPagination}
 					pivotingEnabled={false}
 					rows={items}
 					scrollbarVisible={false}
 					searchText={t("requesting.items_search")}
 					toolbarVisible={true}
 					type={"Items"}
-					rowCount={items.length}
 					rowModesModel={{}}
-					filterMode="client"
 					sortingMode="client"
-					sortModel={[{ field: "availabilityDate", sort: "desc" }]}
+					sortModel={itemsCurrentSortModel}
+					onSortModelChange={(newModel) =>
+						setItemsSortModel(itemsGridId, newModel)
+					}
 				/>
 			</Grid>
 
@@ -156,27 +210,34 @@ function ItemsPageComponent() {
 								disableHoverInteractions={true}
 								disablePivoting
 								disableRowGrouping={true}
+								filterMode="client"
+								filterModel={itemsNotShownCurrentFilterModel}
+								onFilterModelChange={(newModel) =>
+									setItemsNotShownFilterModel(itemsNotShownGridId, newModel)
+								}
 								getDetailPanelContent={({ row }: any) => (
 									<MasterDetail type="items" row={row} />
 								)}
-								identifier="ClusterRecordItemsNotShown"
+								identifier={itemsNotShownGridId}
 								loading={isLoading}
 								listViewEnabled={false}
 								noResultsText={t("requesting.items_not_found")}
+								onPaginationModelChange={setItemsNotShownPaginationModel}
 								pagination
 								paginationMode="client"
-								paginationModel={{ page: 0, pageSize: 25 }}
+								paginationModel={itemsNotShownCurrentPagination}
 								pivotingEnabled={false}
 								scrollbarVisible={false}
 								searchText={t("requesting.items_search")}
 								toolbarVisible={false}
 								rows={itemsNotShown ?? []}
 								type={"Items"}
-								rowCount={itemsNotShown ? itemsNotShown.length : 0}
 								rowModesModel={{}}
-								filterMode="client"
 								sortingMode="client"
-								sortModel={[{ field: "availabilityDate", sort: "desc" }]}
+								sortModel={itemsNotShownCurrentSortModel}
+								onSortModelChange={(newModel) =>
+									setItemsNotShownSortModel(itemsNotShownGridId, newModel)
+								}
 							/>
 						</AccordionDetails>
 					</Accordion>
