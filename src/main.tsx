@@ -6,7 +6,7 @@ import { routeTree } from "./routeTree.gen";
 import theme from "./theme";
 import { LicenseInfo } from "@mui/x-license";
 import { AuthProvider } from "react-oidc-context";
-import { QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
@@ -50,6 +50,29 @@ async function getCfg() {
 	}
 }
 
+const handleServiceErrors = (error: any) => {
+	// For errors from DCB Service / Locate when something is wrong downstream
+	// Maintenance and generic network error only at the moment
+	// Don't need to do anything if we are already on the maintenance page
+	const isNetworkError =
+		error.message?.includes("Failed to fetch") ||
+		error.message?.includes("Network request failed") ||
+		error.message?.includes("NetworkError");
+	const isServiceUnavailable = error?.response?.status === 503;
+
+	if (window.location.pathname === "/maintenance") {
+		return;
+	}
+
+	// If 503, go to maintenance
+	if (isServiceUnavailable) {
+		window.location.href = "/maintenance";
+	}
+	if (isNetworkError) {
+		window.location.href = "/networkError";
+	}
+};
+
 // Re-working this to use an environment variable for the time being.
 // As this method was causing difficulties when navigating from inner routes
 // i.e. navigation from /patronRequests to /mappings was becoming /patronRequests/mappings
@@ -67,6 +90,13 @@ const queryClient = new QueryClient({
 			retry: 1,
 		},
 	},
+	queryCache: new QueryCache({
+		onError: (error) => handleServiceErrors(error),
+	}),
+	// Global error handler for Mutations (Writes)
+	mutationCache: new MutationCache({
+		onError: (error) => handleServiceErrors(error),
+	}),
 });
 
 // basename is set this way so we can deploy this app to multiple folders and the app will
@@ -118,7 +148,7 @@ async function bootstrap() {
 			console.log("Sign in for ", _user);
 			const isReadOnly = _user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
 			const afterLoginRedirectPath = sessionStorage.getItem(
-				"afterLoginRedirectPath"
+				"afterLoginRedirectPath",
 			);
 			if (isReadOnly) {
 				// If user is LIBRARY_READ_ONLY, they can only access requesting.
@@ -134,7 +164,7 @@ async function bootstrap() {
 				window.history.replaceState(
 					{},
 					document.title,
-					window.location.pathname
+					window.location.pathname,
 				);
 			}
 		},
@@ -145,7 +175,7 @@ async function bootstrap() {
 			<AuthProvider {...oidcConfig}>
 				<App theme={theme} queryClient={queryClient} router={router} />
 			</AuthProvider>
-		</React.StrictMode>
+		</React.StrictMode>,
 	);
 }
 

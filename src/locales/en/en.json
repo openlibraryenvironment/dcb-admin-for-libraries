@@ -639,6 +639,7 @@
 			"edit": "Edit",
 			"expand": "Expand",
 			"go_back": "Go back",
+			"go_back_message": "Click below to return to your previous page",
 			"hide_advanced_search": "Hide advanced search",
 			"hide_shown": "Hide shown",
 			"login": "Login",
@@ -719,6 +720,10 @@
 			"info": {
 				"general": "Information"
 			},
+			"maintenance": "Maintenance in progress",
+			"maintenance_message": "OpenRS DCB is undergoing maintenance, and DCB Admin for Libraries will be back soon!",
+			"network_error": "Network error detected",
+			"network_error_message": "This doesn't seem to be working at the moment. Please check your network and reload the page",
 			"not_set": "Not set",
 			"please_wait": "Please wait",
 			"reveal_more": "and {{number}} more",

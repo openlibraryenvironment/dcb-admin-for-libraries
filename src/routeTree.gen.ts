@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as NetworkErrorRouteImport } from './routes/networkError'
+import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as _authenticatedRouteImport } from './routes/__authenticated'
@@ -37,6 +39,16 @@ import { Route as _authenticatedRequestingRecordIdHistoryIndexRouteImport } from
 import { Route as _authenticatedPatronRequestsAuditsAuditIdIndexRouteImport } from './routes/__authenticated/patronRequests/audits/$auditId/index'
 import { Route as _authenticatedIndexesIndexCodeRecordIdIndexRouteImport } from './routes/__authenticated/indexes/$indexCode/$recordId/index'
 
+const NetworkErrorRoute = NetworkErrorRouteImport.update({
+  id: '/networkError',
+  path: '/networkError',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaintenanceRoute = MaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
   path: '/logout',
@@ -191,6 +203,8 @@ const _authenticatedIndexesIndexCodeRecordIdIndexRoute =
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/maintenance': typeof MaintenanceRoute
+  '/networkError': typeof NetworkErrorRoute
   '/contacts': typeof _authenticatedContactsRoute
   '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
   '/ill': typeof _authenticatedIllRouteWithChildren
@@ -219,6 +233,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/maintenance': typeof MaintenanceRoute
+  '/networkError': typeof NetworkErrorRoute
   '/contacts': typeof _authenticatedContactsRoute
   '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
   '/ill': typeof _authenticatedIllRouteWithChildren
@@ -248,6 +264,8 @@ export interface FileRoutesById {
   '/__authenticated': typeof _authenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/maintenance': typeof MaintenanceRoute
+  '/networkError': typeof NetworkErrorRoute
   '/__authenticated/contacts': typeof _authenticatedContactsRoute
   '/__authenticated/dataChangeLog': typeof _authenticatedDataChangeLogRoute
   '/__authenticated/ill': typeof _authenticatedIllRouteWithChildren
@@ -278,6 +296,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/login'
     | '/logout'
+    | '/maintenance'
+    | '/networkError'
     | '/contacts'
     | '/dataChangeLog'
     | '/ill'
@@ -306,6 +326,8 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/logout'
+    | '/maintenance'
+    | '/networkError'
     | '/contacts'
     | '/dataChangeLog'
     | '/ill'
@@ -334,6 +356,8 @@ export interface FileRouteTypes {
     | '/__authenticated'
     | '/login'
     | '/logout'
+    | '/maintenance'
+    | '/networkError'
     | '/__authenticated/contacts'
     | '/__authenticated/dataChangeLog'
     | '/__authenticated/ill'
@@ -364,10 +388,26 @@ export interface RootRouteChildren {
   _authenticatedRoute: typeof _authenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
+  MaintenanceRoute: typeof MaintenanceRoute
+  NetworkErrorRoute: typeof NetworkErrorRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/networkError': {
+      id: '/networkError'
+      path: '/networkError'
+      fullPath: '/networkError'
+      preLoaderRoute: typeof NetworkErrorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maintenance': {
+      id: '/maintenance'
+      path: '/maintenance'
+      fullPath: '/maintenance'
+      preLoaderRoute: typeof MaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/logout': {
       id: '/logout'
       path: '/logout'
@@ -652,6 +692,8 @@ const rootRouteChildren: RootRouteChildren = {
   _authenticatedRoute: _authenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
+  MaintenanceRoute: MaintenanceRoute,
+  NetworkErrorRoute: NetworkErrorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
