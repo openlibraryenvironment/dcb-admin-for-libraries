@@ -1,3 +1,12 @@
+# [1.10.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.9.0...v1.10.0) (2026-02-13)
+
+
+### Features
+
+* Login/logout page improvements ([08ae567](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/08ae567fef6f6269350de9e1926287740cf4e36a))
+* Make user preferences persist for client-paginated grids ([2c58d3f](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/2c58d3f6031604050cc4d7c858a56472de6250db))
+* New maintenance and error pages ([14b599a](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/14b599a2294424a435ef222bf6a3351d8b2cd274))
+
 # [1.9.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.8.1...v1.9.0) (2026-01-26)
 
 
