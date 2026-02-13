@@ -253,7 +253,7 @@
 		"view_location": "View pickup location"
 	},
 	"login": {
-		"access": "To access DCB Admin for Libraries, please sign in with your library credentials",
+		"access": "Welcome to DCB Admin for Libraries! To get started, please sign in with your library credentials",
 		"authenticating": "Authenticating",
 		"keycloak": "Sign in with Keycloak",
 		"initialising": "Initialising the application",
@@ -747,6 +747,14 @@
 			"check_address": "Please check the web address",
 			"oldest_entry": "This is the oldest audit entry in the log.",
 			"newest_entry": "This is the most recent audit entry in the log."
+		},
+		"logout": {
+			"again": "Log in again",
+			"failure": "We have encountered an error during logout. Please try again.",
+			"out": "Logged out",
+			"out_current": "Logging you out",
+			"out_progress": "Please wait while we sign you out securely...",
+			"success": "You have successfully logged out from DCB Admin for Libraries. We hope to see you again soon!"
 		},
 		"tooltips": {
 			"logo": "Click this logo to go to the home page"
