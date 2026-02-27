@@ -1,3 +1,11 @@
+# [1.11.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.10.0...v1.11.0) (2026-02-27)
+
+
+### Features
+
+* Filter patron requests by patron barcode [DCB-2131] ([e4cf25b](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/e4cf25b452b0b7a00ac9ce295aa62938fe3daca4))
+* Provide multi-cleanup and export improvements [DCB-2136] ([cb484cd](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/cb484cded1a76b549f3685716cc2bc65e8dcc75e))
+
 # [1.10.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.9.0...v1.10.0) (2026-02-13)
 
 
