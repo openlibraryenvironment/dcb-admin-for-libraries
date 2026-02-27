@@ -29,10 +29,11 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		},
 	},
 	{
-		field: "localBarcode",
+		field: "patronBarcode",
 		headerName: "Patron barcode",
-		filterable: false,
+		filterable: true,
 		sortable: false,
+		filterOperators: equalsOnly,
 		flex: 0.75,
 		valueGetter: (value: string, row: PatronRequest) =>
 			row?.requestingIdentity?.localBarcode,
@@ -101,7 +102,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		sortable: false,
 		valueGetter: (
 			value: string,
-			row: { suppliers: { canonicalItemType: string }[] }
+			row: { suppliers: { canonicalItemType: string }[] },
 		) => {
 			if (row.suppliers.length > 0) {
 				return row.suppliers[0].canonicalItemType;
@@ -168,7 +169,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		filterOperators: durationFilters,
 		valueGetter: (
 			value: string,
-			row: { elapsedTimeInCurrentStatus: number }
+			row: { elapsedTimeInCurrentStatus: number },
 		) => {
 			return formatDuration(row.elapsedTimeInCurrentStatus);
 		},

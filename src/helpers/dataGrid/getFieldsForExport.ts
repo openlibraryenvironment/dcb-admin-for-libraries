@@ -37,9 +37,9 @@ export const getFieldsForExport = (coreType: string) => {
 			return [
 				"dateCreated",
 				"patronHostlmsCode",
-				"localBarcode",
+				"patronBarcode",
 				"clusterRecordTitle",
-				"supplyingAgency",
+				"supplyingAgencyCode",
 				"pickupLocationCode",
 				"pickupRequestId",
 				"pickupItemId",
@@ -59,6 +59,15 @@ export const getFieldsForExport = (coreType: string) => {
 				"requesterNote",
 				"id",
 				"activeWorkflow",
+				"isExpeditedCheckout",
+				"itemBarcode",
+				"rawLocalItemStatus",
+				"rawLocalRequestStatus",
+				"localRequestId",
+				"localRequestStatus",
+				"localItemId",
+				"localItemStatus",
+				"localItemType",
 			];
 		default:
 			return [];

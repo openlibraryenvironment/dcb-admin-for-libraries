@@ -1,5 +1,6 @@
 import {
 	DataGridPremium,
+	GridApiPremium,
 	GridColDef,
 	GridColumnVisibilityModel,
 	GridEventListener,
@@ -11,10 +12,13 @@ import {
 	GridRowModes,
 	GridRowModesModel,
 	GridRowParams,
+	GridRowSelectionModel,
 	GridRowsProp,
 	GridSortModel,
+	GridToolbar,
+	useGridApiRef,
 } from "@mui/x-data-grid-premium";
-import { useCallback, useState } from "react";
+import { RefObject, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NoResultsOverlay } from "./components/NoResultsOverlay";
 import { useNavigate } from "@tanstack/react-router";
@@ -24,6 +28,17 @@ import {
 	specialRedirectionTypes,
 } from "@constants/dataGrid/types";
 import { SxProps, Theme } from "@mui/material";
+import ExportToolbar from "./components/ExportToolbar";
+
+declare module "@mui/x-data-grid-premium" {
+	interface ToolbarPropsOverrides {
+		handleExport?: (fileType: string, exportMode: string) => Promise<void>;
+		allDataLoading?: boolean;
+		type?: string;
+		onCleanup?: () => void;
+		selectionCount?: number;
+	}
+}
 
 interface DataGridProps {
 	autoRowHeight?: boolean;
@@ -65,6 +80,11 @@ interface DataGridProps {
 	searchText: string;
 	styleOverrides?: SxProps<Theme>; // If you are providing style overrides for the Data Grid, you MUST include all styles as this will override everything specified by default in sx
 	type: string; // The general type - i.e. "Locations"
+	parentApiRef?: RefObject<GridApiPremium | null>;
+	enableCleanup?: boolean;
+	onCleanup?: () => void;
+	onExport?: (fileType: string, exportMode: string) => Promise<void>;
+	isExporting?: boolean;
 }
 export default function DataGrid({
 	autoRowHeight,
@@ -76,13 +96,17 @@ export default function DataGrid({
 	disablePivoting,
 	disableRowGrouping,
 	editMode,
+	enableCleanup,
 	filterMode,
 	filterModel,
 	getDetailPanelContent,
+	isExporting = false,
 	loading,
 	listViewEnabled,
 	noResultsText,
+	onCleanup,
 	onColumnVisibilityModelChange,
+	onExport,
 	onFilterModelChange,
 	onPaginationModelChange,
 	onRowModesModelChange,
@@ -91,6 +115,7 @@ export default function DataGrid({
 	pagination,
 	paginationMode,
 	paginationModel,
+	parentApiRef,
 	pivotingEnabled,
 	processRowUpdate,
 	rowCount,
@@ -113,6 +138,13 @@ export default function DataGrid({
 		severity: "success",
 		text: null,
 	}); // We do need to give feedback on editing s
+	const internalApiRef = useGridApiRef();
+	const apiRef = parentApiRef || internalApiRef;
+
+	const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
+		type: "include",
+		ids: new Set(),
+	});
 	const handleRowClick: GridEventListener<"rowClick"> = (params, event) => {
 		//UseNavigateResult<string>
 		console.log(type, params);
@@ -167,6 +199,7 @@ export default function DataGrid({
 	return (
 		<div style={{ display: "flex", flexDirection: "column" }}>
 			<DataGridPremium
+				apiRef={apiRef}
 				checkboxSelection={checkboxSelection}
 				columns={columns}
 				columnVisibilityModel={columnVisibilityModel}
@@ -224,6 +257,9 @@ export default function DataGrid({
 				}}
 				onSortModelChange={onSortModelChange}
 				onRowClick={handleRowClick}
+				onRowSelectionModelChange={(newSelection) => {
+					setSelectionModel(newSelection);
+				}}
 				pageSizeOptions={[5, 10, 20, 25, 30, 40, 50, 100, 200]}
 				pagination={pagination}
 				paginationMode={paginationMode}
@@ -235,6 +271,7 @@ export default function DataGrid({
 				onRowModesModelChange={onRowModesModelChange}
 				rowCount={paginationMode === "server" ? rowCount : undefined}
 				rows={rows}
+				rowSelectionModel={selectionModel}
 				showToolbar={toolbarVisible}
 				sortingMode={sortingMode}
 				sortModel={sortModel}
@@ -247,9 +284,18 @@ export default function DataGrid({
 					noResultsOverlay: () => (
 						<NoResultsOverlay noResultsMessage={noResultsText} />
 					),
+					toolbar: type === "patronRequests" ? ExportToolbar : GridToolbar, // rely on this for now. develop our own 'standard custom' toolbar by v9
 				}}
 				slotProps={{
-					toolbar: { showQuickFilter: false },
+					toolbar: {
+						showQuickFilter: false,
+						handleExport: onExport, // Pass the export handler
+						excelOptions: { disableToolbarButton: true },
+						allDataLoading: isExporting, // Pass the loading state
+						type: type, // Pass type to determine menu options
+						onCleanup: enableCleanup ? onCleanup : undefined, // Pass cleanup handler
+						selectionCount: selectionModel?.ids?.size || 0,
+					},
 					filterPanel: expandedFilterPanel
 						? {
 								sx: {

@@ -1,20 +1,21 @@
-import { GridColumnVisibilityModel } from "@mui/x-data-grid-premium";
-
-export const defaultPatronRequestColumnVisibility: GridColumnVisibilityModel = {
+export const cleanupPatronRequestVisibility = {
 	canonicalItemType: false,
 	canonicalPtype: false,
 	pickupLocationCode: false,
-	patronHostlmsCode: false,
+	status: false,
 	previousStatus: false,
 	nextExpectedStatus: false,
 	errorMessage: false,
+	elapsedTimeInCurrentStatus: false,
+	pollCountForCurrentStatus: false,
+	dateUpdated: false,
+	patronHostlmsCode: false,
+	suppliers: false,
+	id: false,
 	outOfSequenceFlag: false,
 	isManuallySelectedItem: false,
-	dateUpdated: false,
-	id: false,
 	description: false,
 	requesterNote: false,
-	activeWorkflow: false,
 	pickupRequestId: false,
 	pickupRequestStatus: false,
 	isExpeditedCheckout: false,
@@ -27,6 +28,8 @@ export const defaultPatronRequestColumnVisibility: GridColumnVisibilityModel = {
 	rawLocalRequestStatus: false,
 	localRequestId: false,
 	renewalCount: false,
-	pollCountForCurrentStatus: false,
-	elapsedTimeInCurrentStatus: false,
+	resolutionCount: false,
+	activeWorkflow: false,
+	supplyingAgencyCode: false,
+	dateCreated: false, // Maybe give them this. But that's it
 };

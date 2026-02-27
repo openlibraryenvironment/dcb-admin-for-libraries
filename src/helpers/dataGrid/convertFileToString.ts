@@ -23,7 +23,7 @@ const getNestedValue = (item: any, path: string[]): any => {
 const formatCellValue = (
 	value: any,
 	delimiter: string,
-	field: string
+	field: string,
 ): string => {
 	if (value === null || value === undefined) {
 		return "";
@@ -62,8 +62,8 @@ const getFieldMapping = (field: string): FieldPath => {
 			field: "canonicalPtype",
 			path: ["requestingIdentity", "canonicalPtype"],
 		},
-		supplyingAgency: {
-			field: "supplyingAgency",
+		supplyingAgencyCode: {
+			field: "supplyingAgencyCode",
 			path: ["suppliers"],
 			arrayHandler: (suppliers) => {
 				const firstSupplier = arrayHandlers.firstItem(suppliers);
@@ -76,6 +76,22 @@ const getFieldMapping = (field: string): FieldPath => {
 			arrayHandler: (suppliers) => {
 				const firstSupplier = arrayHandlers.firstItem(suppliers);
 				return firstSupplier?.canonicalItemType;
+			},
+		},
+		itemBarcode: {
+			field: "itemBarcode",
+			path: ["suppliers"],
+			arrayHandler: (suppliers) => {
+				const firstSupplier = arrayHandlers.firstItem(suppliers);
+				return firstSupplier?.localItemBarcode;
+			},
+		},
+		localItemType: {
+			field: "localItemType",
+			path: ["suppliers"],
+			arrayHandler: (suppliers) => {
+				const firstSupplier = arrayHandlers.firstItem(suppliers);
+				return firstSupplier?.localItemType;
 			},
 		},
 	};
@@ -101,7 +117,7 @@ export const convertFileToString = (
 	data: any[],
 	delimiter: string,
 	coreType: string,
-	usefulColumns: string[] | null
+	usefulColumns: string[] | null,
 ) => {
 	const fieldsForExport = usefulColumns
 		? usefulColumns
@@ -125,7 +141,7 @@ export const convertFileToString = (
 				const value = getFieldValue(item, fieldMapping);
 				return formatCellValue(value, delimiter, field);
 			})
-			.join(delimiter)
+			.join(delimiter),
 	);
 
 	return [headerRow, ...rows].join("\n");

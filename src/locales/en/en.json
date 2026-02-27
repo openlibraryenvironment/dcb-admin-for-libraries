@@ -334,8 +334,10 @@
 		"check_successful": "Check complete",
 		"check_unsuccessful": "Check unsuccessful",
 		"cleanup": "Force clean up",
+		"cleanup_complete": "Cleanup complete",
 		"cleanup_disabled": "Clean up is only available for requests in a non-terminal or ERROR state.",
 		"cleanup_info": "Bypass circulation; clean up and finalise request. This auto-finalises a request and can be used to return an unwanted item. ",
+		"cleanup_in_progress": "Cleanup in progress",
 		"cleanup_successful": "The cleanup operation has been successful, and the patron request has been finalised.",
 		"cleanup_unsuccessful": "The clean up operation has failed, and the patron request remains in an ERROR state. Please try again later.",
 		"cluster_record_uuid": "Cluster record UUID",
@@ -633,6 +635,7 @@
 			"apply_filters": "Apply filters",
 			"cancel": "Cancel",
 			"clear_all": "Clear all",
+			"close": "Close",
 			"collapse": "Collapse",
 			"confirm_changes": "Confirm changes",
 			"continue": "Continue",
@@ -667,10 +670,17 @@
 		},
 		"data_grid": {
 			"active_filters": "{{number}} Active filters",
+			"cleanup": {
+				"error_count": "Error: {{count}}",
+				"selected": "Cleanup selected requests ({{count}})",
+				"skipped_count": "Not eligible: {{count}}",
+				"success_count": "Successful: {{count}}"
+			},
 			"export": {
 				"all": "Export all",
 				"all_csv": "Export all as CSV",
 				"all_tsv": "Export all as TSV",
+				"complete": "{{percentage}} complete",
 				"current": "Export current page as CSV",
 				"failed": "The data grid export has failed. Please try again.",
 				"success": "Successfully exported {{count}} records from the data grid.",
@@ -680,6 +690,7 @@
 				"records": "Exporting {{count}} records from the data grid."
 			},
 			"filters": {
+				"active_description": "{{length}} filter(s) active: {{description}}",
 				"between": "Between",
 				"days_from": "Days from",
 				"days_to": "Days to",

@@ -30,4 +30,5 @@ export const defaultSupplierRequestColumnVisibility: GridColumnVisibilityModel =
 		rawLocalRequestStatus: false,
 		localRequestId: false,
 		renewalCount: false,
+		elapsedTimeInCurrentStatus: false,
 	};

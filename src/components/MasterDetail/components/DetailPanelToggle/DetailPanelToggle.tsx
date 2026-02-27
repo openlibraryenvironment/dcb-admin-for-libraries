@@ -5,24 +5,24 @@ import {
 	useGridApiContext,
 	useGridSelector,
 	gridDetailPanelExpandedRowsContentCacheSelector,
-	GridApiPro,
+	GridApiPremium,
 } from "@mui/x-data-grid-premium";
 import { isValidElement, RefObject } from "react";
 import { useTranslation } from "react-i18next";
 
 export function DetailPanelToggle(
-	props: Pick<GridRenderCellParams, "id" | "value">
+	props: Pick<GridRenderCellParams, "id" | "value">,
 ) {
 	const { t } = useTranslation();
 
 	const { id, value: isExpanded } = props;
-	const apiRef = useGridApiContext() as RefObject<GridApiPro>;
+	const apiRef = useGridApiContext() as RefObject<GridApiPremium>;
 
 	// To avoid calling ´getDetailPanelContent` all the time, the following selector
 	// gives an object with the detail panel content for each row id.
 	const contentCache = useGridSelector(
 		apiRef,
-		gridDetailPanelExpandedRowsContentCacheSelector
+		gridDetailPanelExpandedRowsContentCacheSelector,
 	);
 
 	// If the value is not a valid React element, it means that the row has no detail panel.
