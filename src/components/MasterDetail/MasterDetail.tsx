@@ -10,7 +10,7 @@ import {
 	Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { GridApiPro, useGridApiContext } from "@mui/x-data-grid-premium";
+import { GridApiPremium, useGridApiContext } from "@mui/x-data-grid-premium";
 import { useTranslation } from "react-i18next";
 import { RefObject, useCallback, useEffect, useState } from "react";
 import RenderAttribute from "../RenderAttribute/RenderAttribute";
@@ -28,7 +28,7 @@ interface MasterDetailType {
 }
 
 export default function MasterDetail({ row, type }: MasterDetailType) {
-	const apiRef = useGridApiContext() as RefObject<GridApiPro>;
+	const apiRef = useGridApiContext() as RefObject<GridApiPremium>;
 	const { t } = useTranslation();
 
 	const [width, setWidth] = useState(() => {

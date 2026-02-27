@@ -34,9 +34,9 @@ const headerMappings: Record<string, Record<string, string>> = {
 	patronRequests: {
 		dateCreated: "Date created",
 		patronHostlmsCode: "Patron Host LMS code",
-		localBarcode: "Patron barcode",
+		patronBarcode: "Patron barcode",
 		clusterRecordTitle: "Title",
-		supplyingAgency: "Supplying agency",
+		supplyingAgencyCode: "Supplying agency",
 		pickupLocationCode: "Pickup location name",
 		pickupRequestId: "Pickup request UUID",
 		pickupRequestStatus: "Pickup request status",
@@ -56,12 +56,21 @@ const headerMappings: Record<string, Record<string, string>> = {
 		requesterNote: "Requester note",
 		id: "DCB Patron request UUID",
 		activeWorkflow: "Active workflow",
+		isExpeditedCheckout: "Walk-up request?",
+		itemBarcode: "Item barcode",
+		rawLocalItemStatus: "Raw local item status",
+		rawLocalRequestStatus: "Raw local request status",
+		localRequestId: "Request ID in local system",
+		localRequestStatus: "Request status in local system",
+		localItemId: "Item ID in local system",
+		localItemStatus: "Local item status",
+		localItemType: "Local item type",
 	},
 };
 
 export const getHeadersForExport = (
 	coreType: string,
-	usefulColumns?: string[]
+	usefulColumns?: string[],
 ) => {
 	const mappings = headerMappings[coreType] || {};
 	console.log(usefulColumns);

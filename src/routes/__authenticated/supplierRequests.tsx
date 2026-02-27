@@ -1,6 +1,10 @@
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
+import { usePatronRequestExport } from "@/hooks/useExport";
+import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
+import { CleanupProgressDialog } from "@components/DataGrid/components/CleanupProgressDialog";
+import { ExportProgressDialog } from "@components/DataGrid/components/ExportProgressDialog";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -20,9 +24,11 @@ import {
 	GridPaginationModel,
 	GridRowModesModel,
 	GridSortModel,
+	useGridApiRef,
 } from "@mui/x-data-grid-premium";
 import { getLibraries } from "@queries/getLibraries";
 import { getPatronRequests } from "@queries/getPatronRequests";
+import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
@@ -46,8 +52,9 @@ function RouteComponent() {
 		() => ({
 			Authorization: `Bearer ${auth?.user?.access_token}`,
 		}),
-		[token]
+		[token],
 	);
+	const apiRef = useGridApiRef();
 
 	const gridId = "supplierPatronRequests";
 	const {
@@ -70,19 +77,19 @@ function RouteComponent() {
 
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
-			storedState.pagination ?? { page: 0, pageSize: 25 }
+			storedState.pagination ?? { page: 0, pageSize: 25 },
 		);
 	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
-		storedState.filter ?? { items: [] }
+		storedState.filter ?? { items: [] },
 	);
 	const debouncedFilterModel = useDebounce(filterModel, 500);
 
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
-		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }]
+		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }],
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? defaultSupplierRequestColumnVisibility
+		storedState.columnVisibility ?? defaultSupplierRequestColumnVisibility,
 	);
 
 	const [isFiltering, setIsFiltering] = useState(false);
@@ -90,7 +97,7 @@ function RouteComponent() {
 	useEffect(() => {
 		const hasActiveFilters =
 			filterModel.items.some(
-				(item) => item.value && item.value !== "" && item.value !== null
+				(item) => item.value && item.value !== "" && item.value !== null,
 			) ||
 			(filterModel.quickFilterValues &&
 				filterModel.quickFilterValues.length > 0);
@@ -112,7 +119,7 @@ function RouteComponent() {
 			setLocalPaginationModel(model);
 			setPaginationModel(gridId, model);
 		},
-		[gridId, setPaginationModel]
+		[gridId, setPaginationModel],
 	);
 
 	const handleFilterChange = useCallback(
@@ -120,7 +127,7 @@ function RouteComponent() {
 			setLocalFilterModel(model);
 			setFilterModel(gridId, model);
 		},
-		[gridId, setFilterModel]
+		[gridId, setFilterModel],
 	);
 
 	const handleSortChange = useCallback(
@@ -128,7 +135,7 @@ function RouteComponent() {
 			setLocalSortModel(model);
 			setSortModel(gridId, model);
 		},
-		[gridId, setSortModel]
+		[gridId, setSortModel],
 	);
 
 	const handleColumnVisibilityChange = useCallback(
@@ -136,19 +143,31 @@ function RouteComponent() {
 			setLocalColumnVisibilityModel(model);
 			setColumnVisibilityModel(gridId, model);
 		},
-		[gridId, setColumnVisibilityModel]
+		[gridId, setColumnVisibilityModel],
 	);
 
-	const [snackbarOpen, setSnackbarOpen] = useState(false);
+	const [alert, setAlert] = useState<{
+		open: boolean;
+		severity: "success" | "error" | "warning";
+		text: string | null;
+	}>({
+		open: false,
+		severity: "success",
+		text: null,
+	});
 
 	const handleSnackbarClose = (
 		event?: React.SyntheticEvent | Event,
-		reason?: string
+		reason?: string,
 	) => {
 		if (reason === "clickaway") {
 			return;
 		}
-		setSnackbarOpen(false);
+		setAlert({
+			open: false,
+			severity: "success",
+			text: null,
+		});
 	};
 
 	const code = auth.user?.profile?.code;
@@ -161,6 +180,7 @@ function RouteComponent() {
 		isError: isPatronRequestError,
 		error,
 		isFetching,
+		refetch,
 	} = useQuery<PatronRequestQueryData>({
 		queryKey: [
 			"getSupplierRequestsByIds",
@@ -177,7 +197,7 @@ function RouteComponent() {
 			const additionalFilters = processGridFilterModel(
 				debouncedFilterModel,
 				presetQuery,
-				["status", "description"]
+				["status", "description"],
 			);
 			const finalQuery = additionalFilters
 				? `(${presetQuery}) AND (${additionalFilters})`
@@ -195,7 +215,7 @@ function RouteComponent() {
 				`${dcbApiBase}/graphql`,
 				getPatronRequests,
 				queryVariables,
-				headers
+				headers,
 			);
 		},
 		enabled: !!token && !!dcbApiBase && !!code,
@@ -217,7 +237,7 @@ function RouteComponent() {
 					orderBy: "DESC",
 					order: "fullName",
 				},
-				headers
+				headers,
 			),
 		enabled: !!token && !!dcbApiBase,
 		refetchOnWindowFocus: false,
@@ -260,8 +280,49 @@ function RouteComponent() {
 		error,
 		setLocalFilterModel,
 		setLocalSortModel,
-		() => setSnackbarOpen(true)
+		() =>
+			setAlert({
+				open: true,
+				severity: "warning",
+				text: t("ui.feedback.cannot_process"),
+			}),
 	);
+
+	const { cleanupState, handleCleanup, handleCloseCleanup } =
+		usePatronRequestCleanup({
+			apiRef,
+			dcbApiBase,
+			headers,
+			onSuccess: () => {
+				refetch();
+			},
+		});
+	const { exportProgress, handleExport } = usePatronRequestExport({
+		apiRef,
+		dcbApiBase,
+		headers,
+		baseQuery: presetQuery,
+		exportQuery: getPatronRequestsForExport,
+		filterModel: debouncedFilterModel,
+		sortModel,
+		onExportSuccess: (msg, count) => {
+			console.log(msg);
+			setAlert({
+				open: true,
+				severity: "success",
+				text: t("ui.data_grid.export.success", { count: count }),
+			});
+		},
+		onExportError: (msg) => {
+			console.log(msg);
+			setAlert({
+				open: true,
+				severity: "error",
+				text: t("ui.data_grid.export.failed"),
+			});
+		},
+		type: "supplierRequests",
+	});
 
 	if (isPatronRequestLoading && !patronRequestData) {
 		return (
@@ -299,10 +360,10 @@ function RouteComponent() {
 					rows={patronRequestData?.patronRequests?.content ?? []}
 					columns={dynamicColumns}
 					columnVisibilityModel={columnVisibilityModel}
+					checkboxSelection={true}
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
 					type="patronRequests"
 					identifier="supplierPatronRequests"
-					checkboxSelection={false}
 					disableAggregation={true}
 					disableHoverInteractions={true}
 					disableRowGrouping={true}
@@ -326,20 +387,43 @@ function RouteComponent() {
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
+					enableCleanup={true}
+					onCleanup={handleCleanup}
+					onExport={handleExport}
+					isExporting={exportProgress.isExporting}
+					parentApiRef={apiRef}
 				/>
 			}
+			<ExportProgressDialog
+				open={exportProgress.isExporting}
+				progress={exportProgress.progress}
+				totalRecords={exportProgress.totalRecords}
+			/>
+			<CleanupProgressDialog
+				open={cleanupState.open}
+				isCleaning={cleanupState.isCleaning}
+				progress={
+					cleanupState.total > 0
+						? (cleanupState.processed / cleanupState.total) * 100
+						: 0
+				}
+				total={cleanupState.total}
+				processed={cleanupState.processed}
+				successRows={cleanupState.successRows}
+				errorRows={cleanupState.errorRows}
+				skippedRows={cleanupState.skippedRows}
+				onClose={handleCloseCleanup}
+			/>
+
 			{
 				<TimedAlert
-					open={snackbarOpen}
+					open={alert.open}
 					onCloseFunc={handleSnackbarClose}
-					severityType="warning"
+					severityType={alert.severity}
 					// variant="filled"
 					// sx={{ width: "100%" }}
 					autoHideDuration={6000}
-					alertText={
-						t("ui.feedback.error.cannot_process") ||
-						"We could not process that operation, so we have reset the data grid options."
-					}></TimedAlert>
+					alertText={alert.text}></TimedAlert>
 			}
 		</>
 	);

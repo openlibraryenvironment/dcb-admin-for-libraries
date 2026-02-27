@@ -3,7 +3,7 @@
 import { gql } from "graphql-request";
 
 export const getPatronRequestsForExport = gql`
-	query LoadPatronRequests(
+	query LoadPatronRequestsForExport(
 		$pageno: Int!
 		$pagesize: Int!
 		$order: String!
@@ -37,6 +37,14 @@ export const getPatronRequestsForExport = gql`
 				pickupRequestId
 				pickupRequestStatus
 				pickupItemId
+				isExpeditedCheckout
+				rawLocalRequestStatus
+				rawLocalItemStatus
+				localRequestId
+				localRequestStatus
+				localItemId
+				localItemStatus
+				localItemType
 				patron {
 					id
 				}
@@ -47,6 +55,8 @@ export const getPatronRequestsForExport = gql`
 				suppliers {
 					localAgency
 					canonicalItemType
+					localItemBarcode
+					localItemType
 				}
 				clusterRecord {
 					title

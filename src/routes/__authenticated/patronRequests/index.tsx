@@ -1,7 +1,11 @@
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
+import { usePatronRequestExport } from "@/hooks/useExport";
+import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
 import DataGrid from "@components/DataGrid/DataGrid";
+import { CleanupProgressDialog } from "@components/DataGrid/components/CleanupProgressDialog";
+import { ExportProgressDialog } from "@components/DataGrid/components/ExportProgressDialog";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
@@ -20,9 +24,11 @@ import {
 	GridPaginationModel,
 	GridRowModesModel,
 	GridSortModel,
+	useGridApiRef,
 } from "@mui/x-data-grid-premium";
 import { getLibraries } from "@queries/getLibraries";
 import { getPatronRequests } from "@queries/getPatronRequests";
+import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
@@ -42,7 +48,7 @@ function RouteComponent() {
 	const { t } = useTranslation();
 	// const navigate = useNavigate();
 	const auth = useAuth();
-
+	const apiRef = useGridApiRef();
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
@@ -72,12 +78,28 @@ function RouteComponent() {
 		columnVisibility: storedColumnVisibilityModel[gridId],
 	};
 
+	// const [alert, setAlert] = useState<AlertObject>({
+	// 	open: false,
+	// 	severity: "success",
+	// 	text: "",
+	// 	title: "",
+	// });
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
 			storedState.pagination ?? { page: 0, pageSize: 25 },
 		);
 
-	const [snackbarOpen, setSnackbarOpen] = useState(false);
+	const [alert, setAlert] = useState<{
+		open: boolean;
+		severity: "success" | "error" | "warning";
+		text: string | null;
+	}>({
+		open: false,
+		severity: "success",
+		text: null,
+	});
+
+	// const [snackbarOpen, setSnackbarOpen] = useState(false);
 
 	const handleSnackbarClose = (
 		event?: React.SyntheticEvent | Event,
@@ -86,7 +108,7 @@ function RouteComponent() {
 		if (reason === "clickaway") {
 			return;
 		}
-		setSnackbarOpen(false);
+		setAlert({ open: false, severity: "success", text: null });
 	};
 	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
 		storedState.filter ?? { items: [] },
@@ -224,6 +246,7 @@ function RouteComponent() {
 		isError: isPatronRequestError,
 		error,
 		isFetching,
+		refetch,
 	} = useQuery<PatronRequestQueryData>({
 		queryKey: [
 			"getPatronRequests",
@@ -270,9 +293,50 @@ function RouteComponent() {
 		error,
 		setLocalFilterModel,
 		setLocalSortModel,
-		() => setSnackbarOpen(true),
+		() =>
+			setAlert({
+				open: true,
+				severity: "warning",
+				text: t("ui.feedback.cannot_process"),
+			}),
 	);
 
+	const { cleanupState, handleCleanup, handleCloseCleanup } =
+		usePatronRequestCleanup({
+			apiRef,
+			dcbApiBase,
+			headers,
+			onSuccess: () => {
+				refetch();
+			},
+		});
+	const exportBaseQuery = `patronHostlmsCode:${userLibraryHostLmsCode}`;
+	const { exportProgress, handleExport } = usePatronRequestExport({
+		apiRef,
+		dcbApiBase,
+		headers,
+		baseQuery: exportBaseQuery,
+		exportQuery: getPatronRequestsForExport,
+		filterModel: debouncedFilterModel,
+		sortModel,
+		onExportSuccess: (msg, count) => {
+			console.log(msg);
+			setAlert({
+				open: true,
+				severity: "success",
+				text: t("ui.data_grid.export.success", { count: count }),
+			});
+		},
+		onExportError: (msg) => {
+			console.log(msg);
+			setAlert({
+				open: true,
+				severity: "error",
+				text: t("ui.data_grid.export.failed"),
+			});
+		},
+		type: "patronRequests",
+	});
 	// Show loading if initial load or libraries are loading
 	if ((isPatronRequestLoading && !patronRequestData) || librariesLoading) {
 		return (
@@ -307,6 +371,7 @@ function RouteComponent() {
 		<>
 			{
 				<DataGrid
+					parentApiRef={apiRef}
 					disablePivoting
 					rows={patronRequestData?.patronRequests?.content ?? []}
 					columns={dynamicPatronRequestColumns}
@@ -314,7 +379,7 @@ function RouteComponent() {
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
 					type="patronRequests"
 					identifier="patronRequestsMain"
-					checkboxSelection={false}
+					checkboxSelection={true}
 					disableAggregation={true}
 					disableHoverInteractions={true}
 					disableRowGrouping={true}
@@ -338,18 +403,42 @@ function RouteComponent() {
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
+					enableCleanup={true}
+					onCleanup={handleCleanup}
+					onExport={handleExport}
+					isExporting={exportProgress.isExporting}
 				/>
 			}
+			<ExportProgressDialog
+				open={exportProgress.isExporting}
+				progress={exportProgress.progress}
+				totalRecords={exportProgress.totalRecords}
+			/>
+			<CleanupProgressDialog
+				open={cleanupState.open}
+				isCleaning={cleanupState.isCleaning}
+				progress={
+					cleanupState.total > 0
+						? (cleanupState.processed / cleanupState.total) * 100
+						: 0
+				}
+				total={cleanupState.total}
+				processed={cleanupState.processed}
+				successRows={cleanupState.successRows}
+				errorRows={cleanupState.errorRows}
+				skippedRows={cleanupState.skippedRows}
+				onClose={handleCloseCleanup}
+			/>
 
 			{
 				<TimedAlert
-					open={snackbarOpen}
+					open={alert.open}
 					onCloseFunc={handleSnackbarClose}
-					severityType="warning"
+					severityType={alert.severity}
 					// variant="filled"
 					// sx={{ width: "100%" }}
 					autoHideDuration={6000}
-					alertText={t("ui.feedback.error.cannot_process")}></TimedAlert>
+					alertText={alert.text}></TimedAlert>
 			}
 		</>
 	);
