@@ -1,3 +1,10 @@
+# [1.12.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.11.0...v1.12.0) (2026-03-04)
+
+
+### Features
+
+* New title and publisher filters for requests ([f3df8aa](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/f3df8aaffc05d4728d0581b5e50d3781a4fe8ad0))
+
 # [1.11.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.10.0...v1.11.0) (2026-02-27)
 
 
