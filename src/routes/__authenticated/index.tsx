@@ -52,10 +52,11 @@ function HomeComponent() {
 		() => ({
 			Authorization: `Bearer ${auth.user?.access_token}`,
 		}),
-		[auth.user?.access_token]
+		[auth.user?.access_token],
 	);
 
 	const code = auth.user?.profile?.code;
+	console.log(auth);
 
 	const theme = useTheme();
 	const [editMode, setEditMode] = useState(false);
@@ -71,6 +72,7 @@ function HomeComponent() {
 	};
 
 	console.log(showConfirmationEdit);
+	console.log(code);
 	const DCB_API_BASE = cfg?.VITE_DCB_API_BASE;
 
 	const [alert, setAlert] = useState<AlertObject>({
@@ -110,7 +112,7 @@ function HomeComponent() {
 					orderBy: "fullName",
 					order: "DESC",
 				},
-				headers
+				headers,
 			),
 		// do the on success here
 	});
@@ -140,7 +142,7 @@ function HomeComponent() {
 				`${DCB_API_BASE}/graphql`,
 				getPatronRequestStats,
 				queryVariables,
-				headers
+				headers,
 			);
 		},
 		enabled: !!headers && !!DCB_API_BASE && !!userLibraryHostLmsCode,
@@ -175,7 +177,7 @@ function HomeComponent() {
 				`${DCB_API_BASE}/graphql`,
 				getPatronRequestStats,
 				queryVariables,
-				headers
+				headers,
 			);
 		},
 		enabled: !!headers && !!DCB_API_BASE && !!userLibraryHostLmsCode,
@@ -202,7 +204,7 @@ function HomeComponent() {
 						...formData,
 					},
 				},
-				headers
+				headers,
 			);
 			return response.updateLibrary;
 		},
@@ -251,7 +253,7 @@ function HomeComponent() {
 			.trim()
 			.nonNullable(t("ui.validation.required"))
 			.required(
-				t("ui.validation.required", { field: t("ui.library.full_name") })
+				t("ui.validation.required", { field: t("ui.library.full_name") }),
 			)
 			.max(255, t("ui.validation.max_length", { length: 255 })),
 		shortName: Yup.string()
@@ -263,14 +265,14 @@ function HomeComponent() {
 			.max(32, t("ui.validation.max_length", { length: 128 })),
 		latitude: Yup.number()
 			.transform((value, originalValue) =>
-				originalValue === "" ? null : value
+				originalValue === "" ? null : value,
 			)
 			.typeError(t("ui.validation.locations.lat"))
 			.min(-90, t("ui.validation.locations.lat"))
 			.max(90, t("ui.validation.locations.lat")),
 		longitude: Yup.number()
 			.transform((value, originalValue) =>
-				originalValue === "" ? null : value
+				originalValue === "" ? null : value,
 			)
 			.typeError(t("ui.validation.locations.long"))
 			.min(-180, t("ui.validation.locations.long"))
@@ -344,7 +346,7 @@ function HomeComponent() {
 	const handleConfirmSave = async (
 		reason: string,
 		changeCategory: string,
-		changeReferenceUrl: string
+		changeReferenceUrl: string,
 	) => {
 		try {
 			updateLibraryMutation.mutate({
