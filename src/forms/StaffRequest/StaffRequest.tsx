@@ -53,7 +53,7 @@ export default function StaffRequest({
 		() => ({
 			Authorization: `Bearer ${auth.user?.access_token}`,
 		}),
-		[auth.user?.access_token]
+		[auth.user?.access_token],
 	);
 	const router = useRouter();
 	const { cfg } = router.options.context;
@@ -75,7 +75,7 @@ export default function StaffRequest({
 
 	const [activeStep, setActiveStep] = useState(0);
 	const [patronData, setPatronData] = useState<PatronLookupResponse | null>(
-		null
+		null,
 	);
 	const [stepError, setStepError] = useState<number | null>(null);
 
@@ -90,32 +90,33 @@ export default function StaffRequest({
 			.required(
 				t("ui.validation.required", {
 					field: t("requesting.staff_request.patron.barcode").toLowerCase(),
-				})
+				}),
 			)
 			.test(
 				"no-square-brackets",
 				t("requesting.staff_request.patron.error.no_brackets"),
-				(value) => (value ? !value.includes("[") && !value.includes("]") : true)
+				(value) =>
+					value ? !value.includes("[") && !value.includes("]") : true,
 			),
 		agencyCode: Yup.string().required(
 			t("ui.validation.required", {
 				field: t("agency.code").toLowerCase(),
-			})
+			}),
 		),
 		pickupLocationId: Yup.string().required(
 			t("ui.validation.required", {
 				field: t(
-					"requesting.staff_request.patron.pickup_location"
+					"requesting.staff_request.patron.pickup_location",
 				).toLowerCase(),
-			})
+			}),
 		),
 		requesterNote: Yup.string(),
 		selectionType: Yup.string().required(
 			t("ui.validation.required", {
 				field: t(
-					"requesting.staff_request.patron.selection.type"
+					"requesting.staff_request.patron.selection.type",
 				).toLowerCase(),
-			})
+			}),
 		),
 		itemLocalId: Yup.string().when("selectionType", {
 			is: "manual",
@@ -123,9 +124,9 @@ export default function StaffRequest({
 				schema.required(
 					t("ui.validation.required", {
 						field: t(
-							"requesting.staff_request.patron.item_local_id"
+							"requesting.staff_request.patron.item_local_id",
 						).toLowerCase(),
-					})
+					}),
 				),
 			otherwise: (schema) => schema.notRequired(),
 		}),
@@ -135,9 +136,9 @@ export default function StaffRequest({
 				schema.required(
 					t("ui.validation.required", {
 						field: t(
-							"requesting.staff_request.patron.item_library"
+							"requesting.staff_request.patron.item_library",
 						).toLowerCase(),
-					})
+					}),
 				),
 			otherwise: (schema) => schema.notRequired(),
 		}),
@@ -184,7 +185,7 @@ export default function StaffRequest({
 						pagesize: 1000,
 						query: "",
 					},
-					headers
+					headers,
 				),
 		});
 
@@ -203,14 +204,14 @@ export default function StaffRequest({
 				agencyId: item.agency?.id,
 				functionalSettings: findConsortium(item?.membership)
 					?.functionalSettings,
-			})
+			}),
 		) || [];
 
 	const selectedLibrary = libraryOptions.find(
-		(option) => option.value === patronAgencyCode
+		(option) => option.value === patronAgencyCode,
 	);
 	const isPickupAnywhere = !!selectedLibrary?.functionalSettings?.some(
-		(setting) => setting.name === "PICKUP_ANYWHERE" && setting.enabled === true
+		(setting) => setting.name === "PICKUP_ANYWHERE" && setting.enabled === true,
 	); // This still matters in the context of staff requesting. However, pickup locations from the user's agency should be prioritised.
 
 	const {
@@ -227,8 +228,10 @@ export default function StaffRequest({
 		],
 		queryFn: () => {
 			const locationQuery = isPickupAnywhere
-				? "isEnabledForPickupAnywhere:true"
-				: `agency:${selectedLibrary?.agencyId}`;
+				? "agency:" +
+					selectedLibrary?.agencyId +
+					" OR isEnabledForPickupAnywhere:true"
+				: "agency:" + selectedLibrary?.agencyId;
 			return request(
 				`${cfg.VITE_DCB_API_BASE}/graphql`,
 				getLocations,
@@ -239,7 +242,7 @@ export default function StaffRequest({
 					pagesize: 1000,
 					query: locationQuery,
 				},
-				headers
+				headers,
 			);
 		},
 		enabled: false,
@@ -268,7 +271,7 @@ export default function StaffRequest({
 
 	const itemsData: Item[] = availabilityResults?.itemList || [];
 	const filteredItems = itemsData.filter(
-		(item) => item?.agency?.code === itemAgencyCode
+		(item) => item?.agency?.code === itemAgencyCode,
 	);
 
 	const pickupLocationOptions: PatronRequestAutocompleteOption[] =
@@ -277,7 +280,7 @@ export default function StaffRequest({
 				label: item.name,
 				value: item.id,
 				code: item.code,
-			})
+			}),
 		) || [];
 	const sortedPickupLocationOptions = useMemo(() => {
 		if (!pickupLocations?.locations?.content) {
@@ -295,7 +298,7 @@ export default function StaffRequest({
 					item?.agency?.name ??
 					t("staff_request.patron.pickup_location_no_agency"),
 				agencyCode: item?.agency?.code,
-			})
+			}),
 		);
 		// Sort the array of options
 		return options.sort((a: any, b: any) => {
@@ -316,7 +319,7 @@ export default function StaffRequest({
 				label: item.fullName,
 				value: item.agencyCode,
 				hostLmsCode: item?.agency?.hostLms?.code,
-			})
+			}),
 		) || [];
 
 	const itemOptions: PatronRequestAutocompleteOption[] =
@@ -345,7 +348,7 @@ export default function StaffRequest({
 
 				value: item.id,
 				dueDate: item?.dueDate,
-			})
+			}),
 		) || [];
 
 	// This handles loading state, errors, and success callbacks cleanly.
@@ -362,7 +365,7 @@ export default function StaffRequest({
 						patronPrinciple: variables.patronBarcode,
 						agencyCode: variables.agencyCode,
 					},
-					{ headers }
+					{ headers },
 				)
 				.then((res) => res.data),
 		onSuccess: (data) => {
@@ -456,7 +459,7 @@ export default function StaffRequest({
 		}
 
 		const selectedLocation = pickupLocationOptions.find(
-			(option) => option.value === data.pickupLocationId
+			(option) => option.value === data.pickupLocationId,
 		);
 
 		const basePayload = {

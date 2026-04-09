@@ -65,7 +65,7 @@ export default function ExpeditedCheckout({
 		() => ({
 			Authorization: `Bearer ${auth.user?.access_token}`,
 		}),
-		[auth.user?.access_token]
+		[auth.user?.access_token],
 	);
 
 	const [alert, setAlert] = useState<{
@@ -88,7 +88,7 @@ export default function ExpeditedCheckout({
 
 	const [patronValidated, setPatronValidated] = useState(false);
 	const [patronData, setPatronData] = useState<PatronLookupResponse | null>(
-		null
+		null,
 	);
 	const [availabilityResults, setAvailabilityResults] = useState<any>({});
 	const [itemsLoading, setItemsLoading] = useState(false);
@@ -118,7 +118,7 @@ export default function ExpeditedCheckout({
 					orderBy: "fullName",
 					order: "DESC",
 				},
-				headers
+				headers,
 			),
 		// do the on success here
 	});
@@ -142,7 +142,7 @@ export default function ExpeditedCheckout({
 					pagesize: 1000,
 					query: "",
 				},
-				headers
+				headers,
 			),
 	});
 
@@ -166,9 +166,9 @@ export default function ExpeditedCheckout({
 					hostLmsCode: item?.agency?.hostLms?.code,
 					functionalSettings: findConsortium(item?.membership)
 						?.functionalSettings,
-				})
+				}),
 			),
-		[patronLibraries]
+		[patronLibraries],
 	);
 
 	// Pickup anywhere is not relevant here: you can only check out at a location of the staff user's library.
@@ -188,7 +188,7 @@ export default function ExpeditedCheckout({
 				`${cfg.VITE_DCB_API_BASE}/graphql`,
 				getPatronRequestEssentials,
 				{ query: `id:${patronRequestId}` },
-				headers
+				headers,
 			),
 		enabled: patronRequestWaiting && !!patronRequestId,
 		refetchInterval: 10000,
@@ -215,36 +215,37 @@ export default function ExpeditedCheckout({
 			.required(
 				t("ui.validation.required", {
 					field: t("requesting.staff_request.patron.barcode").toLowerCase(),
-				})
+				}),
 			)
 			.test(
 				"no-square-brackets",
 				t("requesting.staff_request.patron.error.no_brackets"),
-				(value) => (value ? !value.includes("[") && !value.includes("]") : true)
+				(value) =>
+					value ? !value.includes("[") && !value.includes("]") : true,
 			),
 		agencyCode: Yup.string().required(
 			t("ui.validation.required", {
 				field: t("agency.code").toLowerCase(),
-			})
+			}),
 		),
 		pickupLocationId: Yup.string().required(
 			t("ui.validation.required", {
 				field: t(
-					"requesting.staff_request.patron.pickup_location"
+					"requesting.staff_request.patron.pickup_location",
 				).toLowerCase(),
-			})
+			}),
 		),
 		requesterNote: Yup.string(),
 		itemLocalId: Yup.string().required(
 			t("ui.validation.required", {
 				field: t("requesting.staff_request.patron.item_local_id").toLowerCase(),
-			})
+			}),
 		),
 		itemLocalSystemCode: Yup.string().required(),
 		itemAgencyCode: Yup.string().required(
 			t("ui.validation.required", {
 				field: t("requesting.staff_request.patron.item_library").toLowerCase(),
-			})
+			}),
 		),
 	});
 	const staffLibraryHostLmsCode = staffLibrary?.agency?.hostLms?.code;
@@ -299,10 +300,10 @@ export default function ExpeditedCheckout({
 						pagesize: 1000,
 						query: locationQuery,
 					},
-					headers
+					headers,
 				),
 			enabled: !!staffLibrary?.agency?.id,
-		}
+		},
 	);
 	useEffect(() => {
 		if (staffLibraryHostLmsCode) {
@@ -321,7 +322,7 @@ export default function ExpeditedCheckout({
 				{
 					headers,
 					params: { clusteredBibId: bibClusterId },
-				}
+				},
 			);
 			setAvailabilityResults(response.data);
 		} catch (error) {
@@ -341,7 +342,7 @@ export default function ExpeditedCheckout({
 
 	const itemsData: Item[] = availabilityResults?.itemList || [];
 	const filteredItems = itemsData.filter(
-		(item) => item?.agency?.code === itemAgencyCode
+		(item) => item?.agency?.code === itemAgencyCode,
 	);
 
 	const pickupLocationOptions: PatronRequestAutocompleteOption[] =
@@ -350,7 +351,7 @@ export default function ExpeditedCheckout({
 				label: item.name,
 				value: item.id,
 				code: item.code,
-			})
+			}),
 		) || [];
 
 	const itemOptions: PatronRequestAutocompleteOption[] =
@@ -379,11 +380,11 @@ export default function ExpeditedCheckout({
 
 				value: item.id,
 				dueDate: item?.dueDate,
-			})
+			}),
 		) || [];
 
 	const selectedItem = itemOptions.find(
-		(option) => option.value === itemLocalId
+		(option) => option.value === itemLocalId,
 	);
 
 	useEffect(() => {
@@ -451,11 +452,11 @@ export default function ExpeditedCheckout({
 		mutationFn: async (data) => {
 			if (!patronData || patronData.status !== "VALID") {
 				throw new Error(
-					t("requesting.staff_request.patron.error.validation_failure")
+					t("requesting.staff_request.patron.error.validation_failure"),
 				);
 			}
 			const selectedLocation = pickupLocationOptions.find(
-				(option) => option.value === data.pickupLocationId
+				(option) => option.value === data.pickupLocationId,
 			);
 
 			const payload = {
@@ -479,7 +480,7 @@ export default function ExpeditedCheckout({
 			const response = await axios.post(
 				`${cfg.VITE_DCB_API_BASE}/patrons/requests/place/expeditedCheckout`,
 				payload,
-				{ headers }
+				{ headers },
 			);
 			return response.data;
 		},
