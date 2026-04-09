@@ -1,3 +1,10 @@
+## [1.12.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.12.0...v1.12.1) (2026-04-09)
+
+
+### Bug Fixes
+
+* Fix issue with some locations not showing ([d0f727b](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/d0f727be9e4864946435a60af80c4144a9e85a76))
+
 # [1.12.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.11.0...v1.12.0) (2026-03-04)
 
 
