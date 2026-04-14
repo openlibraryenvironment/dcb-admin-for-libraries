@@ -468,6 +468,7 @@ export default function StaffRequest({
 				localSystemCode: patronData.systemCode,
 				localId: patronData.localPatronId[0],
 				homeLibraryCode: patronData.homeLocationCode,
+				agencyCode: patronData.agencyCode,
 			},
 			pickupLocation: { code: selectedLocation?.value || "" },
 			requesterNote: data.requesterNote || "Staff Request",

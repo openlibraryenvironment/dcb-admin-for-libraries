@@ -465,6 +465,7 @@ export default function ExpeditedCheckout({
 					localSystemCode: patronData.systemCode,
 					localId: patronData.localPatronId[0],
 					homeLibraryCode: patronData.homeLocationCode,
+					agencyCode: patronData.agencyCode,
 				},
 				pickupLocation: { code: selectedLocation?.value || "" },
 				description: "On site borrowing request" + data.requesterNote,
