@@ -1,3 +1,10 @@
+## [1.12.2](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.12.1...v1.12.2) (2026-04-17)
+
+
+### Bug Fixes
+
+* Pass patron agency code for staff/expidited requests ([9aa2651](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/9aa2651f23608a0487551010a1e8bcf62ed1e917))
+
 ## [1.12.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.12.0...v1.12.1) (2026-04-09)
 
 
