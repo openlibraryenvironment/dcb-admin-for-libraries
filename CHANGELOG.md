@@ -1,3 +1,10 @@
+## [1.12.4](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.12.3...v1.12.4) (2026-04-23)
+
+
+### Bug Fixes
+
+* Ensure items that aren't available don't show for walk-up [DCB-2138] ([794c79c](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/794c79c237afcb250eee37e01ad50b8256f2ea7a))
+
 ## [1.12.3](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.12.2...v1.12.3) (2026-04-23)
 
 
