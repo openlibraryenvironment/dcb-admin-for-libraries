@@ -342,7 +342,11 @@ export default function ExpeditedCheckout({
 
 	const itemsData: Item[] = availabilityResults?.itemList || [];
 	const filteredItems = itemsData.filter(
-		(item) => item?.agency?.code === itemAgencyCode,
+		(item) =>
+			item.agency.code === itemAgencyCode &&
+			item.isRequestable &&
+			!item.isSuppressed &&
+			item?.status?.code == "AVAILABLE",
 	);
 
 	const pickupLocationOptions: PatronRequestAutocompleteOption[] =
