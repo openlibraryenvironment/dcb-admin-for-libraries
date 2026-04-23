@@ -475,7 +475,7 @@ export default function ExpeditedCheckout({
 					localSystemCode: data.itemLocalSystemCode || "",
 					agencyCode: data.itemAgencyCode || "",
 				},
-				isExpeditedCheckout: true,
+				isExpeditedRequest: true,
 			};
 
 			const response = await axios.post(
