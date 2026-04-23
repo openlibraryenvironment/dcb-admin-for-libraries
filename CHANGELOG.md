@@ -1,3 +1,10 @@
+## [1.12.3](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.12.2...v1.12.3) (2026-04-23)
+
+
+### Bug Fixes
+
+* Typo in walk-up payload [DCB-2138] ([8b7253b](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/8b7253b668db5db1a2f5747eb4e79ef708f6394a))
+
 ## [1.12.2](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.12.1...v1.12.2) (2026-04-17)
 
 
