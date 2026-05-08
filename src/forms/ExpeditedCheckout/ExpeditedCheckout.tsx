@@ -56,7 +56,7 @@ export default function ExpeditedCheckout({
 }: PatronRequestFormType) {
 	const { t } = useTranslation();
 	const auth = useAuth();
-	const userAgencyCode = String(auth.user?.profile?.code);
+	const staffAgencyCode = String(auth.user?.profile?.code);
 	// Also the ID of the library of the item.
 	const { cfg } = useRouter().options.context;
 
@@ -106,14 +106,13 @@ export default function ExpeditedCheckout({
 		// isError: errorFetchingStaffLibrary,
 		// isLoading: staffLibraryLoading,
 	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", userAgencyCode, headers, cfg.VITE_DCB_API_BASE],
+		queryKey: ["libraryInfo", staffAgencyCode, headers, cfg.VITE_DCB_API_BASE],
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
 				getLibrary,
 				{
-					query: "agencyCode:" + userAgencyCode,
-					pagesize: 10,
+					query: "agencyCode:" + staffAgencyCode,
 					pageno: 0,
 					orderBy: "fullName",
 					order: "DESC",
@@ -260,12 +259,12 @@ export default function ExpeditedCheckout({
 	} = useForm<OnSiteBorrowingFormData>({
 		defaultValues: {
 			patronBarcode: "",
-			agencyCode: userAgencyCode,
+			agencyCode: staffAgencyCode,
 			pickupLocationId: "",
 			requesterNote: "On-site-borrowing: ",
 			itemLocalId: "",
 			itemLocalSystemCode: staffLibraryHostLmsCode,
-			itemAgencyCode: userAgencyCode, // For on-site borrowing, the item agency code must match the user's.
+			itemAgencyCode: staffAgencyCode, // For on-site borrowing, the item agency code must match the user's.
 			// As you can only do an on-site borrowing request for your own library's items.
 		},
 		resolver: yupResolver(validationSchema),
@@ -597,7 +596,7 @@ export default function ExpeditedCheckout({
 						itemAgencyCode={itemAgencyCode}
 						handleClose={handleClose}
 						isValid={isValid}
-						isSubmitting={placeRequestMutation.isPending} // FIX 3: Use isPending instead of isLoading
+						isSubmitting={placeRequestMutation.isPending}
 						pickupLocationId={pickupLocationId}
 						t={t}
 					/>
