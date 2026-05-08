@@ -37,7 +37,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 		flex: 1,
 	},
 	{
-		field: "localBarcode",
+		field: "patronBarcode",
 		headerName: "Patron barcode",
 		filterable: false,
 		sortable: false,
@@ -92,7 +92,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 		sortable: false,
 		valueGetter: (
 			value: string,
-			row: { suppliers: { canonicalItemType: string }[] }
+			row: { suppliers: { canonicalItemType: string }[] },
 		) => {
 			if (row.suppliers.length > 0) {
 				return row.suppliers[0].canonicalItemType;
@@ -159,7 +159,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 		filterOperators: durationFilters,
 		valueGetter: (
 			value: string,
-			row: { elapsedTimeInCurrentStatus: number }
+			row: { elapsedTimeInCurrentStatus: number },
 		) => {
 			return formatDuration(row.elapsedTimeInCurrentStatus);
 		},
