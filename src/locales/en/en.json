@@ -349,6 +349,7 @@
 		"error_pickup": "Error loading pickup location information",
 		"general": "General",
 		"item": "Item",
+		"item_barcode": "Item barcode",
 		"item_manual_agency_code": "Manually selected agency code",
 		"item_manual_hostlms_code": "Manually selected host LMS code",
 		"item_manually_selected": "Manually selected?",
@@ -544,6 +545,9 @@
 				"complete": "All steps complete!",
 				"patron_validation": "Patron validation",
 				"patron_validation_instruction": "Please provide the barcode and the affiliated institution of the patron.",
+				"quick_walk_up": {
+					"instructions": "Scan the item barcode and select a pickup location for this request"
+				},
 				"request_creation": "Request creation",
 				"request_creation_instruction": "The patron barcode is valid. Please now provide the remaining details."
 			},

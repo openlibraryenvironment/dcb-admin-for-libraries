@@ -9,7 +9,14 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid-premium";
 import { useTranslation } from "react-i18next";
-import { Button } from "@mui/material";
+import {
+	Button,
+	Dialog,
+	DialogTitle,
+	IconButton,
+	Menu,
+	MenuItem,
+} from "@mui/material";
 
 // import { Route } from "@/routes/__authenticated/requesting";
 import { AdvancedSearchFilter } from "./AdvancedSearchFilter";
@@ -21,6 +28,8 @@ import Error from "@components/Error/Error";
 import { useSearchGridStore } from "@/hooks/useSearchGridStore";
 import { parseQuery } from "@helpers/search/queryParser";
 import { validate } from "uuid";
+import { ChecklistRounded, Close } from "@mui/icons-material";
+import QuickWalkUpRequest from "@forms/QuickWalkUp/QuickWalkUp";
 
 interface SharedIndexQueryParams {
 	filters?: string; // JSON stringified filters
@@ -97,6 +106,23 @@ export function SharedIndexV2() {
 
 	const isAdvancedSearchAvailable =
 		stagedFilters[0].field !== SearchField.ClusterRecordID;
+
+	const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+	const isMenuOpen = Boolean(menuAnchorEl);
+	const [showModal, setShowModal] = useState(false);
+
+	const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+		setMenuAnchorEl(event.currentTarget);
+	};
+
+	const handleMenuClose = () => {
+		setMenuAnchorEl(null);
+	};
+
+	const handleQuickWalkUpClick = () => {
+		handleMenuClose();
+		setShowModal(true);
+	};
 
 	// On initial load, synchronize state from the URL
 	// Dependency on queryParam ensures this runs on URL change
@@ -283,10 +309,48 @@ export function SharedIndexV2() {
 	return (
 		<Box sx={{ width: "100%" }}>
 			<Stack spacing={2} direction={"column"}>
-				<Typography variant="h1" gutterBottom>
+				{/* <Typography variant="h1" gutterBottom>
 					{t("nav.requesting.title")}
-				</Typography>
+				</Typography> */}
 				{/* Can we use react-hook-form here */}
+
+				<Stack
+					direction={{ xs: "column", sm: "row" }}
+					justifyContent="space-between"
+					alignItems={{ xs: "flex-start", sm: "center" }}
+					spacing={2}>
+					<Typography variant="h1" gutterBottom sx={{ mb: { xs: 0, sm: 0 } }}>
+						{t("nav.requesting.title")}
+					</Typography>
+
+					<Box>
+						<Button
+							id="actions-menu-button"
+							aria-controls={isMenuOpen ? "actions-menu" : undefined}
+							aria-haspopup="true"
+							aria-expanded={isMenuOpen ? "true" : undefined}
+							onClick={handleMenuClick}
+							variant="contained"
+							color="primary"
+							startIcon={<ChecklistRounded />}>
+							{t("ui.actions.menu", "Actions")}
+						</Button>
+						<Menu
+							id="actions-menu"
+							anchorEl={menuAnchorEl}
+							open={isMenuOpen}
+							onClose={handleMenuClose}
+							slotProps={{
+								list: {
+									"aria-labelledby": "actions-menu-button",
+								},
+							}}>
+							<MenuItem onClick={handleQuickWalkUpClick}>
+								{t("requesting.quick_walk_up.button", "Quick Walk-Up Request")}
+							</MenuItem>
+						</Menu>
+					</Box>
+				</Stack>
 				<form onSubmit={handleSearchSubmit}>
 					<AdvancedSearchFilter
 						filters={stagedFilters}
@@ -428,6 +492,27 @@ export function SharedIndexV2() {
 					},
 				}}
 			/>
+			<Dialog
+				open={showModal}
+				onClose={() => setShowModal(false)}
+				fullWidth
+				maxWidth="sm">
+				<DialogTitle variant="modalTitle">
+					{t("requesting.quick_walk_up.title", "Quick Walk-Up Request")}
+				</DialogTitle>
+				<IconButton
+					onClick={() => setShowModal(false)}
+					sx={{
+						position: "absolute",
+						right: 8,
+						top: 8,
+						color: (theme) => theme.palette.grey[500],
+					}}>
+					<Close />
+				</IconButton>
+
+				<QuickWalkUpRequest onClose={() => setShowModal(false)} />
+			</Dialog>
 		</Box>
 	);
 }
