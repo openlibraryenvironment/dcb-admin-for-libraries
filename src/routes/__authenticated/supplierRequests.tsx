@@ -369,7 +369,7 @@ function RouteComponent() {
 					disableRowGrouping={true}
 					loading={shouldShowLoading}
 					listViewEnabled={false}
-					noResultsText={t("patron_requests.no_results")}
+					noResultsText={t("patron_request.no_requests")}
 					pagination
 					pivotingEnabled={false}
 					toolbarVisible
