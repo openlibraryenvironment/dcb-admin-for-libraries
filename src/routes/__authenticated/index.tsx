@@ -35,6 +35,8 @@ import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
 import { FunctionalSettingStatus } from "@models/FunctionalSetting";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import { getPatronRequestStats } from "@queries/getPatronRequestStats";
+import TopTitlesSummary from "@components/TopTitlesSummary/TopTitlesSummary";
+import TopRequestorsSummary from "@components/TopRequestorSummary/TopRequestorSummary";
 
 // Landing page, also library information page
 export const Route = createFileRoute("/__authenticated/")({
@@ -71,8 +73,6 @@ function HomeComponent() {
 		reset();
 	};
 
-	console.log(showConfirmationEdit);
-	console.log(code);
 	const DCB_API_BASE = cfg?.VITE_DCB_API_BASE;
 
 	const [alert, setAlert] = useState<AlertObject>({
@@ -399,7 +399,6 @@ function HomeComponent() {
 					/>
 				</Typography>
 			</Grid> */}
-
 			{editingEnabled ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 					<>
@@ -537,7 +536,6 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">{t("library.type")}</Typography>
@@ -614,7 +612,6 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
@@ -752,6 +749,29 @@ function HomeComponent() {
 							}
 						/>
 					)}
+				</Stack>
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Stack spacing={1} direction={"column"}>
+					<Typography variant="h3" fontWeight={"bold"}>
+						{t("library.statistics.top_titles_month")}
+					</Typography>
+					<TopTitlesSummary
+						headers={headers}
+						libraryCode={userLibraryHostLmsCode}
+					/>
+				</Stack>
+				xp
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Stack spacing={1} direction={"column"}>
+					<Typography variant="h3" fontWeight={"bold"}>
+						{t("library.statistics.top_requesters_month")}
+					</Typography>
+					<TopRequestorsSummary
+						headers={headers}
+						libraryCode={userLibraryHostLmsCode}
+					/>
 				</Stack>
 			</Grid>
 			<TimedAlert

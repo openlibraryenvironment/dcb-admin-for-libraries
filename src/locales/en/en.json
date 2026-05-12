@@ -227,9 +227,14 @@
 		"short_name": "Short name",
 		"site_designation": "Site designation",
 		"statistics": {
+			"no_requesters": "No requesters this month",
+			"no_titles": "No titles requested this month",
 			"requests_made": "Requests made",
 			"requests_supplied": "Requests supplied",
-			"title": "Your library's DCB experience"
+			"title": "Your library's DCB experience",
+			"top_requesters_month": "Top requesters this month",
+			"top_titles_month": "Your patrons' favourite titles this month",
+			"unknown_patron": "Unknown patron"
 		},
 		"support_hours": "Support hours",
 		"title": "Information for {{library}}",
@@ -543,6 +548,7 @@
 				"checkout_success": "The item has been successfully checked out, and all steps are complete. The due date for this item is {{dueDate}}.",
 				"checkout_waiting": "The request has been created. Please wait while we attempt to check out the item.",
 				"complete": "All steps complete!",
+				"due_date": "Loading due date ...",
 				"patron_validation": "Patron validation",
 				"patron_validation_instruction": "Please provide the barcode and the affiliated institution of the patron.",
 				"quick_walk_up": {
