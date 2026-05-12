@@ -1,3 +1,18 @@
+# [1.13.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.12.4...v1.13.0) (2026-05-12)
+
+
+### Bug Fixes
+
+* Fix for due date visibility in walk-up requesting ([3fb419c](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/3fb419ce39e5528b7d419c5f78e4362c07ab15da))
+* Fix issue where patron barcodes weren't included in export ([da5dce8](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/da5dce87a51babb6c5e4d2e03944a87d8f45cf5b))
+* Fix supplier requests no results text ([a2db49e](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/a2db49ecfb0299f82761674a26300f74c083349d))
+
+
+### Features
+
+* At-a-glance leaderboards for requesting, titles [DCB-2110] ([b3f4f6f](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/b3f4f6fdb1f628b620798540bffbdc6dc0ebda48))
+* Walk-up requesting using item barcode [DCB-2142] ([653b7ba](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/653b7ba407ee9a8a95e45d4fee23c614789b5025))
+
 ## [1.12.4](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.12.3...v1.12.4) (2026-04-23)
 
 
