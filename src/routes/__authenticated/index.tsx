@@ -761,7 +761,6 @@ function HomeComponent() {
 						libraryCode={userLibraryHostLmsCode}
 					/>
 				</Stack>
-				xp
 			</Grid>
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Stack spacing={1} direction={"column"}>
