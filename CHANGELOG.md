@@ -1,3 +1,10 @@
+## [1.13.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.13.0...v1.13.1) (2026-05-12)
+
+
+### Bug Fixes
+
+* Fix typo ([e12091b](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/e12091b76fc1358c7ad1e6c0f75ff17b0172eacc))
+
 # [1.13.0](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.12.4...v1.13.0) (2026-05-12)
 
 
