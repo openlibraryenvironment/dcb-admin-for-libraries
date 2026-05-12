@@ -386,9 +386,11 @@ export default function ExpeditedCheckout({
 			}),
 		) || [];
 
-	const selectedItem = itemOptions.find(
-		(option) => option.value === itemLocalId,
-	);
+	// const selectedItem = itemOptions.find(
+	// 	(option) => option.value === itemLocalId,
+	// );
+
+	const rawSelectedItem = itemsData.find((item) => item.id === itemLocalId);
 
 	useEffect(() => {
 		if (timeoutRef.current) {
@@ -609,7 +611,7 @@ export default function ExpeditedCheckout({
 						checkoutCompleted={checkoutCompleted}
 						stepError={stepError}
 						t={t}
-						dueDate={selectedItem?.dueDate ?? ""}
+						dueDate={rawSelectedItem?.dueDate ?? ""}
 					/>
 				);
 			default:

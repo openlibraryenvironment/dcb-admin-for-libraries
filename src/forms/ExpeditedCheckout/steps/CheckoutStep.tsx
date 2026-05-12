@@ -32,13 +32,19 @@ export const CheckoutStep = ({
 	const auth = useAuth();
 	const roles = auth?.user?.profile?.roles ? auth?.user?.profile?.roles : [];
 	const isReadOnly = roles.includes("LIBRARY_READ_ONLY");
+	const displayDueDate = dueDate
+		? dayjs(dueDate).format("dddd, MMMM D, YYYY h:mm A")
+		: t(
+				"requesting.expedited_checkout.steps.due_date_loading",
+				"Loading due date...",
+			);
 
 	return (
 		<Stack direction="column" spacing={2}>
 			<Typography>
 				{checkoutCompleted &&
 					t("requesting.expedited_checkout.steps.checkout_success", {
-						dueDate: dayjs(dueDate).format("dddd, MMMM D, YYYY h:mm A"),
+						dueDate: displayDueDate,
 					})}
 				{!checkoutCompleted &&
 					stepError !== 2 &&
@@ -47,7 +53,7 @@ export const CheckoutStep = ({
 					stepError === 2 &&
 					(isReadOnly
 						? t(
-								"requesting.expedited_checkout.steps.checkout_failure_request_only"
+								"requesting.expedited_checkout.steps.checkout_failure_request_only",
 							)
 						: t("requesting.expedited_checkout.steps.checkout_failure"))}
 			</Typography>
