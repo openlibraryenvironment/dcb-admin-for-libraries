@@ -179,12 +179,6 @@
 			"user_base_url": "User base URL"
 		}
 	},
-	"ill": {
-		"dcb_requests": "DCB patron requests",
-		"login": "ILL login",
-		"logout": "Logout from ILL",
-		"requests": "ILL patron requests"
-	},
 	"library": {
 		"abbreviated_name": "Abbreviated name",
 		"backup_schedule": "Backup / downtime schedule",
@@ -287,9 +281,6 @@
 		},
 		"home": {
 			"title": "Home"
-		},
-		"ill": {
-			"title": "ILL integration - Experimental"
 		},
 		"library": {
 			"service": "Service",
