@@ -37,9 +37,10 @@ The application requires the following environment variables to function properl
 | `VITE_DCB_API_BASE`      | **Yes**  | The URL of the dcb-service instance.                                                                                                                                                                                                                                                |
 | `VITE_DCB_SEARCH_BASE`   | **Yes**  | The URL of the dcb-locate instance.                                                                                                                                                                                                                                                 |
 | `VITE_MUI_X_LICENSE_KEY` | **Yes**  | Provided by the Hosting Provider. Unlocks MUI X Premium features. It is OK for this to be exposed in the bundle: it is not OK for this to be publicly broadcast (i.e. committed to a repository). See [MUI X docs](https://mui.com/x/introduction/licensing/#license-key-security)! |
+| `VITE_PUBLIC_URL`        | No       | The subpath the app is hosted under (e.g. `/libraries-admin/`). Defaults to `/`.                                                                                                                                                                                                    |
 
 > [!NOTE]
-> Unlike other variants of the admin UI, **DCB Admin for Libraries** uses relative asset paths (`base: "./"`) in its build configuration. This means you do **not** need to supply a build-time `VITE_PUBLIC_URL` variable if hosting on a subpath (e.g., `/libraries-admin/`). The application's scripts and styles will automatically resolve correctly relative to the deployment folder.
+> **DCB Admin for Libraries** uses relative asset paths (`base: "./"`) in its build configuration, so its JS/CSS bundle references resolve correctly on a subpath without any configuration. `VITE_PUBLIC_URL` is a separate concern: it drives the TanStack Router `basepath` and the nav tab links. If you host the app on a subpath and omit `VITE_PUBLIC_URL`, assets will still load fine (masking the problem), but client-side routing will break because the router will treat the app as hosted at `/`. Set it whenever you deploy to anything other than a domain root.
 
 ---
 
@@ -47,21 +48,7 @@ The application requires the following environment variables to function properl
 
 Choose the deployment method that matches your infrastructure.
 
-### Option A: AWS (S3 + CloudFront)
-
-**Architecture:** This approach uses a static build. Because S3 has no server-side execution, environment variables cannot be injected at runtime. Every `VITE_*` value is permanently baked into the JavaScript bundle during the build phase. You must build a separate artifact for each environment (dev, staging, production).
-
-**Deployment Steps:**
-
-1. Export all environment variables listed in Section 2 on your build machine (or in your CI/CD runner).
-2. Run `npm run build` to generate the `dist/` directory.
-3. Sync the `dist/` directory to your S3 bucket.
-4. Ensure your sync command sets `Cache-Control: no-store, no-cache, must-revalidate` strictly on `/index.html` to guarantee users always receive the latest app updates instantly.
-5. Configure CloudFront's custom error responses.
-6. Map `403` and `404` errors to return `/index.html` with a `200` status.
-7. Ensure this is configured so the application's client-side routing can handle deep links and page refreshes correctly.
-
-### Option B: Cloudflare Pages
+### Option A: Cloudflare Pages
 
 **Architecture:** This uses a "Build Once, Deploy Anywhere" approach. You deploy the exact same static build to every environment, and a small Cloudflare Pages Function dynamically supplies the environment-specific configuration to the app at runtime via `/inject_env.json`.
 
@@ -73,9 +60,43 @@ Choose the deployment method that matches your infrastructure.
 4. Deploy the application.
 5. Verify that Cloudflare automatically serves the configuration as JSON via `/inject_env.json`.
 
+### Option B: AWS (S3 + CloudFront)
+
+**Architecture:** This approach uses a static build. Because S3 has no server-side execution, environment variables cannot be injected at runtime. Every `VITE_*` value is permanently baked into the JavaScript bundle during the build phase. You must build a separate artifact for each environment (dev, staging, production).
+
+**Architecture Note** (main.tsx Fallback): On a plain S3 bucket, there is no server-side component to generate /inject*env.json. The application deliberately attempts to fetch this file, and when it receives a 404 error, it intentionally falls back to the build-time import.meta.env.VITE*\* variables.
+
+**Deployment Steps:**
+
+1. Export all environment variables listed in Section 2 on your build machine (or in your CI/CD runner).
+2. Run `npm run build` to generate the `dist/` directory.
+3. Sync the `dist/` directory to your S3 bucket.
+4. Ensure your sync command sets `Cache-Control: no-store, no-cache, must-revalidate` strictly on `/index.html` to guarantee users always receive the latest app updates instantly.
+5. Configure CloudFront's custom error responses.
+6. Map `403` and `404` errors to return `/index.html` with a `200` status.
+7. Ensure this is configured so the application's client-side routing can handle deep links and page refreshes correctly.
+
+**CI/CD Examples**
+
+Using "staging" as an example environment.
+
+# 1. Build the application with environment variables
+
+VITE_KEYCLOAK_URL=https://staging-keycloak... VITE_DCB_API_BASE=https://staging-api... npm run build
+
+# 2. Sync the built assets to your S3 bucket
+
+aws s3 sync dist/ s3://dcb-admin-staging --delete
+
+# 3. Invalidate the CloudFront cache (crucial for /index.html)
+
+aws cloudfront create-invalidation --distribution-id <id> --paths "/index.html" "/\*"
+
 ### Option C: Docker (Self-Hosted / Portable)
 
-**Architecture:** Similar to Cloudflare, this uses a runtime-config approach. The provided Dockerfile builds the app and serves it via an Nginx alpine container (`nginx:stable-alpine`). An entrypoint script uses `envsubst` to dynamically inject the container's environment variables into the app when the container boots.
+**Architecture:** Similar to Cloudflare, this uses a runtime-config approach. The provided Dockerfile (`docker/production/Dockerfile`) builds the app and serves it via an Nginx alpine container (`nginx:stable-alpine`). On boot, nginx's own template mechanism renders `docker/production/default.conf.template` into the live server config, and a script in `/docker-entrypoint.d/` (`docker/production/40-inject-env.sh`) uses `envsubst` on `docker/production/inject_env.json.template` to render `/inject_env.json` from the container's environment variables. Client-side routes (deep links/refreshes) fall back to `index.html`, and both `index.html` and `inject_env.json` are served with `Cache-Control: no-store, no-cache, must-revalidate` so redeployed containers are never masked by a stale cache.
+
+**Security Note**: The Dockerfile deliberately uses floating minor-version tags (e.g., node:22-alpine, nginx:stable-alpine) rather than pinned patch versions. This ensures that every time the image is rebuilt, it automatically picks up the latest base-OS security patches.
 
 **Deployment Steps:**
 
@@ -92,6 +113,7 @@ docker run -p 8080:80 \
   -e VITE_KEYCLOAK_ID="dcb-admin-libraries" \
   -e VITE_DCB_API_BASE="https://api..." \
   -e VITE_DCB_SEARCH_BASE="https://search..." \
+  -e VITE_PUBLIC_URL="/libraries-admin/" \
   dcb-admin-libraries
 
 ```

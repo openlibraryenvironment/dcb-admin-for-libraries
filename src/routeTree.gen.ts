@@ -19,7 +19,6 @@ import { Route as _authenticatedSupplierRequestsRouteImport } from './routes/__a
 import { Route as _authenticatedSettingsRouteImport } from './routes/__authenticated/settings'
 import { Route as _authenticatedServiceRouteImport } from './routes/__authenticated/service'
 import { Route as _authenticatedMappingsRouteImport } from './routes/__authenticated/mappings'
-import { Route as _authenticatedIllRouteImport } from './routes/__authenticated/ill'
 import { Route as _authenticatedDataChangeLogRouteImport } from './routes/__authenticated/dataChangeLog'
 import { Route as _authenticatedContactsRouteImport } from './routes/__authenticated/contacts'
 import { Route as _authenticatedRequestingIndexRouteImport } from './routes/__authenticated/requesting/index'
@@ -27,8 +26,6 @@ import { Route as _authenticatedPatronRequestsIndexRouteImport } from './routes/
 import { Route as _authenticatedLocationsIndexRouteImport } from './routes/__authenticated/locations/index'
 import { Route as _authenticatedBibsIndexRouteImport } from './routes/__authenticated/bibs/index'
 import { Route as _authenticatedRequestingRecordIdRouteImport } from './routes/__authenticated/requesting/$recordId'
-import { Route as _authenticatedIllPatronRequestsRouteImport } from './routes/__authenticated/ill.patronRequests'
-import { Route as _authenticatedIllLoginRouteImport } from './routes/__authenticated/ill.login'
 import { Route as _authenticatedRequestingRecordIdIndexRouteImport } from './routes/__authenticated/requesting/$recordId/index'
 import { Route as _authenticatedPatronRequestsIdIndexRouteImport } from './routes/__authenticated/patronRequests/$id/index'
 import { Route as _authenticatedLocationsIdIndexRouteImport } from './routes/__authenticated/locations/$id/index'
@@ -89,11 +86,6 @@ const _authenticatedMappingsRoute = _authenticatedMappingsRouteImport.update({
   path: '/mappings',
   getParentRoute: () => _authenticatedRoute,
 } as any)
-const _authenticatedIllRoute = _authenticatedIllRouteImport.update({
-  id: '/ill',
-  path: '/ill',
-  getParentRoute: () => _authenticatedRoute,
-} as any)
 const _authenticatedDataChangeLogRoute =
   _authenticatedDataChangeLogRouteImport.update({
     id: '/dataChangeLog',
@@ -134,17 +126,6 @@ const _authenticatedRequestingRecordIdRoute =
     path: '/requesting/$recordId',
     getParentRoute: () => _authenticatedRoute,
   } as any)
-const _authenticatedIllPatronRequestsRoute =
-  _authenticatedIllPatronRequestsRouteImport.update({
-    id: '/patronRequests',
-    path: '/patronRequests',
-    getParentRoute: () => _authenticatedIllRoute,
-  } as any)
-const _authenticatedIllLoginRoute = _authenticatedIllLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => _authenticatedIllRoute,
-} as any)
 const _authenticatedRequestingRecordIdIndexRoute =
   _authenticatedRequestingRecordIdIndexRouteImport.update({
     id: '/',
@@ -207,14 +188,11 @@ export interface FileRoutesByFullPath {
   '/networkError': typeof NetworkErrorRoute
   '/contacts': typeof _authenticatedContactsRoute
   '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
-  '/ill': typeof _authenticatedIllRouteWithChildren
   '/mappings': typeof _authenticatedMappingsRoute
   '/service': typeof _authenticatedServiceRoute
   '/settings': typeof _authenticatedSettingsRoute
   '/supplierRequests': typeof _authenticatedSupplierRequestsRoute
   '/': typeof _authenticatedIndexRoute
-  '/ill/login': typeof _authenticatedIllLoginRoute
-  '/ill/patronRequests': typeof _authenticatedIllPatronRequestsRoute
   '/requesting/$recordId': typeof _authenticatedRequestingRecordIdRouteWithChildren
   '/bibs': typeof _authenticatedBibsIndexRoute
   '/locations': typeof _authenticatedLocationsIndexRoute
@@ -237,14 +215,11 @@ export interface FileRoutesByTo {
   '/networkError': typeof NetworkErrorRoute
   '/contacts': typeof _authenticatedContactsRoute
   '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
-  '/ill': typeof _authenticatedIllRouteWithChildren
   '/mappings': typeof _authenticatedMappingsRoute
   '/service': typeof _authenticatedServiceRoute
   '/settings': typeof _authenticatedSettingsRoute
   '/supplierRequests': typeof _authenticatedSupplierRequestsRoute
   '/': typeof _authenticatedIndexRoute
-  '/ill/login': typeof _authenticatedIllLoginRoute
-  '/ill/patronRequests': typeof _authenticatedIllPatronRequestsRoute
   '/bibs': typeof _authenticatedBibsIndexRoute
   '/locations': typeof _authenticatedLocationsIndexRoute
   '/patronRequests': typeof _authenticatedPatronRequestsIndexRoute
@@ -268,14 +243,11 @@ export interface FileRoutesById {
   '/networkError': typeof NetworkErrorRoute
   '/__authenticated/contacts': typeof _authenticatedContactsRoute
   '/__authenticated/dataChangeLog': typeof _authenticatedDataChangeLogRoute
-  '/__authenticated/ill': typeof _authenticatedIllRouteWithChildren
   '/__authenticated/mappings': typeof _authenticatedMappingsRoute
   '/__authenticated/service': typeof _authenticatedServiceRoute
   '/__authenticated/settings': typeof _authenticatedSettingsRoute
   '/__authenticated/supplierRequests': typeof _authenticatedSupplierRequestsRoute
   '/__authenticated/': typeof _authenticatedIndexRoute
-  '/__authenticated/ill/login': typeof _authenticatedIllLoginRoute
-  '/__authenticated/ill/patronRequests': typeof _authenticatedIllPatronRequestsRoute
   '/__authenticated/requesting/$recordId': typeof _authenticatedRequestingRecordIdRouteWithChildren
   '/__authenticated/bibs/': typeof _authenticatedBibsIndexRoute
   '/__authenticated/locations/': typeof _authenticatedLocationsIndexRoute
@@ -300,14 +272,11 @@ export interface FileRouteTypes {
     | '/networkError'
     | '/contacts'
     | '/dataChangeLog'
-    | '/ill'
     | '/mappings'
     | '/service'
     | '/settings'
     | '/supplierRequests'
     | '/'
-    | '/ill/login'
-    | '/ill/patronRequests'
     | '/requesting/$recordId'
     | '/bibs'
     | '/locations'
@@ -330,14 +299,11 @@ export interface FileRouteTypes {
     | '/networkError'
     | '/contacts'
     | '/dataChangeLog'
-    | '/ill'
     | '/mappings'
     | '/service'
     | '/settings'
     | '/supplierRequests'
     | '/'
-    | '/ill/login'
-    | '/ill/patronRequests'
     | '/bibs'
     | '/locations'
     | '/patronRequests'
@@ -360,14 +326,11 @@ export interface FileRouteTypes {
     | '/networkError'
     | '/__authenticated/contacts'
     | '/__authenticated/dataChangeLog'
-    | '/__authenticated/ill'
     | '/__authenticated/mappings'
     | '/__authenticated/service'
     | '/__authenticated/settings'
     | '/__authenticated/supplierRequests'
     | '/__authenticated/'
-    | '/__authenticated/ill/login'
-    | '/__authenticated/ill/patronRequests'
     | '/__authenticated/requesting/$recordId'
     | '/__authenticated/bibs/'
     | '/__authenticated/locations/'
@@ -464,13 +427,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authenticatedMappingsRouteImport
       parentRoute: typeof _authenticatedRoute
     }
-    '/__authenticated/ill': {
-      id: '/__authenticated/ill'
-      path: '/ill'
-      fullPath: '/ill'
-      preLoaderRoute: typeof _authenticatedIllRouteImport
-      parentRoute: typeof _authenticatedRoute
-    }
     '/__authenticated/dataChangeLog': {
       id: '/__authenticated/dataChangeLog'
       path: '/dataChangeLog'
@@ -519,20 +475,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/requesting/$recordId'
       preLoaderRoute: typeof _authenticatedRequestingRecordIdRouteImport
       parentRoute: typeof _authenticatedRoute
-    }
-    '/__authenticated/ill/patronRequests': {
-      id: '/__authenticated/ill/patronRequests'
-      path: '/patronRequests'
-      fullPath: '/ill/patronRequests'
-      preLoaderRoute: typeof _authenticatedIllPatronRequestsRouteImport
-      parentRoute: typeof _authenticatedIllRoute
-    }
-    '/__authenticated/ill/login': {
-      id: '/__authenticated/ill/login'
-      path: '/login'
-      fullPath: '/ill/login'
-      preLoaderRoute: typeof _authenticatedIllLoginRouteImport
-      parentRoute: typeof _authenticatedIllRoute
     }
     '/__authenticated/requesting/$recordId/': {
       id: '/__authenticated/requesting/$recordId/'
@@ -600,19 +542,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface _authenticatedIllRouteChildren {
-  _authenticatedIllLoginRoute: typeof _authenticatedIllLoginRoute
-  _authenticatedIllPatronRequestsRoute: typeof _authenticatedIllPatronRequestsRoute
-}
-
-const _authenticatedIllRouteChildren: _authenticatedIllRouteChildren = {
-  _authenticatedIllLoginRoute: _authenticatedIllLoginRoute,
-  _authenticatedIllPatronRequestsRoute: _authenticatedIllPatronRequestsRoute,
-}
-
-const _authenticatedIllRouteWithChildren =
-  _authenticatedIllRoute._addFileChildren(_authenticatedIllRouteChildren)
-
 interface _authenticatedRequestingRecordIdRouteChildren {
   _authenticatedRequestingRecordIdIndexRoute: typeof _authenticatedRequestingRecordIdIndexRoute
   _authenticatedRequestingRecordIdHistoryIndexRoute: typeof _authenticatedRequestingRecordIdHistoryIndexRoute
@@ -637,7 +566,6 @@ const _authenticatedRequestingRecordIdRouteWithChildren =
 interface _authenticatedRouteChildren {
   _authenticatedContactsRoute: typeof _authenticatedContactsRoute
   _authenticatedDataChangeLogRoute: typeof _authenticatedDataChangeLogRoute
-  _authenticatedIllRoute: typeof _authenticatedIllRouteWithChildren
   _authenticatedMappingsRoute: typeof _authenticatedMappingsRoute
   _authenticatedServiceRoute: typeof _authenticatedServiceRoute
   _authenticatedSettingsRoute: typeof _authenticatedSettingsRoute
@@ -659,7 +587,6 @@ interface _authenticatedRouteChildren {
 const _authenticatedRouteChildren: _authenticatedRouteChildren = {
   _authenticatedContactsRoute: _authenticatedContactsRoute,
   _authenticatedDataChangeLogRoute: _authenticatedDataChangeLogRoute,
-  _authenticatedIllRoute: _authenticatedIllRouteWithChildren,
   _authenticatedMappingsRoute: _authenticatedMappingsRoute,
   _authenticatedServiceRoute: _authenticatedServiceRoute,
   _authenticatedSettingsRoute: _authenticatedSettingsRoute,

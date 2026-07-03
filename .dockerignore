@@ -1,0 +1,10 @@
+node_modules
+dist
+test-results
+playwright-report
+coverage
+.git
+.gitlab-ci.yml
+.env
+.env.*
+*.md

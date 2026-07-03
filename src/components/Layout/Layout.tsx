@@ -66,7 +66,6 @@ export const Layout = ({ children }: LayoutProps) => {
 					// 				label: t("nav.data_change_log.title"),
 					// 				value: `${basePath}dataChangeLog`,
 					// 			},
-					// 			{ label: t("nav.ill.title"), value: `${basePath}ill/login` },
 					// 		]
 					// 	: []),
 				]

@@ -1,0 +1,25 @@
+server {
+    listen       80;
+    server_name  _;
+
+    root   /usr/share/nginx/html;
+    index  index.html;
+
+    # Runtime config for the SPA (getCfg() in src/main.tsx). Must never be cached,
+    # otherwise a redeployed container's config changes never reach the browser.
+    location = /inject_env.json {
+        add_header Cache-Control "no-store, no-cache, must-revalidate";
+    }
+
+    # Same reasoning as CloudFront's /index.html cache-control override: users must
+    # always get the latest deployed build, never a stale cached shell.
+    location = /index.html {
+        add_header Cache-Control "no-store, no-cache, must-revalidate";
+    }
+
+    # TanStack Router client-side routing: deep links and refreshes must fall back
+    # to index.html rather than 404ing (equivalent of the CloudFront 403/404 -> 200 mapping).
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

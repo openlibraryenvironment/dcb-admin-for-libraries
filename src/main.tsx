@@ -38,7 +38,6 @@ async function getCfg() {
 				VITE_KEYCLOAK_ID: String(import.meta.env.VITE_KEYCLOAK_ID),
 				VITE_DCB_API_BASE: String(import.meta.env.VITE_DCB_API_BASE),
 				VITE_DCB_SEARCH_BASE: String(import.meta.env.VITE_DCB_SEARCH_BASE),
-				VITE_ILL_API_BASE: String(import.meta.env.VITE_ILL_API_BASE),
 				VITE_PUBLIC_URL: String(import.meta.env.VITE_PUBLIC_URL),
 			};
 		}
