@@ -1,3 +1,12 @@
+## [1.13.2](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.13.1...v1.13.2) (2026-07-14)
+
+
+### Bug Fixes
+
+* CI fix to deal with multiple apps at root ([0d05e44](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/0d05e445135d23390d00ab5387393cbba93978b3))
+* Don't allow force cleanup if library is not supplier [DCB-2194] ([487ea09](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/487ea0908293fe1d5b3010876cb713af7f167b6f))
+* Further CI fixes ([2bed93f](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/commit/2bed93f001d774c073a2f41b08f19a621172f32c))
+
 ## [1.13.1](https://gitlab.com/knowledge-integration/libraries/dcb-admin-for-libraries/compare/v1.13.0...v1.13.1) (2026-05-12)
 
 
