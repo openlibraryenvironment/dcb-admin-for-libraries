@@ -331,7 +331,7 @@
 		"check_unsuccessful": "Check unsuccessful",
 		"cleanup": "Force clean up",
 		"cleanup_complete": "Cleanup complete",
-		"cleanup_disabled": "Clean up is only available for requests in a non-terminal or ERROR state.",
+		"cleanup_disabled": "Clean up is only available for requests supplied by your library that are either in an ERROR state, or have not yet been shipped.",
 		"cleanup_info": "Bypass circulation; clean up and finalise request. This auto-finalises a request and can be used to return an unwanted item. ",
 		"cleanup_in_progress": "Cleanup in progress",
 		"cleanup_successful": "The cleanup operation has been successful, and the patron request has been finalised.",
