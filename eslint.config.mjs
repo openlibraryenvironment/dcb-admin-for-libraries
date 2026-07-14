@@ -47,5 +47,16 @@ export default defineConfig(
 			"no-constant-binary-expression": "error",
 		},
 	},
-	globalIgnores(["dist/", "node_modules/", "public/", "eslint.config.mjs"])
+	// playwright-report/ and test-results/ are generated: the HTML reporter ships
+	// its own minified bundles, and linting them produced ~2900 phantom errors
+	// that had nothing to do with our source. Generated output is not source.
+	globalIgnores([
+		"dist/",
+		"node_modules/",
+		"public/",
+		"coverage/",
+		"playwright-report/",
+		"test-results/",
+		"eslint.config.mjs",
+	])
 );

@@ -1,11 +1,13 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 /// <reference types="vitest/config" />
 
 // https://vite.dev/config/
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+	const env = loadEnv(mode, process.cwd(), "");
+
 	return {
 		plugins: [
 			tanstackRouter({
@@ -15,9 +17,18 @@ export default defineConfig(() => {
 			react(),
 		],
 		server: {
-			historyApiFallback: true, // For Vercel 404 weirdness. We won't end up deploying to Vercel permanently so not to worry too much.
+			historyApiFallback: true,
 		},
-		base: "./",
+		// Deliberately an absolute path, NOT a relative "./" base. A relative base
+		// resolves asset URLs against the CURRENT page path, and every SPA-fallback
+		// host serves index.html AT the deep URL rather than at "/" - so refreshing
+		// /dcb-admin-for-libraries/patronRequests/<id> would resolve
+		// ./assets/index-<hash>.js against /dcb-admin-for-libraries/patronRequests/
+		// and 404 every asset.
+		//
+		// This is also the single source of the router basepath: main.tsx reads it
+		// back as import.meta.env.BASE_URL. It must never be re-supplied at runtime.
+		base: env.VITE_PUBLIC_URL || "/",
 		build: {
 			// think about other ways of addressing bundle size
 			// ultimately if we can't because of the DGrid it's fine
@@ -30,17 +41,18 @@ export default defineConfig(() => {
 					},
 				},
 			},
-			optimizeDeps: {
-				// Pre-bundle common dependencies
-				include: [
-					"react",
-					"react-dom",
-					"@mui/material",
-					"@mui/x-data-grid-premium",
-					"@emotion/styled",
-					"@emotion/react",
-				],
-			},
+		},
+
+		// Top-level, not nested under `build` - where it was never read.
+		optimizeDeps: {
+			include: [
+				"react",
+				"react-dom",
+				"@mui/material",
+				"@mui/x-data-grid-premium",
+				"@emotion/styled",
+				"@emotion/react",
+			],
 		},
 
 		test: {

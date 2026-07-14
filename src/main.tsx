@@ -13,6 +13,13 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import App from "@components/App/App";
 import { User } from "oidc-client-ts";
+import {
+	BASE,
+	appPath,
+	appUrl,
+	storageKey,
+	toRoutePath,
+} from "@helpers/appBase";
 
 // declare module "@tanstack/react-router" {
 // 	interface Register {
@@ -23,9 +30,16 @@ async function getCfg() {
 	try {
 		// We need to support runtime configuration as well as build time config. When using
 		// build time config variables come via import.meta.env.VITE_MUI_X_LICENSE_KEY
-		// When using deploy time, cloudflare will inject inject_env.js into the deployment
+		// When using deploy time, cloudflare will inject inject_env.json into the deployment
 		// to read these values.
-		const response = await fetch("/inject_env.json", { cache: "no-store" });
+		//
+		// Base-scoped, not "/inject_env.json": the origin may host several apps under
+		// path prefixes, and a root-relative fetch gives the worker no way to tell
+		// which of them is asking - it redirects to the default app, and we parse
+		// that app's HTML shell as JSON.
+		const response = await fetch(`${BASE}inject_env.json`, {
+			cache: "no-store",
+		});
 
 		// File not supplied, OR, server helpfully returning the SPA bundle root doc
 		if (
@@ -38,7 +52,6 @@ async function getCfg() {
 				VITE_KEYCLOAK_ID: String(import.meta.env.VITE_KEYCLOAK_ID),
 				VITE_DCB_API_BASE: String(import.meta.env.VITE_DCB_API_BASE),
 				VITE_DCB_SEARCH_BASE: String(import.meta.env.VITE_DCB_SEARCH_BASE),
-				VITE_PUBLIC_URL: String(import.meta.env.VITE_PUBLIC_URL),
 			};
 		}
 
@@ -59,28 +72,23 @@ const handleServiceErrors = (error: any) => {
 		error.message?.includes("NetworkError");
 	const isServiceUnavailable = error?.response?.status === 503;
 
-	if (window.location.pathname === "/maintenance") {
+	// Router path: window.location.pathname carries the base, so a raw comparison
+	// against "/maintenance" never matches once the app is mounted under a prefix,
+	// and the guard against redirect loops stops guarding.
+	if (toRoutePath() === "/maintenance") {
 		return;
 	}
 
-	// If 503, go to maintenance
+	// Base-scoped hard navigations. A bare "/maintenance" leaves this app entirely:
+	// on an origin hosting several apps the worker redirects the root to the
+	// DEFAULT app, so a 503 here would dump the user into DCB Admin.
 	if (isServiceUnavailable) {
-		window.location.href = "/maintenance";
+		window.location.href = appPath("maintenance");
 	}
 	if (isNetworkError) {
-		window.location.href = "/networkError";
+		window.location.href = appPath("networkError");
 	}
 };
-
-// Re-working this to use an environment variable for the time being.
-// As this method was causing difficulties when navigating from inner routes
-// i.e. navigation from /patronRequests to /mappings was becoming /patronRequests/mappings
-// Thus making navigation difficult
-// const getBasePath = () => {
-// 	const fullPath = window.location.pathname;
-// 	const matches = fullPath.match(/^\/[^/]+/);
-// 	return matches ? matches[0] : "/";
-// };
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -98,20 +106,15 @@ const queryClient = new QueryClient({
 	}),
 });
 
-// basename is set this way so we can deploy this app to multiple folders and the app will
-// work relative to those folders
-// Now uses env variable to tackle issue above. A temp fix for now.
-// Unfortunately my fix is also necessitating specifying base path in index.html - we definitely need a better way of doing it
-// const bp = String(import.meta.env.VITE_PUBLIC_URL);
-// console.log(bp);
-
 async function bootstrap() {
 	// See if there is an injected_cfg.json, otherwise fall back to build time variables.
 	const cfg = await getCfg();
 	const router = createRouter({
 		routeTree,
-		// basepath: getBasePath(),
-		basepath: cfg.VITE_PUBLIC_URL || "/",
+		// Build-time constant, NOT runtime config: it must be the exact value Vite
+		// used for the asset base, or the router mounts at a path from which its
+		// own assets do not resolve. Set via VITE_PUBLIC_URL at build time.
+		basepath: BASE,
 		defaultPreload: "intent",
 		defaultPreloadStaleTime: 0,
 		defaultStaleTime: 5000,
@@ -138,26 +141,31 @@ async function bootstrap() {
 	const oidcConfig = {
 		authority: cfg.VITE_KEYCLOAK_URL,
 		client_id: cfg.VITE_KEYCLOAK_ID,
-		redirect_uri: window.location.origin,
+		// The app's own base, not the bare origin: where several apps are mounted
+		// under path prefixes, the origin root serves none of them - the worker
+		// redirects it to the default app, and this app's callback lands there.
+		redirect_uri: appUrl(),
+		post_logout_redirect_uri: appUrl(),
 		response_type: "code",
 		scope: "openid profile email",
 		loadUserInfo: true,
 		automaticSilentRenew: true,
 		onSigninCallback: (_user: User | void): void => {
-			console.log("Sign in for ", _user);
 			const isReadOnly = _user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
 			const afterLoginRedirectPath = sessionStorage.getItem(
-				"afterLoginRedirectPath",
+				storageKey("afterLoginRedirectPath"),
 			);
 			if (isReadOnly) {
 				// If user is LIBRARY_READ_ONLY, they can only access requesting.
 				// So they don't get their after login redirect path
 				// Although if it is a sub path we could save it
-				window.location.replace("/requesting");
+				window.location.replace(appPath("requesting"));
 				return;
 			}
 			if (afterLoginRedirectPath) {
-				sessionStorage.removeItem("afterLoginRedirectPath");
+				sessionStorage.removeItem(storageKey("afterLoginRedirectPath"));
+				// Already browser-absolute: it was captured from
+				// window.location.pathname, which includes the base.
 				window.location.replace(afterLoginRedirectPath);
 			} else {
 				window.history.replaceState(

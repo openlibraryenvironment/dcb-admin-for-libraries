@@ -7,6 +7,8 @@ import {
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+import { storageKey } from "@helpers/appBase";
+
 // Persist all our grid options so we don't lose them on reload
 interface GridState {
 	// Sort model is stored directly for consistency
@@ -68,7 +70,10 @@ export const useGridStore = create<GridState & GridActions>()(
 				})),
 		}),
 		{
-			name: "grid-storage",
+			// Namespaced: DCB Admin persists a store under the same bare
+			// "grid-storage" key in the same sessionStorage, with a different shape.
+			// On a shared origin the two collide and hydration can throw.
+			name: storageKey("grid-storage"),
 			storage: createJSONStorage(() => sessionStorage), // or localStorage
 		}
 	)

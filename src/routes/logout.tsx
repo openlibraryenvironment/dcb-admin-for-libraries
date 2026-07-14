@@ -11,6 +11,7 @@ import { useAuth } from "react-oidc-context";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
+import { appUrl, storageKey } from "@helpers/appBase";
 
 // Define the search params to handle the ?loggedOut=true flag
 const logoutSearchSchema = z.object({
@@ -41,10 +42,11 @@ function Logout() {
 			hasTriggeredLogout.current = true;
 			try {
 				clearGridState();
-				sessionStorage.removeItem("afterLoginRedirectPath");
-				const postLogoutRedirectUri = `${window.location.origin}/logout?loggedOut=true`;
+				sessionStorage.removeItem(storageKey("afterLoginRedirectPath"));
+				// Base-scoped: the bare origin serves no app when several are mounted
+				// under path prefixes, so Keycloak would return the user to DCB Admin.
 				await auth.signoutRedirect({
-					post_logout_redirect_uri: postLogoutRedirectUri,
+					post_logout_redirect_uri: appUrl("logout?loggedOut=true"),
 				});
 			} catch (error) {
 				console.error("Logout error:", error);

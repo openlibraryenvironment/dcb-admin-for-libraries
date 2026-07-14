@@ -8,6 +8,7 @@ import LoginIcon from "@mui/icons-material/Login";
 import { z } from "zod";
 import Loading from "@components/Loading/Loading";
 import { useTranslation } from "react-i18next";
+import { storageKey } from "@helpers/appBase";
 
 const Login = () => {
 	const auth = useAuth();
@@ -29,14 +30,10 @@ const Login = () => {
 	// }, [auth.isAuthenticated, navigate, redirect]);
 	// Still need to handle this case but this should stop it causing problems.
 
-	console.log("Current location is", window.location.pathname);
-	console.log("Redirect is", redirect);
 	const handleLogin = () => {
-		// Store current location
-		sessionStorage.setItem("postLoginRedirectPath", redirect || "/");
-		const redirectPath = sessionStorage.getItem("postLoginRedirectPath");
-		console.log("Final redirect is", redirectPath);
-		// Trigger login redirect - this is being lost
+		// Store current location. Namespaced: sibling apps on this origin share one
+		// sessionStorage.
+		sessionStorage.setItem(storageKey("postLoginRedirectPath"), redirect || "/");
 		auth.signinRedirect();
 	};
 
