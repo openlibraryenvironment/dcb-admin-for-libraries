@@ -5,8 +5,12 @@ variables:
   CACHE_COMPRESSION_LEVEL: "fast"
 
 default:
+  # Node floor is set by semantic-release 25 (^22.14.0 || >=24.10.0), not by the
+  # app: on 22.12.0 it refused to start and the release job died. Every Node job
+  # inherits this one declaration - the previous copy-per-job made the version a
+  # thing that could drift silently.
   image:
-    name: node:22.12.0-bullseye
+    name: node:22.23.1-bullseye
     pull_policy: if-not-present
 
   tags:
@@ -28,11 +32,6 @@ cache:
 
 build:
   stage: build
-  image:
-    name: node:22.12.0-bullseye
-    pull_policy: if-not-present
-  tags:
-    - ki-onprem
   script:
     - export NPM_TOKEN="$NPMJS_TOKEN"
     - git config --global user.name "ianibbo"
@@ -50,11 +49,6 @@ build:
 
 release:
   stage: release
-  image:
-    name: node:22.12.0-bullseye
-    pull_policy: if-not-present
-  tags:
-    - ki-onprem
   # This rule ensures the job ONLY runs on the 'release' branch
   rules:
     - if: '$CI_COMMIT_BRANCH == "release"'
