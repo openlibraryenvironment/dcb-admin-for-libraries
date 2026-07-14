@@ -41,7 +41,8 @@ build:
     - ls -al
     - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
     - npm ci
-    - npm run build
+    # must equal the S3 app prefix the worker serves this app from.
+    - VITE_PUBLIC_URL=/dcb-admin-for-libraries/ npm run build
   artifacts:
     paths:
       - dist/
@@ -115,10 +116,20 @@ deploy_tag_to_s3:
     pull_policy: if-not-present
   script:
     - echo "Deploying version $RELEASE_VERSION to S3..."
-    - ls
-    - aws s3 ls
-    - aws s3 sync dist/ "s3://ki-libs-spa-hosting/dcb-admin-for-libraries-$CI_COMMIT_TAG" --delete
-    - aws s3 sync dist/ "s3://ki-libs-spa-hosting/dcb-admin-for-libraries" --delete
+    # Key layout is <env-root>/<app>/, and the worker picks the root by hostname.
+    # Trailing slashes are explicit: --delete is scoped to the destination
+    # prefix, and one level up it would wipe the sibling apps in this root.
+    - aws s3 sync dist/ "s3://ki-libs-spa-hosting/prod/dcb-admin-for-libraries/" --delete
+    # Immutable archive of the released bundle, NOT a servable path: the base
+    # ("/dcb-admin-for-libraries/") is baked in, so this copy only ever resolves
+    # its assets from that path. It exists to roll back FROM, by copying it over
+    # prod/dcb-admin-for-libraries/ - never to be served in place.
+    #
+    # Keyed on $RELEASE_VERSION from the release job's dotenv report, not
+    # $CI_COMMIT_TAG: this job is gated on the `release` BRANCH, so there is no
+    # tag in scope and $CI_COMMIT_TAG expanded to nothing - every release
+    # overwrote a single key literally named "dcb-admin-for-libraries-".
+    - aws s3 sync dist/ "s3://ki-libs-spa-hosting/archive/dcb-admin-for-libraries-$RELEASE_VERSION/" --delete
   variables:
     AWS_ACCESS_KEY_ID: $AWS_DEVOPS_AGENT_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $AWS_DEVOPS_AGENT_ACCESS_KEY_SECRET
@@ -141,9 +152,11 @@ deploy_dev_to_s3:
     name: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
     pull_policy: if-not-present
   script:
-    - ls
-    - aws s3 ls
-    - aws s3 sync dist/ "s3://ki-libs-spa-hosting/dcb-admin-for-libraries-dev" --delete
+    # dev/, not dcb-admin-for-libraries-dev/. The worker resolves
+    # /dcb-admin-for-libraries/... against <env-root>/dcb-admin-for-libraries/,
+    # and dev.kihosting.net's root is "dev". A key prefix it does not know about
+    # is a 502 - which is exactly what "dcb-admin-for-libraries-dev" was giving.
+    - aws s3 sync dist/ "s3://ki-libs-spa-hosting/dev/dcb-admin-for-libraries/" --delete
   variables:
     AWS_ACCESS_KEY_ID: $AWS_DEVOPS_AGENT_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $AWS_DEVOPS_AGENT_ACCESS_KEY_SECRET
