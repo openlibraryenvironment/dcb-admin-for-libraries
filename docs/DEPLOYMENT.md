@@ -54,6 +54,7 @@ Choose the deployment method that matches your infrastructure.
 
 **Deployment Steps:**
 
+
 1. Create a Cloudflare Pages project pointing at your repository.
 2. Set the build command to `npm run build` and the output directory to `dist`.
 3. Add the variables from Section 2 directly into the Cloudflare dashboard under your Pages environment bindings.
@@ -80,17 +81,17 @@ Choose the deployment method that matches your infrastructure.
 
 Using "staging" as an example environment.
 
-# 1. Build the application with environment variables
+1. Build the application with environment variables
 
-VITE_KEYCLOAK_URL=https://staging-keycloak... VITE_DCB_API_BASE=https://staging-api... npm run build
+`VITE_KEYCLOAK_URL=https://staging-keycloak... VITE_DCB_API_BASE=https://staging-api... npm run build`
 
-# 2. Sync the built assets to your S3 bucket
+2. Sync the built assets to your S3 bucket
 
-aws s3 sync dist/ s3://dcb-admin-staging --delete
+`aws s3 sync dist/ s3://dcb-admin-staging --delete`
 
-# 3. Invalidate the CloudFront cache (crucial for /index.html)
+3. Invalidate the CloudFront cache (crucial for /index.html)
 
-aws cloudfront create-invalidation --distribution-id <id> --paths "/index.html" "/\*"
+`aws cloudfront create-invalidation --distribution-id <id> --paths "/index.html" "/\*"`
 
 ### Option C: Docker (Self-Hosted / Portable)
 
