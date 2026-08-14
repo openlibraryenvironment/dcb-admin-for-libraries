@@ -11,10 +11,16 @@ import RenderAttribute from "../../components/RenderAttribute/RenderAttribute";
 import {
 	Button,
 	CircularProgress,
+	MenuItem,
 	Stack,
 	TextField,
 	useTheme,
 } from "@mui/material";
+import {
+	BRAND_LIMITS,
+	isValidLogoUrl,
+	themeOptions,
+} from "@constants/discoveryBranding";
 import AddressLink from "../../components/Address/AddressLink";
 import { Controller, useForm } from "react-hook-form";
 import { UpdateLibraryFormData } from "../../models/UpdateLibraryFormData";
@@ -38,6 +44,20 @@ import { getPatronRequestStats } from "@queries/getPatronRequestStats";
 import TopTitlesSummary from "@components/TopTitlesSummary/TopTitlesSummary";
 import TopRequestorsSummary from "@components/TopRequestorSummary/TopRequestorSummary";
 
+/**
+ * Whether an edit actually changed a field.
+ *
+ * An empty control and an unset column are the same state, and treating them as different
+ * put every untouched optional field into the confirmation dialog as a pending change.
+ * That was survivable while the form held seven mostly-populated fields; the brand fields
+ * are mostly empty, so it is not any more.
+ */
+function hasChanged(next: unknown, current: unknown): boolean {
+	const normalise = (value: unknown) =>
+		value === null || value === undefined ? "" : value;
+	return normalise(next) !== normalise(current);
+}
+
 // Landing page, also library information page
 export const Route = createFileRoute("/__authenticated/")({
 	component: HomeComponent,
@@ -58,7 +78,6 @@ function HomeComponent() {
 	);
 
 	const code = auth.user?.profile?.code;
-	console.log(auth);
 
 	const theme = useTheme();
 	const [editMode, setEditMode] = useState(false);
@@ -231,6 +250,9 @@ function HomeComponent() {
 					backupDowntimeSchedule: library.backupDowntimeSchedule,
 					longitude: library.longitude,
 					latitude: library.latitude,
+					brandLogoUrl: library.brandLogoUrl ?? "",
+					brandLogoAlt: library.brandLogoAlt ?? "",
+					defaultThemeName: library.defaultThemeName ?? "",
 				});
 			}
 			refetch();
@@ -283,6 +305,28 @@ function HomeComponent() {
 		supportHours: Yup.string()
 			.trim()
 			.max(200, t("ui.validation.max_length", { length: 200 })),
+		// Mirrors dcb-service's BrandingValidator so the administrator is told at the
+		// field rather than by a rejected save. Blank is valid at all three and means
+		// "clear it" — a library that uploaded the wrong mark must be able to remove it.
+		brandLogoUrl: Yup.string()
+			.trim()
+			.max(
+				BRAND_LIMITS.logoUrl,
+				t("ui.validation.max_length", { length: BRAND_LIMITS.logoUrl }),
+			)
+			.test("absolute-http-url", t("library.brand.logo_url_invalid"), isValidLogoUrl),
+		brandLogoAlt: Yup.string()
+			.trim()
+			.max(
+				BRAND_LIMITS.logoAlt,
+				t("ui.validation.max_length", { length: BRAND_LIMITS.logoAlt }),
+			),
+		defaultThemeName: Yup.string()
+			.trim()
+			.max(
+				BRAND_LIMITS.themeName,
+				t("ui.validation.max_length", { length: BRAND_LIMITS.themeName }),
+			),
 	});
 
 	const {
@@ -319,6 +363,9 @@ function HomeComponent() {
 				backupDowntimeSchedule: library.backupDowntimeSchedule ?? "",
 				latitude: library.latitude,
 				longitude: library.longitude,
+				brandLogoUrl: library.brandLogoUrl ?? "",
+				brandLogoAlt: library.brandLogoAlt ?? "",
+				defaultThemeName: library.defaultThemeName ?? "",
 			});
 		}
 	}, [library, reset]);
@@ -330,7 +377,7 @@ function HomeComponent() {
 			const currentValue = data[field];
 			const originalValue = library[field];
 
-			if (currentValue !== originalValue && currentValue !== undefined) {
+			if (hasChanged(currentValue, originalValue) && currentValue !== undefined) {
 				(acc[field] as typeof currentValue) = currentValue;
 			}
 			return acc;
@@ -629,6 +676,134 @@ function HomeComponent() {
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">{t("library.id")}</Typography>
 					<RenderAttribute attribute={library?.id} />
+				</Stack>
+			</Grid>
+
+			{/* Patron-facing brand — N-1B. Its own labelled block because everything
+			    above configures this library's participation in DCB and these three
+			    configure what a patron sees in the discovery app. The library's mark
+			    leads the lockup there and the consortium's follows it, smaller: the
+			    patron is using their library, and the consortium is the supply network
+			    behind it. */}
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Typography variant="h3" fontWeight={"bold"}>
+					{t("library.brand.section")}
+				</Typography>
+				<Typography>{t("library.brand.section_help")}</Typography>
+			</Grid>
+			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Stack direction={"column"}>
+					<Typography
+						variant="attributeTitle"
+						color={
+							errors.brandLogoUrl
+								? theme.palette.error.main
+								: theme.palette.common.black
+						}>
+						{t("library.brand.logo_url")}
+					</Typography>
+					<Controller
+						name="brandLogoUrl"
+						control={control}
+						render={({ field }) =>
+							editMode ? (
+								<TextField
+									{...field}
+									label={t("library.brand.logo_url")}
+									fullWidth
+									error={!!errors.brandLogoUrl}
+									helperText={
+										errors.brandLogoUrl?.message ??
+										t("library.brand.logo_url_help")
+									}
+									margin="normal"
+								/>
+							) : (
+								<RenderAttribute attribute={library?.brandLogoUrl} />
+							)
+						}
+					/>
+				</Stack>
+			</Grid>
+			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Stack direction={"column"}>
+					<Typography
+						variant="attributeTitle"
+						color={
+							errors.brandLogoAlt
+								? theme.palette.error.main
+								: theme.palette.common.black
+						}>
+						{t("library.brand.logo_alt")}
+					</Typography>
+					<Controller
+						name="brandLogoAlt"
+						control={control}
+						render={({ field }) =>
+							editMode ? (
+								<TextField
+									{...field}
+									label={t("library.brand.logo_alt")}
+									fullWidth
+									error={!!errors.brandLogoAlt}
+									helperText={
+										errors.brandLogoAlt?.message ??
+										t("library.brand.logo_alt_help")
+									}
+									margin="normal"
+								/>
+							) : (
+								<RenderAttribute attribute={library?.brandLogoAlt} />
+							)
+						}
+					/>
+				</Stack>
+			</Grid>
+			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Stack direction={"column"}>
+					<Typography
+						variant="attributeTitle"
+						color={
+							errors.defaultThemeName
+								? theme.palette.error.main
+								: theme.palette.common.black
+						}>
+						{t("library.brand.theme")}
+					</Typography>
+					<Controller
+						name="defaultThemeName"
+						control={control}
+						render={({ field }) =>
+							editMode ? (
+								// A list, not a colour. Every theme in the registry has been
+								// contrast-tested in light, dark and high contrast; a colour
+								// typed here would not be, and nothing on this page could tell
+								// the administrator it had failed.
+								<TextField
+									{...field}
+									select
+									label={t("library.brand.theme")}
+									fullWidth
+									error={!!errors.defaultThemeName}
+									helperText={
+										errors.defaultThemeName?.message ??
+										t("library.brand.theme_help")
+									}
+									margin="normal">
+									<MenuItem value="">
+										{t("library.brand.theme_inherit")}
+									</MenuItem>
+									{themeOptions(library?.defaultThemeName).map((name) => (
+										<MenuItem key={name} value={name}>
+											{name}
+										</MenuItem>
+									))}
+								</TextField>
+							) : (
+								<RenderAttribute attribute={library?.defaultThemeName} />
+							)
+						}
+					/>
 				</Stack>
 			</Grid>
 			{/* /* 'Primary location' title goes here/* */}
