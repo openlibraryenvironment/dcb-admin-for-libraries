@@ -182,6 +182,18 @@
 	"library": {
 		"abbreviated_name": "Abbreviated name",
 		"backup_schedule": "Backup / downtime schedule",
+		"brand": {
+			"section": "How your library appears to patrons",
+			"section_help": "Used in the discovery app, where your library's logo and name appear alongside the consortium's.",
+			"logo_url": "Logo URL",
+			"logo_url_help": "A full web address beginning http:// or https://. Leave blank to show your library's name on its own.",
+			"logo_url_invalid": "Enter a full web address beginning http:// or https://, or leave this blank.",
+			"logo_alt": "Logo description",
+			"logo_alt_help": "Read aloud in place of the logo. Leave blank to use your library's full name.",
+			"theme": "Discovery theme",
+			"theme_help": "Applied when a patron is searching your library. Every theme has been checked for colour contrast in light, dark and high-contrast modes.",
+			"theme_inherit": "Use the consortium's theme"
+		},
 		"config": {
 			"patronAuth": {
 				"auth_profile": "Authentication profile",

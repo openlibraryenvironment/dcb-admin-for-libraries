@@ -8,6 +8,9 @@ export const updateLibrary = gql`
 			supportHours
 			latitude
 			longitude
+			brandLogoUrl
+			brandLogoAlt
+			defaultThemeName
 		}
 	}
 `;
