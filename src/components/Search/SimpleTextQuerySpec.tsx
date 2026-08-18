@@ -16,7 +16,10 @@ export function SimpleTextQuerySpec({
 }: SimpleTextQuerySpecProps) {
 	const [input, setInput] = useState(searchTerm);
 
-	const clearTerm = () => {};
+	const clearTerm = () => {
+		setInput("");
+		handleSearch("", queryType);
+	};
 
 	// We only search on enter now
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

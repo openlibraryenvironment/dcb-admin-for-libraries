@@ -14,7 +14,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import { getLibrary } from "@queries/getLibrary";
 import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
-import { appPath } from "@helpers/appBase";
+import { appPath, assetUrl } from "@helpers/appBase";
 
 export const Header = () => {
 	const navigate = useNavigate();
@@ -63,7 +63,7 @@ export const Header = () => {
 					<Button
 						variant="outlined"
 						href={appPath()}
-						startIcon={<Avatar src={appPath("fallback-header.png")} />}
+						startIcon={<Avatar src={assetUrl("fallback-header.png")} />}
 					/>
 				</Tooltip>
 

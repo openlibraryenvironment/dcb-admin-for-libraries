@@ -193,7 +193,7 @@ export function SharedIndexV2() {
 		async ({ queryKey }: any) => {
 			// Need this
 
-			const [_, query, pageno, pagesize] = queryKey;
+			const [, query, pageno, pagesize] = queryKey;
 			const isUUID = query.length === 36 ? validate(query) : false;
 
 			if (!query) {

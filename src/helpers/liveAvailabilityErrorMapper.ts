@@ -36,14 +36,14 @@ export const getAggregatedErrorMessage = (
 
 			if (bibId) bibs.add(bibId);
 
-			if (hostId) {
-				// If we want to make the library codes look nicer, do it here
-				libraries.add(hostId.split("_").join(" "));
+				if (hostId) {
+					// If we want to make the library codes look nicer, do it here
+					libraries.add(hostId.split("_").join(" "));
+				}
+			} catch {
+				// Fallback if parsing fails for some reason
+				console.warn("Error parsing message", msg);
 			}
-		} catch (e) {
-			// Fallback if parsing fails for some reason
-			console.warn("Error parsing message", msg);
-		}
 	});
 
 	// 3. Construct the message
