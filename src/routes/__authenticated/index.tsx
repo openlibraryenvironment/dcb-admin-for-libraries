@@ -16,6 +16,7 @@ import {
 	TextField,
 	useTheme,
 } from "@mui/material";
+import { BrandImageField } from "@components/BrandImageField/BrandImageField";
 import {
 	BRAND_LIMITS,
 	isValidLogoUrl,
@@ -690,6 +691,12 @@ function HomeComponent() {
 					{t("library.brand.section")}
 				</Typography>
 				<Typography>{t("library.brand.section_help")}</Typography>
+				{/* Said once, in the section, rather than in each field's help text. A
+				    library choosing between uploading and pasting an address deserves to
+				    know what the second one costs. */}
+				<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+					{t("library.brand.external_url_cost")}
+				</Typography>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
@@ -707,16 +714,15 @@ function HomeComponent() {
 						control={control}
 						render={({ field }) =>
 							editMode ? (
-								<TextField
-									{...field}
+								<BrandImageField
+									value={field.value ?? ""}
+									onChange={field.onChange}
 									label={t("library.brand.logo_url")}
-									fullWidth
 									error={!!errors.brandLogoUrl}
 									helperText={
 										errors.brandLogoUrl?.message ??
 										t("library.brand.logo_url_help")
 									}
-									margin="normal"
 								/>
 							) : (
 								<RenderAttribute attribute={library?.brandLogoUrl} />

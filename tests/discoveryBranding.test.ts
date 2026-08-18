@@ -89,8 +89,49 @@ describe("brand translations", () => {
 			"theme",
 			"theme_help",
 			"theme_inherit",
+			"upload",
+			"uploading",
+			"upload_formats",
+			"upload_too_large",
+			"upload_failed",
+			"image_url",
+			"external_url_cost",
 		]) {
 			expect(typeof brand[key], key).toBe("string");
 		}
+	});
+});
+
+// --- R-17e: one column, two ways to fill it ----------------------------------
+
+describe("an uploaded asset path", () => {
+	const key = "a".repeat(64);
+
+	/**
+	 * The new accepted form. An upload returns a site-relative URL under dcb-service's
+	 * own asset prefix — which is exactly the shape the other cases here exist to reject
+	 * — so the rule is widened by one case rather than relaxed.
+	 */
+	it("accepts a path under dcb-service's asset prefix", () => {
+		expect(isValidLogoUrl(`/discovery/brand-assets/${key}.png`)).toBe(true);
+		expect(isValidLogoUrl(`/discovery/brand-assets/${key}.jpg`)).toBe(true);
+	});
+
+	/**
+	 * A "starts with" test would accept this. A prefix test that can be walked out of is
+	 * not a prefix test, which is why the key's shape is checked too.
+	 */
+	it("rejects a traversal out of the prefix", () => {
+		expect(isValidLogoUrl("/discovery/brand-assets/../../etc/passwd")).toBe(false);
+	});
+
+	it("rejects anything under the prefix that is not a key this service minted", () => {
+		expect(isValidLogoUrl("/discovery/brand-assets/logo.png")).toBe(false);
+		expect(isValidLogoUrl(`/discovery/brand-assets/${key}.svg`)).toBe(false);
+	});
+
+	it("still rejects every other site-relative path", () => {
+		expect(isValidLogoUrl(`/uploads/${key}.png`)).toBe(false);
+		expect(isValidLogoUrl("/discovery/brand-assets-evil/x.png")).toBe(false);
 	});
 });
