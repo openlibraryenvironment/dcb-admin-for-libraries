@@ -18,6 +18,11 @@ export const getLibrary = gql`
 				training
 				patronWebsite
 				discoverySystem
+				# Patron-facing brand (N-1B), rendered by the discovery app. patronWebsite
+				# above is the mark's link target, so there is no second URL here.
+				brandLogoUrl
+				brandLogoAlt
+				defaultThemeName
 				type
 				backupDowntimeSchedule
 				hostLmsConfiguration
