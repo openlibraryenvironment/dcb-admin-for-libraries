@@ -133,7 +133,7 @@ export default function DataGrid({
 	const navigate = useNavigate();
 	const expandedFilterPanel = expandedFilterPanelTypes.includes(type);
 	const getDetailPanelHeight = useCallback(() => "auto", []); // Only necessary because master detail is not applicable to all grids yet
-	const [alert, setAlert] = useState<any>({
+	const [, setAlert] = useState<any>({
 		open: false,
 		severity: "success",
 		text: null,

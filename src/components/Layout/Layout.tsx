@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useRouter } from "@tanstack/react-router";
+import { useLocation } from "@tanstack/react-router";
 import { useAuth } from "react-oidc-context";
 import { useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -9,6 +9,7 @@ import Container from "@mui/material/Container";
 import { Header } from "../Header/Header";
 import { CustomLink } from "@components/CustomLink";
 import { useTranslation } from "react-i18next";
+import { getAppBase } from "@helpers/appBase";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -18,9 +19,7 @@ export const Layout = ({ children }: LayoutProps) => {
 	const auth = useAuth();
 	const theme = useTheme();
 	const { pathname } = useLocation();
-	const router = useRouter();
-	const { cfg } = router.options.context;
-	const basePath = cfg?.VITE_PUBLIC_URL || "/";
+	const basePath = getAppBase();
 	const [activeTab, setActiveTab] = useState<string | false>(basePath);
 	const { t } = useTranslation();
 	const tabsReadOnly = useMemo(() => {

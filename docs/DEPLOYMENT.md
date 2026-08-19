@@ -37,10 +37,10 @@ The application requires the following environment variables to function properl
 | `VITE_DCB_API_BASE`      | **Yes**  | The URL of the dcb-service instance.                                                                                                                                                                                                                                                |
 | `VITE_DCB_SEARCH_BASE`   | **Yes**  | The URL of the dcb-locate instance.                                                                                                                                                                                                                                                 |
 | `VITE_MUI_X_LICENSE_KEY` | **Yes**  | Provided by the Hosting Provider. Unlocks MUI X Premium features. It is OK for this to be exposed in the bundle: it is not OK for this to be publicly broadcast (i.e. committed to a repository). See [MUI X docs](https://mui.com/x/introduction/licensing/#license-key-security)! |
-| `VITE_PUBLIC_URL`        | No       | The subpath the app is hosted under (e.g. `/libraries-admin/`). Defaults to `/`.                                                                                                                                                                                                    |
+| `VITE_PUBLIC_URL`        | No       | Standalone base path. Defaults to `/`. Must include leading and trailing slashes (e.g. `/dcb-admin-for-libraries/`). **Build-time only.** The standalone entry uses it for assets, routing, public assets and storage. The bootloader entry always routes at `/` and resolves assets from its own bundle URL. |
 
 > [!NOTE]
-> **DCB Admin for Libraries** uses relative asset paths (`base: "./"`) in its build configuration, so its JS/CSS bundle references resolve correctly on a subpath without any configuration. `VITE_PUBLIC_URL` is a separate concern: it drives the TanStack Router `basepath` and the nav tab links. If you host the app on a subpath and omit `VITE_PUBLIC_URL`, assets will still load fine (masking the problem), but client-side routing will break because the router will treat the app as hosted at `/`. Set it whenever you deploy to anything other than a domain root.
+> `VITE_PUBLIC_URL` is not runtime tenant configuration. Set it only at build time for standalone/subpath deployments. Host-specific backend, search, Keycloak and licence values should be supplied by `inject_env.json` in standalone runtime-config deployments or by the KI bootloader host configuration.
 
 ---
 
@@ -48,11 +48,30 @@ The application requires the following environment variables to function properl
 
 Choose the deployment method that matches your infrastructure.
 
+### KI bootloader bundle
+
+`npm run build` creates one `dist/` artifact with the standalone `index.html`
+and a fixed adapter entry point:
+
+```ts
+mount({ element, config }): Promise<void>
+```
+
+Publish the same directory to existing standalone destinations and as
+`dcb-admin-for-libraries/<version>/` in the `ki-front-end-bundles` R2 bucket.
+Configure KI Console SPA bootstrap host records with app
+`dcb-admin-for-libraries`, a version such as `next` or `v1.2.3`, and a public
+`config` object containing the variables from Section 2.
+
+The existing S3 paths, Docker image, `inject_env.json`, and local `npm run dev`
+flow remain unchanged.
+
 ### Option A: Cloudflare Pages
 
 **Architecture:** This uses a "Build Once, Deploy Anywhere" approach. You deploy the exact same static build to every environment, and a small Cloudflare Pages Function dynamically supplies the environment-specific configuration to the app at runtime via `/inject_env.json`.
 
 **Deployment Steps:**
+
 
 1. Create a Cloudflare Pages project pointing at your repository.
 2. Set the build command to `npm run build` and the output directory to `dist`.
@@ -80,17 +99,17 @@ Choose the deployment method that matches your infrastructure.
 
 Using "staging" as an example environment.
 
-# 1. Build the application with environment variables
+1. Build the application with environment variables
 
-VITE_KEYCLOAK_URL=https://staging-keycloak... VITE_DCB_API_BASE=https://staging-api... npm run build
+`VITE_KEYCLOAK_URL=https://staging-keycloak... VITE_DCB_API_BASE=https://staging-api... npm run build`
 
-# 2. Sync the built assets to your S3 bucket
+2. Sync the built assets to your S3 bucket
 
-aws s3 sync dist/ s3://dcb-admin-staging --delete
+`aws s3 sync dist/ s3://dcb-admin-staging --delete`
 
-# 3. Invalidate the CloudFront cache (crucial for /index.html)
+3. Invalidate the CloudFront cache (crucial for /index.html)
 
-aws cloudfront create-invalidation --distribution-id <id> --paths "/index.html" "/\*"
+`aws cloudfront create-invalidation --distribution-id <id> --paths "/index.html" "/\*"`
 
 ### Option C: Docker (Self-Hosted / Portable)
 

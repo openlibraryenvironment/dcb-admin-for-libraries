@@ -8,6 +8,7 @@
 		"coverage": "vitest run --coverage",
 		"dev": "vite",
 		"build": "tsc && vite build",
+		"e2e:ki-bootstrap": "playwright test --config playwright.ki-bootstrap.config.ts",
 		"lint": "eslint",
 		"preview": "vite preview",
 		"semantic-release": "semantic-release",
