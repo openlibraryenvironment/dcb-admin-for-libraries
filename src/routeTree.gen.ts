@@ -17,6 +17,7 @@ import { Route as NetworkErrorRouteImport } from './routes/networkError'
 import { Route as _authenticatedIndexRouteImport } from './routes/__authenticated/index'
 import { Route as _authenticatedContactsRouteImport } from './routes/__authenticated/contacts'
 import { Route as _authenticatedDataChangeLogRouteImport } from './routes/__authenticated/dataChangeLog'
+import { Route as _authenticatedInsightsRouteImport } from './routes/__authenticated/insights'
 import { Route as _authenticatedMappingsRouteImport } from './routes/__authenticated/mappings'
 import { Route as _authenticatedServiceRouteImport } from './routes/__authenticated/service'
 import { Route as _authenticatedSettingsRouteImport } from './routes/__authenticated/settings'
@@ -76,6 +77,11 @@ const _authenticatedDataChangeLogRoute =
     path: '/dataChangeLog',
     getParentRoute: () => _authenticatedRoute,
   } as any)
+const _authenticatedInsightsRoute = _authenticatedInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => _authenticatedRoute,
+} as any)
 const _authenticatedMappingsRoute = _authenticatedMappingsRouteImport.update({
   id: '/mappings',
   path: '/mappings',
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/networkError': typeof NetworkErrorRoute
   '/contacts': typeof _authenticatedContactsRoute
   '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
+  '/insights': typeof _authenticatedInsightsRoute
   '/mappings': typeof _authenticatedMappingsRoute
   '/service': typeof _authenticatedServiceRoute
   '/settings': typeof _authenticatedSettingsRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/networkError': typeof NetworkErrorRoute
   '/contacts': typeof _authenticatedContactsRoute
   '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
+  '/insights': typeof _authenticatedInsightsRoute
   '/mappings': typeof _authenticatedMappingsRoute
   '/service': typeof _authenticatedServiceRoute
   '/settings': typeof _authenticatedSettingsRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/networkError': typeof NetworkErrorRoute
   '/__authenticated/contacts': typeof _authenticatedContactsRoute
   '/__authenticated/dataChangeLog': typeof _authenticatedDataChangeLogRoute
+  '/__authenticated/insights': typeof _authenticatedInsightsRoute
   '/__authenticated/mappings': typeof _authenticatedMappingsRoute
   '/__authenticated/service': typeof _authenticatedServiceRoute
   '/__authenticated/settings': typeof _authenticatedSettingsRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/networkError'
     | '/contacts'
     | '/dataChangeLog'
+    | '/insights'
     | '/mappings'
     | '/service'
     | '/settings'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/networkError'
     | '/contacts'
     | '/dataChangeLog'
+    | '/insights'
     | '/mappings'
     | '/service'
     | '/settings'
@@ -326,6 +337,7 @@ export interface FileRouteTypes {
     | '/networkError'
     | '/__authenticated/contacts'
     | '/__authenticated/dataChangeLog'
+    | '/__authenticated/insights'
     | '/__authenticated/mappings'
     | '/__authenticated/service'
     | '/__authenticated/settings'
@@ -411,6 +423,13 @@ declare module '@tanstack/react-router' {
       path: '/dataChangeLog'
       fullPath: '/dataChangeLog'
       preLoaderRoute: typeof _authenticatedDataChangeLogRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/insights': {
+      id: '/__authenticated/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof _authenticatedInsightsRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/mappings': {
@@ -566,6 +585,7 @@ const _authenticatedRequestingRecordIdRouteWithChildren =
 interface _authenticatedRouteChildren {
   _authenticatedContactsRoute: typeof _authenticatedContactsRoute
   _authenticatedDataChangeLogRoute: typeof _authenticatedDataChangeLogRoute
+  _authenticatedInsightsRoute: typeof _authenticatedInsightsRoute
   _authenticatedMappingsRoute: typeof _authenticatedMappingsRoute
   _authenticatedServiceRoute: typeof _authenticatedServiceRoute
   _authenticatedSettingsRoute: typeof _authenticatedSettingsRoute
@@ -587,6 +607,7 @@ interface _authenticatedRouteChildren {
 const _authenticatedRouteChildren: _authenticatedRouteChildren = {
   _authenticatedContactsRoute: _authenticatedContactsRoute,
   _authenticatedDataChangeLogRoute: _authenticatedDataChangeLogRoute,
+  _authenticatedInsightsRoute: _authenticatedInsightsRoute,
   _authenticatedMappingsRoute: _authenticatedMappingsRoute,
   _authenticatedServiceRoute: _authenticatedServiceRoute,
   _authenticatedSettingsRoute: _authenticatedSettingsRoute,
