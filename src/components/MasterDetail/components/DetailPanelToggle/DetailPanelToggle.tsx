@@ -30,12 +30,14 @@ export function DetailPanelToggle(
 
 	return (
 		<Tooltip
-			title={isExpanded ? t("ui.data_grid.collapse") : t("ui.actions.expand")}>
+			title={isExpanded ? t("ui.actions.collapse") : t("ui.actions.expand")}>
 			<IconButton
 				size="small"
 				tabIndex={-1}
 				disabled={!hasDetail}
-				aria-label={isExpanded ? "Close" : "Open"}>
+				aria-label={
+					isExpanded ? t("ui.actions.collapse") : t("ui.actions.expand")
+				}>
 				<ExpandMoreIcon
 					sx={{
 						transform: `rotateZ(${isExpanded ? 180 : 0}deg)`,

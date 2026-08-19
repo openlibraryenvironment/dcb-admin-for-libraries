@@ -21,12 +21,12 @@ export const createActionItems = (
 		return [
 			{
 				icon: "Save",
-				label: t("ui.data_grid.save"),
+				label: t("ui.actions.save"),
 				onClick: handleSaveClick(params?.row?.id),
 			},
 			{
 				icon: "Cancel",
-				label: t("ui.data_grid.cancel"),
+				label: t("ui.actions.cancel"),
 				onClick: handleCancelClick(params?.row?.id),
 			},
 		];
@@ -43,13 +43,13 @@ export const createActionItems = (
 		return [
 			{
 				icon: "Edit",
-				label: t("ui.data_grid.edit"),
+				label: t("ui.actions.edit"),
 				onClick: handleEditClick(params?.row?.id),
 				disabled: isAnyRowEditing(),
 			},
 			{
 				icon: "Delete",
-				label: t("ui.data_grid.delete"),
+				label: t("ui.actions.delete"),
 				onClick: () => {
 					setConfirmationModalOpen(true);
 					setEntityToDelete(params?.row?.id);
@@ -62,13 +62,13 @@ export const createActionItems = (
 	return [
 		{
 			icon: "Edit",
-			label: t("ui.data_grid.edit"),
+			label: t("ui.actions.edit"),
 			onClick: handleEditClick(params?.row?.id),
 			disabled: isAnyRowEditing(),
 		},
 		{
 			icon: "Delete",
-			label: t("ui.data_grid.delete"),
+			label: t("ui.actions.delete"),
 			onClick: () => {
 				setConfirmationModalOpen(true);
 				setEntityToDelete(params?.row?.id);

@@ -34,6 +34,8 @@ Scenarios were tested using a range of manual and automated testing methods, suc
 
 Automated testing was undertaken with Axe Dev-Tools to the WCAG 2.2 AA standard.
 
+Automated testing is also a continuous gate rather than a one-off exercise: `e2e/accessibility.spec.ts` runs axe-core against the WCAG 2.0, 2.1 and 2.2 A and AA rule sets on every pipeline, in both light and dark colour schemes, and the build fails on any violation. The pages covered are listed in that file.
+
 **Applicable Standards/Guidelines**
 
 This report covers the degree of conformance for the following accessibility standard/guidelines \- WCAG 2.2 AA.

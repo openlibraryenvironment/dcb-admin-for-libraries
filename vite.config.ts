@@ -86,8 +86,8 @@ export default defineConfig(({ mode }) => {
 			rollupOptions: {
 				preserveEntrySignatures: "strict",
 				input: {
-					index: path.resolve(__dirname, "index.html"),
-					"ki-bootstrap": path.resolve(__dirname, "src/ki-bootstrap.ts"),
+					index: path.resolve(import.meta.dirname, "index.html"),
+					"ki-bootstrap": path.resolve(import.meta.dirname, "src/ki-bootstrap.ts"),
 				},
 				output: {
 					entryFileNames: (chunk) =>
@@ -126,15 +126,15 @@ export default defineConfig(({ mode }) => {
 		},
 		resolve: {
 			alias: {
-				"@components": path.resolve(__dirname, "src/components"),
-				"@constants": path.resolve(__dirname, "src/constants"),
-				"@forms": path.resolve(__dirname, "src/forms"),
-				"@helpers": path.resolve(__dirname, "src/helpers"),
-				"@queries": path.resolve(__dirname, "src/queries"),
-				"@models": path.resolve(__dirname, "src/models"),
-				"@mutations": path.resolve(__dirname, "src/mutations"),
-				"@types": path.resolve(__dirname, "src/types"),
-				"@": path.resolve(__dirname, "src"),
+				"@components": path.resolve(import.meta.dirname, "src/components"),
+				"@constants": path.resolve(import.meta.dirname, "src/constants"),
+				"@forms": path.resolve(import.meta.dirname, "src/forms"),
+				"@helpers": path.resolve(import.meta.dirname, "src/helpers"),
+				"@queries": path.resolve(import.meta.dirname, "src/queries"),
+				"@models": path.resolve(import.meta.dirname, "src/models"),
+				"@mutations": path.resolve(import.meta.dirname, "src/mutations"),
+				"@types": path.resolve(import.meta.dirname, "src/types"),
+				"@": path.resolve(import.meta.dirname, "src"),
 			},
 		},
 	};

@@ -138,7 +138,6 @@ function HomeComponent() {
 	});
 	// on success
 
-	//@ts-expect-error TYPING
 	const library: Library = data?.libraries?.content?.[0];
 	const userLibraryHostLmsCode = library?.agency?.hostLms?.code;
 
@@ -262,7 +261,7 @@ function HomeComponent() {
 			setAlert({
 				open: true,
 				severity: "error",
-				text: t("common.update_error", {
+				text: t("common.update_failure", {
 					entity: t("entities.library"),
 					name: library?.fullName,
 				}),
@@ -276,7 +275,7 @@ function HomeComponent() {
 			.trim()
 			.nonNullable(t("ui.validation.required"))
 			.required(
-				t("ui.validation.required", { field: t("ui.library.full_name") }),
+				t("ui.validation.required", { field: t("library.full_name") }),
 			)
 			.max(255, t("ui.validation.max_length", { length: 255 })),
 		shortName: Yup.string()
@@ -404,16 +403,18 @@ function HomeComponent() {
 				changeCategory,
 				changeReferenceUrl,
 			});
-		} catch (error) {
-			console.error("Error updating library:", error);
+		} catch {
 			setAlert({
 				open: true,
 				severity: "error",
-				text: t("ui.data_grid.edit_error", {
+				text: t("common.update_failure", {
 					entity: t("entities.location"),
 					name: library?.fullName,
 				}),
-				title: t("ui.data_grid.updated"),
+				// The failure path, so the alert title is Error - matching the
+				// identical handler above. It read ui.data_grid.updated, a key that
+				// does not exist, so the alert was titled with the key itself.
+				title: t("common.error"),
 			});
 		} finally {
 			setConfirmationEdit(false);
@@ -495,8 +496,8 @@ function HomeComponent() {
 						variant="attributeTitle"
 						color={
 							errors.fullName
-								? theme.palette.error.main
-								: theme.palette.common.black
+								? (theme.vars || theme).palette.error.main
+								: (theme.vars || theme).palette.text.primary
 						}>
 						{t("library.full_name")}
 					</Typography>
@@ -528,8 +529,8 @@ function HomeComponent() {
 						variant="attributeTitle"
 						color={
 							errors.shortName
-								? theme.palette.error.main
-								: theme.palette.common.black
+								? (theme.vars || theme).palette.error.main
+								: (theme.vars || theme).palette.text.primary
 						}>
 						{t("library.short_name")}
 					</Typography>
@@ -560,8 +561,8 @@ function HomeComponent() {
 						variant="attributeTitle"
 						color={
 							errors.abbreviatedName
-								? theme.palette.error.main
-								: theme.palette.common.black
+								? (theme.vars || theme).palette.error.main
+								: (theme.vars || theme).palette.text.primary
 						}>
 						{t("library.abbreviated_name")}
 					</Typography>
@@ -604,8 +605,8 @@ function HomeComponent() {
 						variant="attributeTitle"
 						color={
 							errors.supportHours
-								? theme.palette.error.main
-								: theme.palette.common.black
+								? (theme.vars || theme).palette.error.main
+								: (theme.vars || theme).palette.text.primary
 						}>
 						{t("library.support_hours")}
 					</Typography>
@@ -636,8 +637,8 @@ function HomeComponent() {
 						variant="attributeTitle"
 						color={
 							errors.backupDowntimeSchedule
-								? theme.palette.error.main
-								: theme.palette.common.black
+								? (theme.vars || theme).palette.error.main
+								: (theme.vars || theme).palette.text.primary
 						}>
 						{t("library.backup_schedule")}
 					</Typography>
@@ -712,8 +713,8 @@ function HomeComponent() {
 						variant="attributeTitle"
 						color={
 							errors.brandLogoUrl
-								? theme.palette.error.main
-								: theme.palette.common.black
+								? (theme.vars || theme).palette.error.main
+								: (theme.vars || theme).palette.text.primary
 						}>
 						{t("library.brand.logo_url")}
 					</Typography>
@@ -745,8 +746,8 @@ function HomeComponent() {
 						variant="attributeTitle"
 						color={
 							errors.brandLogoAlt
-								? theme.palette.error.main
-								: theme.palette.common.black
+								? (theme.vars || theme).palette.error.main
+								: (theme.vars || theme).palette.text.primary
 						}>
 						{t("library.brand.logo_alt")}
 					</Typography>
@@ -779,8 +780,8 @@ function HomeComponent() {
 						variant="attributeTitle"
 						color={
 							errors.defaultThemeName
-								? theme.palette.error.main
-								: theme.palette.common.black
+								? (theme.vars || theme).palette.error.main
+								: (theme.vars || theme).palette.text.primary
 						}>
 						{t("library.brand.theme")}
 					</Typography>
@@ -841,8 +842,8 @@ function HomeComponent() {
 						variant="attributeTitle"
 						color={
 							errors.latitude
-								? theme.palette.error.main
-								: theme.palette.common.black
+								? (theme.vars || theme).palette.error.main
+								: (theme.vars || theme).palette.text.primary
 						}>
 						{t("common.latitude")}
 					</Typography>
@@ -873,8 +874,8 @@ function HomeComponent() {
 						variant="attributeTitle"
 						color={
 							errors.longitude
-								? theme.palette.error.main
-								: theme.palette.common.black
+								? (theme.vars || theme).palette.error.main
+								: (theme.vars || theme).palette.text.primary
 						}>
 						{t("common.longitude")}
 					</Typography>

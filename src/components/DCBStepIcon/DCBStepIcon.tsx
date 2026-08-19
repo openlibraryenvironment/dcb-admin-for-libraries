@@ -21,7 +21,7 @@ export default function DCBStepIcon(props: StepIconProps) {
 					sx={{
 						fontSize: `${iconSize * 1.1}px`, // Adjust size if needed
 					}}
-					htmlColor={theme.palette.error.main}
+					htmlColor={(theme.vars || theme).palette.error.main}
 				/>
 			</Avatar>
 		);
@@ -36,7 +36,7 @@ export default function DCBStepIcon(props: StepIconProps) {
 					height: iconSize,
 				}}>
 				<CheckCircle
-					htmlColor={theme.palette.success.main}
+					htmlColor={(theme.vars || theme).palette.success.main}
 					sx={{
 						fontSize: `${iconSize * 1.1}px`,
 					}}
@@ -51,8 +51,8 @@ export default function DCBStepIcon(props: StepIconProps) {
 		return (
 			<Avatar
 				sx={{
-					bgcolor: theme.palette.primary.main,
-					color: theme.palette.primary.iconSymbol,
+					bgcolor: (theme.vars || theme).palette.primary.main,
+					color: (theme.vars || theme).palette.primary.iconSymbol,
 					width: iconSize,
 					height: iconSize,
 					fontWeight: "bold",
@@ -67,8 +67,8 @@ export default function DCBStepIcon(props: StepIconProps) {
 	return (
 		<Avatar
 			sx={{
-				bgcolor: theme.palette.primary.inactiveBackground,
-				color: theme.palette.primary.iconSymbol,
+				bgcolor: (theme.vars || theme).palette.primary.inactiveBackground,
+				color: (theme.vars || theme).palette.primary.iconSymbol,
 				width: iconSize,
 				height: iconSize,
 			}}>

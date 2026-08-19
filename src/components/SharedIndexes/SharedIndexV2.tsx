@@ -169,7 +169,7 @@ export function SharedIndexV2() {
 				replace: true,
 			});
 		},
-		[router, setAppliedFilters],
+		[router, setAppliedFilters, paginationModel.page, paginationModel.pageSize],
 	);
 
 	const handleSearchSubmit = (event: React.FormEvent) => {
@@ -253,12 +253,9 @@ export function SharedIndexV2() {
 				};
 			}
 		},
-		[
-			auth.user?.access_token,
-			cfg.VITE_DCB_SEARCH_BASE,
-			paginationModel.page, // pageno
-			paginationModel.pageSize, // pagesize
-		],
+		// pageno/pagesize come from the queryKey the fetcher is handed, not from
+		// the model, so the model is deliberately not a dependency here.
+		[auth.user?.access_token, cfg.VITE_DCB_SEARCH_BASE],
 	);
 
 	const {
@@ -278,7 +275,6 @@ export function SharedIndexV2() {
 		staleTime: 1000 * 60 * 5, // 5 minutes,
 		placeholderData: keepPreviousData,
 	});
-	console.log(isFetching);
 
 	// // Reset pagination when the query changes ???????
 	// useEffect(() => {
@@ -520,7 +516,7 @@ export function SharedIndexV2() {
 						position: "absolute",
 						right: 8,
 						top: 8,
-						color: (theme) => theme.palette.grey[500],
+						color: (theme) => (theme.vars || theme).palette.grey[500],
 					}}>
 					<Close />
 				</IconButton>

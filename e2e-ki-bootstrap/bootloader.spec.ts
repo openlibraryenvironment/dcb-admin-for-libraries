@@ -1,14 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
-declare global {
-	interface Window {
-		__APP_ENV__?: {
-			VITE_DCB_API_BASE?: string;
-			[key: string]: string | undefined;
-		};
-		__DCB_BUNDLE_BASE_URL__?: string;
-	}
-}
+// Window.__APP_ENV__ and __DCB_BUNDLE_BASE_URL__ are declared once, in
+// src/application.tsx. A second declaration here narrowed the type and
+// collided with it as soon as the specs joined the tsconfig program.
 
 const runtimeConfig = {
 	VITE_KEYCLOAK_URL: "https://identity.example.invalid",

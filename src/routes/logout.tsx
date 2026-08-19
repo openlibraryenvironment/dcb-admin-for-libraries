@@ -48,8 +48,7 @@ function Logout() {
 				await auth.signoutRedirect({
 					post_logout_redirect_uri: appUrl("logout?loggedOut=true"),
 				});
-			} catch (error) {
-				console.error("Logout error:", error);
+			} catch {
 				hasTriggeredLogout.current = false;
 			}
 		};
@@ -65,13 +64,18 @@ function Logout() {
 	if (loggedOut) {
 		return (
 			<Box
-				sx={{
+				sx={(theme) => ({
 					display: "flex",
 					justifyContent: "center",
 					alignItems: "center",
 					minHeight: "100vh",
-					backgroundColor: (theme) => theme.palette.grey[100],
-				}}>
+					backgroundColor: (theme.vars || theme).palette.grey[100],
+					// grey[100] is the same near-white in both schemes, which left the
+					// dark-mode page a white sheet behind a dark card.
+					...theme.applyStyles("dark", {
+						backgroundColor: (theme.vars || theme).palette.grey[900],
+					}),
+				})}>
 				<Paper
 					elevation={3}
 					sx={{
@@ -112,13 +116,18 @@ function Logout() {
 
 	return (
 		<Box
-			sx={{
+			sx={(theme) => ({
 				display: "flex",
 				justifyContent: "center",
 				alignItems: "center",
 				minHeight: "100vh",
-				backgroundColor: (theme) => theme.palette.grey[100],
-			}}>
+				backgroundColor: (theme.vars || theme).palette.grey[100],
+				// grey[100] is the same near-white in both schemes, which left the
+				// dark-mode page a white sheet behind a dark card.
+				...theme.applyStyles("dark", {
+					backgroundColor: (theme.vars || theme).palette.grey[900],
+				}),
+			})}>
 			<Paper
 				elevation={3}
 				sx={{

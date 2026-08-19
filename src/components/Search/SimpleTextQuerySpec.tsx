@@ -2,6 +2,7 @@ import { TextField, InputAdornment, IconButton } from "@mui/material";
 import Search from "@mui/icons-material/Search";
 import Clear from "@mui/icons-material/Clear";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface SimpleTextQuerySpecProps {
 	searchTerm: string;
@@ -14,6 +15,7 @@ export function SimpleTextQuerySpec({
 	handleSearch,
 	queryType,
 }: SimpleTextQuerySpecProps) {
+	const { t } = useTranslation();
 	const [input, setInput] = useState(searchTerm);
 
 	const clearTerm = () => {
@@ -34,7 +36,7 @@ export function SimpleTextQuerySpec({
 			value={input}
 			onChange={(e) => setInput(e.target.value)}
 			onKeyDown={handleKeyDown}
-			placeholder="Search"
+			placeholder={t("ui.actions.search")}
 			slotProps={{
 				input: {
 					startAdornment: (
@@ -47,7 +49,7 @@ export function SimpleTextQuerySpec({
 							<IconButton
 								onClick={clearTerm}
 								edge="end"
-								aria-label="clear search">
+								aria-label={t("ui.actions.clear_search")}>
 								<Clear />
 							</IconButton>
 						</InputAdornment>

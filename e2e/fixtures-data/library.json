@@ -1,0 +1,50 @@
+{
+	"libraries": {
+		"totalSize": 1,
+		"content": [
+			{
+				"id": "11111111-1111-4111-8111-111111111111",
+				"fullName": "E2E Test Library",
+				"shortName": "E2E",
+				"abbreviatedName": "E2E",
+				"agencyCode": "e2e-agency",
+				"supportHours": "Mon-Fri, 9-5",
+				"backupDowntimeSchedule": "Sundays, 02:00-03:00",
+				"agency": {
+					"id": "22222222-2222-4222-8222-222222222222",
+					"code": "e2e-agency",
+					"maxConsortialLoans": 10,
+					"hostLms": {
+						"id": "33333333-3333-4333-8333-333333333333",
+						"code": "e2e-lms",
+						"name": "E2E Host LMS",
+						"lmsClientClass": "org.olf.dcb.core.interaction.sierra.SierraLmsClient"
+					}
+				},
+				"secondHostLms": null,
+				"membership": [
+					{
+						"libraryGroup": {
+							"id": "44444444-4444-4444-8444-444444444444",
+							"code": "E2E-CONSORTIUM",
+							"name": "E2E Consortium",
+							"type": "CONSORTIUM",
+							"consortium": {
+								"id": "55555555-5555-4555-8555-555555555555",
+								"name": "E2E Consortium",
+								"functionalSettings": [
+									{
+										"id": "66666666-6666-4666-8666-666666666666",
+										"name": "DENY_LIBRARY_MAPPING_EDIT",
+										"enabled": false
+									}
+								]
+							}
+						}
+					}
+				],
+				"contacts": []
+			}
+		]
+	}
+}

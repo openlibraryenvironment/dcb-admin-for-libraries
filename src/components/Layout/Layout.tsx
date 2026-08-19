@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "@tanstack/react-router";
 import { useAuth } from "react-oidc-context";
-import { useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
@@ -17,7 +16,6 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
 	const auth = useAuth();
-	const theme = useTheme();
 	const { pathname } = useLocation();
 	const basePath = getAppBase();
 	const [activeTab, setActiveTab] = useState<string | false>(basePath);
@@ -27,7 +25,7 @@ export const Layout = ({ children }: LayoutProps) => {
 			// { label: t("nav.home.title"), value: basePath },
 			{ label: t("nav.requesting.title"), value: `${basePath}requesting` },
 		];
-	}, [basePath]);
+	}, [basePath, t]);
 
 	// Tabs below marked with import.meta.env.DEV means that these tabs will only show up in DEV mode,
 	// remove the conditon to make then show up in prod.
@@ -69,7 +67,7 @@ export const Layout = ({ children }: LayoutProps) => {
 					// 	: []),
 				]
 			: tabsReadOnly;
-	}, [basePath]); // This will only re-calculate if the basePath changes
+	}, [basePath, auth?.user?.profile?.roles, t, tabsReadOnly]);
 
 	// This effect sets the active tab based on the current route
 	useEffect(() => {
@@ -90,7 +88,7 @@ export const Layout = ({ children }: LayoutProps) => {
 				setActiveTab(false);
 			}
 		}
-	}, [pathname]);
+	}, [pathname, tabsConfig]);
 
 	return (
 		<>
@@ -99,9 +97,8 @@ export const Layout = ({ children }: LayoutProps) => {
 				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
 					<Tabs
 						value={activeTab}
-						aria-label="navigation tabs"
+						aria-label={t("a11y.navigation")}
 						variant="scrollable"
-						sx={{ backgroundColor: theme.palette.secondary.main }}
 						scrollButtons="auto"
 						color="primary">
 						{tabsConfig.map((tab) => (

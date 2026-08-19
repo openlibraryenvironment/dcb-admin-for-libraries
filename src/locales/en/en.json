@@ -19,7 +19,8 @@
 		"to_status": "toStatus"
 	},
 	"a11y": {
-		"empty": "This field is empty"
+		"empty": "This field is empty",
+		"navigation": "Main navigation"
 	},
 	"bibs": {
 		"author": "Author",
@@ -51,6 +52,7 @@
 	},
 	"common": {
 		"discovery": "Link to discovery",
+		"patron_website": "Link to patron website",
 		"error": "Error",
 		"latitude": "Latitude",
 		"longitude": "Longitude",
@@ -209,6 +211,7 @@
 			}
 		},
 		"full_name": "Full name",
+		"no_contact": "not recorded",
 		"id": "Library UUID",
 		"primary_location": {
 			"address": "Address",
@@ -273,6 +276,7 @@
 	"login": {
 		"access": "Welcome to DCB Admin for Libraries! To get started, please sign in with your library credentials",
 		"authenticating": "Authenticating",
+		"error": "Authentication error: {{message}}",
 		"keycloak": "Sign in with Keycloak",
 		"initialising": "Initialising the application",
 		"loading_title": "Logging in",
@@ -427,6 +431,7 @@
 		"resolution_count": "Resolution count",
 		"return": "Return to patron request",
 		"status": "Current status",
+		"source_record_not_found": "Source record not found",
 		"statuses": {
 			"SUBMITTED_TO_DCB": "Submitted to DCB",
 			"PATRON_VERIFIED": "Patron verified",
@@ -579,6 +584,44 @@
 		"shared_index": {
 			"cluster": "Cluster",
 			"cluster_details": "Cluster details",
+			"boolean": {
+				"and": "AND",
+				"or": "OR",
+				"not": "NOT"
+			},
+			"languages": {
+				"ara": "Arabic",
+				"chi": "Chinese",
+				"eng": "English",
+				"fre": "French",
+				"ger": "German",
+				"ita": "Italian",
+				"jpn": "Japanese",
+				"lat": "Latin",
+				"por": "Portuguese",
+				"spa": "Spanish"
+			},
+			"search_fields": {
+				"any": "Any",
+				"author": "Author",
+				"cluster_record_id": "Cluster record ID",
+				"contributor": "Contributor",
+				"format": "Format",
+				"isbn": "ISBN",
+				"issn": "ISSN",
+				"keyword": "Keyword",
+				"language": "Language",
+				"publisher": "Publisher",
+				"subject": "Subject",
+				"title": "Title"
+			},
+			"query_syntax": {
+				"label": "Query input type",
+				"cql": "CQL",
+				"lucene": "LuceneQL",
+				"lucene_builder": "Lucene builder",
+				"simple": "Simple"
+			},
 			"error_connecting": "There was an error connecting to the search service. Please try again later.",
 			"error_connecting_title": "Could not connect to dcb-locate",
 			"items": "Items",
@@ -643,6 +686,10 @@
 	"settings": {
 		"customisation": "Customisation",
 		"dark_mode": "Dark mode",
+		"language": {
+			"en": "English",
+			"es": "Spanish"
+		},
 		"library": "Library",
 		"light_mode": "Light mode",
 		"system_mode": "System mode",
@@ -655,12 +702,16 @@
 			"apply_filters": "Apply filters",
 			"cancel": "Cancel",
 			"clear_all": "Clear all",
+			"clear_search": "Clear search",
 			"close": "Close",
 			"collapse": "Collapse",
+			"collapse_all": "Collapse all rows",
+			"delete": "Delete",
 			"confirm_changes": "Confirm changes",
 			"continue": "Continue",
 			"edit": "Edit",
 			"expand": "Expand",
+			"expand_all": "Expand all rows",
 			"go_back": "Go back",
 			"go_back_message": "Click below to return to your previous page",
 			"hide_advanced_search": "Hide advanced search",
@@ -682,9 +733,11 @@
 		"common": {
 			"author": "Author",
 			"field": "Field",
+			"language": "Language",
 			"last_updated": "Last updated",
 			"none": "None",
 			"operator": "Operator",
+			"search_term": "Search term",
 			"status": "Status",
 			"title": "Title"
 		},
@@ -729,6 +782,12 @@
 			},
 			"edit_summary": "Edit {{entity}}",
 			"find_column": "Find column",
+			"columns": "Columns",
+			"delete_body": "This {{entity}} will be permanently deleted.",
+			"delete_body_library": "The library details and all its contacts and group memberships will be permanently deleted.",
+			"delete_header": "Delete {{entity}} {{name}}",
+			"edit_url": "Enter a valid URL",
+			"open": "Open",
 			"master_detail": "Master detail",
 			"no_data": "No data available"
 		},
@@ -766,6 +825,7 @@
 		},
 		"info": {
 			"contact": "contact",
+			"coming_soon": "This page is not available yet",
 			"connection_issue": "There may be a connection issue",
 			"correct_as_of": "Status correct as of",
 			"description": "Description: {{description}}",
@@ -789,6 +849,9 @@
 		},
 		"tooltips": {
 			"logo": "Click this logo to go to the home page"
+		},
+		"unsaved_changes": {
+			"keep_editing": "Keep editing"
 		},
 		"validation": {
 			"locations": {

@@ -1,6 +1,5 @@
 import { OnSiteBorrowingFormData } from "@models/OnSiteBorrowingFormData";
 import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocompleteOption";
-// import { StaffRequestFormData } from "@models/StaffRequestFormData";
 import {
 	Autocomplete,
 	Button,
@@ -20,11 +19,7 @@ import {
 
 // Step two: request creation / placing
 interface RequestCreationStepType {
-	// control:
-	// 	| Control<OnSiteBorrowingFormData, any>
-	// 	| Control<StaffRequestFormData, any>; // itemLibraryOptions: PatronRequestAutocompleteOption[];
-	// itemLibrariesLoading: boolean;
-	control: Control<any, any>;
+	control: Control<OnSiteBorrowingFormData>;
 	setValue: UseFormSetValue<OnSiteBorrowingFormData>;
 	errors: FieldErrors<OnSiteBorrowingFormData>;
 	pickupLocationOptions: PatronRequestAutocompleteOption[];
@@ -56,7 +51,6 @@ export const RequestCreationStep = ({
 	pickupLocationId,
 	t,
 }: RequestCreationStepType) => {
-	console.log(errors);
 	return (
 		<>
 			<Typography>

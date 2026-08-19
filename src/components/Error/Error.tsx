@@ -48,7 +48,7 @@ export default function Error({
                 }}>
 				<ErrorOutlined
 					sx={{ fontSize: 200 }}
-					htmlColor={theme.palette.primary.exclamationIcon}
+					htmlColor={(theme.vars || theme).palette.primary.exclamationIcon}
 				/>
 				<Typography variant="h1">{title}</Typography>
 				<Typography variant="componentSubheading" sx={{ fontWeight: "bold" }}>

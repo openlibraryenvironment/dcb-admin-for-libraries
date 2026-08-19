@@ -12,28 +12,33 @@ interface AppRouterContext {
 	cfg: any;
 }
 
-export const Route = createRootRouteWithContext<AppRouterContext>()({
-	component: () => {
-		const auth = useAuth();
-		const { t } = useTranslation();
+// A named, capitalised component rather than an inline arrow: hooks called in an
+// anonymous lowercase function are invisible to rules-of-hooks, and React's
+// devtools and Fast Refresh both need the name.
+function RootComponent() {
+	const auth = useAuth();
+	const { t } = useTranslation();
 
-		// Show a global loading spinner only during the initial auth check
-		if (auth.isLoading) {
-			return (
-				<Loading title={t("login.initialising")} subtitle={t("ui.info.wait")} />
-			);
-		}
-
-		// The Outlet will render the correct route.
-		// For protected routes, it will be the _authenticated layout.
-		// For public routes, it will be the login page directly.
-		// This necessitates that authenticated routes MUST be children of the main authenticated route.
-
+	// Show a global loading spinner only during the initial auth check
+	if (auth.isLoading) {
 		return (
-			<>
-				<Outlet />
-				{process.env.NODE_ENV !== "production" && <TanStackRouterDevtools />}
-			</>
+			<Loading title={t("login.initialising")} subtitle={t("ui.info.wait")} />
 		);
-	},
+	}
+
+	// The Outlet will render the correct route.
+	// For protected routes, it will be the _authenticated layout.
+	// For public routes, it will be the login page directly.
+	// This necessitates that authenticated routes MUST be children of the main authenticated route.
+
+	return (
+		<>
+			<Outlet />
+			{process.env.NODE_ENV !== "production" && <TanStackRouterDevtools />}
+		</>
+	);
+}
+
+export const Route = createRootRouteWithContext<AppRouterContext>()({
+	component: RootComponent,
 });

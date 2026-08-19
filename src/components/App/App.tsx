@@ -13,7 +13,11 @@ export default function App({ queryClient, theme, router }: AppProps) {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			<ThemeProvider theme={theme}>
+			{/* noSsr: this is a client-only SPA, so the provider does not need to
+			    double-render to guard against a hydration mismatch. Without it, a
+			    theme carrying both colour schemes repaints light before dark on
+			    every refresh. */}
+			<ThemeProvider theme={theme} noSsr>
 				<CssBaseline />
 				<RouterProvider router={router} context={{ auth }} />
 			</ThemeProvider>

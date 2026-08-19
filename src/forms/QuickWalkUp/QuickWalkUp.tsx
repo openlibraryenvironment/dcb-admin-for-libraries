@@ -133,7 +133,12 @@ export default function QuickWalkUpRequest({
 				),
 		});
 
-	const libraries: Library[] = librariesData?.libraries?.content ?? [];
+	// Memoised because `?? []` allocates a new array on every render, which made
+	// every memo keyed on it recompute every render.
+	const libraries: Library[] = useMemo(
+		() => librariesData?.libraries?.content ?? [],
+		[librariesData],
+	);
 	const libraryOptions: AutocompleteOption[] = useMemo(
 		() =>
 			libraries.map(
@@ -402,7 +407,6 @@ export default function QuickWalkUpRequest({
 				return (
 					<PatronValidationStep
 						control={control}
-						errors={errors}
 						patronValidated={patronValidated}
 						isValidatingPatron={validatePatronMutation.isPending}
 						handleClose={handleClose}

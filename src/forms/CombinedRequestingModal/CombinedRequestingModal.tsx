@@ -83,7 +83,7 @@ export default function CombinedRequestingModal({
 											</Typography>
 										</FormLabel>
 										<RadioGroup
-											aria-label="request-type"
+											aria-label={t("requesting.options")}
 											name="request-type-group"
 											value={selectedValue}
 											onChange={handleRadioChange}>
@@ -160,13 +160,13 @@ export default function CombinedRequestingModal({
 					{/** We will need to do the same thing here and cut off the title after a certain point, but offer the option to expand  */}
 				</DialogTitle>
 				<IconButton
-					aria-label="close"
+					aria-label={t("ui.actions.close")}
 					onClick={handleClose}
 					sx={{
 						position: "absolute",
 						right: 8,
 						top: 8,
-						color: (theme) => theme.palette.grey[500],
+						color: (theme) => (theme.vars || theme).palette.grey[500],
 					}}>
 					<Close />
 				</IconButton>

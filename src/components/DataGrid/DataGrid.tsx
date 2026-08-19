@@ -147,14 +147,12 @@ export default function DataGrid({
 	});
 	const handleRowClick: GridEventListener<"rowClick"> = (params, event) => {
 		//UseNavigateResult<string>
-		console.log(type, params);
 
 		if (rowModesModel[params?.row?.id]?.mode !== GridRowModes.Edit) {
 			// Some grids, like the PRs on the library page, need special redirection
 			if (specialRedirectionTypes.includes(type)) {
 				if (event.ctrlKey || event.metaKey)
 					if (type == "audits") {
-						console.log("Type match");
 						if (event.ctrlKey || event.metaKey) {
 							window.open(
 								`/patronRequests/audits/${params?.row?.id}`,
@@ -168,7 +166,6 @@ export default function DataGrid({
 					}
 				if (!(event.ctrlKey || event.metaKey))
 					if (type == "audits") {
-						console.log("Type match");
 						if (event.ctrlKey || event.metaKey) {
 							window.open(
 								`/patronRequests/audits/${params?.row?.id}`,
@@ -217,7 +214,7 @@ export default function DataGrid({
 				listView={listViewEnabled}
 				loading={loading}
 				localeText={{
-					toolbarQuickFilterPlaceholder: searchText ?? t("general.search"),
+					toolbarQuickFilterPlaceholder: searchText ?? t("ui.actions.search"),
 					columnsManagementSearchTitle: t("ui.data_grid.find_column"),
 					toolbarExportCSV: t("ui.data_grid.export.current"),
 					toolbarExportPrint: t("ui.data_grid.export.print"),
@@ -236,20 +233,19 @@ export default function DataGrid({
 				onColumnVisibilityModelChange={onColumnVisibilityModelChange}
 				onFilterModelChange={onFilterModelChange}
 				onPaginationModelChange={onPaginationModelChange}
-				//@ts-expect-error Until we fix the typing issues, expect an error here.
-				onProcessRowUpdateError={(params: GridRowParams, error: string) => {
-					// fix typing
-					console.error("Error updating row:", error);
+				onProcessRowUpdateError={(params: GridRowParams) => {
 					const name = params?.row?.name ?? params?.row?.fullName;
 					setAlert({
 						open: true,
 						severity: "error",
-						text: t("ui.data_grid.edit_error", {
+						text: t("common.update_failure", {
+							// entities.* are already lowercase singulars written for exactly
+							// this sentence, so no toLowerCase() is needed on them.
 							entity:
 								type === "ReferenceValueMapping"
-									? t("mappings.ref_value_one").toLowerCase()
+									? t("entities.reference_value_mapping")
 									: type === "NumericRangeMapping"
-										? t("mappings.num_range_one").toLowerCase()
+										? t("entities.numeric_range_mapping")
 										: type?.toLowerCase(),
 							name: name,
 						}),
@@ -311,7 +307,7 @@ export default function DataGrid({
 						".MuiDataGrid-main": { color: "rgba(0, 0, 0, 0.87)" },
 					},
 					// "& .MuiDataGrid-cell--editable": {
-					// 	bgcolor: theme.palette.primary.editableFieldBackground,
+					// 	bgcolor: (theme.vars || theme).palette.primary.editableFieldBackground,
 					// }, // How to signal editable cells.
 					".MuiDataGrid-virtualScroller": {
 						overflow: scrollbarVisible ? "" : "hidden",

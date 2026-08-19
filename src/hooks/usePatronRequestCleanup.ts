@@ -78,8 +78,7 @@ export const usePatronRequestCleanup = ({
 						const cleanupUrl = `${dcbApiBase}/patrons/requests/${row.id}/transition/cleanup`;
 						await axios.post(cleanupUrl, {}, { headers });
 						batchSuccess.push(row);
-					} catch (error) {
-						console.error(`Failed to clean up request ${row.id}`, error);
+					} catch {
 						batchError.push(row);
 					}
 					// finally {

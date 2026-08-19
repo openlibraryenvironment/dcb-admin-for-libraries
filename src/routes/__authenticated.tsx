@@ -32,7 +32,6 @@ const AuthenticatedLayout = () => {
 		if (!isReadOnly) {
 			return;
 		}
-		console.log(location.pathname);
 		// If user is read only and trying to access something they shouldn't,  do not allow.
 		const isTryingToAccessAllowedPage =
 			location.pathname.includes("/requesting/") ||

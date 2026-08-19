@@ -10,7 +10,6 @@ export const buildFilterQuery = (
 	operator: string,
 	value: any
 ) => {
-	console.log(field, operator, value);
 	// The order of this is very important. Last 30/90 days operators have no "value" so we must analyse them first
 	// Or we'll get hit with the null value error.
 	if (operator === "last30Days") {
@@ -77,7 +76,6 @@ export const buildFilterQuery = (
 			return "";
 		}
 	}
-	console.log(operator);
 	if (operator === "last30Days") {
 		const end = dayjs().toISOString();
 		const start = dayjs().subtract(30, "day").toISOString();

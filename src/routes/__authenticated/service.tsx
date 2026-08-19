@@ -50,7 +50,6 @@ function ServiceComponent() {
 			),
 		// do the on success here
 	});
-	//@ts-expect-error TYPING - needs fixing
 	const library: Library = data?.libraries?.content?.[0];
 	const firstHostLms: HostLMS = library?.agency?.hostLms;
 	const secondHostLms: HostLMS = library?.secondHostLms;
@@ -92,7 +91,7 @@ function ServiceComponent() {
 					{library?.patronWebsite ? (
 						<RenderAttribute
 							attribute={library?.patronWebsite}
-							title="Link to patron website"
+							title={t("common.patron_website")}
 						/>
 					) : (
 						<Typography variant="attributeText">-</Typography>

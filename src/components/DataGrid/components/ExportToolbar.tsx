@@ -54,8 +54,6 @@ export default function ExportToolbar({
 	const onExportClick = (fileType: string, exportMode: string) => {
 		if (handleExport) {
 			handleExport(fileType, exportMode);
-		} else {
-			console.warn("Export function is not available for this grid.");
 		}
 	};
 
@@ -65,7 +63,6 @@ export default function ExportToolbar({
 
 	const handleCleanupClick = () => {
 		if (onCleanup) {
-			console.log("Cleaning ");
 			onCleanup();
 		}
 		handleMenuClose();
@@ -77,7 +74,7 @@ export default function ExportToolbar({
 	// Further customisation needed - ideally it would be "filters" text on the button but in the old style
 	return (
 		<Toolbar>
-			<Tooltip title="Columns">
+			<Tooltip title={t("ui.data_grid.columns")}>
 				<ColumnsPanelTrigger render={<ToolbarButton />}>
 					<GridViewColumnIcon fontSize="small" />
 				</ColumnsPanelTrigger>
@@ -103,7 +100,7 @@ export default function ExportToolbar({
 						<ListItemIcon>
 							{allDataLoading ? <CircularProgress /> : <FileDownloadOutlined />}
 						</ListItemIcon>
-						<ListItemText>{t("ui.data_grid.export_all_csv")}</ListItemText>
+						<ListItemText>{t("ui.data_grid.export.all_csv")}</ListItemText>
 					</MenuItem>
 				) : null}
 				{type != "patronRequests" ? (
@@ -113,7 +110,7 @@ export default function ExportToolbar({
 						<ListItemIcon>
 							<FileDownloadOutlined />
 						</ListItemIcon>
-						<ListItemText>{t("ui.data_grid.export_all_tsv")}</ListItemText>
+						<ListItemText>{t("ui.data_grid.export.all_tsv")}</ListItemText>
 					</MenuItem>
 				) : null}
 				{type == "patronRequests" ? (
@@ -232,7 +229,7 @@ export default function ExportToolbar({
 	// 								<FileDownloadOutlined />
 	// 							)}
 	// 						</ListItemIcon>
-	// 						<ListItemText>{t("ui.data_grid.export_all_csv")}</ListItemText>
+	// 						<ListItemText>{t("ui.data_grid.export.all_csv")}</ListItemText>
 	// 					</MenuItem>
 	// 				) : null}
 	// 				{type != "patronRequests" ? (
@@ -242,7 +239,7 @@ export default function ExportToolbar({
 	// 						<ListItemIcon>
 	// 							<FileDownloadOutlined />
 	// 						</ListItemIcon>
-	// 						<ListItemText>{t("ui.data_grid.export_all_tsv")}</ListItemText>
+	// 						<ListItemText>{t("ui.data_grid.export.all_tsv")}</ListItemText>
 	// 					</MenuItem>
 	// 				) : null}
 	// 				{type == "patronRequests" ? (

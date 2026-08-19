@@ -63,14 +63,19 @@ export const Header = () => {
 					<Button
 						variant="outlined"
 						href={appPath()}
-						startIcon={<Avatar src={assetUrl("fallback-header.png")} />}
+						startIcon={
+							<Avatar
+								alt={t("ui.tooltips.logo")}
+								src={assetUrl("fallback-header.png")}
+							/>
+						}
 					/>
 				</Tooltip>
 
 				<Typography
 					variant="h6"
 					component="div"
-					sx={{ flexGrow: 1, color: theme.palette.primary.headerText }}>
+					sx={{ flexGrow: 1, color: (theme.vars || theme).palette.primary.headerText }}>
 					{isReadOnly
 						? t("header.title_requesting", {
 								library: library ? library?.fullName : "Libraries",
@@ -83,7 +88,7 @@ export const Header = () => {
 					<Box sx={{ display: "flex", alignItems: "center" }}>
 						<Typography
 							variant="body2"
-							sx={{ mr: 2, color: theme.palette.primary.headerText }}>
+							sx={{ mr: 2, color: (theme.vars || theme).palette.primary.headerText }}>
 							{t("header.user", { user: auth.user.profile?.name || "User" })}
 						</Typography>
 						<Button

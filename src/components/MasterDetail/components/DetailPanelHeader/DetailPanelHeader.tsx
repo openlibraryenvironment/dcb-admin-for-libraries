@@ -41,14 +41,21 @@ export default function DetailPanelHeader() {
 	return (
 		<Tooltip
 			title={
-				noDetailPanelsOpen ? t("ui.actions.expand") : t("ui.actions.collapse")
+				noDetailPanelsOpen
+					? t("ui.actions.expand_all")
+					: t("ui.actions.collapse_all")
 			}>
 			<span>
 				<IconButton
 					size="small"
 					tabIndex={-1}
 					onClick={expandOrCollapseAll}
-					aria-label={noDetailPanelsOpen ? "Expand All" : "Collapse All"}>
+					// The accessible name matches the tooltip: WCAG 2.5.3 Label in Name
+					aria-label={
+						noDetailPanelsOpen
+							? t("ui.actions.expand_all")
+							: t("ui.actions.collapse_all")
+					}>
 					<Icon fontSize="inherit" />
 				</IconButton>
 			</span>

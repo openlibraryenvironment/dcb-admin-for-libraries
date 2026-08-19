@@ -45,11 +45,6 @@ export const useDataGridErrorSafely = (
 			return;
 		}
 
-		console.warn(
-			`[DataGridSafetyHook] Query failed for grid '${gridId}'. Resetting filters and sort.`,
-			error
-		);
-
 		// For now, full reset. Would be good to reset to last safe point
 
 		const emptyFilterModel: GridFilterModel = {

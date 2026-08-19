@@ -62,8 +62,14 @@ export async function getStandaloneConfig() {
 		}
 
 		return await response.json();
-	} catch (err) {
-		console.warn("Could not load inject_env.json:", err);
+	} catch {
+		// The only console call in the app. Kept because nothing is mounted at
+		// this point, so a misconfigured deployment has no other symptom - and
+		// reduced to a literal, because an error object here can carry the
+		// response body.
+		console.warn(
+			"Could not load inject_env.json; falling back to build-time configuration",
+		);
 		return {};
 	}
 }

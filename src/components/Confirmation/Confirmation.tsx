@@ -28,7 +28,7 @@ const Confirmation = ({
 	onConfirm,
 	editInformation,
 	action, // The action to be confirmed
-	// entityType, // The type of entity being acted upon- i.e. library
+	entityType, // The type of entity being acted upon - i.e. library
 	entityName, // The name of the entity
 	gridEdit, // boolean value for grid editing
 }: ConfirmationType) => {
@@ -79,13 +79,26 @@ const Confirmation = ({
 		mode: "onChange",
 	});
 
+	// Callers that know the entity pass entityType. Grid callers instead pass the
+	// entity's TYPE as entityName ("ReferenceValueMapping"), which getEntityText
+	// maps to a translation key - the same derivation the edit header uses.
+	const deletionEntity = entityType
+		? entityType.toLowerCase()
+		: t(getEntityText(entityName, gridEdit)).toLowerCase();
+
+	// A grid deletion identifies its row by id, not by a human-readable name, so
+	// entityName is the type there and must not be repeated as the name.
+	const deletionName = entityType ? entityName : "";
+
+	const isLibraryDeletion = deletionEntity === t("entities.library");
+
 	const getHeaderText = () => {
 		switch (action) {
 			case "deletion":
 				return t("ui.data_grid.delete_header", {
-					entity: t("ui.info.contact"),
-					name: entityName,
-				});
+					entity: deletionEntity,
+					name: deletionName,
+				}).trim();
 			case "gridEdit":
 			case "pageEdit":
 				return t("ui.data_grid.edit_summary", {
@@ -102,7 +115,9 @@ const Confirmation = ({
 				return (
 					<Box>
 						<Typography variant="body1">
-							{t("ui.data_grid.delete_body_library")}
+							{isLibraryDeletion
+								? t("ui.data_grid.delete_body_library")
+								: t("ui.data_grid.delete_body", { entity: deletionEntity })}
 						</Typography>
 					</Box>
 				);

@@ -139,7 +139,6 @@ function RouteComponent() {
 
 	const {
 		data: supplierLibraryData,
-		isError: supplierLibraryError,
 		isLoading: supplierLibraryLoading,
 	} = useQuery<LibrariesQueryData>({
 		// The dependencies are now restored in the queryKey
@@ -167,7 +166,6 @@ function RouteComponent() {
 			),
 	});
 
-	console.log(supplierLibraryError);
 	const supplierLibraries: Library[] =
 		supplierLibraryData?.libraries?.content ?? [];
 	const supplierLibrary = supplierLibraries?.[0];
@@ -237,7 +235,6 @@ function RouteComponent() {
 	const pickupLocation = pickupLocationData?.locations?.content?.[0];
 	const {
 		data: pickupLibraryData,
-		isError: pickupLibraryError,
 		isLoading: pickupLibraryLoading,
 	} = useQuery<LibrariesQueryData>({
 		// The dependencies are now restored in the queryKey
@@ -263,7 +260,6 @@ function RouteComponent() {
 				headers,
 			),
 	});
-	console.log(pickupLibraryError);
 
 	const pickupLibraries: Library[] =
 		pickupLibraryData?.libraries?.content ?? [];
@@ -273,7 +269,6 @@ function RouteComponent() {
 	// Get Host LMS code, ID, then agency, then library
 	const {
 		data: patronLmsData,
-		isError: patronLmsError,
 		isLoading: patronLmsLoading,
 	} = useQuery<HostLmsQueryData>({
 		// The dependencies are now restored in the queryKey
@@ -300,13 +295,11 @@ function RouteComponent() {
 			),
 	});
 	const patronHostLmss: HostLMS[] = patronLmsData?.hostLms?.content ?? [];
-	console.log(patronLmsError);
 
 	const patronHostLms: HostLMS = patronHostLmss?.[0];
 
 	const {
 		data: patronAgencyData,
-		isError: patronAgencyError,
 		isLoading: patronAgencyLoading,
 	} = useQuery<AgencyQueryData>({
 		// The dependencies are now restored in the queryKey
@@ -332,7 +325,6 @@ function RouteComponent() {
 				headers,
 			),
 	});
-	console.log(patronAgencyError);
 
 	// Which we can then use to get library. When we combine library and agency we can eliminate this but for now we're stuck with it
 	const patronAgencies = patronAgencyData?.agencies?.content ?? [];
@@ -340,7 +332,6 @@ function RouteComponent() {
 
 	const {
 		data: patronLibraryData,
-		isError: patronLibraryError,
 		isLoading: patronLibraryLoading,
 	} = useQuery<LibrariesQueryData>({
 		// The dependencies are now restored in the queryKey
@@ -371,8 +362,6 @@ function RouteComponent() {
 		patronLibraryData?.libraries?.content ?? [];
 	const patronLibrary = patronLibraries?.[0];
 
-	console.log(patronLibraryError);
-
 	// Mutation for updating the patron request
 	const updateMutation = useMutation({
 		mutationFn: () => {
@@ -386,8 +375,7 @@ function RouteComponent() {
 			queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
 			setUpdateSuccessAlertVisibility(true);
 		},
-		onError: (error) => {
-			console.error("Error starting update", error);
+		onError: () => {
 			setErrorAlertVisibility(true);
 		},
 	});
@@ -404,8 +392,7 @@ function RouteComponent() {
 			queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
 			setCleanupSuccessAlertVisibility(true);
 		},
-		onError: (error) => {
-			console.error("Error starting cleanup", error);
+		onError: () => {
 			setCleanupErrorAlertVisibility(true);
 		},
 	});
@@ -497,7 +484,7 @@ function RouteComponent() {
 											),
 											contact: patronLibrary?.contacts
 												? findPrimaryContacts(patronLibrary?.contacts)
-												: t("libraries.no_contact"),
+												: t("library.no_contact"),
 										})}>
 										<span>
 											<RenderAttribute attribute={patronLibrary?.fullName} />
@@ -523,7 +510,7 @@ function RouteComponent() {
 											),
 											contact: supplierLibrary?.contacts
 												? findPrimaryContacts(supplierLibrary?.contacts)
-												: t("libraries.no_contact"),
+												: t("library.no_contact"),
 										})}>
 										<span>
 											<RenderAttribute attribute={supplierLibrary?.fullName} />
@@ -547,7 +534,7 @@ function RouteComponent() {
 											),
 											contact: pickupLibrary?.contacts
 												? findPrimaryContacts(pickupLibrary?.contacts)
-												: t("libraries.no_contact"),
+												: t("library.no_contact"),
 										})}>
 										<span>
 											<RenderAttribute attribute={pickupLibrary?.fullName} />
@@ -602,7 +589,7 @@ function RouteComponent() {
 									<RenderAttribute
 										attribute={
 											pickupLocationDataError
-												? t("patron_request..error_pickup")
+												? t("patron_request.error_pickup")
 												: pickupLocation?.agency?.code
 										}
 									/>
@@ -624,7 +611,7 @@ function RouteComponent() {
 									<RenderAttribute
 										attribute={
 											pickupLocationDataError
-												? t("patron_request..error_pickup")
+												? t("patron_request.error_pickup")
 												: pickupLocation?.hostSystem?.code
 										}
 									/>
@@ -1674,7 +1661,7 @@ function RouteComponent() {
 									<RenderAttribute
 										attribute={
 											patronIdentitiesError
-												? t("patron_request..error_identities")
+												? t("patron_request.error_identities")
 												: pickupPatronIdentity?.localBarcode
 										}
 									/>
@@ -1696,7 +1683,7 @@ function RouteComponent() {
 									<RenderAttribute
 										attribute={
 											patronIdentitiesError
-												? t("patron_request..error_identities")
+												? t("patron_request.error_identities")
 												: pickupPatronIdentity?.localPtype
 										}
 									/>
@@ -1718,7 +1705,7 @@ function RouteComponent() {
 									<RenderAttribute
 										attribute={
 											patronIdentitiesError
-												? t("patron_request..error_identities")
+												? t("patron_request.error_identities")
 												: pickupPatronIdentity?.canonicalPtype
 										}
 									/>

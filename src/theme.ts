@@ -33,7 +33,7 @@ const theme = createTheme({
 							display: "none",
 						},
 						"&:first-of-type": {
-							borderTop: `2px solid ${theme.palette.divider}`,
+							borderTop: `2px solid ${(theme.vars || theme).palette.divider}`,
 						},
 					}),
 				},
@@ -172,16 +172,16 @@ const theme = createTheme({
 		MuiTab: {
 			styleOverrides: {
 				root: ({ theme }) => ({
-					color: theme.palette.primary.navigationText,
+					color: (theme.vars || theme).palette.primary.navigationText,
 					"&.Mui-focusVisible": {
 						outline: "2px solid", // For keyboard focus
 						boxSizing: "border-box",
-						borderColor: theme.palette.primary.outlineColor,
+						borderColor: (theme.vars || theme).palette.primary.outlineColor,
 						outlineOffset: "-2px",
 					},
 					"&.Mui-selected": {
 						fontWeight: "bold",
-						color: theme.palette.primary.navigationTextActive,
+						color: (theme.vars || theme).palette.primary.navigationTextActive,
 					},
 				}),
 			},
@@ -189,17 +189,26 @@ const theme = createTheme({
 		MuiTabs: {
 			styleOverrides: {
 				root: ({ theme }) => ({
-					backgroundColor: theme.palette.secondary.main,
+					// A purpose-named token, not secondary.main: MUI's secondary slot is
+					// whatever a component asks for with color="secondary", and a value
+					// chosen to carry white nav text at 4.5:1 is not that. The two values
+					// are the ones the axe gate passes in each scheme.
+					backgroundColor: (theme.vars || theme).palette.primary
+						.navigationBackground,
 					"& .MuiTab-root": {
-						color: theme.palette.primary.headerText,
+						color: (theme.vars || theme).palette.primary.headerText,
 						"&.Mui-selected": {
 							fontWeight: "bold",
 						},
 					},
+					// The nested tab strip on detail pages. A literal background against a
+					// scheme-dependent text colour put light blue on light blue in dark
+					// mode; both halves are now tokens.
 					"&.secondary": {
-						backgroundColor: "#e2eef6",
+						backgroundColor: (theme.vars || theme).palette.primary
+							.subTabBackground,
 						"& .MuiTab-root": {
-							color: theme.palette.primary.main, // This is '#0c4068'
+							color: (theme.vars || theme).palette.primary.subTabText,
 						},
 					},
 				}),
@@ -217,10 +226,14 @@ const theme = createTheme({
 					iconSymbol: "#FFFFFF",
 					inactiveBackground: "#8C8C8C",
 					main: "#0C4068",
+					navigationBackground: "#1B76B4",
 					navigationText: "#E2EEF6",
 					navigationTextActive: "#FFFFFF",
 					searchResultBackground: "#F6F9FC",
 					searchResultTitle: "#186498",
+					outlineColor: "#0C4068",
+					subTabBackground: "#E2EEF6",
+					subTabText: "#0C4068",
 				},
 				secondary: {
 					main: "#1e7ebf",
@@ -241,6 +254,12 @@ const theme = createTheme({
 					main: "#35B7FF",
 					searchResultBackground: "#424242",
 					searchResultTitle: "#186498",
+					navigationBackground: "#0C4068",
+					navigationText: "#E2EEF6",
+					navigationTextActive: "#FFFFFF",
+					outlineColor: "#35B7FF",
+					subTabBackground: "#1E3A4C",
+					subTabText: "#E2EEF6",
 				},
 				secondary: {
 					main: "#75BEDB",
@@ -367,10 +386,13 @@ declare module "@mui/material/styles" {
 		landingCard?: string;
 		loginCard?: string;
 		loginText?: string;
+		navigationBackground?: string;
 		navigationText?: string;
 		navigationTextActive?: string;
 		searchResultBackground?: string;
 		searchResultTitle?: string;
+		subTabBackground?: string;
+		subTabText?: string;
 		secondary?: {
 			main?: string;
 		};
@@ -410,10 +432,13 @@ declare module "@mui/material/styles" {
 		landingCard?: string;
 		loginCard?: string;
 		loginText?: string;
+		navigationBackground?: string;
 		navigationText?: string;
 		navigationTextActive?: string;
 		searchResultBackground?: string;
 		searchResultTitle?: string;
+		subTabBackground?: string;
+		subTabText?: string;
 		secondary?: {
 			main?: string;
 		};

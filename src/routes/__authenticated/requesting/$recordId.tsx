@@ -32,7 +32,6 @@ function RequestingLayout() {
 	const requestableCount = items?.length ?? 0;
 	// You can request if there are items and if it's not loading
 	const canRequest = !isLoading && requestableCount > 0;
-	console.log(clusterDetail);
 
 	const currentPath = location.pathname;
 	let activeTab = "info";

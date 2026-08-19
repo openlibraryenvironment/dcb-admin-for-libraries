@@ -164,7 +164,7 @@ function AuditDetailsComponent() {
 		return (
 			<Loading
 				title={t("ui.info.loading.document", {
-					document_type: t("audit.entry").toLowerCase(),
+					document_type: t("audit.audit_entry").toLowerCase(),
 				})}
 				subtitle={t("ui.info.wait")}
 			/>
