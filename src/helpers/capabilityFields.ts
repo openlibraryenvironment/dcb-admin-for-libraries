@@ -34,11 +34,18 @@ const isOn = (entry: ServiceCapability): boolean =>
  */
 export const capabilitySelection = (id: string, type: string): string => {
 	const entry = capability(id);
-	const fields = isOn(entry)
-		? entry.fields[type]
-		: (entry.fallback?.[type] ?? []);
+	const on = isOn(entry);
+	const fields = on ? entry.fields[type] : (entry.fallback?.[type] ?? []);
+	const selections = on ? entry.selections : undefined;
 
-	return (fields ?? []).join("\n\t\t\t\t");
+	return (fields ?? [])
+		.map((field) => {
+			const selection = selections?.[field];
+			// A field with a sub-selection is rendered on one line: the caller
+			// controls the surrounding indentation and cannot be guessed from here.
+			return selection ? `${field} { ${selection} }` : field;
+		})
+		.join("\n\t\t\t\t");
 };
 
 /**

@@ -12,7 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Contributor } from "@models/ClusterDetailResponse";
 import CombinedRequestingModal from "@forms/CombinedRequestingModal/CombinedRequestingModal";
-import { useAuth } from "react-oidc-context";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { Item } from "@models/Item";
 import {
 	CancelOutlined,
@@ -36,8 +36,7 @@ interface SearchResultProps {
 export const SearchResult = ({ params }: SearchResultProps) => {
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const recordId = params?.row?.id;
-	const auth = useAuth();
-	const userAgencyCode = auth.user?.profile?.code;
+	const { agencyCode: userAgencyCode } = useAgencyCodes();
 
 	const cardRef = useRef<HTMLDivElement | null>(null);
 	const { t } = useTranslation();

@@ -1,6 +1,13 @@
 import { gql } from "graphql-request";
 
-export const getPatronRequest = gql`
+import { capabilitySelection } from "@helpers/capabilityFields";
+
+// A FUNCTION, not a constant - R-19. Part of the selection depends on the deployment's
+// dcb-service release, and the flag that decides is read from window.__APP_ENV__, which
+// application.tsx assigns only after awaiting inject_env.json. This module is in the
+// static import graph and evaluates first, so a constant would read every flag as off in
+// every environment.
+export const getPatronRequest = () => gql`
 	query LoadPatronRequest($query: String!) {
 		patronRequests(query: $query) {
 			content {
@@ -54,6 +61,14 @@ export const getPatronRequest = gql`
 					canonicalPtype
 					localHomeLibraryCode
 					lastValidated
+					# The borrowing library, and the only place a request records it:
+					# patronHostlmsCode names the system, which on a shared one is every
+					# co-tenant rather than any of them.
+					#
+					# New in dcb-service 9.0.0. There is no older equivalent to fall back
+					# to, and this query drives the patron request detail page, so an
+					# older deployment must select none of it rather than fail the page.
+					${capabilitySelection("agency_scoped_requests", "PatronIdentity")}
 				}
 				audit {
 					id

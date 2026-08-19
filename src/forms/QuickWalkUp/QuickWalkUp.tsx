@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useAuth } from "react-oidc-context";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
 
@@ -54,7 +55,9 @@ export default function QuickWalkUpRequest({
 	const auth = useAuth();
 	const navigate = useNavigate();
 	const { cfg } = useRouter().options.context;
-	const staffAgencyCode = String(auth.user?.profile?.code);
+	// The library the staff member is acting for - see useAgencyCodes
+	const { agencyCode: selectedAgencyCode } = useAgencyCodes();
+	const staffAgencyCode = selectedAgencyCode ?? "";
 
 	const headers = useMemo(
 		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),

@@ -1,6 +1,7 @@
 {
 	"header": {
-		"welcome": "Bienvenido a DCB Admin para {{name}}"
+		"welcome": "Bienvenido a DCB Admin para {{name}}",
+		"library_selector": "Biblioteca"
 	},
 	"library": {
 		"title": "Información para {{library}}"

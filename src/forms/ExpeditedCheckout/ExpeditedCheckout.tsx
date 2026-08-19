@@ -17,6 +17,7 @@ import { getLocations } from "@queries/getLocations";
 import { getLibraries } from "@queries/getLibraries";
 import axios from "axios";
 import { useAuth } from "react-oidc-context";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { getRequestError } from "@helpers/getRequestError";
 import { Agency } from "../../models/Agency";
 import { LibraryGroupMember } from "@models/LibraryGroupMember";
@@ -56,7 +57,9 @@ export default function ExpeditedCheckout({
 }: PatronRequestFormType) {
 	const { t } = useTranslation();
 	const auth = useAuth();
-	const staffAgencyCode = String(auth.user?.profile?.code);
+	// The library the staff member is acting for - see useAgencyCodes
+	const { agencyCode: selectedAgencyCode } = useAgencyCodes();
+	const staffAgencyCode = selectedAgencyCode ?? "";
 	// Also the ID of the library of the item.
 	const { cfg } = useRouter().options.context;
 

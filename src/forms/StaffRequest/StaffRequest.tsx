@@ -16,6 +16,7 @@ import { getLibraries } from "@queries/getLibraries";
 import { getLocations } from "@queries/getLocations";
 import axios, { AxiosError } from "axios";
 import { useAuth } from "react-oidc-context";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { getRequestError } from "@helpers/getRequestError";
 import { Agency } from "@models/Agency";
 import { LibraryGroupMember } from "@models/LibraryGroupMember";
@@ -57,9 +58,11 @@ export default function StaffRequest({
 	);
 	const router = useRouter();
 	const { cfg } = router.options.context;
-	const agencyCode = auth.user?.profile?.code
-		? String(auth.user?.profile?.code)
-		: "";
+	// The library this request is placed on behalf of. Read through useAgencyCodes
+	// because the claim can name several and this needs the one being looked at, not
+	// all of them run together.
+	const { agencyCode: selectedAgencyCode } = useAgencyCodes();
+	const agencyCode = selectedAgencyCode ?? "";
 
 	const [alert, setAlert] = useState<{
 		open: boolean;

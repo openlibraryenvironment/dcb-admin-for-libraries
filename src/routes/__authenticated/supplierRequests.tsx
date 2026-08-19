@@ -35,6 +35,7 @@ import request from "graphql-request";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/supplierRequests")({
 	component: RouteComponent,
@@ -170,7 +171,7 @@ function RouteComponent() {
 		});
 	};
 
-	const code = auth.user?.profile?.code;
+	const { agencyCode: code } = useAgencyCodes();
 
 	const presetQuery = "supplyingAgencyCode:" + code;
 

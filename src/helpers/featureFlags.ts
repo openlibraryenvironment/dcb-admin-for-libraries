@@ -46,6 +46,19 @@ export const isLibraryBrandingEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_LIBRARY_BRANDING");
 
 /**
+ * Scoping a library's requests by agency code - dcb-service 9.0.0 and later.
+ *
+ * Two things move together behind this flag, which is why it is one and not two. The
+ * Lucene filter changes from patronHostlmsCode to patronAgencyCode, and PatronIdentity
+ * gains resolvedAgency. Sending either to an older deployment fails outright rather than
+ * degrading: the query builder resolves a filter name against the entity's properties and
+ * raises on one it does not know, and an undeclared selection field fails the whole
+ * operation, not just that field.
+ */
+export const isAgencyScopedRequestsEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_AGENCY_SCOPED_REQUESTS");
+
+/**
  * A flag by name, for code driven by the capability registry rather than by one feature.
  *
  * Deliberately NOT a way to invent a flag at a call site: every name passed here comes

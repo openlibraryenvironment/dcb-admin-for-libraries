@@ -16,6 +16,7 @@ import {
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
 import { useAuth } from "react-oidc-context";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import {
 	LibrariesQueryData,
 	PatronRequestQueryData,
@@ -41,7 +42,10 @@ export const usePatronRequestQueries = ({
 }: UsePatronRequestQueriesProps) => {
 	const auth = useAuth();
 
-	const code = auth.user?.profile?.code as string;
+	// The library being looked at. Empty only while the claim is still loading, which
+	// the enabled guards below already wait on.
+	const { agencyCode } = useAgencyCodes();
+	const code = agencyCode ?? "";
 	const headers = useMemo(
 		() => ({
 			Authorization: `Bearer ${auth?.user?.access_token}`,

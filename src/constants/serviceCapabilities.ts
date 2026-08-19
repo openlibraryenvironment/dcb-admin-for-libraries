@@ -74,6 +74,15 @@ export interface ServiceCapability {
 	 * is simply new.
 	 */
 	fallback?: CapabilityFields;
+	/**
+	 * The sub-selection a field needs, by field name, for any field above that is not a
+	 * scalar. `brandLogoUrl: String` can be selected bare; `resolvedAgency: Agency`
+	 * cannot, and a bare object field is a parse error rather than a missing value.
+	 *
+	 * Absent means scalar, which is the ordinary case. The names are still checked
+	 * against the committed schemas as fields - this only says how to ask for them.
+	 */
+	selections?: Readonly<Record<string, string>>;
 }
 
 export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
@@ -99,6 +108,25 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		flag: "VITE_FEATURE_INSIGHTS",
 		since: "9.0.0",
 		fields: {},
+	},
+	{
+		// Which library a patron request belongs to. PatronIdentity gained resolvedAgency
+		// in 9.0.0; before it the only recorded answer was patronHostlmsCode, which names
+		// the system rather than the library and so cannot distinguish co-tenants on a
+		// shared one. Nothing to fall back to - the older schema has no equivalent field,
+		// and the page keeps its old agency lookup for that case.
+		//
+		// The same flag also switches the Lucene filter these views run under, which is
+		// not a schema matter and so is not described here. See helpers/patronRequestScope.
+		id: "agency_scoped_requests",
+		flag: "VITE_FEATURE_AGENCY_SCOPED_REQUESTS",
+		since: "9.0.0",
+		fields: {
+			PatronIdentity: ["resolvedAgency"],
+		},
+		selections: {
+			resolvedAgency: "id code name",
+		},
 	},
 ];
 
