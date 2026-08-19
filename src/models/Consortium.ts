@@ -7,12 +7,14 @@ export interface Consortium {
 	name: string;
 	libraryGroup: Group;
 	dateOfLaunch: string;
-	headerImageUrl: string;
-	headerImageUploader: string;
-	headerImageUploaderEmail: string;
-	aboutImageUrl: string;
-	aboutImageUploader: string;
-	aboutImageUploaderEmail: string;
+	// The brand marks are deliberately absent. dcb-service V8_74_002 merged
+	// headerImageUrl into brandHeaderIconUrl and aboutImageUrl into brandLogoUrl, and
+	// dropped the uploader name and email columns that sat beside them - a member of
+	// staff's personal data on a type any authenticated principal could read.
+	//
+	// This app never asked for any of them: it selects `consortium { id name
+	// functionalSettings }` and nothing more. They were declared here and never used.
+	// Add a brand field to this interface when a query in this app actually requests it.
 	description: string;
 	catalogueSearchUrl: string;
 	websiteUrl: string;
