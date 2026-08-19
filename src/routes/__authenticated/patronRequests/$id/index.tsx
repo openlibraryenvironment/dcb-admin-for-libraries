@@ -449,7 +449,12 @@ function RouteComponent() {
 		</>
 	) : (
 		<>
-			<Typography variant="h1" mb={3} mt={3}>
+			<Typography
+                variant="h1"
+                sx={{
+                    mb: 3,
+                    mt: 3
+                }}>
 				{patronRequest?.clusterRecord?.title}
 			</Typography>
 			<TabContext value={activeTab}>
@@ -1205,7 +1210,12 @@ function RouteComponent() {
 						container
 						spacing={{ xs: 2, md: 3 }}
 						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }} mb={1} mt={1}>
+						<Grid
+                            size={{ xs: 4, sm: 8, md: 12, lg: 16 }}
+                            sx={{
+                                mb: 1,
+                                mt: 1
+                            }}>
 							<Divider aria-hidden="true"></Divider>
 						</Grid>
 						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
@@ -1329,7 +1339,12 @@ function RouteComponent() {
 						container
 						spacing={{ xs: 2, md: 3 }}
 						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }} mb={1} mt={1}>
+						<Grid
+                            size={{ xs: 4, sm: 8, md: 12, lg: 16 }}
+                            sx={{
+                                mb: 1,
+                                mt: 1
+                            }}>
 							<Divider aria-hidden="true"></Divider>
 						</Grid>
 						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
@@ -1493,7 +1508,12 @@ function RouteComponent() {
 							</Stack>
 						</Grid>
 
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }} mb={1} mt={1}>
+						<Grid
+                            size={{ xs: 4, sm: 8, md: 12, lg: 16 }}
+                            sx={{
+                                mb: 1,
+                                mt: 1
+                            }}>
 							<Divider aria-hidden="true"></Divider>
 						</Grid>
 						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
@@ -1617,7 +1637,12 @@ function RouteComponent() {
 								/>
 							</Stack>
 						</Grid>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }} mb={1} mt={1}>
+						<Grid
+                            size={{ xs: 4, sm: 8, md: 12, lg: 16 }}
+                            sx={{
+                                mb: 1,
+                                mt: 1
+                            }}>
 							<Divider aria-hidden="true"></Divider>
 						</Grid>
 						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
@@ -1700,7 +1725,12 @@ function RouteComponent() {
 								)}
 							</Stack>
 						</Grid>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }} mb={1} mt={1}>
+						<Grid
+                            size={{ xs: 4, sm: 8, md: 12, lg: 16 }}
+                            sx={{
+                                mb: 1,
+                                mt: 1
+                            }}>
 							<Divider aria-hidden="true"></Divider>
 						</Grid>
 						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>

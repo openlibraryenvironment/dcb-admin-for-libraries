@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import LoginIcon from "@mui/icons-material/Login";
 import { useAuth } from "react-oidc-context";
 import { useGridStore } from "@/hooks/useDataGridStore";

@@ -551,8 +551,8 @@ export default function StaffRequest({
 	};
 
 	return (
-		<>
-			{/* <Dialog
+        <>
+            {/* <Dialog
 				open={show}
 				onClose={handleClose}
 				aria-labelledby="patron-request-modal"
@@ -572,7 +572,7 @@ export default function StaffRequest({
 					}}>
 					<Close />
 				</IconButton> */}
-			<DialogContent>
+            <DialogContent>
 				{/* Same style as Expedited Checkout */}
 				<Stepper
 					activeStep={activeStep}
@@ -601,24 +601,26 @@ export default function StaffRequest({
 						}
 
 						return (
-							<Step key={label} {...stepProps}>
-								<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
+                            <Step key={label} {...stepProps}>
+                                <StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
 									<Typography
 										color={getStepColors(isActive, hasError, isCompleted)}
-										fontWeight={getStepLabelFontWeight(isActive)}>
+										sx={{
+                                            fontWeight: getStepLabelFontWeight(isActive)
+                                        }}>
 										{label}
 									</Typography>
 								</StepLabel>
-							</Step>
-						);
+                            </Step>
+                        );
 					})}
 				</Stepper>
 				<form onSubmit={handleSubmit(onSubmit)}>
 					{getStepContent(activeStep)}
 				</form>
 			</DialogContent>
-			{/* </Dialog> */}
-			<TimedAlert
+            {/* </Dialog> */}
+            <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
 				autoHideDuration={6000}
@@ -640,6 +642,6 @@ export default function StaffRequest({
 				}
 				key="staff-request-alert"
 			/>
-		</>
-	);
+        </>
+    );
 }

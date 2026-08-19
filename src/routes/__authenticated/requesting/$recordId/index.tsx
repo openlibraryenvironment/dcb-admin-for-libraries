@@ -67,11 +67,11 @@ function ClusterRecordComponent() {
 	}
 
 	return (
-		<Grid
+        <Grid
 			container
 			spacing={{ xs: 2, md: 3 }}
 			columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
-			<Grid
+            <Grid
 				container
 				spacing={{ xs: 2, md: 3 }}
 				columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
@@ -145,11 +145,13 @@ function ClusterRecordComponent() {
 						title={t("requesting.subjects")}
 						children={
 							<Stack
-								direction="row"
-								spacing={1}
-								flexWrap="wrap"
-								useFlexGap
-								mb={2}>
+                                direction="row"
+                                spacing={1}
+                                useFlexGap
+                                sx={{
+                                    flexWrap: "wrap",
+                                    mb: 2
+                                }}>
 								{clusterDetail?.subjects?.map(
 									(sub: { value: string }, index: number) => (
 										<Chip
@@ -167,11 +169,13 @@ function ClusterRecordComponent() {
 						title={t("requesting.series")}
 						children={
 							<Stack
-								direction="row"
-								spacing={1}
-								flexWrap="wrap"
-								useFlexGap
-								mb={2}>
+                                direction="row"
+                                spacing={1}
+                                useFlexGap
+                                sx={{
+                                    flexWrap: "wrap",
+                                    mb: 2
+                                }}>
 								{clusterDetail?.series?.map(
 									(sub: { value: string }, index: number) => (
 										<Chip
@@ -189,11 +193,13 @@ function ClusterRecordComponent() {
 						title={t("requesting.notes")}
 						children={
 							<Stack
-								direction="row"
-								spacing={1}
-								flexWrap="wrap"
-								useFlexGap
-								mb={2}>
+                                direction="row"
+                                spacing={1}
+                                useFlexGap
+                                sx={{
+                                    flexWrap: "wrap",
+                                    mb: 2
+                                }}>
 								{clusterDetail?.notes?.map((note: Note, index: number) => (
 									<Chip
 										key={clusterDetail?.id + "." + index + "." + note.note}
@@ -268,6 +274,6 @@ function ClusterRecordComponent() {
 					</Accordion>
 				</Grid>
 			</Grid>
-		</Grid>
-	);
+        </Grid>
+    );
 }

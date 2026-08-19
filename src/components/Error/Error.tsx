@@ -1,6 +1,6 @@
 import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import ErrorOutline from "@mui/icons-material/ErrorOutline";
+import ErrorOutlined from "@mui/icons-material/ErrorOutlined";
 
 interface ErrorProps {
 	title: string;
@@ -29,21 +29,24 @@ export default function Error({
 		location.reload();
 	};
 	return (
-		<Box
-			display="flex"
-			alignItems="center"
-			justifyContent="center"
-			width="100%" // Takes the full width of the content area
-			height="100%"
-			flex="1" // Takes up the available space in the flex container
-			minHeight="0" // Override minHeight to allow the Box to shrink if necessary
-		>
-			<Stack
-				direction="column"
-				alignItems={"center"}
-				alignSelf={"center"}
-				spacing={2}>
-				<ErrorOutline
+        <Box
+            sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "100%",
+                height: "100%",
+                flex: "1",
+                minHeight: "0"
+            }}>
+            <Stack
+                direction="column"
+                spacing={2}
+                sx={{
+                    alignItems: "center",
+                    alignSelf: "center"
+                }}>
+				<ErrorOutlined
 					sx={{ fontSize: 200 }}
 					htmlColor={theme.palette.primary.exclamationIcon}
 				/>
@@ -59,6 +62,6 @@ export default function Error({
 					{action}
 				</Button>
 			</Stack>
-		</Box>
-	);
+        </Box>
+    );
 }

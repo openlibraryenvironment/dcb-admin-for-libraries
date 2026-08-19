@@ -69,8 +69,8 @@ export default function CombinedRequestingModal({
 			default:
 				// This is the initial selection screen
 				return (
-					<>
-						<DialogContent>
+                    <>
+                        <DialogContent>
 							<Stack spacing={1}>
 								<Typography variant="body1">
 									{t("requesting.place_description", { title: title })}
@@ -98,7 +98,9 @@ export default function CombinedRequestingModal({
 															</Typography>
 															<Typography
 																variant="body2"
-																color="text.secondary">
+																sx={{
+                                                                    color: "text.secondary"
+                                                                }}>
 																{t(
 																	"requesting.staff_request.option_description"
 																)}
@@ -118,7 +120,9 @@ export default function CombinedRequestingModal({
 															</Typography>
 															<Typography
 																variant="body2"
-																color="text.secondary">
+																sx={{
+                                                                    color: "text.secondary"
+                                                                }}>
 																{t(
 																	"requesting.expedited_checkout.option_description"
 																)}
@@ -132,14 +136,14 @@ export default function CombinedRequestingModal({
 								</FormControl>
 							</Stack>
 						</DialogContent>
-						<DialogActions>
+                        <DialogActions>
 							<Button onClick={handleClose}>{t("ui.actions.cancel")}</Button>
 							<Button onClick={handleContinue} variant="contained">
 								{t("ui.actions.continue")}
 							</Button>
 						</DialogActions>
-					</>
-				);
+                    </>
+                );
 		}
 	};
 

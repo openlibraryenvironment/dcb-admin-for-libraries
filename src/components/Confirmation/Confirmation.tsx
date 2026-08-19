@@ -205,7 +205,7 @@ const Confirmation = ({
 											// disabled={doPatronRequestsExist}
 											error={!!errors.reason}
 											helperText={errors.reason?.message}
-											inputProps={{ maxLength: 200 }}
+											slotProps={{ htmlInput: { maxLength: 200 } }}
 										/>
 									)}
 								/>
@@ -230,7 +230,7 @@ const Confirmation = ({
 													t("data_change_log.ref_url_helper")
 												)
 											}
-											inputProps={{ maxLength: 200 }}
+											slotProps={{ htmlInput: { maxLength: 200 } }}
 										/>
 									)}
 								/>

@@ -96,11 +96,14 @@ export default defineConfig(({ mode }) => {
 							: "assets/[name]-[hash].js",
 					chunkFileNames: "assets/[name]-[hash].js",
 					assetFileNames: "assets/[name]-[hash][extname]",
-					manualChunks: {
-						vendor: ["react", "react-dom"],
-						router: ["@tanstack/react-router", "@tanstack/react-query"],
-						mui: ["@mui/material", "@emotion/styled", "@emotion/react"],
-					},
+					// manualChunks removed with the Vite 8 upgrade. Vite 8 bundles with
+					// rolldown, which takes a function or its own `advancedChunks` groups
+					// and rejects the object form outright ("manualChunks is not a
+					// function"). It was not earning its place regardless: on rollup it
+					// emitted "Generated an empty chunk: vendor" on every build, because
+					// react/react-dom were already reachable from the entry. dcb-admin-ui
+					// carries no manual chunking either — rolldown's default splitting is
+					// what both apps now use.
 				},
 			},
 		},

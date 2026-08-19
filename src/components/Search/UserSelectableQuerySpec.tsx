@@ -52,10 +52,12 @@ export function UserSelectableQuerySpec({
 					value={tab}
 					onChange={(_, newTab) => setTab(newTab)}
 					aria-label="Query input type"
-					TabIndicatorProps={{
-						sx: {
-							top: "unset",
-							bottom: "unset", // unset the default bottom position
+					slotProps={{
+						indicator: {
+							sx: {
+								top: "unset",
+								bottom: "unset", // unset the default bottom position
+							},
 						},
 					}}
 					sx={{

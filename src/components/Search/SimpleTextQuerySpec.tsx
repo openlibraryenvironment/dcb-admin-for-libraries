@@ -35,22 +35,24 @@ export function SimpleTextQuerySpec({
 			onChange={(e) => setInput(e.target.value)}
 			onKeyDown={handleKeyDown}
 			placeholder="Search"
-			InputProps={{
-				startAdornment: (
-					<InputAdornment position="start">
-						<Search />
-					</InputAdornment>
-				),
-				endAdornment: searchTerm && (
-					<InputAdornment position="end">
-						<IconButton
-							onClick={clearTerm}
-							edge="end"
-							aria-label="clear search">
-							<Clear />
-						</IconButton>
-					</InputAdornment>
-				),
+			slotProps={{
+				input: {
+					startAdornment: (
+						<InputAdornment position="start">
+							<Search />
+						</InputAdornment>
+					),
+					endAdornment: searchTerm && (
+						<InputAdornment position="end">
+							<IconButton
+								onClick={clearTerm}
+								edge="end"
+								aria-label="clear search">
+								<Clear />
+							</IconButton>
+						</InputAdornment>
+					),
+				},
 			}}
 			fullWidth
 			variant="outlined"

@@ -130,14 +130,16 @@ export const AdvancedSearchFilter = ({
 
 	//fix this styling
 	return (
-		<Box sx={{ p: 2, border: "1px solid #e0e0e0", borderRadius: 1 }}>
-			<Stack spacing={2}>
+        <Box sx={{ p: 2, border: "1px solid #e0e0e0", borderRadius: 1 }}>
+            <Stack spacing={2}>
 				{filtersToRender.map((filter, index) => (
 					<Stack
 						key={filter.id}
 						direction="row"
 						spacing={2}
-						alignItems="center">
+						sx={{
+                            alignItems: "center"
+                        }}>
 						{/* Only show boolean operator in advanced mode for subsequent filters */}
 						{isAdvancedMode && index > 0 && (
 							<FormControl size="small" sx={{ minWidth: 80 }}>
@@ -221,7 +223,13 @@ export const AdvancedSearchFilter = ({
 								number: numberOfActiveFilters,
 							})}
 						</Typography>
-						<Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
+						<Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{
+                                flexWrap: "wrap",
+                                mt: 1
+                            }}>
 							{filters
 								.filter((f) => f.value)
 								.map((filter) => (
@@ -240,6 +248,6 @@ export const AdvancedSearchFilter = ({
 					</Box>
 				)}
 			</Stack>
-		</Box>
-	);
+        </Box>
+    );
 };

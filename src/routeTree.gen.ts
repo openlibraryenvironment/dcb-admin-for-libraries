@@ -182,6 +182,7 @@ const _authenticatedIndexesIndexCodeRecordIdIndexRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof _authenticatedIndexRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/maintenance': typeof MaintenanceRoute
@@ -192,21 +193,20 @@ export interface FileRoutesByFullPath {
   '/service': typeof _authenticatedServiceRoute
   '/settings': typeof _authenticatedSettingsRoute
   '/supplierRequests': typeof _authenticatedSupplierRequestsRoute
-  '/': typeof _authenticatedIndexRoute
   '/requesting/$recordId': typeof _authenticatedRequestingRecordIdRouteWithChildren
-  '/bibs': typeof _authenticatedBibsIndexRoute
-  '/locations': typeof _authenticatedLocationsIndexRoute
-  '/patronRequests': typeof _authenticatedPatronRequestsIndexRoute
-  '/requesting': typeof _authenticatedRequestingIndexRoute
-  '/bibs/$id': typeof _authenticatedBibsIdIndexRoute
-  '/indexes/$indexCode': typeof _authenticatedIndexesIndexCodeIndexRoute
-  '/locations/$id': typeof _authenticatedLocationsIdIndexRoute
-  '/patronRequests/$id': typeof _authenticatedPatronRequestsIdIndexRoute
+  '/bibs/': typeof _authenticatedBibsIndexRoute
+  '/locations/': typeof _authenticatedLocationsIndexRoute
+  '/patronRequests/': typeof _authenticatedPatronRequestsIndexRoute
+  '/requesting/': typeof _authenticatedRequestingIndexRoute
+  '/bibs/$id/': typeof _authenticatedBibsIdIndexRoute
+  '/indexes/$indexCode/': typeof _authenticatedIndexesIndexCodeIndexRoute
+  '/locations/$id/': typeof _authenticatedLocationsIdIndexRoute
+  '/patronRequests/$id/': typeof _authenticatedPatronRequestsIdIndexRoute
   '/requesting/$recordId/': typeof _authenticatedRequestingRecordIdIndexRoute
-  '/indexes/$indexCode/$recordId': typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
-  '/patronRequests/audits/$auditId': typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
-  '/requesting/$recordId/history': typeof _authenticatedRequestingRecordIdHistoryIndexRoute
-  '/requesting/$recordId/items': typeof _authenticatedRequestingRecordIdItemsIndexRoute
+  '/indexes/$indexCode/$recordId/': typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
+  '/patronRequests/audits/$auditId/': typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
+  '/requesting/$recordId/history/': typeof _authenticatedRequestingRecordIdHistoryIndexRoute
+  '/requesting/$recordId/items/': typeof _authenticatedRequestingRecordIdItemsIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -266,6 +266,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/login'
     | '/logout'
     | '/maintenance'
@@ -276,21 +277,20 @@ export interface FileRouteTypes {
     | '/service'
     | '/settings'
     | '/supplierRequests'
-    | '/'
     | '/requesting/$recordId'
-    | '/bibs'
-    | '/locations'
-    | '/patronRequests'
-    | '/requesting'
-    | '/bibs/$id'
-    | '/indexes/$indexCode'
-    | '/locations/$id'
-    | '/patronRequests/$id'
+    | '/bibs/'
+    | '/locations/'
+    | '/patronRequests/'
+    | '/requesting/'
+    | '/bibs/$id/'
+    | '/indexes/$indexCode/'
+    | '/locations/$id/'
+    | '/patronRequests/$id/'
     | '/requesting/$recordId/'
-    | '/indexes/$indexCode/$recordId'
-    | '/patronRequests/audits/$auditId'
-    | '/requesting/$recordId/history'
-    | '/requesting/$recordId/items'
+    | '/indexes/$indexCode/$recordId/'
+    | '/patronRequests/audits/$auditId/'
+    | '/requesting/$recordId/history/'
+    | '/requesting/$recordId/items/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -388,7 +388,7 @@ declare module '@tanstack/react-router' {
     '/__authenticated': {
       id: '/__authenticated'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof _authenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -444,28 +444,28 @@ declare module '@tanstack/react-router' {
     '/__authenticated/requesting/': {
       id: '/__authenticated/requesting/'
       path: '/requesting'
-      fullPath: '/requesting'
+      fullPath: '/requesting/'
       preLoaderRoute: typeof _authenticatedRequestingIndexRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/patronRequests/': {
       id: '/__authenticated/patronRequests/'
       path: '/patronRequests'
-      fullPath: '/patronRequests'
+      fullPath: '/patronRequests/'
       preLoaderRoute: typeof _authenticatedPatronRequestsIndexRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/locations/': {
       id: '/__authenticated/locations/'
       path: '/locations'
-      fullPath: '/locations'
+      fullPath: '/locations/'
       preLoaderRoute: typeof _authenticatedLocationsIndexRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/bibs/': {
       id: '/__authenticated/bibs/'
       path: '/bibs'
-      fullPath: '/bibs'
+      fullPath: '/bibs/'
       preLoaderRoute: typeof _authenticatedBibsIndexRouteImport
       parentRoute: typeof _authenticatedRoute
     }
@@ -486,56 +486,56 @@ declare module '@tanstack/react-router' {
     '/__authenticated/patronRequests/$id/': {
       id: '/__authenticated/patronRequests/$id/'
       path: '/patronRequests/$id'
-      fullPath: '/patronRequests/$id'
+      fullPath: '/patronRequests/$id/'
       preLoaderRoute: typeof _authenticatedPatronRequestsIdIndexRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/locations/$id/': {
       id: '/__authenticated/locations/$id/'
       path: '/locations/$id'
-      fullPath: '/locations/$id'
+      fullPath: '/locations/$id/'
       preLoaderRoute: typeof _authenticatedLocationsIdIndexRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/indexes/$indexCode/': {
       id: '/__authenticated/indexes/$indexCode/'
       path: '/indexes/$indexCode'
-      fullPath: '/indexes/$indexCode'
+      fullPath: '/indexes/$indexCode/'
       preLoaderRoute: typeof _authenticatedIndexesIndexCodeIndexRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/bibs/$id/': {
       id: '/__authenticated/bibs/$id/'
       path: '/bibs/$id'
-      fullPath: '/bibs/$id'
+      fullPath: '/bibs/$id/'
       preLoaderRoute: typeof _authenticatedBibsIdIndexRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/requesting/$recordId/items/': {
       id: '/__authenticated/requesting/$recordId/items/'
       path: '/items'
-      fullPath: '/requesting/$recordId/items'
+      fullPath: '/requesting/$recordId/items/'
       preLoaderRoute: typeof _authenticatedRequestingRecordIdItemsIndexRouteImport
       parentRoute: typeof _authenticatedRequestingRecordIdRoute
     }
     '/__authenticated/requesting/$recordId/history/': {
       id: '/__authenticated/requesting/$recordId/history/'
       path: '/history'
-      fullPath: '/requesting/$recordId/history'
+      fullPath: '/requesting/$recordId/history/'
       preLoaderRoute: typeof _authenticatedRequestingRecordIdHistoryIndexRouteImport
       parentRoute: typeof _authenticatedRequestingRecordIdRoute
     }
     '/__authenticated/patronRequests/audits/$auditId/': {
       id: '/__authenticated/patronRequests/audits/$auditId/'
       path: '/patronRequests/audits/$auditId'
-      fullPath: '/patronRequests/audits/$auditId'
+      fullPath: '/patronRequests/audits/$auditId/'
       preLoaderRoute: typeof _authenticatedPatronRequestsAuditsAuditIdIndexRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/indexes/$indexCode/$recordId/': {
       id: '/__authenticated/indexes/$indexCode/$recordId/'
       path: '/indexes/$indexCode/$recordId'
-      fullPath: '/indexes/$indexCode/$recordId'
+      fullPath: '/indexes/$indexCode/$recordId/'
       preLoaderRoute: typeof _authenticatedIndexesIndexCodeRecordIdIndexRouteImport
       parentRoute: typeof _authenticatedRoute
     }

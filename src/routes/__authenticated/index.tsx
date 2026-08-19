@@ -421,11 +421,11 @@ function HomeComponent() {
 	};
 
 	return (
-		<Grid
+        <Grid
 			container
 			spacing={{ xs: 2, md: 3 }}
 			columns={{ xs: 4, sm: 8, md: 12 }}>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography>
 					{t("welcome.title", {
 						library: library?.fullName,
@@ -433,7 +433,7 @@ function HomeComponent() {
 					})}
 				</Typography>
 			</Grid>
-			{/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
+            {/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography>
 					<Trans
 						i18nKey="welcome.background"
@@ -447,7 +447,7 @@ function HomeComponent() {
 					/>
 				</Typography>
 			</Grid> */}
-			{editingEnabled ? (
+            {editingEnabled ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 					<>
 						{editMode ? (
@@ -481,13 +481,15 @@ function HomeComponent() {
 					</>
 				</Grid>
 			) : null}
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" fontWeight={"bold"}>
+            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Typography variant="h3" sx={{
+                    fontWeight: "bold"
+                }}>
 					{/* {t("welcome.library", { library: library?.fullName })} */}
 					{t("welcome.library_short")}
 				</Typography>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
 					<Typography
 						variant="attributeTitle"
@@ -520,7 +522,7 @@ function HomeComponent() {
 					}
 				/>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
 					<Typography
 						variant="attributeTitle"
@@ -552,7 +554,7 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
 					<Typography
 						variant="attributeTitle"
@@ -584,19 +586,19 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">{t("library.type")}</Typography>
 					<RenderAttribute attribute={library?.type} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">{t("agency.code")}</Typography>
 					<RenderAttribute attribute={library?.agencyCode} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
 					<Typography
 						variant="attributeTitle"
@@ -628,7 +630,7 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
 					<Typography
 						variant="attributeTitle"
@@ -660,7 +662,7 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
 						{t("library.site_designation")}
@@ -673,32 +675,38 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">{t("library.id")}</Typography>
 					<RenderAttribute attribute={library?.id} />
 				</Stack>
 			</Grid>
-
-			{/* Patron-facing brand — N-1B. Its own labelled block because everything
+            {/* Patron-facing brand — N-1B. Its own labelled block because everything
 			    above configures this library's participation in DCB and these three
 			    configure what a patron sees in the discovery app. The library's mark
 			    leads the lockup there and the consortium's follows it, smaller: the
 			    patron is using their library, and the consortium is the supply network
 			    behind it. */}
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" fontWeight={"bold"}>
+            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Typography variant="h3" sx={{
+                    fontWeight: "bold"
+                }}>
 					{t("library.brand.section")}
 				</Typography>
 				<Typography>{t("library.brand.section_help")}</Typography>
 				{/* Said once, in the section, rather than in each field's help text. A
 				    library choosing between uploading and pasting an address deserves to
 				    know what the second one costs. */}
-				<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+				<Typography
+                    variant="body2"
+                    sx={{
+                        color: "text.secondary",
+                        mt: 1
+                    }}>
 					{t("library.brand.external_url_cost")}
 				</Typography>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography
 						variant="attributeTitle"
@@ -731,7 +739,7 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography
 						variant="attributeTitle"
@@ -765,7 +773,7 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography
 						variant="attributeTitle"
@@ -785,7 +793,7 @@ function HomeComponent() {
 								// contrast-tested in light, dark and high contrast; a colour
 								// typed here would not be, and nothing on this page could tell
 								// the administrator it had failed.
-								<TextField
+								(<TextField
 									{...field}
 									select
 									label={t("library.brand.theme")}
@@ -796,15 +804,15 @@ function HomeComponent() {
 										t("library.brand.theme_help")
 									}
 									margin="normal">
-									<MenuItem value="">
+                                    <MenuItem value="">
 										{t("library.brand.theme_inherit")}
 									</MenuItem>
-									{themeOptions(library?.defaultThemeName).map((name) => (
+                                    {themeOptions(library?.defaultThemeName).map((name) => (
 										<MenuItem key={name} value={name}>
 											{name}
 										</MenuItem>
 									))}
-								</TextField>
+                                </TextField>)
 							) : (
 								<RenderAttribute attribute={library?.defaultThemeName} />
 							)
@@ -812,13 +820,13 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			{/* /* 'Primary location' title goes here/* */}
-			{/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
+            {/* /* 'Primary location' title goes here/* */}
+            {/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography variant="h3" fontWeight={"bold"}>
 					{t("library.primary_location.title")}
 				</Typography>
 			</Grid> */}
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
 						{t("library.primary_location.address")}
@@ -827,7 +835,7 @@ function HomeComponent() {
 					<AddressLink address={library?.address} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
 					<Typography
 						variant="attributeTitle"
@@ -859,7 +867,7 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
 					<Typography
 						variant="attributeTitle"
@@ -891,12 +899,14 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" fontWeight={"bold"}>
+            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Typography variant="h3" sx={{
+                    fontWeight: "bold"
+                }}>
 					{t("library.statistics.title")}
 				</Typography>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
 						{t("library.statistics.requests_made")}
@@ -914,7 +924,7 @@ function HomeComponent() {
 					)}
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
 						{t("library.statistics.requests_supplied")}
@@ -932,9 +942,11 @@ function HomeComponent() {
 					)}
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Stack spacing={1} direction={"column"}>
-					<Typography variant="h3" fontWeight={"bold"}>
+					<Typography variant="h3" sx={{
+                        fontWeight: "bold"
+                    }}>
 						{t("library.statistics.top_titles_month")}
 					</Typography>
 					<TopTitlesSummary
@@ -943,9 +955,11 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Stack spacing={1} direction={"column"}>
-					<Typography variant="h3" fontWeight={"bold"}>
+					<Typography variant="h3" sx={{
+                        fontWeight: "bold"
+                    }}>
 						{t("library.statistics.top_requesters_month")}
 					</Typography>
 					<TopRequestorsSummary
@@ -954,7 +968,7 @@ function HomeComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<TimedAlert
+            <TimedAlert
 				open={alert.open}
 				severityType={alert.severity}
 				autoHideDuration={6000}
@@ -962,7 +976,7 @@ function HomeComponent() {
 				onCloseFunc={() => setAlert({ ...alert, open: false })}
 				alertTitle={alert.title}
 			/>
-			{library && showConfirmationEdit && (
+            {library && showConfirmationEdit && (
 				<Confirmation
 					open={showConfirmationEdit}
 					onClose={() => setConfirmationEdit(false)}
@@ -974,6 +988,6 @@ function HomeComponent() {
 					gridEdit={false}
 				/>
 			)}
-		</Grid>
-	);
+        </Grid>
+    );
 }

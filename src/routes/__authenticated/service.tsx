@@ -59,16 +59,16 @@ function ServiceComponent() {
 	// all pages will need error and loading states too!
 	// do we want to do tabs for first, second host lms?
 	return (
-		<Grid
+        <Grid
 			container
 			spacing={{ xs: 2, md: 3 }}
 			columns={{ xs: 4, sm: 8, md: 12 }}>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography variant="accordionSummary">
 					{t("nav.library.service")}
 				</Typography>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
 						{t("library.service.systems.ils")}
@@ -76,7 +76,7 @@ function ServiceComponent() {
 					<RenderAttribute attribute={ils} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
 						{t("library.service.systems.discovery")}
@@ -84,7 +84,7 @@ function ServiceComponent() {
 					<RenderAttribute attribute={library?.discoverySystem} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
 						{t("library.service.systems.patron_site")}
@@ -99,8 +99,10 @@ function ServiceComponent() {
 					)}
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Typography variant="h3" fontWeight={"bold"}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Typography variant="h3" sx={{
+                    fontWeight: "bold"
+                }}>
 					{t("library.config.patronAuth.title")}
 				</Typography>
 				<Stack direction={"column"}>
@@ -110,7 +112,7 @@ function ServiceComponent() {
 					<RenderAttribute attribute={library?.agency?.authProfile} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
 						{t("hostlms.configuration")}
@@ -118,47 +120,48 @@ function ServiceComponent() {
 					<RenderAttribute attribute={library?.hostLmsConfiguration} />
 				</Stack>
 			</Grid>
-			{firstHostLms ? (
+            {firstHostLms ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
 					<Divider aria-hidden="true"></Divider>
 				</Grid>
 			) : null}
-			{firstHostLms ? (
+            {firstHostLms ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
-					<Typography variant="h3" fontWeight={"bold"}>
+					<Typography variant="h3" sx={{
+                        fontWeight: "bold"
+                    }}>
 						{t("library.service.hostlms_title", {
 							name: firstHostLms?.name,
 						})}
 					</Typography>
 				</Grid>
 			) : null}
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">{t("hostlms.name")}</Typography>
 					<RenderAttribute attribute={firstHostLms?.name} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">{t("hostlms.code")}</Typography>
 					<RenderAttribute attribute={firstHostLms?.code} />
 				</Stack>
 			</Grid>
-			{/* Handle multi-roles and separate them */}
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            {/* Handle multi-roles and separate them */}
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">{t("hostlms.roles")}</Typography>
 					{<FormatArrayAsList roles={firstHostLms?.clientConfig?.["roles"]} />}
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">{t("hostlms.id")}</Typography>
 					<RenderAttribute attribute={firstHostLms?.id} />
 				</Stack>
 			</Grid>
-
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
 						{t("hostlms.client_config.ingest")}
@@ -168,8 +171,8 @@ function ServiceComponent() {
 					/>
 				</Stack>
 			</Grid>
-			{/* Suppression rulesets */}
-			{firstHostLms?.suppressionRulesetName != null && (
+            {/* Suppression rulesets */}
+            {firstHostLms?.suppressionRulesetName != null && (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -183,7 +186,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			)}
-			{firstHostLms?.itemSuppressionRulesetName != null && (
+            {firstHostLms?.itemSuppressionRulesetName != null && (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -197,8 +200,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			)}
-
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
 						{t("library.service.environments.api")}
@@ -209,8 +211,7 @@ function ServiceComponent() {
 					/>
 				</Stack>
 			</Grid>
-
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
 					<Typography variant="attributeTitle">
 						{t("hostlms.client_config.context_hierarchy")}
@@ -220,9 +221,8 @@ function ServiceComponent() {
 					/>
 				</Stack>
 			</Grid>
-
-			{/* 'API Key' has many different guises on clientConfig: for FOLIO libraries it's simple*/}
-			{firstHostLms?.clientConfig?.apikey ? (
+            {/* 'API Key' has many different guises on clientConfig: for FOLIO libraries it's simple*/}
+            {firstHostLms?.clientConfig?.apikey ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
@@ -231,9 +231,8 @@ function ServiceComponent() {
 					/>
 				</Grid>
 			) : null}
-
-			{/* For Polaris libraries it's the 'access key' attribute*/}
-			{firstHostLms?.clientConfig?.["access-key"] ? (
+            {/* For Polaris libraries it's the 'access key' attribute*/}
+            {firstHostLms?.clientConfig?.["access-key"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
@@ -242,9 +241,8 @@ function ServiceComponent() {
 					/>
 				</Grid>
 			) : null}
-
-			{/* And for Sierra libraries it is the 'key' attribute*/}
-			{firstHostLms?.clientConfig?.key ? (
+            {/* And for Sierra libraries it is the 'key' attribute*/}
+            {firstHostLms?.clientConfig?.key ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
@@ -253,8 +251,7 @@ function ServiceComponent() {
 					/>
 				</Grid>
 			) : null}
-
-			{firstHostLms?.clientConfig?.secret ? (
+            {firstHostLms?.clientConfig?.secret ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_secret")}
@@ -263,8 +260,7 @@ function ServiceComponent() {
 					/>
 				</Grid>
 			) : null}
-
-			{firstHostLms?.clientConfig?.defaultAgency ? (
+            {firstHostLms?.clientConfig?.defaultAgency ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -276,10 +272,8 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{/* Sierra specific values*/}
-
-			{firstHostLms?.clientConfig?.holdPolicy ? (
+            {/* Sierra specific values*/}
+            {firstHostLms?.clientConfig?.holdPolicy ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -291,8 +285,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{firstHostLms?.clientConfig?.["page-size"] ? (
+            {firstHostLms?.clientConfig?.["page-size"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -304,10 +297,8 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{/* Polaris-specific values*/}
-
-			{firstHostLms?.clientConfig?.["domain-id"] ? (
+            {/* Polaris-specific values*/}
+            {firstHostLms?.clientConfig?.["domain-id"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -319,7 +310,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{firstHostLms?.clientConfig?.["domain-id"] ? (
+            {firstHostLms?.clientConfig?.["domain-id"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -331,7 +322,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{firstHostLms?.clientConfig?.["staff-password"] ? (
+            {firstHostLms?.clientConfig?.["staff-password"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<PrivateData
 						clientConfigType={t(
@@ -342,7 +333,7 @@ function ServiceComponent() {
 					/>
 				</Grid>
 			) : null}
-			{firstHostLms?.clientConfig?.services?.["organisation-id"] ? (
+            {firstHostLms?.clientConfig?.services?.["organisation-id"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -356,10 +347,8 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{/* FOLIO Specific values: folio-tenant, metadata-prefix, record_syntax, user-base-url*/}
-
-			{firstHostLms?.clientConfig?.["folio-tenant"] ? (
+            {/* FOLIO Specific values: folio-tenant, metadata-prefix, record_syntax, user-base-url*/}
+            {firstHostLms?.clientConfig?.["folio-tenant"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -371,8 +360,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{firstHostLms?.clientConfig?.["metadata-prefix"] ? (
+            {firstHostLms?.clientConfig?.["metadata-prefix"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -384,8 +372,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{firstHostLms?.clientConfig?.["record-syntax"] ? (
+            {firstHostLms?.clientConfig?.["record-syntax"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -397,8 +384,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{firstHostLms?.clientConfig?.["user-base-url"] ? (
+            {firstHostLms?.clientConfig?.["user-base-url"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -411,23 +397,24 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{/* Second Host LMS section - if exists - conditionally render */}
-			{secondHostLms ? (
+            {/* Second Host LMS section - if exists - conditionally render */}
+            {secondHostLms ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 					<Divider aria-hidden="true"></Divider>
 				</Grid>
 			) : null}
-			{secondHostLms ? (
+            {secondHostLms ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-					<Typography variant="h3" fontWeight={"bold"}>
+					<Typography variant="h3" sx={{
+                        fontWeight: "bold"
+                    }}>
 						{t("library.service.hostlms_title", {
 							name: secondHostLms?.name,
 						})}
 					</Typography>
 				</Grid>
 			) : null}
-			{secondHostLms ? (
+            {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -437,7 +424,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{secondHostLms ? (
+            {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -447,7 +434,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{secondHostLms ? (
+            {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -459,7 +446,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{secondHostLms ? (
+            {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">{t("hostlms.id")}</Typography>
@@ -467,7 +454,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{secondHostLms ? (
+            {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -479,7 +466,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{secondHostLms ? (
+            {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -492,7 +479,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{secondHostLms ? (
+            {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -504,9 +491,8 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{/* 'API Key' has many different guises on clientConfig: for FOLIO libraries it's simple*/}
-			{secondHostLms?.clientConfig?.apikey ? (
+            {/* 'API Key' has many different guises on clientConfig: for FOLIO libraries it's simple*/}
+            {secondHostLms?.clientConfig?.apikey ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
@@ -515,9 +501,8 @@ function ServiceComponent() {
 					/>
 				</Grid>
 			) : null}
-
-			{/* For Polaris libraries it's the 'access key' attribute*/}
-			{secondHostLms?.clientConfig?.["access-key"] ? (
+            {/* For Polaris libraries it's the 'access key' attribute*/}
+            {secondHostLms?.clientConfig?.["access-key"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
@@ -526,9 +511,8 @@ function ServiceComponent() {
 					/>
 				</Grid>
 			) : null}
-
-			{/* And for Sierra libraries it is the 'key' attribute*/}
-			{secondHostLms?.clientConfig?.key ? (
+            {/* And for Sierra libraries it is the 'key' attribute*/}
+            {secondHostLms?.clientConfig?.key ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
@@ -537,7 +521,7 @@ function ServiceComponent() {
 					/>
 				</Grid>
 			) : null}
-			{secondHostLms?.clientConfig?.secret ? (
+            {secondHostLms?.clientConfig?.secret ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_secret")}
@@ -546,10 +530,8 @@ function ServiceComponent() {
 					/>
 				</Grid>
 			) : null}
-
-			{/* Polaris specific values - Second Host LMS */}
-
-			{secondHostLms?.clientConfig?.["domain-id"] ? (
+            {/* Polaris specific values - Second Host LMS */}
+            {secondHostLms?.clientConfig?.["domain-id"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -561,7 +543,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{secondHostLms?.clientConfig?.["staff-username"] ? (
+            {secondHostLms?.clientConfig?.["staff-username"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -573,7 +555,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{secondHostLms?.clientConfig?.["staff-password"] ? (
+            {secondHostLms?.clientConfig?.["staff-password"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<PrivateData
 						clientConfigType={t(
@@ -584,7 +566,7 @@ function ServiceComponent() {
 					/>
 				</Grid>
 			) : null}
-			{secondHostLms?.clientConfig?.services?.["organisation-id"] ? (
+            {secondHostLms?.clientConfig?.services?.["organisation-id"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -598,9 +580,8 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{/* FOLIO Specific values (Second Host LMS): folio-tenant, metadata-prefix, record_syntax, user-base-url*/}
-
-			{secondHostLms?.clientConfig?.["folio-tenant"] ? (
+            {/* FOLIO Specific values (Second Host LMS): folio-tenant, metadata-prefix, record_syntax, user-base-url*/}
+            {secondHostLms?.clientConfig?.["folio-tenant"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -612,8 +593,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{secondHostLms?.clientConfig?.["metadata-prefix"] ? (
+            {secondHostLms?.clientConfig?.["metadata-prefix"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -625,8 +605,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{secondHostLms?.clientConfig?.["record-syntax"] ? (
+            {secondHostLms?.clientConfig?.["record-syntax"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -638,8 +617,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{secondHostLms?.clientConfig?.["user-base-url"] ? (
+            {secondHostLms?.clientConfig?.["user-base-url"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -652,9 +630,8 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-			{/* Sierra specific values*/}
-
-			{secondHostLms?.clientConfig?.holdPolicy ? (
+            {/* Sierra specific values*/}
+            {secondHostLms?.clientConfig?.holdPolicy ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -666,8 +643,7 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-
-			{secondHostLms?.clientConfig?.["page-size"] ? (
+            {secondHostLms?.clientConfig?.["page-size"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Stack direction={"column"}>
 						<Typography variant="attributeTitle">
@@ -679,6 +655,6 @@ function ServiceComponent() {
 					</Stack>
 				</Grid>
 			) : null}
-		</Grid>
-	);
+        </Grid>
+    );
 }

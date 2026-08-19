@@ -634,8 +634,8 @@ export default function ExpeditedCheckout({
 	};
 
 	return (
-		<>
-			{/* <Dialog
+        <>
+            {/* <Dialog
 				open={show}
 				onClose={handleClose}
 				aria-labelledby="patron-request-modal"
@@ -658,8 +658,7 @@ export default function ExpeditedCheckout({
 						<Close />
 					</IconButton>
 				)} */}
-
-			<DialogContent sx={{ overflow: "visible" }}>
+            <DialogContent sx={{ overflow: "visible" }}>
 				<Stepper
 					activeStep={activeStep}
 					alternativeLabel
@@ -691,31 +690,35 @@ export default function ExpeditedCheckout({
 						}
 						if (index === 2 && checkoutCompleted) {
 							labelProps.optional = (
-								<Typography variant="caption" color="success.main">
+								<Typography variant="caption" sx={{
+                                    color: "success.main"
+                                }}>
 									{t("requesting.expedited_checkout.steps.complete")}
 								</Typography>
 							);
 						}
 
 						return (
-							<Step key={label} {...stepProps}>
-								<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
+                            <Step key={label} {...stepProps}>
+                                <StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
 									<Typography
 										color={getStepColors(isActive, hasError, isCompleted)}
-										fontWeight={getStepLabelFontWeight(isActive)}>
+										sx={{
+                                            fontWeight: getStepLabelFontWeight(isActive)
+                                        }}>
 										{label}
 									</Typography>
 								</StepLabel>
-							</Step>
-						);
+                            </Step>
+                        );
 					})}
 				</Stepper>
 				<form onSubmit={handleSubmit(onSubmit)}>
 					{getStepContent(activeStep)}
 				</form>
 			</DialogContent>
-			{/* </Dialog> */}
-			<TimedAlert
+            {/* </Dialog> */}
+            <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
 				autoHideDuration={6000}
@@ -723,6 +726,6 @@ export default function ExpeditedCheckout({
 				alertText={alert.text}
 				key="expedited-checkout-alert"
 			/>
-		</>
-	);
+        </>
+    );
 }

@@ -102,4 +102,12 @@ test("preserves the standalone entrypoint in the same artifact", async ({
 	await expect(
 		page.getByRole("button", { name: /sign in with keycloak/i }),
 	).toBeVisible();
+
+	// Every asset on this page is served through the mapPublishedPrefix route, which
+	// rewrites the URL, re-fetches and fulfils. Returning while those are still in
+	// flight tears the context down mid-fulfil — "Fetch response has been disposed".
+	// The button appears long before the chunks finish, so the visibility assertion
+	// alone is not a sufficient barrier. dcb-admin-ui's equivalent test has always
+	// waited here; this one got away without it only while the bundle was small.
+	await page.waitForLoadState("networkidle");
 });
