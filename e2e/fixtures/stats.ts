@@ -136,6 +136,7 @@ export const DEFAULT_STATS: StatsMocks = {
 	"peer-benchmarks": [
 		{
 			libraryCode: "e2e-lms",
+			libraryName: "E2E Test Library",
 			totalRequests: 908,
 			checkoutCount: 764,
 			successCount: 812,
@@ -143,10 +144,21 @@ export const DEFAULT_STATS: StatsMocks = {
 		},
 		{
 			libraryCode: "peer-lms",
+			libraryName: "Peer Test Library",
 			totalRequests: 654,
 			checkoutCount: 471,
 			successCount: 501,
 			failedCount: 153,
+		},
+		{
+			// A Host LMS with requests that is not onboarded as a library: the panel
+			// falls back to the code rather than rendering a blank cell.
+			libraryCode: "unnamed-lms",
+			libraryName: null,
+			totalRequests: 120,
+			checkoutCount: 60,
+			successCount: 70,
+			failedCount: 30,
 		},
 	],
 	"new-acquisitions-performance": [

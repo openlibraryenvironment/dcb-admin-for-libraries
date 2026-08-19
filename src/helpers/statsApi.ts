@@ -137,6 +137,10 @@ export interface ConsortialLifelineStat {
 
 export interface PeerBenchmarkStat {
 	libraryCode: string;
+	// The name a librarian recognises. Null when no library row maps to that Host
+	// LMS - a system with requests that is not onboarded as a library - so callers
+	// fall back to the code rather than rendering a blank row.
+	libraryName: string | null;
 	totalRequests: number;
 	checkoutCount: number;
 	successCount: number;
