@@ -422,7 +422,7 @@ function RouteComponent() {
 					message={t("ui.info.connection_issue")}
 					description={t("ui.info.try_later")}
 					action={t("ui.actions.go_back")}
-					goBack="/patronRequests/exception"
+					goBack="/patronRequests"
 				/>
 			) : (
 				<Error
@@ -430,7 +430,7 @@ function RouteComponent() {
 					message={t("ui.feedback.error.invalid_UUID")}
 					description={t("ui.info.check_address")}
 					action={t("ui.actions.go_back")}
-					goBack="/patronRequests/exception"
+					goBack="/patronRequests"
 				/>
 			)}
 		</>

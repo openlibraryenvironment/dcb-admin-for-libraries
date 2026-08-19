@@ -714,6 +714,7 @@
 			"expand_all": "Expand all rows",
 			"go_back": "Go back",
 			"go_back_message": "Click below to return to your previous page",
+			"go_home": "Go to the home page",
 			"hide_advanced_search": "Hide advanced search",
 			"hide_shown": "Hide shown",
 			"login": "Login",
@@ -805,6 +806,7 @@
 				"invalid_UUID": "The record might have been deleted or the identifier could be wrong",
 				"loading": "Error loading {{entity}}",
 				"loading_message": "An error has occurred loading this page",
+				"reload_message": "Reloading the page will often clear this. If it keeps happening, contact your library administrator.",
 				"too_long_load": "The record is taking too long to load"
 			},
 			"info": {
@@ -814,6 +816,9 @@
 			"maintenance_message": "OpenRS DCB is undergoing maintenance, and DCB Admin for Libraries will be back soon!",
 			"network_error": "Network error detected",
 			"network_error_message": "This doesn't seem to be working at the moment. Please check your network and reload the page",
+			"not_found": "Page not found",
+			"not_found_description": "We could not match {{path}} to a page. The address may be mistyped, or the page may have been moved or deleted.",
+			"not_found_message": "That page does not exist",
 			"not_set": "Not set",
 			"please_wait": "Please wait",
 			"reveal_more": "and {{number}} more",

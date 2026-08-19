@@ -10,6 +10,7 @@
 		"dev": "vite",
 		"e2e": "playwright test",
 		"e2e:a11y": "playwright test e2e/accessibility.spec.ts",
+		"e2e:base-path": "playwright test --config playwright.base-path.config.ts",
 		"e2e:ki-bootstrap": "playwright test --config playwright.ki-bootstrap.config.ts",
 		"e2e:ui": "playwright test --ui",
 		"i18n:mark-unused": "i18n-unused mark-unused",

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useLocation } from "@tanstack/react-router";
 import { useAuth } from "react-oidc-context";
 import Box from "@mui/material/Box";
@@ -8,87 +8,81 @@ import Container from "@mui/material/Container";
 import { Header } from "../Header/Header";
 import { CustomLink } from "@components/CustomLink";
 import { useTranslation } from "react-i18next";
-import { getAppBase } from "@helpers/appBase";
+import { matchActiveTab } from "@helpers/activeTab";
 
 interface LayoutProps {
 	children: React.ReactNode;
 }
 
+/**
+ * Router paths, NOT browser paths. The router owns the deployment base: it
+ * strips it from `useLocation().pathname` and re-adds it to every `to` it
+ * renders. Prefixing these with getAppBase() double-counts it, which is how
+ * /dcb-admin-for-libraries-dev/dcb-admin-for-libraries-dev/requesting - a
+ * "Not Found" - gets built, and why nothing ever matched the location.
+ */
+const TAB_PATHS = {
+	home: "/",
+	requesting: "/requesting",
+	patronRequests: "/patronRequests",
+	supplierRequests: "/supplierRequests",
+	service: "/service",
+	mappings: "/mappings",
+	locations: "/locations",
+	bibs: "/bibs",
+	settings: "/settings",
+} as const;
+
 export const Layout = ({ children }: LayoutProps) => {
 	const auth = useAuth();
 	const { pathname } = useLocation();
-	const basePath = getAppBase();
-	const [activeTab, setActiveTab] = useState<string | false>(basePath);
 	const { t } = useTranslation();
+
 	const tabsReadOnly = useMemo(() => {
 		return [
-			// { label: t("nav.home.title"), value: basePath },
-			{ label: t("nav.requesting.title"), value: `${basePath}requesting` },
+			{ label: t("nav.requesting.title"), value: TAB_PATHS.requesting },
 		];
-	}, [basePath, t]);
+	}, [t]);
 
-	// Tabs below marked with import.meta.env.DEV means that these tabs will only show up in DEV mode,
-	// remove the conditon to make then show up in prod.
-	// Library admin check makes sure only requesting tabs show up for non-admin users. Then we need to put the redirect in to make sure they only get directed to that tab.
+	// Library admin check makes sure only requesting tabs show up for non-admin users.
+	// Then we need to put the redirect in to make sure they only get directed to that tab.
 	const tabsConfig = useMemo(() => {
 		return auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN")
 			? [
-					{ label: t("nav.home.title"), value: basePath },
+					{ label: t("nav.home.title"), value: TAB_PATHS.home },
 					{
 						label: t("nav.requesting.title"),
-						value: `${basePath}requesting`,
+						value: TAB_PATHS.requesting,
 					},
-					// { label: t("nav.titles.title"), value: `${basePath}indexes/consortium` }, // Make it generic for now - this should take the consortium code
-
 					{
 						label: t("nav.patron_requests.title"),
-						value: `${basePath}patronRequests`,
+						value: TAB_PATHS.patronRequests,
 					},
 					{
 						label: t("nav.supplier_requests.title"),
-						value: `${basePath}supplierRequests`,
+						value: TAB_PATHS.supplierRequests,
 					},
-					{ label: t("nav.library.service"), value: `${basePath}service` },
-
-					{ label: t("nav.mappings.title"), value: `${basePath}mappings` },
-					{ label: t("nav.locations.title"), value: `${basePath}locations` },
-					{ label: t("nav.bibs.title"), value: `${basePath}bibs` },
-					{ label: t("nav.settings.title"), value: `${basePath}settings` },
-
-					// ...(import.meta.env.DEV
-					// 	? [
-					// 			{ label: t("nav.contacts.title"), value: `${basePath}contacts` },
-					// 			{ label: t("nav.locations.title"), value: `${basePath}locations` },
-					// 			{
-					// 				label: t("nav.data_change_log.title"),
-					// 				value: `${basePath}dataChangeLog`,
-					// 			},
-					// 		]
-					// 	: []),
+					{ label: t("nav.library.service"), value: TAB_PATHS.service },
+					{ label: t("nav.mappings.title"), value: TAB_PATHS.mappings },
+					{ label: t("nav.locations.title"), value: TAB_PATHS.locations },
+					{ label: t("nav.bibs.title"), value: TAB_PATHS.bibs },
+					{ label: t("nav.settings.title"), value: TAB_PATHS.settings },
 				]
 			: tabsReadOnly;
-	}, [basePath, auth?.user?.profile?.roles, t, tabsReadOnly]);
+	}, [auth?.user?.profile?.roles, t, tabsReadOnly]);
 
-	// This effect sets the active tab based on the current route
-	useEffect(() => {
-		// Find exact matches first
-		const exactMatch = tabsConfig.find((tab) => tab.value === pathname);
-		if (exactMatch) {
-			setActiveTab(exactMatch.value);
-		} else {
-			// Then use best matching for nested routes etc
-			const bestMatch = tabsConfig
-				.filter((tab) => pathname.startsWith(tab.value))
-				.sort((a, b) => b.value.length - a.value.length)[0];
-			if (bestMatch) {
-				setActiveTab(bestMatch.value);
-			} else {
-				// If no match is found at all, set no tab as active.
-				// Useful warning indicator that something isn't right (maybe base path isn't set correctly etc)
-				setActiveTab(false);
-			}
-		}
-	}, [pathname, tabsConfig]);
+	// Derived from the location, not synced into state by an effect: an effect
+	// renders one frame with the previous tab lit before correcting itself.
+	// `false` when no tab owns the route, which is MUI's "no indicator" value
+	// and a useful signal that a route is missing from the config.
+	const activeTab = useMemo(
+		() =>
+			matchActiveTab(
+				pathname,
+				tabsConfig.map((tab) => tab.value),
+			),
+		[pathname, tabsConfig],
+	);
 
 	return (
 		<>

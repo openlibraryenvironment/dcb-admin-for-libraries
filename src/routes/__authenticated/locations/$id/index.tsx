@@ -80,7 +80,7 @@ function RouteComponent() {
 						: t("ui.feedback.error.invalid_UUID")
 				}
 				action={t("ui.actions.go_back")}
-				goBack={`/locations}`}
+				goBack="/locations"
 			/>
 		);
 	}

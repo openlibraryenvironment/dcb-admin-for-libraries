@@ -63,6 +63,19 @@ const PAGES: Surface[] = [
 			await expect(page.getByRole("radiogroup")).toBeVisible();
 		},
 	},
+	{
+		// The surface a mistyped or stale link lands on. It is reached by
+		// accident rather than chosen, so it is the last page that should be
+		// hard to read - and the giant ErrorOutlined glyph it shares with the
+		// maintenance and network-error pages is a contrast risk in both schemes.
+		name: "not found",
+		path: "/no-such-page",
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Page not found" }),
+			).toBeVisible();
+		},
+	},
 ];
 
 const SCHEMES: ColorScheme[] = ["light", "dark"];
