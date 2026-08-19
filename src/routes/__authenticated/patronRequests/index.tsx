@@ -59,7 +59,7 @@ function RouteComponent() {
 	const token = auth?.user?.access_token;
 	const headers = useMemo(
 		() => ({
-			Authorization: `Bearer ${auth?.user?.access_token}`,
+			Authorization: `Bearer ${token}`,
 		}),
 		[token],
 	);
@@ -204,8 +204,7 @@ function RouteComponent() {
 						value: bucket.id,
 						label: `${bucket.id} (${bucket.totalRecords})`,
 					}));
-				} catch (err) {
-					console.error("Failed to fetch publisher facets:", err);
+				} catch {
 					return [];
 				}
 			},
@@ -234,7 +233,13 @@ function RouteComponent() {
 			),
 	});
 
-	const libraries = librariesData?.libraries?.content ?? []; // This is all of the libraries, to be supplied to filters.
+	// All libraries, supplied to the filters. Memoised because `?? []` allocates
+	// a new array on every render, which made every memo keyed on it recompute
+	// every render.
+	const libraries = useMemo(
+		() => librariesData?.libraries?.content ?? [],
+		[librariesData],
+	);
 	const userLibrary = libraries.find((library) => library.agencyCode === code); // This is the user's library
 
 	const userLibraryHostLmsCode = userLibrary?.agency?.hostLms?.code;
@@ -293,7 +298,7 @@ function RouteComponent() {
 			});
 		}
 		return modifiedColumns;
-	}, [libraryFilterOptions, t, publisherOptions]);
+	}, [libraryFilterOptions, t, publisherOptions, isAdmin]);
 
 	// Patron requests query - using debounced filter model
 	const {
@@ -391,8 +396,7 @@ function RouteComponent() {
 					} else {
 						finalBaseQuery += ` AND (bibClusterId:00000000-0000-0000-0000-000000000000)`;
 					}
-				} catch (err) {
-					console.error("Failed to filter by Publisher/Title in GraphQL:", err);
+				} catch {
 					finalBaseQuery += ` AND (bibClusterId:00000000-0000-0000-0000-000000000000)`;
 				}
 			}
@@ -440,7 +444,7 @@ function RouteComponent() {
 			setAlert({
 				open: true,
 				severity: "warning",
-				text: t("ui.feedback.cannot_process"),
+				text: t("ui.feedback.error.cannot_process"),
 			}),
 	);
 
@@ -463,15 +467,13 @@ function RouteComponent() {
 		filterModel: debouncedFilterModel,
 		sortModel,
 		onExportSuccess: (msg, count) => {
-			console.log(msg);
 			setAlert({
 				open: true,
 				severity: "success",
 				text: t("ui.data_grid.export.success", { count: count }),
 			});
 		},
-		onExportError: (msg) => {
-			console.log(msg);
+		onExportError: () => {
 			setAlert({
 				open: true,
 				severity: "error",
@@ -491,8 +493,7 @@ function RouteComponent() {
 			/>
 		);
 	}
-	if (isPatronRequestError) {
-		console.log(error, isPatronRequestError, librariesError);
+	if (isPatronRequestError || librariesError) {
 		return (
 			<Error
 				title={t("ui.feedback.error.cannot_retrieve_record")}

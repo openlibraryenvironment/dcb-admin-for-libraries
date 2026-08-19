@@ -1,4 +1,3 @@
-import { OnSiteBorrowingFormData } from "@models/OnSiteBorrowingFormData";
 import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocompleteOption";
 import {
 	Autocomplete,
@@ -8,12 +7,19 @@ import {
 	Typography,
 } from "@mui/material";
 import { TFunction } from "i18next";
-import { Control, Controller, FieldErrors } from "react-hook-form";
+import { Control, Controller, FieldValues, Path } from "react-hook-form";
 
-// Step 1: Patron Validation Component: this is step 1 in the expedited checkout workflow
-interface PatronValidationStepType {
-	control: Control<any, any>;
-	errors: FieldErrors<OnSiteBorrowingFormData>;
+// Step 1: Patron Validation Component: this is step 1 in the expedited checkout workflow.
+// Three forms share it - expedited checkout, quick walk-up and staff request - and
+// they agree only on the two fields this step drives, so it is generic over any form
+// carrying them rather than typed to one form's shape.
+export interface PatronValidationFields extends FieldValues {
+	patronBarcode: string;
+	agencyCode: string;
+}
+
+interface PatronValidationStepType<TFieldValues extends PatronValidationFields> {
+	control: Control<TFieldValues>;
 	patronValidated: boolean;
 	isValidatingPatron: boolean;
 	handleClose: () => void;
@@ -24,9 +30,8 @@ interface PatronValidationStepType {
 	librariesLoading: boolean;
 	t: TFunction;
 }
-export const PatronValidationStep = ({
+export const PatronValidationStep = <TFieldValues extends PatronValidationFields>({
 	control,
-	errors,
 	patronValidated,
 	isValidatingPatron,
 	handleClose,
@@ -36,26 +41,32 @@ export const PatronValidationStep = ({
 	libraryOptions,
 	librariesLoading,
 	t,
-}: PatronValidationStepType) => {
+}: PatronValidationStepType<TFieldValues>) => {
+	// The constraint guarantees both fields exist, but TypeScript cannot narrow a
+	// generic form's Path union to a string literal, so the two names are asserted
+	// here once instead of at every use.
+	const agencyCodeName = "agencyCode" as Path<TFieldValues>;
+	const patronBarcodeName = "patronBarcode" as Path<TFieldValues>;
+
 	return (
 		<>
 			<Typography variant="body1">
 				{t("requesting.expedited_checkout.steps.patron_validation_instruction")}
 			</Typography>
-			{/* /** The library of the patron. Could be a visiting patron, so this is not restricted*/}
+			{/* The library of the patron. Could be a visiting patron, so this is not restricted */}
 			<Controller
-				name="agencyCode"
+				name={agencyCodeName}
 				control={control}
-				render={({ field: { onChange, value } }) => (
+				render={({ field: { onChange, value }, fieldState: { error } }) => (
 					<Autocomplete
 						value={
 							value
-								? libraryOptions.find((option) => option.value === value) ||
-									null
+								? (libraryOptions.find((option) => option.value === value) ??
+									null)
 								: null
 						}
 						onChange={(_, newValue) => {
-							onChange(newValue?.value || "");
+							onChange(newValue?.value ?? "");
 						}}
 						options={libraryOptions}
 						loading={librariesLoading}
@@ -66,8 +77,8 @@ export const PatronValidationStep = ({
 								margin="normal"
 								required
 								label={t("requesting.staff_request.patron.affiliated")}
-								error={!!errors.agencyCode}
-								helperText={errors.agencyCode?.message}
+								error={!!error}
+								helperText={error?.message}
 							/>
 						)}
 						isOptionEqualToValue={(option, value) =>
@@ -78,9 +89,9 @@ export const PatronValidationStep = ({
 			/>
 
 			<Controller
-				name="patronBarcode"
+				name={patronBarcodeName}
 				control={control}
-				render={({ field }) => (
+				render={({ field, fieldState: { error } }) => (
 					<TextField
 						{...field}
 						margin="normal"
@@ -88,8 +99,8 @@ export const PatronValidationStep = ({
 						fullWidth
 						id="patronBarcode"
 						label={t("requesting.staff_request.patron.barcode")}
-						error={!!errors.patronBarcode}
-						helperText={errors.patronBarcode?.message}
+						error={!!error}
+						helperText={error?.message}
 						disabled={patronValidated}
 					/>
 				)}

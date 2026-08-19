@@ -1,32 +1,31 @@
 {
 	"compilerOptions": {
-		"baseUrl": ".",
 		"paths": {
-			"@components/*": ["src/components/*"],
-			"@constants/*": ["src/constants/*"],
-			"@forms/*": ["src/forms/*"],
-			"@helpers/*": ["src/helpers/*"],
-			"@models/*": ["src/models/*"],
-			"@mutations/*": ["src/mutations/*"],
-			"@queries/*": ["src/queries/*"],
-			"@types/*": ["src/types/*"],
-			"@/*": ["src/*"]
+			"@components/*": ["./src/components/*"],
+			"@constants/*": ["./src/constants/*"],
+			"@forms/*": ["./src/forms/*"],
+			"@helpers/*": ["./src/helpers/*"],
+			"@models/*": ["./src/models/*"],
+			"@mutations/*": ["./src/mutations/*"],
+			"@queries/*": ["./src/queries/*"],
+			"@types/*": ["./src/types/*"],
+			"@/*": ["./src/*"]
 		},
 		"target": "ESNext",
 		"useDefineForClassFields": true,
 		"lib": ["DOM", "DOM.Iterable", "ESNext"],
 		"allowJs": false,
 		"skipLibCheck": true,
-		"esModuleInterop": false,
+		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,
 		"module": "ESNext",
-		"moduleResolution": "Node",
+		"moduleResolution": "bundler",
 		"resolveJsonModule": true,
 		"isolatedModules": true,
 		"noEmit": true,
 		"jsx": "react-jsx"
 	},
-	"include": ["src", "src/vite-env.d.ts"]
+	"include": ["src", "src/vite-env.d.ts", "e2e", "e2e-ki-bootstrap", "tests"]
 }

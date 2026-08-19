@@ -4,6 +4,7 @@ import Tab from "@mui/material/Tab";
 import { SimpleTextQuerySpec } from "./SimpleTextQuerySpec";
 import { LuceneQueryBuilder } from "./LuceneQueryBuilder";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface UserSelectableQuerySpecProps {
 	searchTerm: string;
@@ -14,10 +15,11 @@ export function UserSelectableQuerySpec({
 	searchTerm,
 	handleSearch,
 }: UserSelectableQuerySpecProps) {
+	const { t } = useTranslation();
 	const [tab, setTab] = useState(0);
 
 	return (
-		<Box sx={{ p: 2, border: "1px solid #ccc", borderRadius: 2, mb: 2 }}>
+		<Box sx={{ p: 2, border: 1, borderColor: "divider", borderRadius: 2, mb: 2 }}>
 			<Box sx={{ mb: 1 }}>
 				{tab === 0 && (
 					<SimpleTextQuerySpec
@@ -51,11 +53,13 @@ export function UserSelectableQuerySpec({
 				<Tabs
 					value={tab}
 					onChange={(_, newTab) => setTab(newTab)}
-					aria-label="Query input type"
-					TabIndicatorProps={{
-						sx: {
-							top: "unset",
-							bottom: "unset", // unset the default bottom position
+					aria-label={t("requesting.shared_index.query_syntax.label")}
+					slotProps={{
+						indicator: {
+							sx: {
+								top: "unset",
+								bottom: "unset", // unset the default bottom position
+							},
 						},
 					}}
 					sx={{
@@ -67,10 +71,12 @@ export function UserSelectableQuerySpec({
 							fontSize: "0.65rem",
 						},
 					}}>
-					<Tab label="LuceneQL" />
-					<Tab label="Lucene Builder" />
-					<Tab label="Simple" />
-					<Tab label="CQL" />
+					<Tab label={t("requesting.shared_index.query_syntax.lucene")} />
+					<Tab
+						label={t("requesting.shared_index.query_syntax.lucene_builder")}
+					/>
+					<Tab label={t("requesting.shared_index.query_syntax.simple")} />
+					<Tab label={t("requesting.shared_index.query_syntax.cql")} />
 				</Tabs>
 			</Box>
 		</Box>

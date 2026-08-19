@@ -133,7 +133,12 @@ export default function QuickWalkUpRequest({
 				),
 		});
 
-	const libraries: Library[] = librariesData?.libraries?.content ?? [];
+	// Memoised because `?? []` allocates a new array on every render, which made
+	// every memo keyed on it recompute every render.
+	const libraries: Library[] = useMemo(
+		() => librariesData?.libraries?.content ?? [],
+		[librariesData],
+	);
 	const libraryOptions: AutocompleteOption[] = useMemo(
 		() =>
 			libraries.map(
@@ -402,7 +407,6 @@ export default function QuickWalkUpRequest({
 				return (
 					<PatronValidationStep
 						control={control}
-						errors={errors}
 						patronValidated={patronValidated}
 						isValidatingPatron={validatePatronMutation.isPending}
 						handleClose={handleClose}
@@ -448,8 +452,8 @@ export default function QuickWalkUpRequest({
 	};
 
 	return (
-		<>
-			<DialogContent sx={{ overflow: "visible" }}>
+        <>
+            <DialogContent sx={{ overflow: "visible" }}>
 				<Stepper
 					activeStep={activeStep}
 					alternativeLabel
@@ -478,31 +482,34 @@ export default function QuickWalkUpRequest({
 						if (hasError) labelProps.error = true;
 						if (index === 2 && checkoutCompleted) {
 							labelProps.optional = (
-								<Typography variant="caption" color="success.main">
+								<Typography variant="caption" sx={{
+                                    color: "success.main"
+                                }}>
 									{t("requesting.expedited_checkout.steps.complete")}
 								</Typography>
 							);
 						}
 
 						return (
-							<Step id={label} key={label} {...stepProps}>
-								<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
+                            <Step id={label} key={label} {...stepProps}>
+                                <StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
 									<Typography
 										color={getStepColors(isActive, hasError, isCompleted)}
-										fontWeight={getStepLabelFontWeight(isActive)}>
+										sx={{
+                                            fontWeight: getStepLabelFontWeight(isActive)
+                                        }}>
 										{label}
 									</Typography>
 								</StepLabel>
-							</Step>
-						);
+                            </Step>
+                        );
 					})}
 				</Stepper>
 				<form onSubmit={handleSubmit(onSubmit)}>
 					{getStepContent(activeStep)}
 				</form>
 			</DialogContent>
-
-			<TimedAlert
+            <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
 				autoHideDuration={6000}
@@ -510,6 +517,6 @@ export default function QuickWalkUpRequest({
 				alertText={alert.text}
 				key="quick-walk-up-alert"
 			/>
-		</>
-	);
+        </>
+    );
 }

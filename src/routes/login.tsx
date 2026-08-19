@@ -45,13 +45,18 @@ const Login = () => {
 
 	return (
 		<Box
-			sx={{
+			sx={(theme) => ({
 				display: "flex",
 				justifyContent: "center",
 				alignItems: "center",
 				minHeight: "100vh",
-				backgroundColor: (theme) => theme.palette.grey[100],
-			}}>
+				backgroundColor: (theme.vars || theme).palette.grey[100],
+				// grey[100] is the same near-white in both schemes, which left the
+				// dark-mode page a white sheet behind a dark card.
+				...theme.applyStyles("dark", {
+					backgroundColor: (theme.vars || theme).palette.grey[900],
+				}),
+			})}>
 			<Paper
 				elevation={3}
 				sx={{
@@ -83,7 +88,7 @@ const Login = () => {
 
 				{auth.error && (
 					<Typography color="error" sx={{ mt: 2 }}>
-						Authentication error: {auth.error.message}
+						{t("login.error", { message: auth.error.message })}
 					</Typography>
 				)}
 			</Paper>

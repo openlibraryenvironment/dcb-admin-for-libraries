@@ -169,7 +169,7 @@ export function SharedIndexV2() {
 				replace: true,
 			});
 		},
-		[router, setAppliedFilters],
+		[router, setAppliedFilters, paginationModel.page, paginationModel.pageSize],
 	);
 
 	const handleSearchSubmit = (event: React.FormEvent) => {
@@ -253,12 +253,9 @@ export function SharedIndexV2() {
 				};
 			}
 		},
-		[
-			auth.user?.access_token,
-			cfg.VITE_DCB_SEARCH_BASE,
-			paginationModel.page, // pageno
-			paginationModel.pageSize, // pagesize
-		],
+		// pageno/pagesize come from the queryKey the fetcher is handed, not from
+		// the model, so the model is deliberately not a dependency here.
+		[auth.user?.access_token, cfg.VITE_DCB_SEARCH_BASE],
 	);
 
 	const {
@@ -278,7 +275,6 @@ export function SharedIndexV2() {
 		staleTime: 1000 * 60 * 5, // 5 minutes,
 		placeholderData: keepPreviousData,
 	});
-	console.log(isFetching);
 
 	// // Reset pagination when the query changes ???????
 	// useEffect(() => {
@@ -310,18 +306,20 @@ export function SharedIndexV2() {
 
 	// The quick walk up is locked to consortia admin for testing, for now
 	return (
-		<Box sx={{ width: "100%" }}>
-			<Stack spacing={2} direction={"column"}>
+        <Box sx={{ width: "100%" }}>
+            <Stack spacing={2} direction={"column"}>
 				{/* <Typography variant="h1" gutterBottom>
 					{t("nav.requesting.title")}
 				</Typography> */}
 				{/* Can we use react-hook-form here */}
 
 				<Stack
-					direction={{ xs: "column", sm: "row" }}
-					justifyContent="space-between"
-					alignItems={{ xs: "flex-start", sm: "center" }}
-					spacing={2}>
+                    direction={{ xs: "column", sm: "row" }}
+                    spacing={2}
+                    sx={{
+                        justifyContent: "space-between",
+                        alignItems: { xs: "flex-start", sm: "center" }
+                    }}>
 					<Typography variant="h1" gutterBottom sx={{ mb: { xs: 0, sm: 0 } }}>
 						{t("nav.requesting.title")}
 					</Typography>
@@ -365,7 +363,13 @@ export function SharedIndexV2() {
 						onFiltersChange={setStagedFilters}
 						isAdvancedMode={isAdvancedMode}
 					/>
-					<Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 2 }}>
+					<Stack
+                        direction="row"
+                        spacing={2}
+                        sx={{
+                            alignItems: "center",
+                            mt: 2
+                        }}>
 						{isAdvancedMode ? (
 							<Button
 								type="submit"
@@ -407,16 +411,14 @@ export function SharedIndexV2() {
 					</Typography>
 				) : null}
 			</Stack>
-
-			{isError && (
+            {isError && (
 				<Error
 					title={t("requesting.shared_index.error_connecting_title")}
 					message={t("requesting.shared_index.error_connecting")}
 					action={t("ui.actions.go_back")}
 					goBack="/"></Error>
 			)}
-
-			<DataGrid
+            <DataGrid
 				autoRowHeight
 				rows={searchResults?.instances || []}
 				columns={columns}
@@ -500,7 +502,7 @@ export function SharedIndexV2() {
 					},
 				}}
 			/>
-			<Dialog
+            <Dialog
 				open={showModal}
 				onClose={() => setShowModal(false)}
 				fullWidth
@@ -514,13 +516,13 @@ export function SharedIndexV2() {
 						position: "absolute",
 						right: 8,
 						top: 8,
-						color: (theme) => theme.palette.grey[500],
+						color: (theme) => (theme.vars || theme).palette.grey[500],
 					}}>
 					<Close />
 				</IconButton>
 
 				<QuickWalkUpRequest onClose={() => setShowModal(false)} />
 			</Dialog>
-		</Box>
-	);
+        </Box>
+    );
 }

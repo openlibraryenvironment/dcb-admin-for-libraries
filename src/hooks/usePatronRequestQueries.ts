@@ -71,7 +71,12 @@ export const usePatronRequestQueries = ({
 			),
 	});
 
-	const libraries = librariesData?.libraries?.content ?? [];
+	// Memoised because `?? []` allocates a new array on every render, which made
+	// every memo keyed on it recompute every render.
+	const libraries = useMemo(
+		() => librariesData?.libraries?.content ?? [],
+		[librariesData],
+	);
 	const userLibrary = libraries.find(
 		(library: any) => library.agencyCode === code,
 	);

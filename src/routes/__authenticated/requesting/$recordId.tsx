@@ -32,7 +32,6 @@ function RequestingLayout() {
 	const requestableCount = items?.length ?? 0;
 	// You can request if there are items and if it's not loading
 	const canRequest = !isLoading && requestableCount > 0;
-	console.log(clusterDetail);
 
 	const currentPath = location.pathname;
 	let activeTab = "info";
@@ -40,13 +39,17 @@ function RequestingLayout() {
 	if (currentPath.endsWith("/history")) activeTab = "history";
 
 	return (
-		<>
-			<Stack
-				direction="row"
-				justifyContent="space-between"
-				alignItems="center"
-				sx={{ mb: 2 }}>
-				<Typography variant="h1" mb={1}>
+        <>
+            <Stack
+                direction="row"
+                sx={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 2
+                }}>
+				<Typography variant="h1" sx={{
+                    mb: 1
+                }}>
 					{clusterDetail?.title}
 				</Typography>
 				<Tooltip
@@ -62,7 +65,7 @@ function RequestingLayout() {
 					</span>
 				</Tooltip>
 			</Stack>
-			<TabContext value={activeTab}>
+            <TabContext value={activeTab}>
 				<TabList
 					onChange={(event, value) => {
 						handleClusterTabChange(event, value, recordId, navigate);
@@ -77,12 +80,12 @@ function RequestingLayout() {
 					<Outlet />
 				</TabPanel>
 			</TabContext>
-			<CombinedRequestingModal
+            <CombinedRequestingModal
 				show={showModal}
 				onClose={() => setShowModal(false)}
 				bibClusterId={recordId}
 				title={clusterDetail?.title}
 			/>
-		</>
-	);
+        </>
+    );
 }

@@ -296,7 +296,7 @@ export default function StaffRequest({
 				value: item.id,
 				agencyName:
 					item?.agency?.name ??
-					t("staff_request.patron.pickup_location_no_agency"),
+					t("requesting.staff_request.patron.pickup_location_no_agency"),
 				agencyCode: item?.agency?.code,
 			}),
 		);
@@ -390,8 +390,7 @@ export default function StaffRequest({
 				setStepError(0); // Set error on step 0
 			}
 		},
-		onError: (error) => {
-			console.error("Error validating patron:", error);
+		onError: () => {
 			setAlert({
 				open: true,
 				severity: "error",
@@ -428,7 +427,6 @@ export default function StaffRequest({
 			}, 6000);
 		},
 		onError: (error: any) => {
-			console.error("Error submitting patron request:", error.response?.data);
 			setAlert({
 				open: true,
 				severity: "error",
@@ -511,7 +509,6 @@ export default function StaffRequest({
 				return (
 					<PatronValidationStep
 						control={control}
-						errors={errors}
 						patronValidated={activeStep !== 0}
 						isValidatingPatron={validatePatronMutation.isPending}
 						handleClose={handleClose}
@@ -551,8 +548,8 @@ export default function StaffRequest({
 	};
 
 	return (
-		<>
-			{/* <Dialog
+        <>
+            {/* <Dialog
 				open={show}
 				onClose={handleClose}
 				aria-labelledby="patron-request-modal"
@@ -562,17 +559,17 @@ export default function StaffRequest({
 					{t("requesting.staff_request.new")}
 				</DialogTitle>
 				<IconButton
-					aria-label="close"
+					aria-label={t("ui.actions.close")}
 					onClick={handleClose}
 					sx={{
 						position: "absolute",
 						right: 8,
 						top: 8,
-						color: (theme) => theme.palette.grey[500],
+						color: (theme) => (theme.vars || theme).palette.grey[500],
 					}}>
 					<Close />
 				</IconButton> */}
-			<DialogContent>
+            <DialogContent>
 				{/* Same style as Expedited Checkout */}
 				<Stepper
 					activeStep={activeStep}
@@ -601,24 +598,26 @@ export default function StaffRequest({
 						}
 
 						return (
-							<Step key={label} {...stepProps}>
-								<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
+                            <Step key={label} {...stepProps}>
+                                <StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
 									<Typography
 										color={getStepColors(isActive, hasError, isCompleted)}
-										fontWeight={getStepLabelFontWeight(isActive)}>
+										sx={{
+                                            fontWeight: getStepLabelFontWeight(isActive)
+                                        }}>
 										{label}
 									</Typography>
 								</StepLabel>
-							</Step>
-						);
+                            </Step>
+                        );
 					})}
 				</Stepper>
 				<form onSubmit={handleSubmit(onSubmit)}>
 					{getStepContent(activeStep)}
 				</form>
 			</DialogContent>
-			{/* </Dialog> */}
-			<TimedAlert
+            {/* </Dialog> */}
+            <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
 				autoHideDuration={6000}
@@ -640,6 +639,6 @@ export default function StaffRequest({
 				}
 				key="staff-request-alert"
 			/>
-		</>
-	);
+        </>
+    );
 }

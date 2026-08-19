@@ -35,10 +35,9 @@ export const parseQuery = (query: string): SearchFilter[] => {
 				if (rawValue.startsWith('"') && rawValue.endsWith('"')) {
 					try {
 						cleanValue = JSON.parse(rawValue);
-					} catch (e) {
+					} catch {
 						//If parsing fails, just strip the outer quotes manually
 						// All of this is to fix the "War and Peace" problem where it needs to be in quotes for the server, but must not be for the user.
-						console.log(e);
 						cleanValue = rawValue.slice(1, -1);
 					}
 				}

@@ -73,7 +73,6 @@ export const getHeadersForExport = (
 	usefulColumns?: string[],
 ) => {
 	const mappings = headerMappings[coreType] || {};
-	console.log(usefulColumns);
 
 	// If no usefulColumns are provided, return all headers
 	if (!usefulColumns || usefulColumns.length === 0) {

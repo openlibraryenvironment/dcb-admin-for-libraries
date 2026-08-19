@@ -48,10 +48,50 @@ build:
       - dist/
     expire_in: 1 hour
 
+verify_e2e:
+  stage: verify
+  # The image tag must track @playwright/test in package.json: the browsers are
+  # baked into the image, and a mismatch fails at launch.
+  image:
+    name: mcr.microsoft.com/playwright:v1.62.1-noble
+    pull_policy: if-not-present
+  script:
+    - export NPM_TOKEN="$NPMJS_TOKEN"
+    - npm ci
+    # Runs the app specs AND e2e/accessibility.spec.ts - the WCAG 2.2 AA gate,
+    # zero axe violations across every listed page in light and dark. A failure
+    # here is an accessibility regression, not a flaky test.
+    - npm run e2e
+  artifacts:
+    when: always
+    paths:
+      - playwright-report/
+    expire_in: 1 week
+
+verify_base_path:
+  stage: verify
+  # The `build` job ships the app under VITE_PUBLIC_URL=/dcb-admin-for-libraries/
+  # so one origin can host it alongside dcb-admin at /dcb-admin. verify_e2e pins
+  # the base to "/", so without this job the shipped configuration is the one
+  # configuration nothing runs - and a base applied twice (by Vite AND by the
+  # router) reaches production looking green.
+  image:
+    name: mcr.microsoft.com/playwright:v1.62.1-noble
+    pull_policy: if-not-present
+  script:
+    - export NPM_TOKEN="$NPMJS_TOKEN"
+    - npm ci
+    - npm run e2e:base-path
+  artifacts:
+    when: always
+    paths:
+      - playwright-report/
+    expire_in: 1 week
+
 verify_ki_bootstrap:
   stage: verify
   image:
-    name: mcr.microsoft.com/playwright:v1.61.1-noble
+    name: mcr.microsoft.com/playwright:v1.62.1-noble
     pull_policy: if-not-present
   script:
     - export NPM_TOKEN="$NPMJS_TOKEN"

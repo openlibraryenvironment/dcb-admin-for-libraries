@@ -145,8 +145,12 @@ export default function ExpeditedCheckout({
 			),
 	});
 
-	const patronLibraries: Library[] =
-		patronLibrariesData?.libraries?.content ?? [];
+	// Memoised because `?? []` allocates a new array on every render, which made
+	// every memo keyed on it recompute every render.
+	const patronLibraries: Library[] = useMemo(
+		() => patronLibrariesData?.libraries?.content ?? [],
+		[patronLibrariesData],
+	);
 
 	const patronLibraryOptions: AutocompleteOption[] = useMemo(
 		() =>
@@ -278,12 +282,9 @@ export default function ExpeditedCheckout({
 		itemAgencyCode,
 		pickupLocationId,
 		itemLocalId,
-		itemLocalSystemCode,
 	} = formValues;
 
 	const locationQuery = `agency:${staffLibrary?.agency?.id}`; // Staff library is always the supplier.
-
-	console.log(itemLocalSystemCode);
 
 	const { data: pickupLocations, isLoading: pickupLocationsLoading } = useQuery(
 		{
@@ -324,14 +325,13 @@ export default function ExpeditedCheckout({
 				},
 			);
 			setAvailabilityResults(response.data);
-		} catch (error) {
-			console.error("Error:", error);
+		} catch {
 			setItemsError(true);
 			setStepError(1);
 		} finally {
 			setItemsLoading(false);
 		}
-	}, [bibClusterId, headers]);
+	}, [bibClusterId, headers, cfg.VITE_DCB_API_BASE]);
 
 	useEffect(() => {
 		if (activeStep === 1 || checkoutCompleted) {
@@ -410,7 +410,6 @@ export default function ExpeditedCheckout({
 			}
 		};
 	}, [activeStep, checkoutCompleted, stepError]);
-	console.log(errors);
 
 	const validatePatronMutation = useMutation<
 		PatronLookupResponse,
@@ -438,8 +437,7 @@ export default function ExpeditedCheckout({
 				setStepError(0);
 			}
 		},
-		onError: (error) => {
-			console.error("Error validating patron:", error);
+		onError: () => {
 			setAlert({
 				open: true,
 				severity: "error",
@@ -502,7 +500,6 @@ export default function ExpeditedCheckout({
 			setActiveStep(2);
 		},
 		onError: (error: any) => {
-			console.error("Error submitting patron request:", error.response?.data);
 			setAlert({
 				open: true,
 				severity: "error",
@@ -570,7 +567,6 @@ export default function ExpeditedCheckout({
 				return (
 					<PatronValidationStep
 						control={control}
-						errors={errors}
 						patronValidated={patronValidated}
 						isValidatingPatron={validatePatronMutation.isPending}
 						handleClose={handleClose}
@@ -618,7 +614,6 @@ export default function ExpeditedCheckout({
 				return (
 					<PatronValidationStep
 						control={control}
-						errors={errors}
 						patronValidated={patronValidated}
 						isValidatingPatron={validatePatronMutation.isPending}
 						handleClose={handleClose}
@@ -634,8 +629,8 @@ export default function ExpeditedCheckout({
 	};
 
 	return (
-		<>
-			{/* <Dialog
+        <>
+            {/* <Dialog
 				open={show}
 				onClose={handleClose}
 				aria-labelledby="patron-request-modal"
@@ -647,19 +642,18 @@ export default function ExpeditedCheckout({
 
 				{(!patronRequestWaiting || checkoutCompleted) && (
 					<IconButton
-						aria-label="close"
+						aria-label={t("ui.actions.close")}
 						onClick={handleClose}
 						sx={{
 							position: "absolute",
 							right: 8,
 							top: 8,
-							color: (theme) => theme.palette.grey[500],
+							color: (theme) => (theme.vars || theme).palette.grey[500],
 						}}>
 						<Close />
 					</IconButton>
 				)} */}
-
-			<DialogContent sx={{ overflow: "visible" }}>
+            <DialogContent sx={{ overflow: "visible" }}>
 				<Stepper
 					activeStep={activeStep}
 					alternativeLabel
@@ -691,31 +685,35 @@ export default function ExpeditedCheckout({
 						}
 						if (index === 2 && checkoutCompleted) {
 							labelProps.optional = (
-								<Typography variant="caption" color="success.main">
+								<Typography variant="caption" sx={{
+                                    color: "success.main"
+                                }}>
 									{t("requesting.expedited_checkout.steps.complete")}
 								</Typography>
 							);
 						}
 
 						return (
-							<Step key={label} {...stepProps}>
-								<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
+                            <Step key={label} {...stepProps}>
+                                <StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
 									<Typography
 										color={getStepColors(isActive, hasError, isCompleted)}
-										fontWeight={getStepLabelFontWeight(isActive)}>
+										sx={{
+                                            fontWeight: getStepLabelFontWeight(isActive)
+                                        }}>
 										{label}
 									</Typography>
 								</StepLabel>
-							</Step>
-						);
+                            </Step>
+                        );
 					})}
 				</Stepper>
 				<form onSubmit={handleSubmit(onSubmit)}>
 					{getStepContent(activeStep)}
 				</form>
 			</DialogContent>
-			{/* </Dialog> */}
-			<TimedAlert
+            {/* </Dialog> */}
+            <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
 				autoHideDuration={6000}
@@ -723,6 +721,6 @@ export default function ExpeditedCheckout({
 				alertText={alert.text}
 				key="expedited-checkout-alert"
 			/>
-		</>
-	);
+        </>
+    );
 }

@@ -12,6 +12,8 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import App from "@components/App/App";
+import NotFound from "@components/Error/NotFound";
+import RouteError from "@components/Error/RouteError";
 import { User } from "oidc-client-ts";
 import {
 	appPath,
@@ -62,8 +64,14 @@ export async function getStandaloneConfig() {
 		}
 
 		return await response.json();
-	} catch (err) {
-		console.warn("Could not load inject_env.json:", err);
+	} catch {
+		// The only console call in the app. Kept because nothing is mounted at
+		// this point, so a misconfigured deployment has no other symptom - and
+		// reduced to a literal, because an error object here can carry the
+		// response body.
+		console.warn(
+			"Could not load inject_env.json; falling back to build-time configuration",
+		);
 		return {};
 	}
 }
@@ -113,6 +121,15 @@ export async function mountDcbAdminForLibraries(
 	router = createRouter({
 		routeTree,
 		basepath: getAppBase(),
+		// Router-level defaults rather than a per-route option in each of the ~20
+		// route files: a route added later inherits them, whereas a checklist item
+		// gets forgotten. Both are still overridable per route where a surface
+		// needs something more specific.
+		//
+		// Without these, TanStack renders `<p>Not Found</p>` for an unmatched URL
+		// and its own ErrorComponent - which prints error.message - for a throw.
+		defaultNotFoundComponent: NotFound,
+		defaultErrorComponent: RouteError,
 		defaultPreload: "intent",
 		defaultPreloadStaleTime: 0,
 		defaultStaleTime: 5000,

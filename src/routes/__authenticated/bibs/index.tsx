@@ -46,7 +46,7 @@ function RouteComponent() {
 	const token = auth?.user?.access_token;
 	const headers = useMemo(
 		() => ({
-			Authorization: `Bearer ${auth?.user?.access_token}`,
+			Authorization: `Bearer ${token}`,
 		}),
 		[token]
 	);
@@ -233,7 +233,6 @@ function RouteComponent() {
 		);
 	}
 	if (bibsError || librariesError) {
-		console.log(error, bibsError, librariesError);
 		return (
 			<Error
 				title={t("ui.feedback.error.cannot_retrieve_record")}

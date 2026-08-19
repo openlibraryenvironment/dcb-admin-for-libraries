@@ -131,8 +131,8 @@ export function BrandImageField({
 	};
 
 	return (
-		<Stack direction="column" spacing={1}>
-			<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+        <Stack direction="column" spacing={1}>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
 				<Button
 					variant="outlined"
 					size="small"
@@ -144,15 +144,16 @@ export function BrandImageField({
 				>
 					{uploading ? t("library.brand.uploading") : t("library.brand.upload")}
 				</Button>
-				<Typography variant="body2" color="text.secondary">
+				<Typography variant="body2" sx={{
+                    color: "text.secondary"
+                }}>
 					{t("library.brand.upload_formats")}
 				</Typography>
 			</Stack>
-
-			{/* Visually hidden rather than display:none — a hidden input is still the
+            {/* Visually hidden rather than display:none — a hidden input is still the
 			    labelled control the button proxies for, and display:none takes it out of
 			    the accessibility tree entirely. */}
-			<Box
+            <Box
 				component="input"
 				ref={fileInput}
 				type="file"
@@ -168,14 +169,12 @@ export function BrandImageField({
 					whiteSpace: "nowrap",
 				}}
 			/>
-
-			{uploadError && (
+            {uploadError && (
 				<Alert severity="error" onClose={() => setUploadError(null)}>
 					{uploadError}
 				</Alert>
 			)}
-
-			<TextField
+            <TextField
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 				fullWidth
@@ -185,6 +184,6 @@ export function BrandImageField({
 				label={t("library.brand.image_url")}
 				helperText={helperText}
 			/>
-		</Stack>
-	);
+        </Stack>
+    );
 }

@@ -93,9 +93,11 @@ export default function RangeFilter(props: GridFilterInputValueProps) {
 				value={filterValueState[1] ?? ""}
 				onChange={handleUpperFilterChange}
 				type="number"
-				InputProps={
-					applying ? { endAdornment: <CircularProgress size={"sm"} /> } : {}
-				}
+				slotProps={{
+					input: applying
+						? { endAdornment: <CircularProgress size={"sm"} /> }
+						: {},
+				}}
 			/>
 		</Box>
 	);

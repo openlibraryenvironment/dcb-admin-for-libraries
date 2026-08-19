@@ -12,8 +12,8 @@ import {
 	Typography,
 } from "@mui/material";
 import {
-	CheckCircleOutline,
-	ErrorOutline,
+	CheckCircleOutlined,
+	ErrorOutlined,
 	ExpandMore,
 	WarningAmber,
 } from "@mui/icons-material";
@@ -79,16 +79,18 @@ export const CleanupProgressDialog = ({
 	const failedCleanupGridId = "cleanup-error-grid";
 
 	return (
-		<Dialog open={open} fullWidth maxWidth="sm">
-			<DialogTitle variant="modalTitle">
+        <Dialog open={open} fullWidth maxWidth="sm">
+            <DialogTitle variant="modalTitle">
 				{isCleaning
 					? t("patron_request.cleanup_in_progress")
 					: t("patron_request.cleanup_complete")}
 			</DialogTitle>
-			<DialogContent>
+            <DialogContent>
 				<Stack direction="column" spacing={1}>
 					<Stack direction="column" spacing={1}>
-						<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" spacing={1} sx={{
+                            alignItems: "center"
+                        }}>
 							<LinearProgress
 								variant="determinate"
 								value={progress}
@@ -120,7 +122,7 @@ export const CleanupProgressDialog = ({
 										aria-controls="success-rows-show-content"
 										id="success-rows-show-content">
 										<Stack direction={"row"} spacing={1}>
-											<CheckCircleOutline color="success" />
+											<CheckCircleOutlined color="success" />
 											<Typography variant="h3" sx={{ fontWeight: "bold" }}>
 												{t("ui.data_grid.cleanup.success_count", {
 													count: successRows?.length,
@@ -187,7 +189,7 @@ export const CleanupProgressDialog = ({
 									aria-controls="error-rows-show-content"
 									id="error-rows-show-content">
 									<Stack direction={"row"} spacing={1}>
-										<ErrorOutline color="error" />
+										<ErrorOutlined color="error" />
 										<Typography variant="h3" sx={{ fontWeight: "bold" }}>
 											{t("ui.data_grid.cleanup.error_count", {
 												count: errorRows?.length,
@@ -302,11 +304,11 @@ export const CleanupProgressDialog = ({
 					) : null}
 				</Stack>
 			</DialogContent>
-			<DialogActions>
+            <DialogActions>
 				<Button onClick={onClose} disabled={isCleaning} variant="contained">
 					{t("ui.actions.close")}
 				</Button>
 			</DialogActions>
-		</Dialog>
-	);
+        </Dialog>
+    );
 };

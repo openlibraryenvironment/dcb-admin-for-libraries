@@ -81,7 +81,10 @@ function AuditDetailsComponent() {
 		isError: areOtherAuditsError,
 	} = useQuery({
 		// Removed the explicit generic here to let it be inferred from the typed queryFn
-		queryKey: ["allAuditsForPatronRequest", patronRequestId, headers],
+		// DCB_URL belongs in the key: it is derived from runtime config, so the same
+		// patron request against a differently-configured backend is a different
+		// result. The sibling "audit" query in this file already keys on it.
+		queryKey: ["allAuditsForPatronRequest", patronRequestId, headers, DCB_URL],
 		// This queryFn handles all pagination internally and now explicitly returns Promise<AuditItem[]>
 		queryFn: async (): Promise<AuditItem[]> => {
 			if (!patronRequestId) return []; // Guard against running without the required ID
@@ -161,7 +164,7 @@ function AuditDetailsComponent() {
 		return (
 			<Loading
 				title={t("ui.info.loading.document", {
-					document_type: t("audit.entry").toLowerCase(),
+					document_type: t("audit.audit_entry").toLowerCase(),
 				})}
 				subtitle={t("ui.info.wait")}
 			/>
@@ -188,20 +191,20 @@ function AuditDetailsComponent() {
 	}
 
 	return (
-		<Grid
+        <Grid
 			container
 			spacing={{ xs: 2, md: 3 }}
 			columns={{ xs: 2, sm: 2, md: 2 }}>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography variant="h1">{audit?.id}</Typography>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
 					<Typography variant="attributeTitle">{t("audit.uuid")}</Typography>
 					<RenderAttribute attribute={audit?.id} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
 					<Typography variant="attributeTitle">{t("audit.date")}</Typography>
 					<RenderAttribute
@@ -211,7 +214,7 @@ function AuditDetailsComponent() {
 					/>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
 					<Typography variant="attributeTitle">
 						{t("audit.description")}
@@ -219,7 +222,7 @@ function AuditDetailsComponent() {
 					<RenderAttribute attribute={audit?.briefDescription} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
 					<Typography variant="attributeTitle">
 						{t("audit.from_status")}
@@ -227,7 +230,7 @@ function AuditDetailsComponent() {
 					<RenderAttribute attribute={audit?.fromStatus} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
 					<Typography variant="attributeTitle">
 						{t("audit.to_status")}
@@ -235,7 +238,7 @@ function AuditDetailsComponent() {
 					<RenderAttribute attribute={audit?.toStatus} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack>
 					<Typography variant="attributeTitle">
 						{t("patron_request.patron_request_uuid")}
@@ -243,14 +246,18 @@ function AuditDetailsComponent() {
 					<RenderAttribute attribute={audit?.patronRequest?.id} />
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Typography variant="attributeTitle">{t("audit.data")}</Typography>
 				<pre>{JSON.stringify(audit?.auditData, null, 2)}</pre>
 			</Grid>
-
-			{/* Navigation Buttons */}
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction="row" justifyContent="space-between" width="100%">
+            {/* Navigation Buttons */}
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Stack
+                    direction="row"
+                    sx={{
+                        justifyContent: "space-between",
+                        width: "100%"
+                    }}>
 					<Button variant="contained" onClick={handleReturn}>
 						{t("patron_request.return")}
 					</Button>
@@ -308,6 +315,6 @@ function AuditDetailsComponent() {
 					</Stack>
 				</Stack>
 			</Grid>
-		</Grid>
-	);
+        </Grid>
+    );
 }

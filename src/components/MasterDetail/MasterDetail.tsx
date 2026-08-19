@@ -75,7 +75,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 						<Grid size={4} role="gridcell">
 							<Stack direction="column">
 								<Typography variant="attributeTitle">
-									{t("details.author")}
+									{t("bibs.author")}
 								</Typography>
 								<Typography variant="attributeText">
 									<RenderAttribute attribute={row?.author} />
@@ -109,7 +109,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 									expandIcon={<ExpandMore />}
 									aria-controls="source-bibs-source-record-json-content"
 									id="source-bibs-source-record-json-header">
-									<Typography>{t("details.source_record")}</Typography>
+									<Typography>{t("bibs.source_record")}</Typography>
 								</AccordionSummary>
 								<AccordionDetails id="source-bibs-source-record-json-content">
 									<pre>{JSON.stringify(row?.sourceRecord, null, 2)}</pre>
@@ -122,7 +122,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 									expandIcon={<ExpandMore />}
 									aria-controls="search-canonical-metadata-content"
 									id="search-canonical-metadata-header">
-									<Typography>{t("details.canonical_metadata")}</Typography>
+									<Typography>{t("bibs.canonical_metadata")}</Typography>
 								</AccordionSummary>
 								<AccordionDetails id="search-canonical-metadata-content">
 									<pre>{JSON.stringify(row?.canonicalMetadata, null, 2)}</pre>

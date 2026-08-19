@@ -217,10 +217,9 @@ function RouteComponent() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: [gridId] });
 		},
-		onError: (error) => {
+		onError: () => {
 			// Set alerts
 			// Catch "Library mapping editing has been disabled by your consortium administrator" too just in case
-			console.log(error);
 		},
 	});
 
@@ -269,20 +268,29 @@ function RouteComponent() {
 		[gridId, setColumnVisibilityModel]
 	);
 
-	const handleEditClick = (id: GridRowId) => () => {
-		setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-	};
+	const handleEditClick = useCallback(
+		(id: GridRowId) => () => {
+			setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
+		},
+		[rowModesModel]
+	);
 
-	const handleSaveClick = (id: GridRowId) => () => {
-		setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-	};
+	const handleSaveClick = useCallback(
+		(id: GridRowId) => () => {
+			setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
+		},
+		[rowModesModel]
+	);
 
-	const handleCancelClick = (id: GridRowId) => () => {
-		setRowModesModel({
-			...rowModesModel,
-			[id]: { mode: GridRowModes.View, ignoreModifications: true },
-		});
-	};
+	const handleCancelClick = useCallback(
+		(id: GridRowId) => () => {
+			setRowModesModel({
+				...rowModesModel,
+				[id]: { mode: GridRowModes.View, ignoreModifications: true },
+			});
+		},
+		[rowModesModel]
+	);
 
 	const handleDeleteClick = (id: GridRowId) => () => {
 		setDeleteConfirmationId(id);
@@ -353,7 +361,7 @@ function RouteComponent() {
 			{
 				field: "actions",
 				type: "actions",
-				headerName: "Actions",
+				headerName: t("ui.actions.title"),
 				width: 100,
 				cellClassName: "actions",
 				getActions: ({ id }) => {
@@ -363,13 +371,13 @@ function RouteComponent() {
 							<GridActionsCellItem
 								key="save"
 								icon={<Save />}
-								label="Save"
+								label={t("ui.actions.save")}
 								onClick={handleSaveClick(id)}
 							/>,
 							<GridActionsCellItem
 								key="cancel"
 								icon={<Cancel />}
-								label="Cancel"
+								label={t("ui.actions.cancel")}
 								onClick={handleCancelClick(id)}
 							/>,
 						];
@@ -379,7 +387,7 @@ function RouteComponent() {
 							<GridActionsCellItem
 								key="edit"
 								icon={<Edit />}
-								label="Edit"
+								label={t("ui.actions.edit")}
 								onClick={handleEditClick(id)}
 								disabled={!editingEnabled}
 							/>
@@ -387,7 +395,7 @@ function RouteComponent() {
 							<GridActionsCellItem
 								key="delete"
 								icon={<Delete />}
-								label="Delete"
+								label={t("ui.actions.delete")}
 								onClick={handleDeleteClick(id)}
 							/>
 						</>,
@@ -395,7 +403,18 @@ function RouteComponent() {
 				},
 			},
 		],
-		[rowModesModel]
+		// editingEnabled belongs here: it is false while the library query is in
+		// flight, and without the dependency the memo froze that first value - so a
+		// library the consortium DOES permit to edit got a permanently disabled Edit
+		// action. Caught by e2e/mappings.spec.ts.
+		[
+			rowModesModel,
+			editingEnabled,
+			handleEditClick,
+			handleSaveClick,
+			handleCancelClick,
+			t,
+		]
 	);
 
 	const refValueColumns = editingEnabled
@@ -422,8 +441,7 @@ function RouteComponent() {
 		);
 	}
 
-	if (mappingsError) {
-		console.log(error, mappingsError, librariesError);
+	if (mappingsError || librariesError) {
 		return (
 			<Error
 				title={t("ui.feedback.error.loading", {

@@ -9,7 +9,7 @@ import {
 	Stack,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 import { useRouter } from "@tanstack/react-router";
 import dayjs from "dayjs";
 
@@ -60,24 +60,30 @@ export default function TopTitlesSummary({
 
 	if (!libraryCode || isLoading) {
 		return (
-			<Stack alignItems="center" spacing={2}>
-				<CircularProgress size="2rem" />
-				<Typography variant="body2" color="text.secondary">
+            <Stack spacing={2} sx={{
+                alignItems: "center"
+            }}>
+                <CircularProgress size="2rem" />
+                <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                }}>
 					{t("ui.info.wait", "Loading...")}
 				</Typography>
-			</Stack>
-		);
+            </Stack>
+        );
 	}
 
 	if (isError) {
 		return (
-			<Stack alignItems="center" spacing={1}>
-				<ErrorOutlineIcon color="error" fontSize="large" />
-				<Typography color="error" variant="body2">
+            <Stack spacing={1} sx={{
+                alignItems: "center"
+            }}>
+                <ErrorOutlineIcon color="error" fontSize="large" />
+                <Typography color="error" variant="body2">
 					{t("ui.feedback.error.fetching", "Error fetching data")}
 				</Typography>
-			</Stack>
-		);
+            </Stack>
+        );
 	}
 
 	const topRequestedTitlesData = data?.content || [];
@@ -96,8 +102,8 @@ export default function TopTitlesSummary({
 	}
 
 	return (
-		<>
-			<List dense disablePadding>
+        <>
+            <List dense disablePadding>
 				{topRequestedTitlesData.map((item: any, index: number) => (
 					<ListItem
 						key={`top-title-${index}`}
@@ -112,14 +118,21 @@ export default function TopTitlesSummary({
 								</Typography>
 							}
 						/>
-						<Box display="flex" alignItems="center" ml={2}>
-							<Typography variant="body2" fontWeight="bold">
+						<Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                ml: 2
+                            }}>
+							<Typography variant="body2" sx={{
+                                fontWeight: "bold"
+                            }}>
 								{item.requestCount}
 							</Typography>
 						</Box>
 					</ListItem>
 				))}
 			</List>
-		</>
-	);
+        </>
+    );
 }

@@ -111,7 +111,7 @@ function RouteComponent() {
 						: t("ui.feedback.error.invalid_UUID")
 				}
 				action={t("ui.actions.go_back")}
-				goBack={`/bibs}`}
+				goBack="/bibs"
 			/>
 		);
 	}
@@ -277,7 +277,7 @@ function RouteComponent() {
 						) : isSourceLoading ? (
 							<Loading
 								title={t("ui.info.loading.document", {
-									document_type: t("details.source_record").toLowerCase(),
+									document_type: t("bibs.source_record").toLowerCase(),
 								})}
 								subtitle={t("ui.info.wait")}
 							/>

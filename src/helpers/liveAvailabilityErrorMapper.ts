@@ -41,8 +41,9 @@ export const getAggregatedErrorMessage = (
 					libraries.add(hostId.split("_").join(" "));
 				}
 			} catch {
-				// Fallback if parsing fails for some reason
-				console.warn("Error parsing message", msg);
+				// An unparseable message contributes nothing to the aggregate and
+				// the caller falls back to generic error text. Deliberately not
+				// logged: these messages carry patron and item identifiers.
 			}
 	});
 

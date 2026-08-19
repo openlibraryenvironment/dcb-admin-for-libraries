@@ -17,7 +17,7 @@ import { Item } from "@models/Item";
 import {
 	CancelOutlined,
 	CheckCircleOutlineOutlined,
-	InfoOutline,
+	InfoOutlined,
 } from "@mui/icons-material";
 
 interface SearchResultProps {
@@ -141,9 +141,10 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 	// Present at x, available to request at X 'at a glance'
 	// Then go into more detail
 	return (
-		// <Box width="100%" mb={2} p={0} m={0}>
-		<>
-			<Card
+        // <Box width="100%" mb={2} p={0} m={0}>
+        // </Box>
+        <>
+            <Card
 				variant="outlined"
 				ref={cardRef}
 				elevation={4}
@@ -155,7 +156,9 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 					<Stack direction={"column"} spacing={0.5}>
 						<Typography
 							variant="h6"
-							color="var(--mui-palette-primary-searchResultTitle)">
+							sx={{
+                                color: "var(--mui-palette-primary-searchResultTitle)"
+                            }}>
 							<CustomLink
 								// to="/indexes/$indexCode/$recordId"
 								to="/requesting/$recordId"
@@ -165,18 +168,22 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 							</CustomLink>
 						</Typography>
 						<Typography
-							variant="body2"
-							color="text.secondary"
-							fontWeight={"bold"}
-							mb={2}>
+                            variant="body2"
+                            sx={{
+                                color: "text.secondary",
+                                fontWeight: "bold",
+                                mb: 2
+                            }}>
 							{t("requesting.format", {
 								formats: params.row.sourceTypes?.join(","),
 							})}
 						</Typography>
 						<Typography
-							variant="body2"
-							color="text.secondary"
-							fontWeight={"bold"}>
+                            variant="body2"
+                            sx={{
+                                color: "text.secondary",
+                                fontWeight: "bold"
+                            }}>
 							{t("requesting.contributor", {
 								contributors: params.row.contributors
 									?.map((c: Contributor) => c.name)
@@ -184,9 +191,11 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 							})}
 						</Typography>
 						<Typography
-							variant="body2"
-							color="text.secondary"
-							fontWeight={"bold"}>
+                            variant="body2"
+                            sx={{
+                                color: "text.secondary",
+                                fontWeight: "bold"
+                            }}>
 							{t("requesting.publication_date", {
 								publicationDate: params?.row?.publicationDate
 									? params?.row?.publicationDate
@@ -202,9 +211,11 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 						</Typography>
 						<Typography variant="body2">{params.row.description}</Typography>
 						<Typography
-							variant="body2"
-							color="text.secondary"
-							fontWeight={"bold"}>
+                            variant="body2"
+                            sx={{
+                                color: "text.secondary",
+                                fontWeight: "bold"
+                            }}>
 							{t("requesting.isbn", {
 								isbn: params?.row?.isbns
 									? params?.row?.isbns?.map((isbn: string) => isbn).join(", ")
@@ -213,9 +224,11 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 						</Typography>
 						{params?.row?.issns ? (
 							<Typography
-								variant="body2"
-								color="text.secondary"
-								fontWeight={"bold"}>
+                                variant="body2"
+                                sx={{
+                                    color: "text.secondary",
+                                    fontWeight: "bold"
+                                }}>
 								{t("requesting.issn", {
 									issn: params?.row?.issns
 										? params?.row?.issns?.map((issn: string) => issn).join(", ")
@@ -239,7 +252,9 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 										})
 									: t("requesting.live_availability_unavailable")}
 							</Typography>
-							<Stack direction="row" spacing={1} alignItems="center">
+							<Stack direction="row" spacing={1} sx={{
+                                alignItems: "center"
+                            }}>
 								{isAvailableForWalkUp ? (
 									<Tooltip
 										title={t("requesting.available_for_walk_up_description")}>
@@ -266,7 +281,9 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 								</Typography>
 							</Stack>
 
-							<Stack direction="row" spacing={1} alignItems="center">
+							<Stack direction="row" spacing={1} sx={{
+                                alignItems: "center"
+                            }}>
 								{isAvailableForStaffRequesting ? (
 									<Tooltip
 										title={t(
@@ -302,8 +319,10 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 								list: locationNames,
 							})}
 						</Typography> */}
-							<Stack direction="row" spacing={1} alignItems="center">
-								<InfoOutline sx={{ fontSize: "1.25rem" }} />
+							<Stack direction="row" spacing={1} sx={{
+                                alignItems: "center"
+                            }}>
+								<InfoOutlined sx={{ fontSize: "1.25rem" }} />
 
 								<Typography variant="body2">
 									{t("requesting.available_at", {
@@ -362,13 +381,12 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 					</Tooltip>
 				</CardActions>
 			</Card>
-			<CombinedRequestingModal
+            <CombinedRequestingModal
 				show={showCombinedModal}
 				onClose={() => setShowCombinedModal(false)}
 				bibClusterId={params.row.id}
 				title={params.row.title}
 			/>
-		</>
-		// </Box>
-	);
+        </>
+    );
 };

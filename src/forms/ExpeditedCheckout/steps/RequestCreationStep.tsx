@@ -1,6 +1,5 @@
 import { OnSiteBorrowingFormData } from "@models/OnSiteBorrowingFormData";
 import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocompleteOption";
-// import { StaffRequestFormData } from "@models/StaffRequestFormData";
 import {
 	Autocomplete,
 	Button,
@@ -20,11 +19,7 @@ import {
 
 // Step two: request creation / placing
 interface RequestCreationStepType {
-	// control:
-	// 	| Control<OnSiteBorrowingFormData, any>
-	// 	| Control<StaffRequestFormData, any>; // itemLibraryOptions: PatronRequestAutocompleteOption[];
-	// itemLibrariesLoading: boolean;
-	control: Control<any, any>;
+	control: Control<OnSiteBorrowingFormData>;
 	setValue: UseFormSetValue<OnSiteBorrowingFormData>;
 	errors: FieldErrors<OnSiteBorrowingFormData>;
 	pickupLocationOptions: PatronRequestAutocompleteOption[];
@@ -56,7 +51,6 @@ export const RequestCreationStep = ({
 	pickupLocationId,
 	t,
 }: RequestCreationStepType) => {
-	console.log(errors);
 	return (
 		<>
 			<Typography>
@@ -93,16 +87,18 @@ export const RequestCreationStep = ({
 								label={t("requesting.staff_request.patron.item_library")}
 								error={!!errors.itemAgencyCode}
 								helperText={errors.itemAgencyCode?.message}
-								InputProps={{
-									...params.InputProps,
-									endAdornment: (
-										<>
-											{itemLibrariesLoading ? (
-												<CircularProgress color="inherit" size={20} />
-											) : null}
-											{params.InputProps.endAdornment}
-										</>
-									),
+								slotProps={{
+									input: {
+										...params.slotProps.input,
+										endAdornment: (
+											<>
+												{itemLibrariesLoading ? (
+													<CircularProgress color="inherit" size={20} />
+												) : null}
+												{params.slotProps.input.endAdornment}
+											</>
+										),
+									},
 								}}
 							/>
 						)}
@@ -175,16 +171,18 @@ export const RequestCreationStep = ({
 								label={t("requesting.staff_request.patron.item_local_id")}
 								error={!!errors.itemLocalId || itemsError}
 								helperText={errors.itemLocalId?.message}
-								InputProps={{
-									...params.InputProps,
-									endAdornment: (
-										<>
-											{itemsLoading ? (
-												<CircularProgress color="inherit" size={20} />
-											) : null}
-											{params.InputProps.endAdornment}
-										</>
-									),
+								slotProps={{
+									input: {
+										...params.slotProps.input,
+										endAdornment: (
+											<>
+												{itemsLoading ? (
+													<CircularProgress color="inherit" size={20} />
+												) : null}
+												{params.slotProps.input.endAdornment}
+											</>
+										),
+									},
 								}}
 							/>
 						)}

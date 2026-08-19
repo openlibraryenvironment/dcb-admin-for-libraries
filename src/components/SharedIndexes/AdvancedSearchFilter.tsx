@@ -18,8 +18,9 @@ import {
 	BooleanOperator,
 	SearchFilter,
 } from "@models/SearchTypes";
-import { LANGUAGE_OPTIONS } from "@constants/search/languageOptions";
-import { t } from "i18next";
+import { LANGUAGE_CODES } from "@constants/search/languageOptions";
+import { useTranslation } from "react-i18next";
+import { useMemo } from "react";
 
 interface AdvancedSearchFilterProps {
 	filters: SearchFilter[];
@@ -32,26 +33,45 @@ export const AdvancedSearchFilter = ({
 	onFiltersChange,
 	isAdvancedMode,
 }: AdvancedSearchFilterProps) => {
-	const searchFieldOptions = [
-		{ value: SearchField.Keyword, label: "Keyword" },
-		{ value: SearchField.Title, label: "Title" },
-		{ value: SearchField.Author, label: "Author" },
-		{ value: SearchField.ISSN, label: "ISSN" },
-		{ value: SearchField.ISBN, label: "ISBN" },
-		{ value: SearchField.Subject, label: "Subject" },
-		{ value: SearchField.Language, label: "Language" },
-		{ value: SearchField.Publisher, label: "Publisher" },
-		{ value: SearchField.Format, label: "Format" },
-		{ value: SearchField.ClusterRecordID, label: "Cluster Record ID" },
-		// { value: SearchField.PublicationYear, label: "Publication Year" }, //
-		// { value: SearchField.Library, label: "Library" },
-	];
+	const { t } = useTranslation();
 
-	const booleanOperatorOptions = [
-		{ value: BooleanOperator.AND, label: "AND" },
-		{ value: BooleanOperator.OR, label: "OR" },
-		{ value: BooleanOperator.NOT, label: "NOT" },
-	];
+	const searchFieldOptions = useMemo(
+		() => [
+			{ value: SearchField.Keyword, label: t("requesting.shared_index.search_fields.keyword") },
+			{ value: SearchField.Title, label: t("requesting.shared_index.search_fields.title") },
+			{ value: SearchField.Author, label: t("requesting.shared_index.search_fields.author") },
+			{ value: SearchField.ISSN, label: t("requesting.shared_index.search_fields.issn") },
+			{ value: SearchField.ISBN, label: t("requesting.shared_index.search_fields.isbn") },
+			{ value: SearchField.Subject, label: t("requesting.shared_index.search_fields.subject") },
+			{ value: SearchField.Language, label: t("requesting.shared_index.search_fields.language") },
+			{ value: SearchField.Publisher, label: t("requesting.shared_index.search_fields.publisher") },
+			{ value: SearchField.Format, label: t("requesting.shared_index.search_fields.format") },
+			{
+				value: SearchField.ClusterRecordID,
+				label: t("requesting.shared_index.search_fields.cluster_record_id"),
+			},
+		],
+		[t],
+	);
+
+	const booleanOperatorOptions = useMemo(
+		() => [
+			{ value: BooleanOperator.AND, label: t("requesting.shared_index.boolean.and") },
+			{ value: BooleanOperator.OR, label: t("requesting.shared_index.boolean.or") },
+			{ value: BooleanOperator.NOT, label: t("requesting.shared_index.boolean.not") },
+		],
+		[t],
+	);
+
+	// Codes are constant; the names follow the user's language.
+	const languageOptions = useMemo(
+		() =>
+			LANGUAGE_CODES.map((value) => ({
+				value,
+				label: t(`requesting.shared_index.languages.${value}`),
+			})),
+		[t],
+	);
 
 	const numberOfActiveFilters =
 		filters?.filter((f) => f?.value?.trim()).length ?? 0;
@@ -93,17 +113,17 @@ export const AdvancedSearchFilter = ({
 			return (
 				<Autocomplete
 					value={
-						LANGUAGE_OPTIONS.find((opt) => opt.value === filter.value) || null
+						languageOptions.find((opt) => opt.value === filter.value) || null
 					}
 					onChange={(_, newValue) => {
 						updateFilter(filter.id, { value: newValue?.value || "" });
 					}}
-					options={LANGUAGE_OPTIONS}
+					options={languageOptions}
 					getOptionLabel={(option) => option.label}
 					renderInput={(params) => (
 						<TextField
 							{...params}
-							label="Language"
+							label={t("ui.common.language")}
 							variant="outlined"
 							size="small"
 						/>
@@ -117,7 +137,7 @@ export const AdvancedSearchFilter = ({
 			<TextField
 				value={filter.value}
 				onChange={(e) => updateFilter(filter.id, { value: e.target.value })}
-				label="Search term"
+				label={t("ui.common.search_term")}
 				variant="outlined"
 				size="small"
 				sx={{ minWidth: 200, flexGrow: 1 }}
@@ -130,14 +150,16 @@ export const AdvancedSearchFilter = ({
 
 	//fix this styling
 	return (
-		<Box sx={{ p: 2, border: "1px solid #e0e0e0", borderRadius: 1 }}>
-			<Stack spacing={2}>
+        <Box sx={{ p: 2, border: 1, borderColor: "divider", borderRadius: 1 }}>
+            <Stack spacing={2}>
 				{filtersToRender.map((filter, index) => (
 					<Stack
 						key={filter.id}
 						direction="row"
 						spacing={2}
-						alignItems="center">
+						sx={{
+                            alignItems: "center"
+                        }}>
 						{/* Only show boolean operator in advanced mode for subsequent filters */}
 						{isAdvancedMode && index > 0 && (
 							<FormControl size="small" sx={{ minWidth: 80 }}>
@@ -149,7 +171,7 @@ export const AdvancedSearchFilter = ({
 											operator: e.target.value as BooleanOperator,
 										})
 									}
-									label="Operator">
+									label={t("ui.common.operator")}>
 									{booleanOperatorOptions.map((op) => (
 										<MenuItem key={op.value} value={op.value}>
 											{op.label}
@@ -169,7 +191,7 @@ export const AdvancedSearchFilter = ({
 										value: "", // Reset value when field changes
 									})
 								}
-								label="Field">
+								label={t("ui.common.field")}>
 								{searchFieldOptions.map((field) => (
 									<MenuItem key={field.value} value={field.value}>
 										{field.label}
@@ -221,7 +243,13 @@ export const AdvancedSearchFilter = ({
 								number: numberOfActiveFilters,
 							})}
 						</Typography>
-						<Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
+						<Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{
+                                flexWrap: "wrap",
+                                mt: 1
+                            }}>
 							{filters
 								.filter((f) => f.value)
 								.map((filter) => (
@@ -240,6 +268,6 @@ export const AdvancedSearchFilter = ({
 					</Box>
 				)}
 			</Stack>
-		</Box>
-	);
+        </Box>
+    );
 };

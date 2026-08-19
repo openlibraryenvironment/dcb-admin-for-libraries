@@ -149,12 +149,12 @@ export const usePatronRequestExport = ({
 							locationMap.get(item.pickupLocationCode) ||
 							item.pickupLocationCode,
 					}));
-				} catch (error) {
-					console.error("Error fetching location names:", error);
+				} catch {
+					// Location names are a display nicety; the export proceeds with
+					// the codes it already has rather than failing.
 				}
 			}
 		} catch (error) {
-			console.error("Failed to fetch all data for export", error);
 			throw error;
 		}
 
@@ -223,8 +223,7 @@ export const usePatronRequestExport = ({
 					allContent.length,
 				);
 			}
-		} catch (error) {
-			console.log(error);
+		} catch {
 			onExportError("Failed to export records.");
 		} finally {
 			setExportProgress({ isExporting: false, progress: 0, totalRecords: 0 });
