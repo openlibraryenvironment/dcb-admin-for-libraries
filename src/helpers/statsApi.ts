@@ -15,6 +15,9 @@ export interface TurnaroundStat {
 
 export interface PartnerStat {
 	partnerCode: string;
+	// Null when the Host LMS has traffic but is not onboarded as a library - fall back to the
+	// code rather than rendering a blank, as PeerBenchmarkPanel does for libraryName.
+	partnerName: string | null;
 	requestCount: number;
 }
 
