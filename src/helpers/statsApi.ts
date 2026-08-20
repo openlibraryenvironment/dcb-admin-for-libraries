@@ -257,21 +257,41 @@ export function dashboardMetricsQueryOptions(
 	};
 }
 
+/** The fields of a Micronaut Page this app actually reads. */
+export interface Paged<T> {
+	content: T[];
+	totalSize: number;
+}
+
 /**
  * libraryCode is required by the endpoint - "who do we trade with" needs a "we" - so the
  * caller must supply it rather than relying on the consortium-wide default.
+ *
+ * Returns the PAGE rather than unwrapping to the first one, unlike the older summary
+ * endpoints. The whole point of this endpoint over dashboard-metrics' fixed top ten is that
+ * the tail is reachable, and a helper that quietly returns page zero would put it back out of
+ * reach. totalSize counts partners, not requests, so it drives a page control directly.
+ *
+ * Sorting is optional: dcb-service applies total_count descending when none is given, so
+ * "top partners" is the default without the client having to know the column name. Pass
+ * `sort` to rank by one direction instead.
  */
 export function topPartnersQueryOptions(
 	client: AxiosInstance,
-	params: StatsParams & { libraryCode: string },
+	params: StatsParams & {
+		libraryCode: string;
+		page?: number;
+		size?: number;
+		sort?: string;
+	},
 ) {
 	return {
 		queryKey: ["stats", "top-partners", params] as const,
-		queryFn: async (): Promise<TradingPartnerStat[]> => {
+		queryFn: async (): Promise<Paged<TradingPartnerStat>> => {
 			const { data } = await client.get(`${STATS_BASE}/top-partners`, {
 				params: cleanParams(params),
 			});
-			return data;
+			return { content: data?.content ?? [], totalSize: data?.totalSize ?? 0 };
 		},
 	};
 }

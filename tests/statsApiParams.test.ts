@@ -57,6 +57,39 @@ describe("statsApi query parameters", () => {
 		});
 	});
 
+	it("passes paging through to top-partners untouched", async () => {
+		const { client, sent } = clientReturning();
+
+		await topPartnersQueryOptions(client, {
+			libraryCode: "LIB_A",
+			page: 2,
+			size: 25,
+		}).queryFn();
+
+		expect(sent()).toEqual({
+			[LIBRARY_CODE_PARAM]: "LIB_A",
+			page: 2,
+			size: 25,
+		});
+	});
+
+	it("surfaces the page rather than flattening it to the first page", async () => {
+		// The tail being reachable is the reason this endpoint exists over the fixed top ten
+		// on dashboard-metrics; a helper that returned page zero would put it back out of
+		// reach. totalSize counts PARTNERS, so it drives a page control directly.
+		const get = vi.fn(async () => ({
+			data: { content: [{ partnerCode: "PEER_X" }], totalSize: 37 },
+		}));
+		const client = { get } as unknown as AxiosInstance;
+
+		const page = await topPartnersQueryOptions(client, {
+			libraryCode: "LIB_A",
+		}).queryFn();
+
+		expect(page.totalSize).toBe(37);
+		expect(page.content).toHaveLength(1);
+	});
+
 	it("still drops undefined rather than serialising it", async () => {
 		const { client, sent } = clientReturning();
 
