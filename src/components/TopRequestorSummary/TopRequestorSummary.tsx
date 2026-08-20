@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 import { useRouter } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { LIBRARY_CODE_PARAM } from "@helpers/statsApi";
 
 interface TopRequestorsSummaryProps {
 	headers: Record<string, string>;
@@ -37,7 +38,8 @@ export default function TopRequestorsSummary({
 			const endDate = dayjs().toISOString();
 
 			const params = new URLSearchParams({
-				libraryCode,
+				// The name dcb-service binds - see LIBRARY_CODE_PARAM in statsApi.
+				[LIBRARY_CODE_PARAM]: libraryCode,
 				sort: "active_request_count,desc",
 				page: "0",
 				size: "10",

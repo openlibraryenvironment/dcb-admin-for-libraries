@@ -11,11 +11,19 @@ import library from "./fixtures-data/library.json" with { type: "json" };
  *     endpoints that only exist in the upcoming dcb-service release. Hiding the
  *     tab is not enough - the URL is typeable.
  *  2. The library it reports on comes from the access token's agency claim, and
- *     from nowhere else. This app has no library picker and must never grow one:
- *     dcb-service currently trusts the libraryCode query parameter, so a code
- *     that could be influenced from the client would let a library admin read
- *     another library's figures.
+ *     from nowhere else. This app has no library picker and must never grow one.
+ *     dcb-service's StatsScopeGuard now checks the requested code against the
+ *     token rather than trusting it, so a mismatch is refused - but this app must
+ *     still never ASK for a library it was not given, because the request it sends
+ *     is what a reviewer reads to decide whether the client is honest.
  */
+
+/**
+ * The name dcb-service binds - see LIBRARY_CODE_PARAM in src/helpers/statsApi.ts. A literal
+ * rather than an import so this asserts the wire format independently of the code that
+ * produces it; if the two drift, that is exactly what this should catch.
+ */
+const LIBRARY_PARAM = "requestedLibraryCode";
 
 const mocks = { LoadLibrary: library, LoadLibraryBasics: library };
 
@@ -98,7 +106,7 @@ test.describe("Library insights", () => {
 		// seeded token's `code` claim (e2e-agency). Every scoped call must carry
 		// it, and no call may carry anything else.
 		for (const url of statsRequests) {
-			const libraryCode = url.searchParams.get("libraryCode");
+			const libraryCode = url.searchParams.get(LIBRARY_PARAM);
 			if (libraryCode !== null) {
 				expect(
 					libraryCode,
@@ -108,10 +116,12 @@ test.describe("Library insights", () => {
 		}
 
 		// At least one call must actually be scoped - a page that scoped nothing
-		// would pass the loop above vacuously.
+		// would pass the loop above vacuously. This is also what catches the filter
+		// being sent under a name the API does not bind: every call would carry
+		// nothing, the loop would pass, and only this would fail.
 		expect(
 			statsRequests.some(
-				(url) => url.searchParams.get("libraryCode") === "e2e-lms",
+				(url) => url.searchParams.get(LIBRARY_PARAM) === "e2e-lms",
 			),
 		).toBe(true);
 	});
@@ -129,7 +139,8 @@ test.describe("Library insights", () => {
 		await expect(page.getByText("89.4%")).toBeVisible();
 
 		for (const url of statsRequests) {
-			expect(url.searchParams.get("libraryCode")).not.toBe("peer-lms");
+			expect(url.searchParams.get(LIBRARY_PARAM)).not.toBe("peer-lms");
+			expect(url.searchParams.get("libraryCode")).toBeNull();
 		}
 	});
 });

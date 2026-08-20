@@ -21,6 +21,19 @@ export interface PartnerStat {
 	requestCount: number;
 }
 
+/**
+ * One partner and the traffic in BOTH directions, ranked on the total. Not derivable from
+ * topSuppliers and topBorrowers: a partner sixth in each can out-total one third in one, and
+ * appears in neither. The split is kept so an uneven relationship stays visible.
+ */
+export interface TradingPartnerStat {
+	partnerCode: string;
+	partnerName: string | null;
+	borrowedFromCount: number;
+	suppliedToCount: number;
+	totalCount: number;
+}
+
 export interface DashboardMetrics {
 	turnaroundToLoaned: TurnaroundStat;
 	turnaroundToFinalised: TurnaroundStat;
@@ -184,10 +197,28 @@ export type TimeSeriesInterval = "day" | "week" | "month";
 // carrying the rename; VITE_FEATURE_INSIGHTS gates that, see featureFlags.
 const STATS_BASE = "/insights";
 
-// Strip undefined so axios does not serialise `libraryCode=undefined` etc.
+/**
+ * The wire name for the library filter.
+ *
+ * dcb-service binds `requestedLibraryCode`, not `libraryCode` - deliberately, because
+ * StatsScopeGuard treats it as a REQUEST rather than an instruction and checks it against the
+ * caller's token. `StatsScopeArchitectureTests.noStatsEndpointStillBindsTheRawLibraryCodeParameter`
+ * fails the build if an endpoint ever goes back to the trusted name.
+ *
+ * We keep `libraryCode` throughout this app because that is what it is to us, and rename once
+ * here at the serialisation boundary. Sending the old name is silently wrong rather than an
+ * error: the endpoint ignores it, and a consortium administrator asking for one library gets
+ * consortium-wide figures rendered under that library's name.
+ */
+export const LIBRARY_CODE_PARAM = "requestedLibraryCode";
+
+// Strip undefined so axios does not serialise `libraryCode=undefined` etc., and rename the
+// library filter to the name the API actually binds.
 function cleanParams<T extends object>(params: T): Record<string, unknown> {
 	return Object.fromEntries(
-		Object.entries(params).filter(([, v]) => v !== undefined && v !== null),
+		Object.entries(params)
+			.filter(([, v]) => v !== undefined && v !== null)
+			.map(([k, v]) => [k === "libraryCode" ? LIBRARY_CODE_PARAM : k, v]),
 	);
 }
 
@@ -219,6 +250,25 @@ export function dashboardMetricsQueryOptions(
 		queryKey: ["stats", "dashboard-metrics", params] as const,
 		queryFn: async (): Promise<DashboardMetrics> => {
 			const { data } = await client.get(`${STATS_BASE}/dashboard-metrics`, {
+				params: cleanParams(params),
+			});
+			return data;
+		},
+	};
+}
+
+/**
+ * libraryCode is required by the endpoint - "who do we trade with" needs a "we" - so the
+ * caller must supply it rather than relying on the consortium-wide default.
+ */
+export function topPartnersQueryOptions(
+	client: AxiosInstance,
+	params: StatsParams & { libraryCode: string },
+) {
+	return {
+		queryKey: ["stats", "top-partners", params] as const,
+		queryFn: async (): Promise<TradingPartnerStat[]> => {
+			const { data } = await client.get(`${STATS_BASE}/top-partners`, {
 				params: cleanParams(params),
 			});
 			return data;
