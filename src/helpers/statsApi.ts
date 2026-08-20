@@ -175,7 +175,11 @@ export interface StatsParams {
 
 export type TimeSeriesInterval = "day" | "week" | "month";
 
-const STATS_BASE = "/patrons/requests/stats";
+// dcb-service serves Insights from /insights. It was /patrons/requests/stats, which was
+// accurate when the surface was ten endpoints on the patron request controller and misleading
+// at thirty-five - half of them never read patron_request at all. Requires a dcb-service
+// carrying the rename; VITE_FEATURE_INSIGHTS gates that, see featureFlags.
+const STATS_BASE = "/insights";
 
 // Strip undefined so axios does not serialise `libraryCode=undefined` etc.
 function cleanParams<T extends object>(params: T): Record<string, unknown> {

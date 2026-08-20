@@ -46,7 +46,7 @@ export default function TopRequestorsSummary({
 			});
 
 			const response = await fetch(
-				`${DCB_API_BASE}/patrons/requests/stats/top-requestors?${params}`,
+				`${DCB_API_BASE}/insights/top-requestors?${params}`,
 				{
 					headers,
 				},

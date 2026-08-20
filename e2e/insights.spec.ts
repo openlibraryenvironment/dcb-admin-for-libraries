@@ -24,7 +24,7 @@ function trackStatsRequests(page: import("@playwright/test").Page): URL[] {
 	const seen: URL[] = [];
 	page.on("request", (request) => {
 		const url = new URL(request.url());
-		if (url.pathname.includes("/patrons/requests/stats/")) seen.push(url);
+		if (url.pathname.includes("/insights/")) seen.push(url);
 	});
 	return seen;
 }

@@ -45,7 +45,7 @@ export default function TopTitlesSummary({
 			});
 
 			const response = await fetch(
-				`${DCB_API_BASE}/patrons/requests/stats/top-requested-titles?${params}`,
+				`${DCB_API_BASE}/insights/top-requested-titles?${params}`,
 				{
 					headers,
 				},

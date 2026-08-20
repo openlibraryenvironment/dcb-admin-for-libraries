@@ -23,9 +23,9 @@ const readFlag = (name: string): boolean => {
 };
 
 /**
- * Insights depends on the /patrons/requests/stats/** endpoints, which only exist
- * in the upcoming dcb-service release. Enable with VITE_FEATURE_INSIGHTS=true
- * once the environment's dcb-service is new enough.
+ * Insights depends on the /insights/** endpoints, which only exist in the upcoming
+ * dcb-service release. Enable with VITE_FEATURE_INSIGHTS=true once the environment's
+ * dcb-service is new enough - an older one answers 404 to all of them.
  */
 export const isInsightsEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_INSIGHTS");

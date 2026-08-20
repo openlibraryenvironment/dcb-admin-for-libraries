@@ -3,10 +3,10 @@ import type { Page } from "@playwright/test";
 /**
  * The insights statistics API.
  *
- * These are REST, not GraphQL: axios calls `${VITE_DCB_API_BASE}/patrons/requests/
- * stats/<name>` with the window and the library's Host LMS code as query params.
- * Dispatch is on the path segment after `stats/`, mirroring mockGraphQL's dispatch
- * on operationName.
+ * These are REST, not GraphQL: axios calls `${VITE_DCB_API_BASE}/insights/<name>`
+ * with the window and the library's Host LMS code as query params. Dispatch is on
+ * the path segment after `insights/`, mirroring mockGraphQL's dispatch on
+ * operationName.
  *
  * The defaults are POPULATED rather than empty on purpose. An empty response
  * renders the "no data" placeholder, which would let the accessibility gate pass
@@ -179,10 +179,13 @@ export async function mockStats(
 ): Promise<void> {
 	const mocks = { ...DEFAULT_STATS, ...overrides };
 
-	await page.route("**/patrons/requests/stats/**", async (route) => {
+	await page.route("**/insights/**", async (route) => {
 		const path = new URL(route.request().url()).pathname;
-		const name = path.split("/stats/")[1];
-		const body = name === undefined ? undefined : mocks[name];
+		// Split on the API prefix, which is also the app's own route path - so anchor on
+		// the last occurrence rather than the first, or a base URL that happens to contain
+		// /insights/ would take the wrong segment.
+		const name = path.slice(path.lastIndexOf("/insights/") + "/insights/".length);
+		const body = mocks[name];
 
 		if (body === undefined) {
 			await route.abort("failed");
