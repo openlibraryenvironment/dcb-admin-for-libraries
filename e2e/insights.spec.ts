@@ -27,15 +27,48 @@ const LIBRARY_PARAM = "requestedLibraryCode";
 
 const mocks = { LoadLibrary: library, LoadLibraryBasics: library };
 
-/** Collects every statistics call the page makes, in order. Attach before goto. */
-function trackStatsRequests(page: import("@playwright/test").Page): URL[] {
+/**
+ * The two Insights endpoints the HOME page calls on its own account.
+ *
+ * TopTitlesSummary and TopRequestorsSummary are rendered by
+ * routes/__authenticated/index.tsx - the page the flag guard redirects to - and
+ * both call /insights/... regardless of the feature flag. So "did the insights
+ * route leak a statistics call" cannot be asked by matching /insights/ alone: the
+ * destination page answers it for you, a few milliseconds later.
+ *
+ * That is what made the flag-off test flaky rather than wrong. It asserted
+ * immediately after the redirect, so whether those two calls had left yet was a
+ * race - lost about one full-suite run in twenty-five, and never reproducible in
+ * isolation, at --repeat-each, or across four workers.
+ */
+const HOME_PAGE_ENDPOINTS = [
+	"/insights/top-requestors",
+	"/insights/top-requested-titles",
+];
+
+/**
+ * Collects every statistics call the page makes, in order. Attach before goto.
+ *
+ * `ignore` takes endpoints a DIFFERENT page legitimately calls, and is not the
+ * default: on the insights route itself every /insights/ call is the dashboard's,
+ * and the scoping tests below have to see all of them.
+ */
+function trackStatsRequests(
+	page: import("@playwright/test").Page,
+	ignore: string[] = [],
+): URL[] {
 	const seen: URL[] = [];
 	page.on("request", (request) => {
 		const url = new URL(request.url());
-		if (url.pathname.includes("/insights/")) seen.push(url);
+		if (!url.pathname.includes("/insights/")) return;
+		if (ignore.some((endpoint) => url.pathname.endsWith(endpoint))) return;
+		seen.push(url);
 	});
 	return seen;
 }
+
+/** Readable in a CI log: the paths, not "[object URL]". */
+const paths = (urls: URL[]) => urls.map((url) => url.pathname).join(", ");
 
 test.describe("Library insights", () => {
 	test("is unreachable while the feature flag is off", async ({
@@ -48,7 +81,7 @@ test.describe("Library insights", () => {
 		await app.mockGraphQL(mocks);
 		await app.mockStats();
 
-		const statsRequests = trackStatsRequests(page);
+		const statsRequests = trackStatsRequests(page, HOME_PAGE_ENDPOINTS);
 
 		await page.goto("/insights");
 
@@ -61,7 +94,33 @@ test.describe("Library insights", () => {
 		// statistics endpoint is called at all. A guard that let the loader run
 		// first would still land the user elsewhere, but would have asked an
 		// environment that cannot answer - which is the thing the flag is for.
-		expect(statsRequests).toHaveLength(0);
+		expect(statsRequests, paths(statsRequests)).toHaveLength(0);
+	});
+
+	// Pins the behaviour that made the test above flaky, so the exclusion list has
+	// a reason on the record rather than only a comment. It also states a product
+	// fact worth knowing: the flag gates the DASHBOARD, not these two summary
+	// cards, so an environment whose dcb-service predates /insights shows two
+	// failing cards on the home page whatever the flag says. If the cards are ever
+	// gated too, this test fails and HOME_PAGE_ENDPOINTS can go.
+	test("the home page calls Insights whether or not the flag is on", async ({
+		page,
+		app,
+	}) => {
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+
+		const statsRequests = trackStatsRequests(page);
+
+		await page.goto("/");
+
+		await expect
+			.poll(() => statsRequests.map((url) => url.pathname).join(" "))
+			.toContain("/insights/top-requested-titles");
+		await expect
+			.poll(() => statsRequests.map((url) => url.pathname).join(" "))
+			.toContain("/insights/top-requestors");
 	});
 
 	test("is unreachable for a read-only user", async ({ page, app }) => {
@@ -83,7 +142,7 @@ test.describe("Library insights", () => {
 		// which renders the protected page first and corrects afterwards. Asserting
 		// that nothing was fetched is what distinguishes the beforeLoad guard from
 		// that fallback: an effect-only guard leaks a loader's worth of requests.
-		expect(statsRequests).toHaveLength(0);
+		expect(statsRequests, paths(statsRequests)).toHaveLength(0);
 	});
 
 	test("scopes every statistics call to the token's own library", async ({
