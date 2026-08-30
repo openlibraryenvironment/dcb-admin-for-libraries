@@ -3,7 +3,6 @@
 		"code": "Agency code",
 		"name": "Agency name"
 	},
-
 	"audit": {
 		"no_results": "No audits found",
 		"audit": "Audit data",
@@ -330,6 +329,9 @@
 		"supplier_requests": {
 			"title": "Supplier requests",
 			"tooltip": "The requests for which your library is acting as a supplier"
+		},
+		"insights": {
+			"title": "Insights"
 		}
 	},
 	"patron_request": {
@@ -682,7 +684,6 @@
 			"select_pickup": "We have succesfully validated the patron provided. Please choose a pickup location and click 'Submit' to finish placing this staff request."
 		}
 	},
-
 	"settings": {
 		"customisation": "Customisation",
 		"dark_mode": "Dark mode",
@@ -695,7 +696,6 @@
 		"system_mode": "System mode",
 		"theme_selection": "Theme selection"
 	},
-
 	"ui": {
 		"actions": {
 			"add_filter": "Add filter",
@@ -883,5 +883,178 @@
 		"RET-EXP": "Walk-up",
 		"RET-PUA": "Pickup anywhere",
 		"RET-LOCAL": "Local"
+	},
+	"insights": {
+		"title": "Library insights",
+		"subtitle": "Requesting activity, fulfilment and value for {{library}}.",
+		"loading": "Loading insights",
+		"no_host_lms": "This library has no associated Host LMS, so insights cannot be shown.",
+		"no_data": "No data for the selected period.",
+		"duration": {
+			"days": "{{value}} days",
+			"hours": "{{value}} hrs",
+			"minutes": "{{value}} min",
+			"none": "—"
+		},
+		"range": {
+			"label": "Time range",
+			"7d": "7 days",
+			"30d": "30 days",
+			"90d": "90 days",
+			"365d": "1 year",
+			"from": "From",
+			"to": "To"
+		},
+		"kpi": {
+			"vs_prior": "vs previous period",
+			"fill_rate": {
+				"title": "Fill rate"
+			},
+			"error_rate": {
+				"title": "Error rate"
+			},
+			"time_to_loan": {
+				"title": "Median time to loan",
+				"subtitle": "p50 · p95 {{p95}}"
+			},
+			"resolved": {
+				"title": "Requests resolved",
+				"subtitle": "completed or failed"
+			},
+			"cost_avoidance": {
+				"title": "Estimated cost avoided",
+				"basis": "Based on {{count}} successful fulfilments",
+				"input_label": "Cost per ILL",
+				"input_help": "Your own average interlibrary loan cost"
+			},
+			"checkout_rate": {
+				"title": "Checkout rate",
+				"subtitle": "{{reached}} of {{total}} reached the shelf"
+			},
+			"total_borrows": {
+				"title": "Total borrows",
+				"subtitle": "requests placed as borrower"
+			},
+			"total_lends": {
+				"title": "Total lends",
+				"subtitle": "items supplied to the network"
+			},
+			"rescued": {
+				"title": "Requests rescued",
+				"subtitle": "fulfilled after re-resolution"
+			},
+			"unique_titles": {
+				"title": "Unique titles requested",
+				"subtitle": "across {{total}} requests"
+			}
+		},
+		"charts": {
+			"status_flow": {
+				"title": "Requesting activity over time",
+				"subtitle": "Requests entering each status per period. Pick the statuses to plot.",
+				"picker_label": "Choose which statuses to plot"
+			},
+			"failure_taxonomy": {
+				"title": "Why requests fail",
+				"subtitle": "Failed requests broken down by reason.",
+				"series": "Failed requests"
+			},
+			"supplier_reliability": {
+				"title": "Supplier reliability",
+				"subtitle": "Fulfilled versus failed requests per supplying library.",
+				"fulfilled": "Fulfilled",
+				"failed": "Failed"
+			},
+			"net_flow": {
+				"title": "Borrowing vs supplying",
+				"subtitle": "Reciprocity across the network — net givers and takers.",
+				"borrowed": "Borrowed",
+				"supplied": "Supplied"
+			},
+			"rare_gem": {
+				"title": "Unique collection value",
+				"subtitle": "Requested titles that only this library supplies to the network.",
+				"col_title": "Title",
+				"col_author": "Author",
+				"col_requests": "Requests"
+			},
+			"time_in_status": {
+				"title": "Where requests stall",
+				"subtitle": "Median time spent in each status — the biggest bottleneck first.",
+				"series": "Median dwell",
+				"axis_hours": "Hours"
+			},
+			"supplier_response": {
+				"title": "Supplier responsiveness",
+				"subtitle": "Median time from request placed to supplier confirmation, per lender.",
+				"series": "Median response",
+				"axis_hours": "Hours"
+			},
+			"demand_heatmap": {
+				"title": "When requests arrive",
+				"subtitle": "Request volume by day of week and hour of day (server time zone)."
+			},
+			"demand_by_format": {
+				"title": "Demand by format",
+				"subtitle": "Requesting volume by material format.",
+				"series": "Requests"
+			},
+			"top_titles": {
+				"title": "Most requested titles",
+				"subtitle": "The titles the network asks for most.",
+				"col_title": "Title",
+				"col_requests": "Requests"
+			},
+			"demand_by_pickup": {
+				"title": "Demand by pickup location",
+				"subtitle": "Where patrons collect their requests.",
+				"series": "Requests"
+			},
+			"demand_by_patron_group": {
+				"title": "Demand by patron group",
+				"subtitle": "Which patron categories drive requesting.",
+				"series": "Requests"
+			},
+			"unmet_local": {
+				"title": "Unmet local demand",
+				"subtitle": "Titles your own patrons requested but you do not hold.",
+				"col_supplied": "Supplied"
+			},
+			"acquisition_opportunities": {
+				"title": "Acquisition opportunities",
+				"subtitle": "Highly requested titles across the network that you do not hold.",
+				"col_supplied": "Supplied"
+			},
+			"consortial_lifeline": {
+				"title": "Consortial lifeline",
+				"subtitle": "Titles you uniquely keep flowing to the network.",
+				"col_supplied": "Supplied"
+			},
+			"peer_benchmark": {
+				"title": "Peer benchmarking",
+				"subtitle": "Each library vs the consortium median (fill {{fill}}, checkout {{checkout}}).",
+				"col_library": "Library",
+				"col_requests": "Requests",
+				"col_checkout": "Checkout rate",
+				"col_fill": "Fill rate",
+				"your_library": "(your library)"
+			},
+			"collection_dimension": {
+				"title": "Collection analysis",
+				"subtitle": "Requesting demand sliced by a bibliographic dimension.",
+				"select_label": "Dimension",
+				"series": "Requests",
+				"dim_format": "Format",
+				"dim_language": "Language",
+				"dim_subject": "Subject",
+				"dim_decade": "Publication decade"
+			},
+			"new_acquisitions": {
+				"title": "New acquisitions performance",
+				"subtitle": "How your recently-added titles perform in the network.",
+				"acquired_since": "Acquired since",
+				"col_supplied": "Supplied"
+			}
+		}
 	}
 }

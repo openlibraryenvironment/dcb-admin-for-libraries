@@ -2,6 +2,8 @@ import { test as base, expect } from "@playwright/test";
 import { injectRuntimeConfig } from "./runtime-config";
 import { seedAuth, type FakeUserOptions } from "./auth";
 import { mockGraphQL, type OperationMocks } from "./graphql";
+import { mockStats, type StatsMocks } from "./stats";
+import { enableFeatures } from "./features";
 import { useColorScheme, type ColorScheme } from "./color-scheme";
 import { analyse, formatViolations } from "./axe";
 
@@ -24,6 +26,10 @@ export interface AppFixture {
 	signIn(options?: FakeUserOptions): Promise<void>;
 	/** Mock GraphQL operations by operationName. Call before goto. */
 	mockGraphQL(mocks: OperationMocks): Promise<void>;
+	/** Mock the REST statistics endpoints by path segment. Call before goto. */
+	mockStats(overrides?: StatsMocks): Promise<void>;
+	/** Turn runtime feature flags on for this spec. Call before goto. */
+	enableFeatures(flags: string[]): Promise<void>;
 	/** Boot the app in a given colour scheme. Call before goto. */
 	useColorScheme(scheme: ColorScheme): Promise<void>;
 	/** Assert zero WCAG 2.2 AA violations on the current page. */
@@ -45,6 +51,8 @@ export const test = base.extend<{ app: AppFixture; runtimeConfig: void }>({
 		await use({
 			signIn: (options) => seedAuth(page, options),
 			mockGraphQL: (mocks) => mockGraphQL(page, mocks),
+			mockStats: (overrides) => mockStats(page, overrides),
+			enableFeatures: (flags) => enableFeatures(page, flags),
 			useColorScheme: (scheme) => useColorScheme(page, scheme),
 			expectNoAccessibilityViolations: async () => {
 				const violations = await analyse(page);

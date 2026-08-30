@@ -31,6 +31,9 @@ declare global {
 			VITE_KEYCLOAK_ID?: string;
 			VITE_DCB_API_BASE?: string;
 			VITE_DCB_SEARCH_BASE?: string;
+			// Rendered from the container environment by 40-inject-env.sh so a
+			// backend-gated feature can be turned on per environment without a rebuild.
+			VITE_FEATURE_INSIGHTS?: string;
 			[key: string]: string | undefined;
 		};
 		__DCB_BUNDLE_BASE_URL__?: string;

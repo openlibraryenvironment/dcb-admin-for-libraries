@@ -9,6 +9,7 @@ import { Header } from "../Header/Header";
 import { CustomLink } from "@components/CustomLink";
 import { useTranslation } from "react-i18next";
 import { matchActiveTab } from "@helpers/activeTab";
+import { isInsightsEnabled } from "@helpers/featureFlags";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -30,6 +31,7 @@ const TAB_PATHS = {
 	mappings: "/mappings",
 	locations: "/locations",
 	bibs: "/bibs",
+	insights: "/insights",
 	settings: "/settings",
 } as const;
 
@@ -66,6 +68,12 @@ export const Layout = ({ children }: LayoutProps) => {
 					{ label: t("nav.mappings.title"), value: TAB_PATHS.mappings },
 					{ label: t("nav.locations.title"), value: TAB_PATHS.locations },
 					{ label: t("nav.bibs.title"), value: TAB_PATHS.bibs },
+					// Insights is hidden until the environment's dcb-service serves the
+					// statistics endpoints. The route guards the typeable URL as well -
+					// hiding a tab is UX, not access control.
+					...(isInsightsEnabled()
+						? [{ label: t("nav.insights.title"), value: TAB_PATHS.insights }]
+						: []),
 					{ label: t("nav.settings.title"), value: TAB_PATHS.settings },
 				]
 			: tabsReadOnly;

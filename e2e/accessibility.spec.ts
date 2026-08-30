@@ -64,6 +64,35 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// Insights is the chart-heavy surface, and charts are where contrast
+		// failures hide: series colours, axis ticks and legend swatches are all
+		// painted from the palette rather than the theme's text tokens, and a
+		// palette that clears AA on the light ground routinely fails on the dark
+		// one. Scanned with populated data (see DEFAULT_STATS) so the charts are
+		// actually drawn - an empty state would pass this gate without testing
+		// anything it exists to test.
+		name: "insights",
+		path: "/insights",
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraryBasics: library,
+			});
+			await app.mockStats();
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: /insights/i }),
+			).toBeVisible();
+			// The KPI header is fed by the one combined /stats/dashboard call, so a
+			// rendered figure means the page got past its loader rather than being
+			// caught mid-skeleton.
+			await expect(page.getByText("89.4%")).toBeVisible();
+		},
+	},
+	{
 		// The surface a mistyped or stale link lands on. It is reached by
 		// accident rather than chosen, so it is the last page that should be
 		// hard to read - and the giant ErrorOutlined glyph it shares with the
