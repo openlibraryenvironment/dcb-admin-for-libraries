@@ -28,41 +28,19 @@ const LIBRARY_PARAM = "requestedLibraryCode";
 const mocks = { LoadLibrary: library, LoadLibraryBasics: library };
 
 /**
- * The two Insights endpoints the HOME page calls on its own account.
- *
- * TopTitlesSummary and TopRequestorsSummary are rendered by
- * routes/__authenticated/index.tsx - the page the flag guard redirects to - and
- * both call /insights/... regardless of the feature flag. So "did the insights
- * route leak a statistics call" cannot be asked by matching /insights/ alone: the
- * destination page answers it for you, a few milliseconds later.
- *
- * That is what made the flag-off test flaky rather than wrong. It asserted
- * immediately after the redirect, so whether those two calls had left yet was a
- * race - lost about one full-suite run in twenty-five, and never reproducible in
- * isolation, at --repeat-each, or across four workers.
- */
-const HOME_PAGE_ENDPOINTS = [
-	"/insights/top-requestors",
-	"/insights/top-requested-titles",
-];
-
-/**
  * Collects every statistics call the page makes, in order. Attach before goto.
  *
- * `ignore` takes endpoints a DIFFERENT page legitimately calls, and is not the
- * default: on the insights route itself every /insights/ call is the dashboard's,
- * and the scoping tests below have to see all of them.
+ * Matching /insights/ alone is enough now that the home page's two summary cards
+ * sit behind the same flag as the dashboard. It was not before: the guard
+ * redirects to "/", those cards called /insights/... unconditionally, and the
+ * flag-off assertion below raced them - which is how it failed about one
+ * full-suite run in twenty-five while never reproducing in isolation.
  */
-function trackStatsRequests(
-	page: import("@playwright/test").Page,
-	ignore: string[] = [],
-): URL[] {
+function trackStatsRequests(page: import("@playwright/test").Page): URL[] {
 	const seen: URL[] = [];
 	page.on("request", (request) => {
 		const url = new URL(request.url());
-		if (!url.pathname.includes("/insights/")) return;
-		if (ignore.some((endpoint) => url.pathname.endsWith(endpoint))) return;
-		seen.push(url);
+		if (url.pathname.includes("/insights/")) seen.push(url);
 	});
 	return seen;
 }
@@ -81,7 +59,7 @@ test.describe("Library insights", () => {
 		await app.mockGraphQL(mocks);
 		await app.mockStats();
 
-		const statsRequests = trackStatsRequests(page, HOME_PAGE_ENDPOINTS);
+		const statsRequests = trackStatsRequests(page);
 
 		await page.goto("/insights");
 
@@ -97,13 +75,11 @@ test.describe("Library insights", () => {
 		expect(statsRequests, paths(statsRequests)).toHaveLength(0);
 	});
 
-	// Pins the behaviour that made the test above flaky, so the exclusion list has
-	// a reason on the record rather than only a comment. It also states a product
-	// fact worth knowing: the flag gates the DASHBOARD, not these two summary
-	// cards, so an environment whose dcb-service predates /insights shows two
-	// failing cards on the home page whatever the flag says. If the cards are ever
-	// gated too, this test fails and HOME_PAGE_ENDPOINTS can go.
-	test("the home page calls Insights whether or not the flag is on", async ({
+	// The other half of the same flag. Both home-page summary cards read the
+	// Insights API, so leaving them ungated defeated the flag on the page every
+	// library administrator lands on first: an environment too old to serve
+	// /insights still fired both calls and rendered two broken cards.
+	test("the home page makes no Insights call while the flag is off", async ({
 		page,
 		app,
 	}) => {
@@ -114,6 +90,39 @@ test.describe("Library insights", () => {
 		const statsRequests = trackStatsRequests(page);
 
 		await page.goto("/");
+
+		// Wait for something that renders either way, so this cannot pass by
+		// asserting against a page that has not finished loading yet.
+		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+		// The two card headings, by their real names: "Your patrons' favourite
+		// titles this month" and "Top requesters this month".
+		await expect(
+			page.getByRole("heading", { name: /favourite titles|top requesters/i }),
+		).toHaveCount(0);
+		expect(statsRequests, paths(statsRequests)).toHaveLength(0);
+	});
+
+	// ...and they are gated, not deleted.
+	test("the home page shows the summary cards once the flag is on", async ({
+		page,
+		app,
+	}) => {
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+
+		const statsRequests = trackStatsRequests(page);
+
+		await page.goto("/");
+
+		await expect(
+			page.getByRole("heading", { name: /favourite titles/i }),
+		).toBeVisible();
+		await expect(
+			page.getByRole("heading", { name: /top requesters/i }),
+		).toBeVisible();
 
 		await expect
 			.poll(() => statsRequests.map((url) => url.pathname).join(" "))
