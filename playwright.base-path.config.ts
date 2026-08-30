@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Port 4204: the base-path band (420x) for dcb-admin-for-libraries (…4). It was 4175,
+// which is symposia-ui's primary e2e port under the allocation in playwright.config.ts.
+
 /**
  * The app served from a PATH PREFIX, which is how it actually ships: the CI
  * build runs `VITE_PUBLIC_URL=/dcb-admin-for-libraries/ npm run build` so that
@@ -25,7 +28,7 @@ export default defineConfig({
 		// navigate to full browser paths so that every base segment a URL is
 		// expected to carry is written out in the assertion, rather than being
 		// supplied invisibly by Playwright's URL resolution.
-		baseURL: "http://localhost:4175",
+		baseURL: "http://localhost:4204",
 		trace: "on-first-retry",
 	},
 
@@ -38,8 +41,8 @@ export default defineConfig({
 
 	webServer: {
 		command:
-			"npm run build && npm run preview -- --port 4175 --strictPort",
-		url: `http://localhost:4175${BASE_PATH}`,
+			"npm run build && npm run preview -- --port 4204 --strictPort",
+		url: `http://localhost:4204${BASE_PATH}`,
 		reuseExistingServer: !process.env.CI,
 		env: {
 			// Set for BOTH commands, not just the build: `vite preview` reads the
