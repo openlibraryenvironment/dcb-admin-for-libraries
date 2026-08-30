@@ -1,31 +1,13 @@
 /**
  * The patron-facing brand fields a library administrator sets, and what may go in them.
  *
- * These describe the DISCOVERY app (Symposia), not this one. `defaultThemeName` names a
+ * These describe the DISCOVERY experience, not this one. `defaultThemeName` names a
  * theme from the discovery frontend's registry; it has nothing to do with this
- * application's own theme.
- *
- * <h2>Where the vocabulary really lives</h2>
- *
- * dcb-service validates `defaultThemeName` on write against `dcb.branding.theme-names`,
- * whose default is exactly the list below. That is the authority; this constant exists so
- * an administrator picks from a list rather than typing a name and learning it was wrong
- * from a rejected save — §C-5's requirement that configuration survive a non-specialist,
- * and this is the application where the least specialist administrators work.
- *
- * <h2>The third copy, knowingly</h2>
- *
- * symposia-ui ships the registry, dcb-service holds the configured vocabulary, and
- * dcb-admin-ui carries this same module for the consortium form. Extracting a shared
- * package is P-1 in NEXT_STAGE_PLAN.md and is parked on two unanswered questions (where it
- * publishes, and what it contains). The honest interim fix is smaller than that package:
- * a dcb-service query returning the configured list, which would delete both copies. Until
- * one of those happens, {@link themeOptions} folds the stored value in, so drift costs an
- * administrator a missing option and never costs them their setting.
- */
+ * application's own theme. dcb-service validates *
+/** */
 export const DISCOVERY_THEME_NAMES = ["openRS", "kInt"] as const;
 
-/** Column widths in dcb-service's V8_73_002. Rejected here, not by Postgres. */
+/** Column widths in dcb-service. */
 export const BRAND_LIMITS = {
 	logoUrl: 400,
 	logoAlt: 255,
@@ -33,7 +15,7 @@ export const BRAND_LIMITS = {
 } as const;
 
 /**
- * The path dcb-service serves uploaded brand assets from — R-17b.
+ * The path dcb-service serves uploaded brand assets from
  *
  * An upload returns a site-relative URL under this prefix, and dcb-service's
  * BrandingValidator accepts that form on write alongside an absolute http(s) URL. Kept in
@@ -57,6 +39,39 @@ export const BRAND_IMAGE_ACCEPT = "image/png,image/jpeg";
 
 /** Matches `dcb.branding.assets.max-bytes`. Checked again, and properly, on the server. */
 export const BRAND_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
+
+/**
+ * `dcb.branding.assets.store` out of an `/info` payload, or null when it is not there.
+ *
+ * Every level is optional on purpose. dcb-service only publishes the branding block when a
+ * `BrandAssetStore` bean exists, so its absence is an ordinary answer from an older or
+ * differently-configured deployment rather than a malformed response.
+ */
+export function brandAssetStoreFrom(info: unknown): string | null {
+	const store = (
+		info as { dcb?: { branding?: { assets?: { store?: unknown } } } } | null
+	)?.dcb?.branding?.assets?.store;
+
+	return typeof store === "string" ? store : null;
+}
+
+/**
+ * Whether this deployment accepts brand image uploads — R-17b.
+ *
+ * With `dcb.branding.assets.store=none` dcb-service's upload controller is not registered
+ * at all (`@Requires(beans = BrandAssetStore.class)`), so POST /brand-assets is a 404 and
+ * an upload button there can only ever fail.
+ *
+ * UNKNOWN IS AVAILABLE, deliberately. A null store means /info has not been read yet, or
+ * the request failed, or the payload predates the branding block — none of which is
+ * evidence that uploads are off. Hiding the control on unknown would remove a working
+ * feature whenever /info is briefly unreachable, and leave no way to explain why. Showing
+ * it costs a clear refusal at Save, which is the message dcb-service already writes. This
+ * is UX, not authorisation: the control on uploading is the role check on the route.
+ */
+export function areBrandUploadsAvailable(assetStore: string | null): boolean {
+	return assetStore !== "none";
+}
 
 /** The shape dcb-service's asset store mints: a SHA-256 and an extension it re-encodes to. */
 const ASSET_KEY = /^[0-9a-f]{64}[.](png|jpg)$/;

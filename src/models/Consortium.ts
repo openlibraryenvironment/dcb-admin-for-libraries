@@ -7,7 +7,7 @@ export interface Consortium {
 	name: string;
 	libraryGroup: Group;
 	dateOfLaunch: string;
-	// The brand marks are deliberately absent. dcb-service V8_74_002 merged
+	// The brand marks are deliberately absent. dcb-service V9_0_004 merged
 	// headerImageUrl into brandHeaderIconUrl and aboutImageUrl into brandLogoUrl, and
 	// dropped the uploader name and email columns that sat beside them - a member of
 	// staff's personal data on a type any authenticated principal could read.

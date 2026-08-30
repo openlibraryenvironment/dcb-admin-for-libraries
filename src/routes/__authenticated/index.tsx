@@ -22,6 +22,7 @@ import {
 	useTheme,
 } from "@mui/material";
 import { BrandImageField } from "@components/BrandImageField/BrandImageField";
+import { useBrandUploadsAvailable } from "@/hooks/useBrandUploadsAvailable";
 import {
 	BRAND_LIMITS,
 	isValidLogoUrl,
@@ -108,6 +109,11 @@ function HomeComponent() {
 	// Read once per render rather than at each call site, so the two cards below
 	// cannot disagree with each other.
 	const insightsEnabled = isInsightsEnabled();
+
+	// R-17b. A deployment with dcb.branding.assets.store=none has no upload route, so the
+	// button would 404. The URL field stays either way — pointing at a CDN the library
+	// already runs is a first-class route in, not a fallback.
+	const brandUploadsAvailable = useBrandUploadsAvailable();
 
 	const [alert, setAlert] = useState<AlertObject>({
 		open: false,
@@ -819,6 +825,7 @@ function HomeComponent() {
   									stagedFile={stagedLogo}
   									onStageFile={stageLogo}
   									label={t("library.brand.logo_url")}
+  									uploadsAvailable={brandUploadsAvailable}
   									error={!!errors.brandLogoUrl}
   									helperText={
   										errors.brandLogoUrl?.message ??
