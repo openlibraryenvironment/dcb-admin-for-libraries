@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
+import { outcomeTextColour } from "@helpers/outcomeTextColour";
 import { peerBenchmarksQueryOptions } from "@helpers/statsApi";
 
 const PANEL_MIN_HEIGHT = 300;
@@ -166,9 +167,7 @@ export default function PeerBenchmarkPanel({
 													color:
 														row.fillRate == null
 															? "text.secondary"
-															: aboveMedian
-																? "success.main"
-																: "error.main",
+															: outcomeTextColour(aboveMedian),
 												}}
 											>
 												{pct(row.fillRate)}

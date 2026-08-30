@@ -9,6 +9,8 @@ import {
 } from "@mui/material";
 import { ArrowDropUp, ArrowDropDown } from "@mui/icons-material";
 
+import { outcomeTextColour } from "@helpers/outcomeTextColour";
+
 interface KpiTileProps {
 	title: string;
 	value: ReactNode;
@@ -38,9 +40,7 @@ export default function KpiTile({
 	const deltaColor =
 		!hasDelta || (!positive && !negative)
 			? "text.secondary"
-			: good
-				? "success.main"
-				: "error.main";
+			: outcomeTextColour(good);
 
 	return (
 		<Card variant="outlined" sx={{ height: FIXED_HEIGHT }}>

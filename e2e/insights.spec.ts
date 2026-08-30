@@ -27,7 +27,15 @@ const LIBRARY_PARAM = "requestedLibraryCode";
 
 const mocks = { LoadLibrary: library, LoadLibraryBasics: library };
 
-/** Collects every statistics call the page makes, in order. Attach before goto. */
+/**
+ * Collects every statistics call the page makes, in order. Attach before goto.
+ *
+ * Matching /insights/ alone is enough now that the home page's two summary cards
+ * sit behind the same flag as the dashboard. It was not before: the guard
+ * redirects to "/", those cards called /insights/... unconditionally, and the
+ * flag-off assertion below raced them - which is how it failed about one
+ * full-suite run in twenty-five while never reproducing in isolation.
+ */
 function trackStatsRequests(page: import("@playwright/test").Page): URL[] {
 	const seen: URL[] = [];
 	page.on("request", (request) => {
@@ -36,6 +44,9 @@ function trackStatsRequests(page: import("@playwright/test").Page): URL[] {
 	});
 	return seen;
 }
+
+/** Readable in a CI log: the paths, not "[object URL]". */
+const paths = (urls: URL[]) => urls.map((url) => url.pathname).join(", ");
 
 test.describe("Library insights", () => {
 	test("is unreachable while the feature flag is off", async ({
@@ -61,7 +72,64 @@ test.describe("Library insights", () => {
 		// statistics endpoint is called at all. A guard that let the loader run
 		// first would still land the user elsewhere, but would have asked an
 		// environment that cannot answer - which is the thing the flag is for.
-		expect(statsRequests).toHaveLength(0);
+		expect(statsRequests, paths(statsRequests)).toHaveLength(0);
+	});
+
+	// The other half of the same flag. Both home-page summary cards read the
+	// Insights API, so leaving them ungated defeated the flag on the page every
+	// library administrator lands on first: an environment too old to serve
+	// /insights still fired both calls and rendered two broken cards.
+	test("the home page makes no Insights call while the flag is off", async ({
+		page,
+		app,
+	}) => {
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+
+		const statsRequests = trackStatsRequests(page);
+
+		await page.goto("/");
+
+		// Wait for something that renders either way, so this cannot pass by
+		// asserting against a page that has not finished loading yet.
+		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+		// The two card headings, by their real names: "Your patrons' favourite
+		// titles this month" and "Top requesters this month".
+		await expect(
+			page.getByRole("heading", { name: /favourite titles|top requesters/i }),
+		).toHaveCount(0);
+		expect(statsRequests, paths(statsRequests)).toHaveLength(0);
+	});
+
+	// ...and they are gated, not deleted.
+	test("the home page shows the summary cards once the flag is on", async ({
+		page,
+		app,
+	}) => {
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+
+		const statsRequests = trackStatsRequests(page);
+
+		await page.goto("/");
+
+		await expect(
+			page.getByRole("heading", { name: /favourite titles/i }),
+		).toBeVisible();
+		await expect(
+			page.getByRole("heading", { name: /top requesters/i }),
+		).toBeVisible();
+
+		await expect
+			.poll(() => statsRequests.map((url) => url.pathname).join(" "))
+			.toContain("/insights/top-requested-titles");
+		await expect
+			.poll(() => statsRequests.map((url) => url.pathname).join(" "))
+			.toContain("/insights/top-requestors");
 	});
 
 	test("is unreachable for a read-only user", async ({ page, app }) => {
@@ -83,7 +151,7 @@ test.describe("Library insights", () => {
 		// which renders the protected page first and corrects afterwards. Asserting
 		// that nothing was fetched is what distinguishes the beforeLoad guard from
 		// that fallback: an effect-only guard leaks a loader's worth of requests.
-		expect(statsRequests).toHaveLength(0);
+		expect(statsRequests, paths(statsRequests)).toHaveLength(0);
 	});
 
 	test("scopes every statistics call to the token's own library", async ({

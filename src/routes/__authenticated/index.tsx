@@ -42,6 +42,7 @@ import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
 import { FunctionalSettingStatus } from "@models/FunctionalSetting";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import { getPatronRequestStats } from "@queries/getPatronRequestStats";
+import { isInsightsEnabled } from "@helpers/featureFlags";
 import TopTitlesSummary from "@components/TopTitlesSummary/TopTitlesSummary";
 import TopRequestorsSummary from "@components/TopRequestorSummary/TopRequestorSummary";
 
@@ -94,6 +95,10 @@ function HomeComponent() {
 	};
 
 	const DCB_API_BASE = cfg?.VITE_DCB_API_BASE;
+
+	// Read once per render rather than at each call site, so the two cards below
+	// cannot disagree with each other.
+	const insightsEnabled = isInsightsEnabled();
 
 	const [alert, setAlert] = useState<AlertObject>({
 		open: false,
@@ -943,32 +948,44 @@ function HomeComponent() {
 					)}
 				</Stack>
 			</Grid>
-            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Stack spacing={1} direction={"column"}>
-					<Typography variant="h3" sx={{
-                        fontWeight: "bold"
-                    }}>
-						{t("library.statistics.top_titles_month")}
-					</Typography>
-					<TopTitlesSummary
-						headers={headers}
-						libraryCode={userLibraryHostLmsCode}
-					/>
-				</Stack>
-			</Grid>
-            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Stack spacing={1} direction={"column"}>
-					<Typography variant="h3" sx={{
-                        fontWeight: "bold"
-                    }}>
-						{t("library.statistics.top_requesters_month")}
-					</Typography>
-					<TopRequestorsSummary
-						headers={headers}
-						libraryCode={userLibraryHostLmsCode}
-					/>
-				</Stack>
-			</Grid>
+			{/*
+			 * Both summary cards read the Insights API (/insights/top-requested-titles
+			 * and /insights/top-requestors), so they belong behind the same flag as the
+			 * dashboard. Ungated they defeated the flag's whole purpose: an environment
+			 * that turns Insights OFF because its dcb-service is too old to serve those
+			 * endpoints still fired both calls on its home page, and showed two broken
+			 * cards to every library administrator on arrival.
+			 *
+			 * The heading is inside the guard with the card it labels - a heading over
+			 * nothing is worse than an absent section, and it would leave a stray h3 in
+			 * the page outline.
+			 */}
+			{insightsEnabled && (
+				<>
+					<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+						<Stack spacing={1} direction={"column"}>
+							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+								{t("library.statistics.top_titles_month")}
+							</Typography>
+							<TopTitlesSummary
+								headers={headers}
+								libraryCode={userLibraryHostLmsCode}
+							/>
+						</Stack>
+					</Grid>
+					<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+						<Stack spacing={1} direction={"column"}>
+							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+								{t("library.statistics.top_requesters_month")}
+							</Typography>
+							<TopRequestorsSummary
+								headers={headers}
+								libraryCode={userLibraryHostLmsCode}
+							/>
+						</Stack>
+					</Grid>
+				</>
+			)}
             <TimedAlert
 				open={alert.open}
 				severityType={alert.severity}

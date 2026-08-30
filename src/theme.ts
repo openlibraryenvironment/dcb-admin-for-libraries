@@ -234,6 +234,16 @@ const theme = createTheme({
 					outlineColor: "#0C4068",
 					subTabBackground: "#E2EEF6",
 					subTabText: "#0C4068",
+					// Good/bad carried by COLOURED TEXT - see outcomeTextColour.
+					// Measured against both grounds this text sits on, white and the
+					// selected-row tint #ecf0f3: 7.87 / 6.87 and 5.62 / 4.91.
+					//
+					// Deliberately not success.main or error.main. success.main is
+					// 4.47 on the selected row, and error.main is red.A400, which is
+					// 3.85 against white in EITHER direction - no shade of that ramp
+					// clears 4.5 on both grounds in both schemes.
+					outcomeGood: "#1b5e20",
+					outcomeBad: "#c62828",
 				},
 				secondary: {
 					main: "#1e7ebf",
@@ -260,6 +270,10 @@ const theme = createTheme({
 					outlineColor: "#35B7FF",
 					subTabBackground: "#1E3A4C",
 					subTabText: "#E2EEF6",
+					// Same role, measured on the dark grounds #121212 and the
+					// selected-row tint #182c38: 7.92 / 6.10 and 6.27 / 4.83.
+					outcomeGood: "#66bb6a",
+					outcomeBad: "#e57373",
 				},
 				secondary: {
 					main: "#75BEDB",
@@ -407,6 +421,8 @@ declare module "@mui/material/styles" {
 		outlineColor?: string;
 		editableFieldBackground?: string;
 		errorBackground?: string;
+		outcomeGood?: string;
+		outcomeBad?: string;
 	}
 
 	interface SimplePaletteColorOptions {
@@ -453,6 +469,8 @@ declare module "@mui/material/styles" {
 		outlineColor?: string;
 		editableFieldBackground?: string;
 		errorBackground?: string;
+		outcomeGood?: string;
+		outcomeBad?: string;
 	}
 	interface TypographyVariants {
 		accordionSummary?: React.CSSProperties;
