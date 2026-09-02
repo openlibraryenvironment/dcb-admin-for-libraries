@@ -136,7 +136,7 @@ function RouteComponent() {
 		queryFn: async () =>
 			request(
 				DCB_URL,
-				getLibrary,
+				getLibrary(),
 				{
 					query: "agencyCode:" + code,
 					pagesize: 10,

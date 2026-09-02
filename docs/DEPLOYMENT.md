@@ -44,6 +44,46 @@ The application requires the following environment variables to function properl
 
 ---
 
+## 2a. Feature flags: which dcb-service this deployment is talking to
+
+This application ships on its own cadence, and a dcb-service upgrade takes time to reach
+production, so one release of this app has to run against more than one release of the
+backend. Anything that needs a newer dcb-service is behind a runtime flag, switched on
+**when this environment's own dcb-service is upgraded, with no rebuild**: the container
+re-renders `inject_env.json` from its environment on every start, so a changed variable
+plus a restart is the whole procedure.
+
+**Every flag is off unless it is explicitly `true`.** An unset variable, an empty string,
+`0` and `yes` all read as off, so an environment that has never heard of a flag simply
+does not show the feature.
+
+| Variable | Enable at dcb-service | What it turns on |
+| --- | --- | --- |
+| `VITE_FEATURE_LIBRARY_BRANDING` | **9.0.0** or later | The "How your library appears to patrons" block on the library profile: logo, logo description and discovery theme |
+| `VITE_FEATURE_INSIGHTS` | **9.0.0** or later | The Insights page, and the top-titles / top-requesters panels on the library profile (all of them call `/insights/**`) |
+
+### Getting it wrong in each direction
+
+A flag left **off** after the upgrade costs a hidden feature and nothing else.
+
+A flag switched **on** too early is the expensive mistake, because the newer GraphQL
+fields do not degrade gracefully: a field the server does not declare is a validation
+error that fails the whole operation. `LoadLibrary` runs in the header on every page and
+in six routes, so `VITE_FEATURE_LIBRARY_BRANDING=true` against 8.71.0 does not grey out a
+form — it takes the application down.
+
+### Adding the next one
+
+The rule lives in `src/constants/serviceCapabilities.ts`, not in prose. Add a row naming
+the release and the fields, declare the flag in `src/helpers/featureFlags.ts`, add it to
+`docker/production/inject_env.json.template`, and commit that release's schema as
+`schema.v<version>.graphqls`. Three test suites then check the claim rather than trusting
+it: that the flag reaches a deployment, that the release really has those fields (and the
+one before it does not), and that every document is valid against both the oldest
+supported release and dcb-service main.
+
+---
+
 ## 3. Deployment Pathways
 
 Choose the deployment method that matches your infrastructure.
@@ -133,9 +173,16 @@ docker run -p 8080:80 \
   -e VITE_DCB_API_BASE="https://api..." \
   -e VITE_DCB_SEARCH_BASE="https://search..." \
   -e VITE_PUBLIC_URL="/libraries-admin/" \
+  -e VITE_FEATURE_LIBRARY_BRANDING="true" \
+  -e VITE_FEATURE_INSIGHTS="true" \
   dcb-admin-libraries
 
 ```
+
+The two feature flags above are the dcb-service **9.0.0** set (Section 2a). Against an
+older deployment, leave them out. Switching them on later is a changed `-e` and a
+container restart — `40-inject-env.sh` re-renders `inject_env.json` on every start, so the
+bundle is never rebuilt.
 
 ---
 

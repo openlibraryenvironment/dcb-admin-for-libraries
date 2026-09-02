@@ -48,6 +48,24 @@ build:
       - dist/
     expire_in: 1 hour
 
+# Lint, types and unit tests. This job did not exist: the pipeline ran the build (which
+# type-checks, via `tsc && vite build`) and three Playwright suites, and NOTHING ran eslint
+# or vitest. So every unit test in this repo - including the two gates that decide whether
+# a document is safe to send to a given dcb-service release - was a file nobody executed
+# except by hand. A gate that does not run in CI is not a gate.
+verify_unit:
+  stage: verify
+  script:
+    - export NPM_TOKEN="$NPMJS_TOKEN"
+    - npm ci
+    # Zero tolerance: eslint exits 0 on warnings otherwise, and a warning here is
+    # broken code.
+    - npx eslint --max-warnings=0
+    - npx tsc --noEmit
+    # NOT `npm run test` - that script is bare `vitest`, i.e. watch mode, and would
+    # hang the runner until it timed out.
+    - npx vitest run
+
 verify_e2e:
   stage: verify
   # The image tag must track @playwright/test in package.json: the browsers are

@@ -38,7 +38,7 @@ export const Header = () => {
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibrary,
+				getLibrary(),
 				{
 					query: "agencyCode:" + code,
 					pagesize: 1000,
