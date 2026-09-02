@@ -34,7 +34,7 @@ const schemaFor = (version: string): GraphQLSchema | null => {
 	return existsSync(file) ? buildSchema(readFileSync(file, "utf8")) : null;
 };
 
-/** dcb-service main, i.e. what the next release will contain. */
+/** The newest schema this app targets - dcb-service main. See the file's header. */
 const CURRENT = buildSchema(
 	readFileSync(path.resolve(repoRoot, "schema.graphqls"), "utf8"),
 );
@@ -128,7 +128,7 @@ describe("every capability names a release that really has its fields", () => {
 			for (const field of fields) {
 				expect(
 					declaresField(CURRENT, type, field),
-					`${type}.${field} is no longer in dcb-service main`,
+					`${type}.${field} is no longer in the target schema`,
 				).toBe(true);
 			}
 		}

@@ -23,7 +23,8 @@ import { SERVICE_CAPABILITIES } from "@constants/serviceCapabilities";
  * <h2>The two passes</h2>
  *
  * The same documents, twice, with the flags in the state each deployment would have:
- * every flag on against `schema.graphqls` (dcb-service main), every flag off against
+ * every flag on against `schema.graphqls` (dcb-service main, whose schema is identical
+ * to the v9.0.0 tag), every flag off against
  * `schema.v8.71.0.graphqls` (the release before 9.0.0, which this app still has to run
  * against). The flags change the documents themselves, which is why the flag state has to
  * be set before the document is BUILT and not merely before it is rendered.
@@ -86,7 +87,7 @@ describe("documents validate against the dcb-service they target", () => {
 	});
 
 	it.each(files)(
-		"%s is valid against dcb-service main (all flags on)",
+		"%s is valid against the target schema (all flags on)",
 		async (file) => {
 			vi.stubGlobal("window", { __APP_ENV__: ALL_FLAGS_ON });
 
