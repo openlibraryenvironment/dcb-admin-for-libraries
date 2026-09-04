@@ -1,6 +1,6 @@
 # dcb-admin-for-libraries — agent notes
 
-Library-facing administration UI for DCB. React 19, TanStack Router + Query, Vite 7, Vitest 4, GraphQL against `dcb-service`.
+Library-facing administration UI for DCB. React 19, TanStack Router + Query, Vite 8, Vitest 4, GraphQL against `dcb-service`.
 
 ## Non-negotiables
 
@@ -10,13 +10,22 @@ Library-facing administration UI for DCB. React 19, TanStack Router + Query, Vit
 4. **Accessible** — WCAG 2.2 AA is the floor, enforced by a failing axe gate, never asserted in prose.
 5. **Evidenced** — name the test, gate or budget that proves the claim.
 
-## The version trap
+## Versions
 
-**This repo is on MUI 7 and MUI X 8 — not MUI 9 / MUI X 9 like `dcb-admin-ui` and `symposia-ui`.** TanStack Router is 1.12x here, not 1.17x, and TypeScript is 5.8, not 6.
+Corrected 2026-08-30. This section previously said MUI 7 / MUI X 8 / Router 1.12x / TypeScript 5.8 and warned against copying from `dcb-admin-ui` for that reason. That is no longer true in either direction, and following it would have steered people away from APIs that are correct here.
 
-Do not copy a component API, prop or import path across from either sibling repo without checking it exists in *these* versions. This is the single most likely way to break a build here, and it looks correct in review because the code is genuinely valid — somewhere else.
+| | this repo | `dcb-admin-ui` |
+|---|---|---|
+| MUI | **9.3.1** | 9.1.2 |
+| MUI X (grid, charts, pickers, license) | **9.12.0** | 9.12.0 |
+| TanStack Router | **1.170.31** | 1.170.17 |
+| TypeScript | **6.0.3** | 6.0.3 |
+| Vite | **8.2.1** | 8.1.3 |
+| React | **19.2.8** | 19 |
 
-Read the installed types rather than writing an API from memory.
+The two admin apps are on the same generation, so an API that works in one usually works here. "Usually" is the operative word: the MUI minors differ, and MUI X 9 is where the two repos are pinned in lockstep on purpose — those packages share `x-license` and `x-internals`, and a mixed set is a runtime hazard rather than untidiness. Bump them together or not at all.
+
+**Read the installed types rather than writing an API from memory.** That is the durable rule here, and it is not about which repo is behind: this estate runs ahead of most models' training data, so a remembered API is a hallucination risk whichever version is installed.
 
 ## Things you will get wrong without being told
 

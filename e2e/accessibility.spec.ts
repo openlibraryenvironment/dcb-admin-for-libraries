@@ -26,8 +26,31 @@ interface Surface {
 	path: string;
 	/** Runs before navigation: sign-in, mocks, anything else the page needs. */
 	prepare?: (app: AppFixture) => Promise<void>;
+	/**
+	 * Mount anything the page defers until it is scrolled into view.
+	 *
+	 * axe scans the DOM, not the route - so a panel behind an IntersectionObserver
+	 * is not "not yet scanned", it is absent, and the gate goes green over it. A
+	 * page that defers content MUST bring it in here, and `ready` must then wait
+	 * for the LAST thing revealed rather than the first thing painted.
+	 */
+	reveal?: (page: import("@playwright/test").Page) => Promise<void>;
 	/** Waited for before scanning, so axe never sees a half-rendered page. */
 	ready: (page: import("@playwright/test").Page) => Promise<void>;
+}
+
+/**
+ * Scroll to the bottom, in steps, so every IntersectionObserver on the way down
+ * fires. One jump to the end can skip observers whose sentinel never intersects
+ * the viewport, which is the failure mode this helper exists to avoid.
+ */
+async function scrollThroughPage(
+	page: import("@playwright/test").Page,
+	steps = 12,
+) {
+	for (let i = 0; i < steps; i += 1) {
+		await page.mouse.wheel(0, 2000);
+	}
 }
 
 const PAGES: Surface[] = [
@@ -82,14 +105,28 @@ const PAGES: Surface[] = [
 			});
 			await app.mockStats();
 		},
+		// InsightsDashboard wraps nineteen panels in LazyPanel. Without this the scan
+		// saw the KPI header and nothing else: every chart, table and heading below
+		// the fold was unmounted, so the WCAG gate passed over most of the page it
+		// exists to cover. Charts are where a palette actually fails contrast.
+		reveal: scrollThroughPage,
 		ready: async (page) => {
 			await expect(
 				page.getByRole("heading", { level: 1, name: /insights/i }),
 			).toBeVisible();
 			// The KPI header is fed by the one combined /stats/dashboard call, so a
 			// rendered figure means the page got past its loader rather than being
-			// caught mid-skeleton.
-			await expect(page.getByText("89.4%")).toBeVisible();
+			// caught mid-skeleton. `.first()` because the same fill rate legitimately
+			// appears again in the peer-benchmark table further down - which it could
+			// not do before `reveal`, and which is itself a sign the scroll worked.
+			await expect(page.getByText("89.4%").first()).toBeVisible();
+			// ...and the LAST panel on the page, which is what proves the scroll
+			// actually mounted the deferred half rather than merely running. It is
+			// unconditional (RareGemPanel, always rendered), so this cannot pass
+			// vacuously the way a conditional panel would.
+			await expect(
+				page.getByRole("heading", { name: "Unique collection value" }),
+			).toBeVisible();
 		},
 	},
 	{
@@ -117,6 +154,7 @@ for (const scheme of SCHEMES) {
 				await surface.prepare?.(app);
 
 				await page.goto(surface.path);
+				await surface.reveal?.(page);
 				await surface.ready(page);
 
 				// Guards the gate itself: if the scheme never applied, a "passing"
