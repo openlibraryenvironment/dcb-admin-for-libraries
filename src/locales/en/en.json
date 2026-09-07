@@ -116,7 +116,8 @@
 		"title": "DCB Admin for {{library}}",
 		"title_requesting": "DCB Admin for {{library}} - requesting only mode",
 		"user": "Welcome, {{user}}",
-		"welcome": "Welcome to DCB Admin for {{name}}"
+		"welcome": "Welcome to DCB Admin for {{name}}",
+		"library_selector": "Library"
 	},
 	"hostlms": {
 		"alert_text": "Failed to fetch HostLMS, will retry. If this error persists, please refresh the page.",

@@ -45,6 +45,7 @@ import request from "graphql-request";
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/mappings")({
 	component: RouteComponent,
@@ -119,7 +120,7 @@ function RouteComponent() {
 	const [isFiltering, setIsFiltering] = useState(false);
 
 	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
-	const code = auth.user?.profile?.code;
+	const { agencyCode: code } = useAgencyCodes();
 
 	// Track when filter is being applied
 	useEffect(() => {

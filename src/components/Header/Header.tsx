@@ -15,6 +15,8 @@ import request from "graphql-request";
 import { getLibrary } from "@queries/getLibrary";
 import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
 import { appPath, assetUrl } from "@helpers/appBase";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
+import { LibrarySelector } from "@components/Header/LibrarySelector";
 
 export const Header = () => {
 	const navigate = useNavigate();
@@ -27,7 +29,9 @@ export const Header = () => {
 		[auth.user?.access_token]
 	);
 
-	const code = auth.user?.profile?.code;
+	// The library currently being looked at, which for almost everybody is their only
+	// one - see useAgencyCodes
+	const { agencyCode: code } = useAgencyCodes();
 	const isReadOnly = auth.user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
 
 	const { cfg } = useRouter().options.context as { cfg: any };
@@ -86,6 +90,7 @@ export const Header = () => {
 				</Typography>
 				{auth.isAuthenticated && auth.user && (
 					<Box sx={{ display: "flex", alignItems: "center" }}>
+						<LibrarySelector />
 						<Typography
 							variant="body2"
 							sx={{ mr: 2, color: (theme.vars || theme).palette.primary.headerText }}>

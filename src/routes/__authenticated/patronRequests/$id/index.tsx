@@ -26,6 +26,7 @@ import {
 } from "@mui/material";
 import { getPatronIdentities } from "@queries/getPatronIdentities";
 import { getPatronRequest } from "@queries/getPatronRequest";
+import { isAgencyScopedRequestsEnabled } from "@helpers/featureFlags";
 import { getLocation } from "@queries/getLocation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -49,10 +50,10 @@ import { getLibraryBasics } from "@queries/getLibraryBasics";
 import { Library } from "@models/Library";
 import { getILS } from "@helpers/getILS";
 import { findPrimaryContacts } from "@helpers/findPrimaryContacts";
+import { Agency } from "@models/Agency";
 import { HostLMS } from "@models/HostLMS";
 import { getHostLms } from "@queries/getHostLms";
 import { getAgency } from "@queries/getAgency";
-import { Agency } from "@models/Agency";
 import { cleanupStatuses } from "@constants/statuses/cleanupStatuses";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 import { useGridStore } from "@/hooks/useDataGridStore";
@@ -113,7 +114,7 @@ function RouteComponent() {
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
-				getPatronRequest,
+				getPatronRequest(),
 				{
 					query: "id:" + id,
 					pagesize: 10,
@@ -265,6 +266,21 @@ function RouteComponent() {
 		pickupLibraryData?.libraries?.content ?? [];
 	const pickupLibrary = pickupLibraries?.[0];
 
+	// The borrowing library. Two ways to reach it, because the field that makes the
+	// direct one possible does not exist before dcb-service 9.0.0.
+	//
+	// resolvedAgency is the agency the patron identity was resolved to during patron
+	// validation, so it names the library itself. The chain below instead asks which
+	// agencies sit on the patron's Host LMS and takes the first alphabetically: right on
+	// a system serving one library, and on a shared one it returns every co-tenant and
+	// picks an arbitrary one - so the page showed the wrong library, and then rendered
+	// that library's contact details, which belong to somebody unconnected to the
+	// request. The chain is kept rather than deleted because it is what an older
+	// deployment has; the flag is how such a deployment stops being wrong.
+	const agencyScoped = isAgencyScopedRequestsEnabled();
+	const resolvedAgency: Agency | null | undefined =
+		patronRequest?.requestingIdentity?.resolvedAgency;
+
 	// Patron library is a little harder ...
 	// Get Host LMS code, ID, then agency, then library
 	const {
@@ -279,7 +295,7 @@ function RouteComponent() {
 			cfg.VITE_DCB_API_BASE,
 			patronRequest?.patronHostlmsCode,
 		],
-		enabled: !!patronRequest?.patronHostlmsCode,
+		enabled: !agencyScoped && !!patronRequest?.patronHostlmsCode,
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
@@ -310,7 +326,7 @@ function RouteComponent() {
 			cfg.VITE_DCB_API_BASE,
 			patronHostLms?.id,
 		],
-		enabled: !!patronHostLms?.id,
+		enabled: !agencyScoped && !!patronHostLms?.id,
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
@@ -328,7 +344,9 @@ function RouteComponent() {
 
 	// Which we can then use to get library. When we combine library and agency we can eliminate this but for now we're stuck with it
 	const patronAgencies = patronAgencyData?.agencies?.content ?? [];
-	const patronAgency: Agency = patronAgencies?.[0];
+	const patronAgency: Agency | null | undefined = agencyScoped
+		? resolvedAgency
+		: patronAgencies?.[0];
 
 	const {
 		data: patronLibraryData,
@@ -493,8 +511,8 @@ function RouteComponent() {
 								</Stack>
 							</Grid>
 						) : patronLibraryLoading ||
-						  patronLmsLoading ||
-						  patronAgencyLoading ? (
+					  patronLmsLoading ||
+					  patronAgencyLoading ? (
 							<CircularProgress size="1rem" />
 						) : null}
 						{supplierLibrary?.fullName ? (

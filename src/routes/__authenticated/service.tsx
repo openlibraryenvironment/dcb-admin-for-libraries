@@ -2,6 +2,7 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import Grid from "@mui/material/Grid";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import { getLibrary } from "@queries/getLibrary";
@@ -30,7 +31,7 @@ function ServiceComponent() {
 		}),
 		[auth.user?.access_token]
 	);
-	const code = auth.user?.profile?.code;
+	const { agencyCode: code } = useAgencyCodes();
 
 	// does this need a different key
 	const { data } = useQuery({

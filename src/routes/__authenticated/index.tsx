@@ -10,6 +10,7 @@ import {
 import request from "graphql-request";
 import { getLibrary } from "../../queries/getLibrary";
 import { useAuth } from "react-oidc-context";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { Library } from "@models/Library";
 import { useTranslation } from "react-i18next";
 import RenderAttribute from "../../components/RenderAttribute/RenderAttribute";
@@ -53,8 +54,17 @@ import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
 import { FunctionalSettingStatus } from "@models/FunctionalSetting";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import { getPatronRequestStats } from "@queries/getPatronRequestStats";
+import {
+	borrowedByLibraryQuery,
+	hasBorrowingScope,
+} from "@helpers/patronRequestScope";
 import TopTitlesSummary from "@components/TopTitlesSummary/TopTitlesSummary";
 import TopRequestorsSummary from "@components/TopRequestorSummary/TopRequestorSummary";
+
+// Landing page, also library information page
+export const Route = createFileRoute("/__authenticated/")({
+	component: HomeComponent,
+});
 
 /**
  * Whether an edit actually changed a field.
@@ -70,11 +80,6 @@ function hasChanged(next: unknown, current: unknown): boolean {
 	return normalise(next) !== normalise(current);
 }
 
-// Landing page, also library information page
-export const Route = createFileRoute("/__authenticated/")({
-	component: HomeComponent,
-});
-
 function HomeComponent() {
 	const auth = useAuth();
 	const { t } = useTranslation();
@@ -89,7 +94,7 @@ function HomeComponent() {
 		[auth.user?.access_token],
 	);
 
-	const code = auth.user?.profile?.code;
+	const { agencyCode: code } = useAgencyCodes();
 
 	const theme = useTheme();
 	const [editMode, setEditMode] = useState(false);
@@ -184,7 +189,9 @@ function HomeComponent() {
 				headers,
 			);
 		},
-		enabled: !!headers && !!DCB_API_BASE && !!userLibraryHostLmsCode,
+		// Gated on the agency code, which is what supplyingAgencyCode is built from -
+		// this waited on a Host LMS lookup the query never used
+		enabled: !!headers && !!DCB_API_BASE && !!code,
 		// refetchInterval: 1000000, // milliseconds
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
@@ -202,9 +209,12 @@ function HomeComponent() {
 			DCB_API_BASE,
 			headers,
 			userLibraryHostLmsCode,
+			// Both feed the scope this query runs under, so a change to either has to
+			// invalidate what was cached against the previous one
+			code,
 		],
 		queryFn: async () => {
-			const baseQuery = `patronHostlmsCode:${userLibraryHostLmsCode}`;
+			const baseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
 			const queryVariables = {
 				query: baseQuery ?? "",
 				pagesize: 20,
@@ -219,7 +229,11 @@ function HomeComponent() {
 				headers,
 			);
 		},
-		enabled: !!headers && !!DCB_API_BASE && !!userLibraryHostLmsCode,
+		// Gated on whatever the scope is actually built from - see the borrowing grid
+		enabled:
+			!!headers &&
+			!!DCB_API_BASE &&
+			hasBorrowingScope(code, userLibraryHostLmsCode),
 		// refetchInterval: 1000000, // milliseconds
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,

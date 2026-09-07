@@ -13,6 +13,10 @@ import { standardFilters } from "@constants/filters/filters";
 import { defaultPatronRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/patronRequestColumnVisibility";
 import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
+import {
+	borrowedByLibraryQuery,
+	hasBorrowingScope,
+} from "@helpers/patronRequestScope";
 import { Library } from "@models/Library";
 import {
 	LibrariesQueryData,
@@ -42,6 +46,7 @@ import request from "graphql-request";
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/")({
 	component: RouteComponent,
@@ -177,7 +182,7 @@ function RouteComponent() {
 		[gridId, setColumnVisibilityModel],
 	);
 
-	const code = auth.user?.profile?.code;
+	const { agencyCode: code } = useAgencyCodes();
 	const roles = auth?.user?.profile?.roles ? auth?.user?.profile?.roles : [];
 
 	const isAdmin = roles.includes("ADMIN");
@@ -314,6 +319,9 @@ function RouteComponent() {
 			dcbApiBase,
 			headers,
 			userLibraryHostLmsCode,
+			// Both feed the scope this query runs under, so a change to either has to
+			// invalidate what was cached against the previous one
+			code,
 			debouncedFilterModel, // Use debounced filter model
 			paginationModel.pageSize,
 			paginationModel.page,
@@ -323,7 +331,7 @@ function RouteComponent() {
 		// HIGHLY EXPERIMENTAL PUBLISHER FILTER
 		// this is cursed but will have to do until the backend changes are in
 		queryFn: async () => {
-			const baseQuery = `patronHostlmsCode:${userLibraryHostLmsCode}`;
+			const baseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
 			let finalBaseQuery = baseQuery;
 
 			const publisherFilter = debouncedFilterModel?.items?.find(
@@ -428,7 +436,14 @@ function RouteComponent() {
 				headers,
 			);
 		},
-		enabled: !!token && !!dcbApiBase && !!userLibraryHostLmsCode,
+		// Gated on whatever the scope is actually built from. Under the v9 filter that is
+		// the agency claim, which is available immediately; waiting on the Host LMS would
+		// hold the grid behind a lookup it no longer needs, and strand a library whose
+		// agency has no Host LMS recorded.
+		enabled:
+			!!token &&
+			!!dcbApiBase &&
+			hasBorrowingScope(code, userLibraryHostLmsCode),
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
@@ -457,7 +472,9 @@ function RouteComponent() {
 				refetch();
 			},
 		});
-	const exportBaseQuery = `patronHostlmsCode:${userLibraryHostLmsCode}`;
+	// The export must carry the same scope as the grid - it is the same data leaving
+	// the building in a file rather than on screen
+	const exportBaseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
 	const { exportProgress, handleExport } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
