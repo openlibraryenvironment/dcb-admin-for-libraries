@@ -125,7 +125,6 @@ export const usePatronRequestQueries = ({
 			sortModel[0]?.field,
 			sortModel[0]?.sort,
 			additionalQuery,
-			,
 			mode,
 			code,
 		],

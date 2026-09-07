@@ -161,7 +161,7 @@ interface Finding {
 function findMissingKeys(): Finding[] {
 	const findings: Finding[] = [];
 	// `t("key"` / `i18n.t("key"` / `.t("key"`, single or double quoted.
-	const call = /\bt\(\s*(["'])([a-zA-Z0-9_.\-]+)\1/g;
+	const call = /\bt\(\s*(["'])([a-zA-Z0-9_.-]+)\1/g;
 
 	for (const file of listSourceFiles(SRC)) {
 		const source = stripComments(fs.readFileSync(file, "utf8"));

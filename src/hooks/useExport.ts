@@ -56,106 +56,102 @@ export const usePatronRequestExport = ({
 					]) ?? "")
 				: baseQuery;
 
-		try {
-			const initialData = await request<any>( // also pass as prop
+		const initialData = await request<any>( // also pass as prop
+			`${dcbApiBase}/graphql`,
+			exportQuery,
+			{
+				query: exportQueryString,
+				pagesize: pageSize,
+				pageno: 0,
+				order: sortModel[0]?.field ?? "dateCreated",
+				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+			},
+			headers,
+		);
+
+		const totalSize = initialData?.patronRequests?.totalSize || 0;
+		const totalPages = Math.ceil(totalSize / pageSize);
+		allContent = initialData?.patronRequests?.content || [];
+
+		setExportProgress((prev) => ({
+			...prev,
+			totalRecords: totalSize,
+			progress: Math.round((allContent.length / totalSize) * 100),
+		}));
+
+		// Obtain all the pages that exist
+		for (let page = 1; page < totalPages; page++) {
+			const nextPageData = await request<any>(
 				`${dcbApiBase}/graphql`,
 				exportQuery,
 				{
 					query: exportQueryString,
 					pagesize: pageSize,
-					pageno: 0,
+					pageno: page,
 					order: sortModel[0]?.field ?? "dateCreated",
 					orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
 				},
 				headers,
 			);
 
-			const totalSize = initialData?.patronRequests?.totalSize || 0;
-			const totalPages = Math.ceil(totalSize / pageSize);
-			allContent = initialData?.patronRequests?.content || [];
+			if (nextPageData?.patronRequests?.content) {
+				allContent = [...allContent, ...nextPageData.patronRequests.content];
+				setExportProgress((prev) => ({
+					...prev,
+					progress: Math.round((allContent.length / totalSize) * 100),
+				}));
+			}
+		}
 
-			setExportProgress((prev) => ({
-				...prev,
-				totalRecords: totalSize,
-				progress: Math.round((allContent.length / totalSize) * 100),
-			}));
+		// We have to put location data in
 
-			// Obtain all the pages that exist
-			for (let page = 1; page < totalPages; page++) {
-				const nextPageData = await request<any>(
+		const uniqueLocationCodes = Array.from(
+			new Set(
+				allContent
+					.map((request: any) => request.pickupLocationCode)
+					.filter(Boolean),
+			),
+		) as string[];
+
+		if (uniqueLocationCodes.length > 0) {
+			const locationQuery = uniqueLocationCodes
+				.map((id) => `id:${id}`)
+				.join(" OR ");
+
+			try {
+				const locationData = await request<any>(
 					`${dcbApiBase}/graphql`,
-					exportQuery,
+					getLocations,
 					{
-						query: exportQueryString,
-						pagesize: pageSize,
-						pageno: page,
-						order: sortModel[0]?.field ?? "dateCreated",
-						orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+						query: locationQuery,
+						pageno: 0,
+						pagesize: uniqueLocationCodes.length,
+						order: "name",
+						orderBy: "ASC",
 					},
 					headers,
 				);
 
-				if (nextPageData?.patronRequests?.content) {
-					allContent = [...allContent, ...nextPageData.patronRequests.content];
-					setExportProgress((prev) => ({
-						...prev,
-						progress: Math.round((allContent.length / totalSize) * 100),
-					}));
-				}
+				const locationMap = new Map(
+					locationData?.locations?.content?.map((location: any) => [
+						location.id,
+						location.name,
+					]) || [],
+				);
+
+				allContent = allContent.map((item: any) => ({
+					...item,
+					pickupLocationCode:
+						locationMap.get(item.pickupLocationCode) ||
+						item.pickupLocationCode,
+					pickupLocationName:
+						locationMap.get(item.pickupLocationCode) ||
+						item.pickupLocationCode,
+				}));
+			} catch {
+				// Location names are a display nicety; the export proceeds with
+				// the codes it already has rather than failing.
 			}
-
-			// We have to put location data in
-
-			const uniqueLocationCodes = Array.from(
-				new Set(
-					allContent
-						.map((request: any) => request.pickupLocationCode)
-						.filter(Boolean),
-				),
-			) as string[];
-
-			if (uniqueLocationCodes.length > 0) {
-				const locationQuery = uniqueLocationCodes
-					.map((id) => `id:${id}`)
-					.join(" OR ");
-
-				try {
-					const locationData = await request<any>(
-						`${dcbApiBase}/graphql`,
-						getLocations,
-						{
-							query: locationQuery,
-							pageno: 0,
-							pagesize: uniqueLocationCodes.length,
-							order: "name",
-							orderBy: "ASC",
-						},
-						headers,
-					);
-
-					const locationMap = new Map(
-						locationData?.locations?.content?.map((location: any) => [
-							location.id,
-							location.name,
-						]) || [],
-					);
-
-					allContent = allContent.map((item: any) => ({
-						...item,
-						pickupLocationCode:
-							locationMap.get(item.pickupLocationCode) ||
-							item.pickupLocationCode,
-						pickupLocationName:
-							locationMap.get(item.pickupLocationCode) ||
-							item.pickupLocationCode,
-					}));
-				} catch {
-					// Location names are a display nicety; the export proceeds with
-					// the codes it already has rather than failing.
-				}
-			}
-		} catch (error) {
-			throw error;
 		}
 
 		return allContent;

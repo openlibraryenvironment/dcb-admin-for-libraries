@@ -1,3 +1,4 @@
+import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import pluginRouter from "@tanstack/eslint-plugin-router";
@@ -10,6 +11,10 @@ import reactHooks from "eslint-plugin-react-hooks";
 export default defineConfig(
 	{
 		extends: [
+			// eslint:recommended. The TypeScript sets below are additive to it, not a
+			// replacement, and nothing extended it - so no plain-JavaScript correctness
+			// rule was running at all.
+			js.configs.recommended,
 			tseslint.configs.recommended,
 			tseslint.configs.stylistic,
 			pluginQuery.configs["flat/recommended"],
@@ -81,6 +86,16 @@ export default defineConfig(
 			// green.
 			"react-hooks/rules-of-hooks": "error",
 			"react-hooks/exhaustive-deps": "error",
+		},
+	},
+	{
+		// CommonJS tooling config, not application source. eslint:recommended brings
+		// no-undef, which has no way to know `module` exists here - and the file has to
+		// stay .cjs because the package is "type": "module". Declared inline rather than
+		// pulling in the `globals` package for two identifiers.
+		files: ["**/*.cjs"],
+		languageOptions: {
+			globals: { module: "writable", require: "readonly", __dirname: "readonly" },
 		},
 	},
 	{
