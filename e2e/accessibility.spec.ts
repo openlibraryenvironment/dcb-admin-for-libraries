@@ -91,6 +91,31 @@ async function scrollUntilPresent(
 
 const PAGES: Surface[] = [
 	{
+		// The library profile: the biggest FORM in the app and the only surface where an
+		// administrator types. It was not scanned at all, which meant the fields §V-11.1
+		// adds would have gone in unaudited — and a form is where name, label and error
+		// association actually fail. Every backend-gated block is switched on, so the
+		// scan covers the widest shape the page can render rather than the narrowest.
+		name: "library profile",
+		path: "/",
+		prepare: async (app) => {
+			await app.enableFeatures([
+				"VITE_FEATURE_LIBRARY_BRANDING",
+				"VITE_FEATURE_LIBRARY_SUPPORT_URL",
+			]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraryBasics: library,
+				LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
+				LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
+			});
+		},
+		ready: async (page) => {
+			await expect(page.getByText("E2E Test Library").first()).toBeVisible();
+		},
+	},
+	{
 		name: "login",
 		path: "/login",
 		ready: async (page) => {

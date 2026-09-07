@@ -26,6 +26,7 @@ import { BrandImageField } from "@components/BrandImageField/BrandImageField";
 import { useBrandUploadsAvailable } from "@/hooks/useBrandUploadsAvailable";
 import {
 	BRAND_LIMITS,
+	isValidLinkUrl,
 	isValidLogoUrl,
 	themeOptions,
 } from "@constants/discoveryBranding";
@@ -37,6 +38,7 @@ import { stripUnsupportedInput } from "@helpers/capabilityFields";
 import {
 	isInsightsEnabled,
 	isLibraryBrandingEnabled,
+	isLibrarySupportUrlEnabled,
 } from "@helpers/featureFlags";
 import { UpdateLibraryResponse } from "../../models/UpdateLibraryResponse";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -291,6 +293,8 @@ function HomeComponent() {
 					brandLogoUrl: library.brandLogoUrl ?? "",
 					brandLogoAlt: library.brandLogoAlt ?? "",
 					defaultThemeName: library.defaultThemeName ?? "",
+					patronWebsite: library.patronWebsite ?? "",
+					supportUrl: library.supportUrl ?? "",
 				});
 			}
 			refetch();
@@ -365,6 +369,25 @@ function HomeComponent() {
 				BRAND_LIMITS.themeName,
 				t("ui.validation.max_length", { length: BRAND_LIMITS.themeName }),
 			),
+		// V-11.1. Both become an href in the discovery app's footer, and dcb-service now
+		// refuses anything that is not an absolute http(s) URL on write — so the rule is
+		// checked under the box rather than reported as a 400 with no field attached.
+		// patronWebsite gains the check with supportUrl because the server gained it for
+		// both at once.
+		patronWebsite: Yup.string()
+			.trim()
+			.max(
+				BRAND_LIMITS.linkUrl,
+				t("ui.validation.max_length", { length: BRAND_LIMITS.linkUrl }),
+			)
+			.test("absolute-http-url", t("library.presence.url_invalid"), isValidLinkUrl),
+		supportUrl: Yup.string()
+			.trim()
+			.max(
+				BRAND_LIMITS.linkUrl,
+				t("ui.validation.max_length", { length: BRAND_LIMITS.linkUrl }),
+			)
+			.test("absolute-http-url", t("library.presence.url_invalid"), isValidLinkUrl),
 	});
 
 	/**
@@ -432,6 +455,8 @@ function HomeComponent() {
 				brandLogoUrl: library.brandLogoUrl ?? "",
 				brandLogoAlt: library.brandLogoAlt ?? "",
 				defaultThemeName: library.defaultThemeName ?? "",
+				patronWebsite: library.patronWebsite ?? "",
+				supportUrl: library.supportUrl ?? "",
 			});
 		}
 	}, [library, reset]);
@@ -935,6 +960,95 @@ function HomeComponent() {
   				</Stack>
   			</Grid>
               </>
+            )}
+            {/* Presence — V-11.1. A patron who arrives at discovery from a search
+                engine has no route back to opening hours, branches or joining, and no
+                way to say the search itself is broken. Discovery holds neither fact;
+                this library does, and its footer renders both.
+
+                Two fields rather than one because they are two questions and rarely the
+                same desk: collapsing them sends "your search is broken" to whoever
+                answers "when do you open". */}
+            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
+              <Typography variant="h3" sx={{ fontWeight: "bold" }}>
+                {t("library.presence.section")}
+              </Typography>
+              <Typography>{t("library.presence.section_help")}</Typography>
+            </Grid>
+            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+              <Stack direction={"column"}>
+                <Typography
+                  variant="attributeTitle"
+                  color={
+                    errors.patronWebsite
+                      ? (theme.vars || theme).palette.error.main
+                      : (theme.vars || theme).palette.text.primary
+                  }>
+                  {t("library.presence.website")}
+                </Typography>
+                <Controller
+                  name="patronWebsite"
+                  control={control}
+                  render={({ field }) =>
+                    editMode ? (
+                      <TextField
+                        {...field}
+                        label={t("library.presence.website")}
+                        fullWidth
+                        error={!!errors.patronWebsite}
+                        helperText={
+                          errors.patronWebsite?.message ??
+                          t("library.presence.website_help")
+                        }
+                        margin="normal"
+                      />
+                    ) : (
+                      <RenderAttribute attribute={library?.patronWebsite} />
+                    )
+                  }
+                />
+              </Stack>
+            </Grid>
+            {/* Behind its own flag, not the branding one: support_url arrived in
+                V9_0_008, after the 9.0.0 tag, and the brand columns arrived in it. The
+                flag is not a render switch — it also keeps the field out of the document
+                and out of the mutation variables, without which nothing on this form
+                saves against a deployment that cannot accept it. */}
+            {isLibrarySupportUrlEnabled() && (
+              <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+                <Stack direction={"column"}>
+                  <Typography
+                    variant="attributeTitle"
+                    color={
+                      errors.supportUrl
+                        ? (theme.vars || theme).palette.error.main
+                        : (theme.vars || theme).palette.text.primary
+                    }>
+                    {t("library.presence.support")}
+                  </Typography>
+                  <Controller
+                    name="supportUrl"
+                    control={control}
+                    render={({ field }) =>
+                      editMode ? (
+                        <TextField
+                          {...field}
+                          label={t("library.presence.support")}
+                          fullWidth
+                          error={!!errors.supportUrl}
+                          helperText={
+                            errors.supportUrl?.message ??
+                            t("library.presence.support_help")
+                          }
+                          margin="normal"
+                        />
+                      ) : (
+                        <RenderAttribute attribute={library?.supportUrl} />
+                      )
+                    }
+                  />
+                </Stack>
+              </Grid>
             )}
             {/* /* 'Primary location' title goes here/* */}
             {/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>

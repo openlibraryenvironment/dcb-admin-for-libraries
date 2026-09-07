@@ -102,6 +102,23 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		},
 	},
 	{
+		// On dcb-service MAIN, and in no release: V9_0_008 landed after the 9.0.0 tag, so
+		// `since` stays null and serviceCapabilities.test.ts says so. A SEPARATE row from
+		// library_branding, whose since is 9.0.0 - one flag over both would be a lie about
+		// one of them, and switching it on at the v9 upgrade would take LoadLibrary down
+		// on every deployment running the release. LoadLibrary runs on every page.
+		//
+		// `patronWebsite` is deliberately absent: Library has carried it since 5.11.1, so
+		// it needs no gate and is selected unconditionally.
+		id: "library_support_url",
+		flag: "VITE_FEATURE_LIBRARY_SUPPORT_URL",
+		since: null,
+		fields: {
+			Library: ["supportUrl"],
+			UpdateLibraryInput: ["supportUrl"],
+		},
+	},
+	{
 		// REST, not GraphQL: the /insights endpoints. No fields, so nothing to select or
 		// strip - it is here because an operator setting flags needs one list, not two.
 		id: "insights",

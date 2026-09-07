@@ -9,6 +9,8 @@
 				"abbreviatedName": "E2E",
 				"agencyCode": "e2e-agency",
 				"supportHours": "Mon-Fri, 9-5",
+				"patronWebsite": "https://library.example.invalid",
+				"supportUrl": "https://library.example.invalid/report-a-problem",
 				"backupDowntimeSchedule": "Sundays, 02:00-03:00",
 				"agency": {
 					"id": "22222222-2222-4222-8222-222222222222",

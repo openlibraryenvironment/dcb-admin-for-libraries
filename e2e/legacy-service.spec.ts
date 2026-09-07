@@ -20,8 +20,28 @@ import library from "./fixtures-data/library.json" with { type: "json" };
  * that has never heard of them.
  */
 
-/** Everything 9.0.0 added to Library. Nothing sent to 8.71.0 may name one. */
+/** Everything 9.0.0 added to Library, behind VITE_FEATURE_LIBRARY_BRANDING. */
 const V9_ONLY_FIELDS = ["brandLogoUrl", "brandLogoAlt", "defaultThemeName"];
+
+/**
+ * What arrived AFTER the 9.0.0 tag: `supportUrl`, in V9_0_008, behind its own flag.
+ *
+ * Kept separate from the list above rather than merged into it, because the two lists
+ * answer different questions. Both are refused by 8.71.0, so the negative test takes
+ * their union — but a deployment ON 9.0.0 has one and not the other, which is the whole
+ * reason they are two capabilities, and a single list would make the positive test below
+ * assert something untrue of every real deployment.
+ */
+const POST_9_0_0_FIELDS = ["supportUrl"];
+
+/**
+ * Nothing sent to 8.71.0 may name one of these.
+ *
+ * `patronWebsite` is deliberately absent: Library has carried it since 5.11.1, so it is
+ * selected unconditionally and 8.71.0 answers it. Adding it would make this list assert
+ * the opposite of the truth.
+ */
+const FIELDS_8_71_0_LACKS = [...V9_ONLY_FIELDS, ...POST_9_0_0_FIELDS];
 
 /** Collects every GraphQL request body the page sends. Attach before goto. */
 function trackGraphQL(page: import("@playwright/test").Page): string[] {
@@ -78,7 +98,7 @@ test.describe("dcb-service 8.71.0", () => {
 		const selection = stripComments(
 			(JSON.parse(loadLibrary!) as { query: string }).query,
 		);
-		for (const field of V9_ONLY_FIELDS) {
+		for (const field of FIELDS_8_71_0_LACKS) {
 			expect(selection, `asked 8.71.0 for ${field}`).not.toContain(field);
 		}
 	});
@@ -130,14 +150,18 @@ test.describe("dcb-service 9.0.0 and later", () => {
 		},
 	};
 
-	test("asks for the brand fields once the flag is on", async ({
+	test("asks for every gated field once its flag is on", async ({
 		page,
 		app,
 	}) => {
 		// The counter-case. A gate with no positive half passes just as happily when it
-		// hides the feature from everybody.
+		// hides the feature from everybody. Both flags, because the two capabilities have
+		// different thresholds and one of them would otherwise never be asserted present.
 		const requests = trackGraphQL(page);
-		await app.enableFeatures(["VITE_FEATURE_LIBRARY_BRANDING"]);
+		await app.enableFeatures([
+			"VITE_FEATURE_LIBRARY_BRANDING",
+			"VITE_FEATURE_LIBRARY_SUPPORT_URL",
+		]);
 		await app.signIn();
 		await app.mockGraphQL({
 			...mocks,
@@ -156,8 +180,8 @@ test.describe("dcb-service 9.0.0 and later", () => {
 		const selection = stripComments(
 			(JSON.parse(loadLibrary!) as { query: string }).query,
 		);
-		for (const field of V9_ONLY_FIELDS) {
-			expect(selection, `did not ask 9.0.0 for ${field}`).toContain(field);
+		for (const field of FIELDS_8_71_0_LACKS) {
+			expect(selection, `did not ask for ${field}`).toContain(field);
 		}
 	});
 });

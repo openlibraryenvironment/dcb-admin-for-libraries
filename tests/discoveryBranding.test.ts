@@ -3,8 +3,10 @@ import { describe, it, expect } from "vitest";
 import {
 	areBrandUploadsAvailable,
 	brandAssetStoreFrom,
+	BRAND_ASSET_PATH_PREFIX,
 	BRAND_LIMITS,
 	DISCOVERY_THEME_NAMES,
+	isValidLinkUrl,
 	isValidLogoUrl,
 	themeOptions,
 } from "@constants/discoveryBranding";
@@ -71,8 +73,14 @@ describe("themeOptions", () => {
 
 describe("brand field limits", () => {
 	it("matches the column widths in dcb-service's library brand migration", () => {
-		// V9_0_002. A value the database would truncate is refused here, with a message.
-		expect(BRAND_LIMITS).toEqual({ logoUrl: 400, logoAlt: 255, themeName: 64 });
+		// V9_0_002, plus V5_11_1_003 and V9_0_008 for the two link columns. A
+		// value the database would truncate is refused here, with a message.
+		expect(BRAND_LIMITS).toEqual({
+			linkUrl: 200,
+			logoUrl: 400,
+			logoAlt: 255,
+			themeName: 64,
+		});
 	});
 });
 
@@ -195,5 +203,48 @@ describe("areBrandUploadsAvailable", () => {
 		// to explain why; showing costs a clear refusal at Save. Hiding a button is UX
 		// here, not authorisation — the role check on the route is the control.
 		expect(areBrandUploadsAvailable(null)).toBe(true);
+	});
+});
+
+describe("isValidLinkUrl", () => {
+	/**
+	 * V-11.1. patronWebsite and supportUrl become the href of an anchor in the discovery
+	 * app's footer, and dcb-service now refuses anything else on write — so without this
+	 * the administrator meets a 400 with no field attached instead of a message under the
+	 * box they typed in.
+	 */
+	it.each(["https://library.example.org", "http://intranet.example/help"])(
+		"accepts %s",
+		(value) => {
+			expect(isValidLinkUrl(value)).toBe(true);
+		},
+	);
+
+	it("treats blank as valid, because blank means clear it", () => {
+		expect(isValidLinkUrl("")).toBe(true);
+		expect(isValidLinkUrl("   ")).toBe(true);
+		expect(isValidLinkUrl(null)).toBe(true);
+		expect(isValidLinkUrl(undefined)).toBe(true);
+	});
+
+	it.each([
+		["javascript:alert(1)", "a script URL"],
+		["data:text/html,<h1>hi", "a data URL"],
+		["//evil.example.org/phish", "protocol-relative, which leaves the origin"],
+		["/settings", "a path back into an application"],
+		["mailto:librarian@example.org", "a scheme that is not http(s)"],
+		["library.example.org", "a bare host with no scheme"],
+	])("rejects %s — %s", (value) => {
+		expect(isValidLinkUrl(value)).toBe(false);
+	});
+
+	it("refuses an asset path that isValidLogoUrl accepts", () => {
+		// The one place the two rules deliberately differ. That prefix names an image
+		// dcb-service stored; a "report a problem" link pointing at a stored PNG is not
+		// a support desk.
+		const asset = `${BRAND_ASSET_PATH_PREFIX}${"a".repeat(64)}.png`;
+
+		expect(isValidLogoUrl(asset)).toBe(true);
+		expect(isValidLinkUrl(asset)).toBe(false);
 	});
 });

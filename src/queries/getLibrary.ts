@@ -26,6 +26,13 @@ export const getLibrary = () => gql`
 				longitude
 				training
 				patronWebsite
+				# V-11.1. Where a patron reports that discovery itself is wrong — a
+				# different destination from patronWebsite, which answers opening hours
+				# and joining. New in V9_0_008, on dcb-service main and in no release, so
+				# an older deployment selects nothing here rather than failing this query
+				# whole. patronWebsite above needs no gate: Library has carried it since
+				# 5.11.1.
+				${capabilitySelection("library_support_url", "Library")}
 				discoverySystem
 				# Patron-facing brand (N-1B), rendered by the discovery app. patronWebsite
 				# above is the mark's link target, so there is no second URL here.

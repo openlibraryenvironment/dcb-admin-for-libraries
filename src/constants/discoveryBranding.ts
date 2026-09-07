@@ -3,12 +3,16 @@
  *
  * These describe the DISCOVERY experience, not this one. `defaultThemeName` names a
  * theme from the discovery frontend's registry; it has nothing to do with this
- * application's own theme. dcb-service validates *
-/** */
+ * application's own theme. dcb-service validates every one of them on write, and the
+ * checks below mirror those rules so an administrator is told at the field rather than
+ * by a rejected save.
+ */
 export const DISCOVERY_THEME_NAMES = ["openRS", "kInt"] as const;
 
 /** Column widths in dcb-service. */
 export const BRAND_LIMITS = {
+	/** V-11.1. library.patron_website and library.support_url are both varchar(200). */
+	linkUrl: 200,
 	logoUrl: 400,
 	logoAlt: 255,
 	themeName: 64,
@@ -110,6 +114,35 @@ export function isValidLogoUrl(value?: string | null): boolean {
 	// prefix test that can be walked out of is not a prefix test.
 	if (trimmed.startsWith(BRAND_ASSET_PATH_PREFIX)) {
 		return ASSET_KEY.test(trimmed.slice(BRAND_ASSET_PATH_PREFIX.length));
+	}
+
+	let url: URL;
+	try {
+		url = new URL(trimmed);
+	} catch {
+		return false;
+	}
+
+	return (
+		(url.protocol === "https:" || url.protocol === "http:") && url.host !== ""
+	);
+}
+
+/**
+ * Mirrors dcb-service's `BrandingValidator.linkUrl` — V-11.1.
+ *
+ * STRICTER than {@link isValidLogoUrl}, and deliberately: absolute http(s) with a host,
+ * and no asset-prefix form. That prefix names an image dcb-service stored, and a "report a
+ * problem" link pointing at a stored PNG is not a support desk.
+ *
+ * dcb-service refuses anything else on write, so without this the administrator meets a
+ * 400 with no field attached rather than a message under the box they typed in. Blank is
+ * valid and means "clear it".
+ */
+export function isValidLinkUrl(value?: string | null): boolean {
+	const trimmed = value?.trim();
+	if (!trimmed) {
+		return true;
 	}
 
 	let url: URL;

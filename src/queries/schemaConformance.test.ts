@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { buildSchema, parse, validate, type GraphQLSchema } from "graphql";
 
-import { SERVICE_CAPABILITIES } from "@constants/serviceCapabilities";
+import {
+	SERVICE_CAPABILITIES,
+	meetsServiceVersion,
+} from "@constants/serviceCapabilities";
 
 /**
  * Every document this application can emit must be valid against the dcb-service it will
@@ -20,14 +23,21 @@ import { SERVICE_CAPABILITIES } from "@constants/serviceCapabilities";
  * dcb-service" prevents none of it. This does, on the NEXT one as well as this one, in
  * milliseconds and with no server.
  *
- * <h2>The two passes</h2>
+ * <h2>The three passes</h2>
  *
- * The same documents, twice, with the flags in the state each deployment would have:
- * every flag on against `schema.graphqls` (dcb-service main, whose schema is identical
- * to the v9.0.0 tag), every flag off against
- * `schema.v8.71.0.graphqls` (the release before 9.0.0, which this app still has to run
- * against). The flags change the documents themselves, which is why the flag state has to
- * be set before the document is BUILT and not merely before it is rendered.
+ * The same documents, three times, with the flags in the state each deployment would
+ * have. Every flag on against `schema.graphqls` (dcb-service main); every flag off
+ * against `schema.v8.71.0.graphqls` (the release before 9.0.0, which this app still has
+ * to run against); and the RELEASE's own flags against `schema.v9.0.0.graphqls`.
+ *
+ * That third pass is the one that was missing, and it stopped being optional when
+ * `schema.graphqls` diverged from the 9.0.0 tag: V9_0_008 added `supportUrl` after it.
+ * Neither of the other two can catch a field gated at the wrong THRESHOLD — all-flags-on
+ * validates against a schema that has everything, and all-flags-off against one that has
+ * nothing. A deployment on the 9.0.0 RELEASE is in neither state.
+ *
+ * The flags change the documents themselves, which is why the flag state has to be set
+ * before the document is BUILT and not merely before it is rendered.
  */
 
 const repoRoot = process.cwd();
@@ -36,12 +46,27 @@ const schemaFrom = (file: string): GraphQLSchema =>
 	buildSchema(readFileSync(path.resolve(repoRoot, file), "utf8"));
 
 const CURRENT = schemaFrom("schema.graphqls");
+const RELEASE_9 = schemaFrom("schema.v9.0.0.graphqls");
 const LEGACY = schemaFrom("schema.v8.71.0.graphqls");
 
+const flagsFor = (capabilities: readonly { flag: string }[]) =>
+	Object.fromEntries(capabilities.map((entry) => [entry.flag, "true"]));
+
 /** Every flag the registry knows, all on. */
-const ALL_FLAGS_ON = Object.fromEntries(
-	SERVICE_CAPABILITIES.map((entry) => [entry.flag, "true"]),
+const ALL_FLAGS_ON = flagsFor(SERVICE_CAPABILITIES);
+
+/**
+ * The flags a deployment on the 9.0.0 RELEASE would have: every capability that release
+ * actually serves, and none that landed after it.
+ *
+ * `meetsServiceVersion("9.0.0", null)` is false, so a capability with no release - which
+ * is what `since: null` means - is off here. That is the claim under test.
+ */
+const RELEASE_9_CAPABILITIES = SERVICE_CAPABILITIES.filter(
+	(entry) => meetsServiceVersion("9.0.0", entry.since) === true,
 );
+
+const RELEASE_9_FLAGS = flagsFor(RELEASE_9_CAPABILITIES);
 
 const modules = import.meta.glob("../{queries,mutations}/*.ts");
 
@@ -100,6 +125,34 @@ describe("documents validate against the dcb-service they target", () => {
 			);
 		},
 	);
+
+	it.each(files)(
+		"%s is valid against dcb-service 9.0.0 (the release's flags)",
+		async (file) => {
+			vi.stubGlobal("window", { __APP_ENV__: RELEASE_9_FLAGS });
+
+			const documents = documentsFrom(
+				(await modules[file]()) as Record<string, unknown>,
+			);
+			expect(documents.length).toBeGreaterThan(0);
+			documents.forEach((document) =>
+				assertValid(
+					document,
+					RELEASE_9,
+					`${file} against schema.v9.0.0.graphqls`,
+				),
+			);
+		},
+	);
+
+	it("the 9.0.0 pass is not vacuous", () => {
+		// It would be if every capability were `since: null`, or if meetsServiceVersion
+		// started returning null for a release we hold a schema for.
+		expect(RELEASE_9_CAPABILITIES.length).toBeGreaterThan(0);
+		expect(RELEASE_9_CAPABILITIES.length).toBeLessThan(
+			SERVICE_CAPABILITIES.length,
+		);
+	});
 
 	it.each(files)(
 		"%s is valid against dcb-service 8.71.0 (all flags off)",

@@ -46,6 +46,20 @@ export const isLibraryBrandingEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_LIBRARY_BRANDING");
 
 /**
+ * The library's patron support link - dcb-service AFTER 9.0.0, V-11.1.
+ *
+ * `library.support_url` arrived in V9_0_008, which is on main and in no release, so this
+ * is a SEPARATE flag from the branding one above rather than a fourth field on it.
+ * Selecting `supportUrl` against the 9.0.0 tag fails LoadLibrary whole, exactly as the
+ * brand fields do against 8.71.0 - same failure, different threshold, which is the entire
+ * reason the flags are per capability.
+ *
+ * `patronWebsite` beside it on the form is ungated: Library has carried it since 5.11.1.
+ */
+export const isLibrarySupportUrlEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_LIBRARY_SUPPORT_URL");
+
+/**
  * Scoping a library's requests by agency code - dcb-service 9.0.0 and later.
  *
  * Two things move together behind this flag, which is why it is one and not two. The

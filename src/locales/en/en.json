@@ -206,6 +206,15 @@
 			"theme_help": "Applied when a patron is searching your library. Every theme has been checked for colour contrast in light, dark and high-contrast modes.",
 			"theme_inherit": "Use the consortium's theme"
 		},
+		"presence": {
+			"section": "Links for patrons",
+			"section_help": "Where the discovery app sends a patron who needs something it does not hold. Both appear in the footer of every page.",
+			"website": "Library website",
+			"website_help": "Opening hours, branches, joining — your own site. Discovery is not your website and should not try to be.",
+			"support": "Report a problem URL",
+			"support_help": "Where a patron says the search itself is wrong: a record with the wrong details, a result that will not request. Usually a different desk from the one that answers opening hours.",
+			"url_invalid": "Enter a full web address starting with https:// or http://"
+		},
 		"config": {
 			"patronAuth": {
 				"auth_profile": "Authentication profile",

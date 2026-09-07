@@ -1,5 +1,8 @@
-# THE NEWEST SCHEMA THIS APP TARGETS - dcb-service main (02b7548da), whose schema is
-# byte-identical to the v9.0.0 tag.
+# THE NEWEST SCHEMA THIS APP TARGETS - dcb-service main (804699693).
+#
+# It was byte-identical to the v9.0.0 tag until V9_0_008 added `supportUrl` to Library,
+# Consortium and their update inputs. That is the only difference this app uses; the
+# provisioning API and maxLocalHolds are also on main and belong to DCB Admin.
 #
 # Copied verbatim; do not hand-edit. schemaConformance.test.ts validates every
 # document with every flag ON against this file.
@@ -32,6 +35,13 @@ type Query {
 		alarms(query: String, pageno: Int, pagesize: Int, order: String, orderBy: String): AlarmPage!
 		patronRequestStatistics(startDate: String,endDate: String,borrowerCodes:[String] ,pickupCodes: [String],
 			statusCodes: [String], supplierCodes: [String], bibClusterId: ID): [DailyPatronRequestStat]!
+		# One library's DCB Admin for Libraries accounts. Deliberately NOT consortium-wide:
+		# a library's staff list is tens of rows, and a roster across 500 libraries is a
+		# different query with different scale properties that nothing has asked for.
+		libraryUsers(libraryId: ID!): [LibraryUser!]!
+		# Whether this deployment has an identity provider configured at all, so the UI can
+		# hide a tab that could only fail rather than render a form nobody can submit.
+		libraryUserProvisioningAvailable: Boolean!
 }
 
 type Mutation {
@@ -67,6 +77,9 @@ type Mutation {
 		updateAgency(input: UpdateAgencyInput): Agency!
 	  createHostLms(input: CreateHostLmsInput!): CreateHostLmsResult
 		updateHostLms(input: UpdateHostLmsInput!): UpdateHostLmsResult
+		provisionLibraryUser(input: ProvisionLibraryUserInput): LibraryUser!
+		setLibraryUserEnabled(input: SetLibraryUserEnabledInput): LibraryUser!
+		resendLibraryUserInvite(input: ResendLibraryUserInviteInput): LibraryUser!
 
 }
 
@@ -127,6 +140,7 @@ input ConsortiumInput {
 	description: String
 	catalogueSearchUrl: String
 	websiteUrl: String
+	supportUrl: String
 	displayName: String!
 	reason: String!
 	changeCategory: String!
@@ -231,7 +245,12 @@ input LibraryInput {
 	contacts: [PersonInput]!
 	longitude: Float
 	latitude: Float
+	# V-11.1. Both are rendered as an href in the patron app's footer, so both must be
+	# an absolute http(s) URL naming a host. An explicit null or an empty string clears
+	# the field. patronWebsite answers opening hours and joining; supportUrl is where a
+	# patron reports that discovery itself is wrong.
 	patronWebsite: String
+	supportUrl: String
 	discoverySystem: String
 	hostLmsConfiguration: String
 	targetLoanToBorrowRatio: String
@@ -243,6 +262,7 @@ input LibraryInput {
 	isSupplyingAgency: Boolean
 	isBorrowingAgency: Boolean
 	maxConsortialLoans: Int
+	maxLocalHolds: Int
 	authProfile: String
 	hostLmsCode: String!
 }
@@ -314,7 +334,10 @@ input UpdateConsortiumInput {
 	id: ID!
 	description: String
 	catalogueSearchUrl: String
+	# V-11.1. Rendered as an href in the patron app's footer: an absolute http(s) URL
+	# naming a host, and an explicit null or empty string clears the field.
 	websiteUrl: String
+	supportUrl: String
 	displayName: String
 	reason: String!
 	changeCategory: String!
@@ -369,6 +392,7 @@ input UpdateLibraryInput {
 	address: String
 	type: String
 	patronWebsite: String
+	supportUrl: String
 	discoverySystem: String
 	# Patron-facing brand (N-1.3). patronWebsite above is the logo's link target, so
 	# there is no second URL here. Explicit null or empty string clears the field.
@@ -418,6 +442,7 @@ input UpdateFunctionalSettingInput {
 input UpdateAgencyInput {
 	code: String!
 	maxConsortialLoans: Int
+	maxLocalHolds: Int
 	longitude: Float
 	latitude: Float
 	isSupplyingAgency: Boolean
@@ -486,6 +511,11 @@ type Agency {
 		isSupplyingAgency: Boolean
 		isBorrowingAgency: Boolean
 		maxConsortialLoans: Int
+		"""
+		The Host LMS limit on total holds per patron, local holds included. Null means
+		the agency has not told us, so DCB will not check it.
+		"""
+		maxLocalHolds: Int
 }
 
 """
@@ -687,6 +717,7 @@ type Library {
 	supportHours: String
 	discoverySystem: String
 	patronWebsite: String
+	supportUrl: String
 	hostLmsConfiguration: String
 	longitude: Float
 	latitude: Float
@@ -743,6 +774,7 @@ type Consortium {
 	description: String
 	catalogueSearchUrl: String
 	websiteUrl: String
+	supportUrl: String
 	displayName: String
 	contacts: [Person]
 	reason: String
@@ -1043,4 +1075,67 @@ type UpdateHostLmsResult {
 	pingStatus: String
 	ingestStatus: String
 	warnings: [String]
+}
+
+
+# ---------------------------------------------------------------------------
+# DCB Admin for Libraries accounts
+#
+# The enum is gate one of four on the role: a request naming ADMIN is a GraphQL
+# validation error before any resolver runs. It is not the security control -
+# ProvisionableRole.parse, the Postgres CHECK constraint and the identity provider's
+# own role-mapping grant are the others - but it is free and it removes a class of
+# mistake at the boundary.
+# ---------------------------------------------------------------------------
+
+enum ProvisionableRole {
+	LIBRARY_ADMIN
+	LIBRARY_READ_ONLY
+}
+
+enum LibraryUserStatus {
+	INVITED
+	ACTIVE
+	DISABLED
+}
+
+# Note the ABSENCE of an agencyCode field. It is derived server-side from libraryId, so
+# a client that cannot name an agency cannot scope an account to somebody else's library.
+input ProvisionLibraryUserInput {
+	libraryId: ID!
+	email: String!
+	firstName: String
+	lastName: String
+	role: ProvisionableRole!
+	reason: String
+	changeCategory: String
+	changeReferenceUrl: String
+}
+
+input SetLibraryUserEnabledInput {
+	id: ID!
+	enabled: Boolean!
+	reason: String
+	changeCategory: String
+	changeReferenceUrl: String
+}
+
+input ResendLibraryUserInviteInput {
+	id: ID!
+}
+
+# No password field exists on this type, deliberately, and none ever should. The
+# credential flow is entirely the provider's actions email.
+type LibraryUser {
+	id: ID!
+	identityProviderUserId: String!
+	libraryId: ID!
+	agencyCode: String!
+	email: String!
+	firstName: String
+	lastName: String
+	role: ProvisionableRole!
+	status: LibraryUserStatus!
+	dateCreated: String
+	lastEditedBy: String
 }
