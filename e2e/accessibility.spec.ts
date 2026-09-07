@@ -40,17 +40,53 @@ interface Surface {
 }
 
 /**
- * Scroll to the bottom, in steps, so every IntersectionObserver on the way down
- * fires. One jump to the end can skip observers whose sentinel never intersects
- * the viewport, which is the failure mode this helper exists to avoid.
+ * Step down the page until `locator` exists, so everything deferred behind an
+ * IntersectionObserver has mounted before axe scans.
+ *
+ * Driven by the thing it is trying to reveal rather than by a step count. A fixed
+ * number of steps is open-loop, and this reveal runs the instant `page.goto`
+ * resolves: under parallel load the document at that moment is shorter than the
+ * viewport, so every step is spent against a page with nothing to scroll, the
+ * panels render below the fold afterwards, and no observer ever fires. The gate
+ * then scanned the KPI header and the trend chart alone - eleven headings out of
+ * twenty-five - and reported no violations over the fifteen panels it exists to
+ * cover. Observed at ten concurrent workers; CI (workers: 1) rendered fast enough
+ * to hide it.
+ *
+ * Polling fixes that because a pass costs nothing while the page is still empty
+ * and starts doing work the moment there is any. One viewport per pass, not a
+ * jump to the bottom: an observer whose sentinel never crosses the viewport never
+ * fires, and the poll interval is what gives each newly mounted panel a frame to
+ * paint and a fetch to land before the next step.
  */
-async function scrollThroughPage(
+/**
+ * The last panel on the insights page, and the only one whose presence proves the
+ * deferred half actually mounted. RareGemPanel is unconditional, so unlike a
+ * panel that hides itself when empty this cannot be satisfied vacuously, and its
+ * title renders outside its own loading branch so it appears on mount rather than
+ * on fetch.
+ */
+const RARE_GEM = "Unique collection value";
+
+async function scrollUntilPresent(
 	page: import("@playwright/test").Page,
-	steps = 12,
+	locator: import("@playwright/test").Locator,
 ) {
-	for (let i = 0; i < steps; i += 1) {
-		await page.mouse.wheel(0, 2000);
-	}
+	await expect
+		.poll(
+			async () => {
+				await page.evaluate(() =>
+					window.scrollBy(0, Math.max(window.innerHeight - 100, 200)),
+				);
+				return locator.count();
+			},
+			{
+				message:
+					"scrolled to the bottom without the last deferred panel ever mounting",
+				timeout: 30_000,
+			},
+		)
+		.toBeGreaterThan(0);
 }
 
 const PAGES: Surface[] = [
@@ -109,7 +145,8 @@ const PAGES: Surface[] = [
 		// saw the KPI header and nothing else: every chart, table and heading below
 		// the fold was unmounted, so the WCAG gate passed over most of the page it
 		// exists to cover. Charts are where a palette actually fails contrast.
-		reveal: scrollThroughPage,
+		reveal: (page) =>
+			scrollUntilPresent(page, page.getByRole("heading", { name: RARE_GEM })),
 		ready: async (page) => {
 			await expect(
 				page.getByRole("heading", { level: 1, name: /insights/i }),
@@ -125,7 +162,7 @@ const PAGES: Surface[] = [
 			// unconditional (RareGemPanel, always rendered), so this cannot pass
 			// vacuously the way a conditional panel would.
 			await expect(
-				page.getByRole("heading", { name: "Unique collection value" }),
+				page.getByRole("heading", { name: RARE_GEM }),
 			).toBeVisible();
 		},
 	},
