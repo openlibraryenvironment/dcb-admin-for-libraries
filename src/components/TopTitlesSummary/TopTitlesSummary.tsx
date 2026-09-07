@@ -65,8 +65,15 @@ export default function TopTitlesSummary({
             <Stack spacing={2} sx={{
                 alignItems: "center"
             }}>
-                <CircularProgress size="2rem" />
-                <Typography variant="body2" sx={{
+                {/* Named from the visible text rather than given its own aria-label:
+                    a progressbar with no accessible name is an axe `aria-progressbar-name`
+                    failure (WCAG 4.1.2), and a second copy of the same words would be
+                    announced twice. */}
+                <CircularProgress
+                    size="2rem"
+                    aria-labelledby="top-titles-loading"
+                />
+                <Typography id="top-titles-loading" variant="body2" sx={{
                     color: "text.secondary"
                 }}>
 					{t("ui.info.wait", "Loading...")}

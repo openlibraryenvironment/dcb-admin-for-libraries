@@ -23,9 +23,34 @@ const readFlag = (name: string): boolean => {
 };
 
 /**
- * Insights depends on the /insights/** endpoints, which only exist in the upcoming
- * dcb-service release. Enable with VITE_FEATURE_INSIGHTS=true once the environment's
- * dcb-service is new enough - an older one answers 404 to all of them.
+ * Insights depends on the /insights/** endpoints, first released in dcb-service 9.0.0.
+ * Enable with VITE_FEATURE_INSIGHTS=true once the environment's dcb-service is new
+ * enough - an older one answers 404 to all of them.
  */
 export const isInsightsEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_INSIGHTS");
+
+/**
+ * The patron-facing library brand - dcb-service 9.0.0 and later.
+ *
+ * THIS FLAG IS NOT A RENDER SWITCH. brandLogoUrl, brandLogoAlt and defaultThemeName do
+ * not exist on Library before 9.0.0, and a GraphQL field the server has never heard of
+ * is not a null - it is a validation error that fails the WHOLE operation. LoadLibrary
+ * is run by the header on every page and by six routes, so selecting them on an older
+ * deployment does not grey out a form, it takes the application down.
+ *
+ * So the flag changes the DOCUMENT and the mutation VARIABLES. See
+ * @constants/serviceCapabilities and @helpers/capabilityFields.
+ */
+export const isLibraryBrandingEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_LIBRARY_BRANDING");
+
+/**
+ * A flag by name, for code driven by the capability registry rather than by one feature.
+ *
+ * Deliberately NOT a way to invent a flag at a call site: every name passed here comes
+ * from SERVICE_CAPABILITIES, and serviceCapabilities.test.ts asserts that every flag in
+ * that registry is also declared above - so the named exports stay the complete list, and
+ * featureFlags.test.ts keeps checking each of them reaches a deployment.
+ */
+export const isCapabilityEnabled = (flag: string): boolean => readFlag(flag);

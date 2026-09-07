@@ -66,8 +66,12 @@ export default function TopRequestorsSummary({
                 <Stack spacing={2} sx={{
                     alignItems: "center"
                 }}>
-					<CircularProgress size="2rem" />
-					<Typography variant="body2" sx={{
+					{/* Named from the visible text - see TopTitlesSummary. */}
+					<CircularProgress
+						size="2rem"
+						aria-labelledby="top-requestors-loading"
+					/>
+					<Typography id="top-requestors-loading" variant="body2" sx={{
                         color: "text.secondary"
                     }}>
 						{t("ui.info.wait", "Loading...")}

@@ -159,7 +159,7 @@ function RouteComponent() {
 		queryFn: async () =>
 			request(
 				`${dcbApiBase}/graphql`,
-				getLibrary,
+				getLibrary(),
 				{
 					query: "agencyCode:" + code,
 					pagesize: 10,

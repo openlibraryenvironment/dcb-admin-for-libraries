@@ -26,6 +26,11 @@ import AddressLink from "../../components/Address/AddressLink";
 import { Controller, useForm } from "react-hook-form";
 import { UpdateLibraryFormData } from "../../models/UpdateLibraryFormData";
 import { updateLibrary } from "../../mutations/updateLibrary";
+import { stripUnsupportedInput } from "@helpers/capabilityFields";
+import {
+	isInsightsEnabled,
+	isLibraryBrandingEnabled,
+} from "@helpers/featureFlags";
 import { UpdateLibraryResponse } from "../../models/UpdateLibraryResponse";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as Yup from "yup";
@@ -42,7 +47,6 @@ import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
 import { FunctionalSettingStatus } from "@models/FunctionalSetting";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import { getPatronRequestStats } from "@queries/getPatronRequestStats";
-import { isInsightsEnabled } from "@helpers/featureFlags";
 import TopTitlesSummary from "@components/TopTitlesSummary/TopTitlesSummary";
 import TopRequestorsSummary from "@components/TopRequestorSummary/TopRequestorSummary";
 
@@ -129,7 +133,7 @@ function HomeComponent() {
 		queryFn: async () =>
 			request(
 				DCB_API_BASE + "/graphql",
-				getLibrary,
+				getLibrary(),
 				{
 					query: "agencyCode:" + code,
 					pagesize: 10,
@@ -221,12 +225,16 @@ function HomeComponent() {
 		mutationFn: async (formData: UpdateLibraryFormData) => {
 			const response: UpdateLibraryResponse = await request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
-				updateLibrary,
+				updateLibrary(),
 				{
-					input: {
+					// Stripped, not blanked. UpdateLibraryInput does not declare the brand
+					// keys before dcb-service 9.0.0, and an undeclared input field fails
+					// the whole mutation - so on an older deployment nothing on this form
+					// would save, brand or not.
+					input: stripUnsupportedInput({
 						id: library?.id,
 						...formData,
-					},
+					}),
 				},
 				headers,
 			);
@@ -687,145 +695,154 @@ function HomeComponent() {
 					<RenderAttribute attribute={library?.id} />
 				</Stack>
 			</Grid>
-            {/* Patron-facing brand — N-1B. Its own labelled block because everything
-			    above configures this library's participation in DCB and these three
-			    configure what a patron sees in the discovery app. The library's mark
-			    leads the lockup there and the consortium's follows it, smaller: the
-			    patron is using their library, and the consortium is the supply network
-			    behind it. */}
-            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" sx={{
-                    fontWeight: "bold"
-                }}>
-					{t("library.brand.section")}
-				</Typography>
-				<Typography>{t("library.brand.section_help")}</Typography>
-				{/* Said once, in the section, rather than in each field's help text. A
-				    library choosing between uploading and pasting an address deserves to
-				    know what the second one costs. */}
-				<Typography
-                    variant="body2"
-                    sx={{
-                        color: "text.secondary",
-                        mt: 1
-                    }}>
-					{t("library.brand.external_url_cost")}
-				</Typography>
-			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.brandLogoUrl
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
-						{t("library.brand.logo_url")}
-					</Typography>
-					<Controller
-						name="brandLogoUrl"
-						control={control}
-						render={({ field }) =>
-							editMode ? (
-								<BrandImageField
-									value={field.value ?? ""}
-									onChange={field.onChange}
-									label={t("library.brand.logo_url")}
-									error={!!errors.brandLogoUrl}
-									helperText={
-										errors.brandLogoUrl?.message ??
-										t("library.brand.logo_url_help")
-									}
-								/>
-							) : (
-								<RenderAttribute attribute={library?.brandLogoUrl} />
-							)
-						}
-					/>
-				</Stack>
-			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.brandLogoAlt
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
-						{t("library.brand.logo_alt")}
-					</Typography>
-					<Controller
-						name="brandLogoAlt"
-						control={control}
-						render={({ field }) =>
-							editMode ? (
-								<TextField
-									{...field}
-									label={t("library.brand.logo_alt")}
-									fullWidth
-									error={!!errors.brandLogoAlt}
-									helperText={
-										errors.brandLogoAlt?.message ??
-										t("library.brand.logo_alt_help")
-									}
-									margin="normal"
-								/>
-							) : (
-								<RenderAttribute attribute={library?.brandLogoAlt} />
-							)
-						}
-					/>
-				</Stack>
-			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.defaultThemeName
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
-						{t("library.brand.theme")}
-					</Typography>
-					<Controller
-						name="defaultThemeName"
-						control={control}
-						render={({ field }) =>
-							editMode ? (
-								// A list, not a colour. Every theme in the registry has been
-								// contrast-tested in light, dark and high contrast; a colour
-								// typed here would not be, and nothing on this page could tell
-								// the administrator it had failed.
-								(<TextField
-									{...field}
-									select
-									label={t("library.brand.theme")}
-									fullWidth
-									error={!!errors.defaultThemeName}
-									helperText={
-										errors.defaultThemeName?.message ??
-										t("library.brand.theme_help")
-									}
-									margin="normal">
-                                    <MenuItem value="">
-										{t("library.brand.theme_inherit")}
-									</MenuItem>
-                                    {themeOptions(library?.defaultThemeName).map((name) => (
-										<MenuItem key={name} value={name}>
-											{name}
-										</MenuItem>
-									))}
-                                </TextField>)
-							) : (
-								<RenderAttribute attribute={library?.defaultThemeName} />
-							)
-						}
-					/>
-				</Stack>
-			</Grid>
+            {/* Hidden before dcb-service 9.0.0, which has no brand columns on Library
+                at all - the query does not ask for them and the mutation could not
+                store them. Hiding the fields is UX; the flag also removes them from the
+                document and the variables, which is what actually keeps the page
+                working. See @constants/serviceCapabilities. */}
+            {isLibraryBrandingEnabled() && (
+              <>
+              {/* Patron-facing brand — N-1B. Its own labelled block because everything
+  			    above configures this library's participation in DCB and these three
+  			    configure what a patron sees in the discovery app. The library's mark
+  			    leads the lockup there and the consortium's follows it, smaller: the
+  			    patron is using their library, and the consortium is the supply network
+  			    behind it. */}
+              <Grid size={{ xs: 4, sm: 8, md: 12 }}>
+  				<Typography variant="h3" sx={{
+                      fontWeight: "bold"
+                  }}>
+  					{t("library.brand.section")}
+  				</Typography>
+  				<Typography>{t("library.brand.section_help")}</Typography>
+  				{/* Said once, in the section, rather than in each field's help text. A
+  				    library choosing between uploading and pasting an address deserves to
+  				    know what the second one costs. */}
+  				<Typography
+                      variant="body2"
+                      sx={{
+                          color: "text.secondary",
+                          mt: 1
+                      }}>
+  					{t("library.brand.external_url_cost")}
+  				</Typography>
+  			</Grid>
+              <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+  				<Stack direction={"column"}>
+  					<Typography
+  						variant="attributeTitle"
+  						color={
+  							errors.brandLogoUrl
+  								? (theme.vars || theme).palette.error.main
+  								: (theme.vars || theme).palette.text.primary
+  						}>
+  						{t("library.brand.logo_url")}
+  					</Typography>
+  					<Controller
+  						name="brandLogoUrl"
+  						control={control}
+  						render={({ field }) =>
+  							editMode ? (
+  								<BrandImageField
+  									value={field.value ?? ""}
+  									onChange={field.onChange}
+  									label={t("library.brand.logo_url")}
+  									error={!!errors.brandLogoUrl}
+  									helperText={
+  										errors.brandLogoUrl?.message ??
+  										t("library.brand.logo_url_help")
+  									}
+  								/>
+  							) : (
+  								<RenderAttribute attribute={library?.brandLogoUrl} />
+  							)
+  						}
+  					/>
+  				</Stack>
+  			</Grid>
+              <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+  				<Stack direction={"column"}>
+  					<Typography
+  						variant="attributeTitle"
+  						color={
+  							errors.brandLogoAlt
+  								? (theme.vars || theme).palette.error.main
+  								: (theme.vars || theme).palette.text.primary
+  						}>
+  						{t("library.brand.logo_alt")}
+  					</Typography>
+  					<Controller
+  						name="brandLogoAlt"
+  						control={control}
+  						render={({ field }) =>
+  							editMode ? (
+  								<TextField
+  									{...field}
+  									label={t("library.brand.logo_alt")}
+  									fullWidth
+  									error={!!errors.brandLogoAlt}
+  									helperText={
+  										errors.brandLogoAlt?.message ??
+  										t("library.brand.logo_alt_help")
+  									}
+  									margin="normal"
+  								/>
+  							) : (
+  								<RenderAttribute attribute={library?.brandLogoAlt} />
+  							)
+  						}
+  					/>
+  				</Stack>
+  			</Grid>
+              <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+  				<Stack direction={"column"}>
+  					<Typography
+  						variant="attributeTitle"
+  						color={
+  							errors.defaultThemeName
+  								? (theme.vars || theme).palette.error.main
+  								: (theme.vars || theme).palette.text.primary
+  						}>
+  						{t("library.brand.theme")}
+  					</Typography>
+  					<Controller
+  						name="defaultThemeName"
+  						control={control}
+  						render={({ field }) =>
+  							editMode ? (
+  								// A list, not a colour. Every theme in the registry has been
+  								// contrast-tested in light, dark and high contrast; a colour
+  								// typed here would not be, and nothing on this page could tell
+  								// the administrator it had failed.
+  								(<TextField
+  									{...field}
+  									select
+  									label={t("library.brand.theme")}
+  									fullWidth
+  									error={!!errors.defaultThemeName}
+  									helperText={
+  										errors.defaultThemeName?.message ??
+  										t("library.brand.theme_help")
+  									}
+  									margin="normal">
+                                      <MenuItem value="">
+  										{t("library.brand.theme_inherit")}
+  									</MenuItem>
+                                      {themeOptions(library?.defaultThemeName).map((name) => (
+  										<MenuItem key={name} value={name}>
+  											{name}
+  										</MenuItem>
+  									))}
+                                  </TextField>)
+  							) : (
+  								<RenderAttribute attribute={library?.defaultThemeName} />
+  							)
+  						}
+  					/>
+  				</Stack>
+  			</Grid>
+              </>
+            )}
             {/* /* 'Primary location' title goes here/* */}
             {/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography variant="h3" fontWeight={"bold"}>

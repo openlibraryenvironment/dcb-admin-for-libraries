@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Port 4184: the bootloader band (418x) for dcb-admin-for-libraries (…4). The allocation
+// table and why it exists are in playwright.config.ts.
+
 export default defineConfig({
 	testDir: "./e2e-ki-bootstrap",
 	fullyParallel: true,
@@ -8,7 +11,7 @@ export default defineConfig({
 	reporter: "html",
 
 	use: {
-		baseURL: "http://localhost:4174",
+		baseURL: "http://localhost:4184",
 		trace: "on-first-retry",
 	},
 
@@ -21,8 +24,8 @@ export default defineConfig({
 
 	webServer: {
 		command:
-			"npm run build -- --base=/dcb-admin-for-libraries/ && npm run preview -- --port 4174 --strictPort",
-		url: "http://localhost:4174/ki-bootstrap.js",
+			"npm run build -- --base=/dcb-admin-for-libraries/ && npm run preview -- --port 4184 --strictPort",
+		url: "http://localhost:4184/ki-bootstrap.js",
 		reuseExistingServer: !process.env.CI,
 		env: {
 			// Pinned, not inherited. `vite preview` reads `base` from vite.config,
