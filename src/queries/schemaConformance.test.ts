@@ -71,6 +71,28 @@ const RELEASE_9_FLAGS = flagsFor(RELEASE_9_CAPABILITIES);
 const modules = import.meta.glob("../{queries,mutations}/*.ts");
 
 /**
+ * Documents that are only ever sent when a flag is on, with the flag that sends them.
+ *
+ * They are EXCLUDED from the narrower passes, not skipped: excluding one here is a claim
+ * that a route guard stops it being emitted on an older deployment, and the claim is
+ * reviewable because the flag is named next to it. A silent skip would be a hole in the
+ * gate; this is a documented door.
+ *
+ * Announcements are the whole of it today. dcb-service declares none of them before the
+ * `feat/discovery-contract` branch merges, so a deployment on any release must never see one - which is
+ * exactly what the two passes below would otherwise, correctly, fail on.
+ */
+const FLAG_ONLY: Record<string, string> = {
+	"queries/getAnnouncements.ts": "VITE_FEATURE_ANNOUNCEMENTS",
+	"mutations/announcements.ts": "VITE_FEATURE_ANNOUNCEMENTS",
+};
+
+const gatedBy = (file: string): string | undefined => {
+	const name = file.replace(/^\.\.\//, "").replace(/^\.\//, "queries/");
+	return FLAG_ONLY[name];
+};
+
+/**
  * Every document a module exports.
  *
  * Two shapes: a plain `gql` string, and - for anything whose selection depends on the
@@ -126,7 +148,12 @@ describe("documents validate against the dcb-service they target", () => {
 		},
 	);
 
-	it.each(files)(
+	it.each(
+		files.filter((file) => {
+			const gate = gatedBy(file);
+			return !gate || gate in RELEASE_9_FLAGS;
+		}),
+	)(
 		"%s is valid against dcb-service 9.0.0 (the release's flags)",
 		async (file) => {
 			vi.stubGlobal("window", { __APP_ENV__: RELEASE_9_FLAGS });
@@ -145,6 +172,19 @@ describe("documents validate against the dcb-service they target", () => {
 		},
 	);
 
+	it("every flag-only exclusion names a flag that exists", () => {
+		const declared = readFileSync(
+			path.resolve(repoRoot, "src/helpers/featureFlags.ts"),
+			"utf8",
+		);
+
+		for (const [file, flag] of Object.entries(FLAG_ONLY)) {
+			expect(declared, `${file} is excluded on ${flag}`).toContain(
+				`readFlag("${flag}")`,
+			);
+		}
+	});
+
 	it("the 9.0.0 pass is not vacuous", () => {
 		// It would be if every capability were `since: null`, or if meetsServiceVersion
 		// started returning null for a release we hold a schema for.
@@ -154,7 +194,7 @@ describe("documents validate against the dcb-service they target", () => {
 		);
 	});
 
-	it.each(files)(
+	it.each(files.filter((file) => !gatedBy(file)))(
 		"%s is valid against dcb-service 8.71.0 (all flags off)",
 		async (file) => {
 			// No window at all: envsubst renders an unset flag as the empty string and a

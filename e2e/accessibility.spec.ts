@@ -116,6 +116,27 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// V-12's compose form. Two text fields, a date input and a switch — a form, which is
+		// where accessible names and error association fail, and the only surface in this
+		// app that publishes something patrons will read.
+		name: "announcements",
+		path: "/announcements",
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_ANNOUNCEMENTS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraryBasics: library,
+				LoadAnnouncements: { announcements: [] },
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Tell your patrons" }),
+			).toBeVisible();
+		},
+	},
+	{
 		name: "login",
 		path: "/login",
 		ready: async (page) => {

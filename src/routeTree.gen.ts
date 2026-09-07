@@ -15,6 +15,7 @@ import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as NetworkErrorRouteImport } from './routes/networkError'
 import { Route as _authenticatedIndexRouteImport } from './routes/__authenticated/index'
+import { Route as _authenticatedAnnouncementsRouteImport } from './routes/__authenticated/announcements'
 import { Route as _authenticatedContactsRouteImport } from './routes/__authenticated/contacts'
 import { Route as _authenticatedDataChangeLogRouteImport } from './routes/__authenticated/dataChangeLog'
 import { Route as _authenticatedInsightsRouteImport } from './routes/__authenticated/insights'
@@ -66,6 +67,12 @@ const _authenticatedIndexRoute = _authenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => _authenticatedRoute,
 } as any)
+const _authenticatedAnnouncementsRoute =
+  _authenticatedAnnouncementsRouteImport.update({
+    id: '/announcements',
+    path: '/announcements',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
 const _authenticatedContactsRoute = _authenticatedContactsRouteImport.update({
   id: '/contacts',
   path: '/contacts',
@@ -193,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/maintenance': typeof MaintenanceRoute
   '/networkError': typeof NetworkErrorRoute
+  '/announcements': typeof _authenticatedAnnouncementsRoute
   '/contacts': typeof _authenticatedContactsRoute
   '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
   '/insights': typeof _authenticatedInsightsRoute
@@ -220,6 +228,7 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/maintenance': typeof MaintenanceRoute
   '/networkError': typeof NetworkErrorRoute
+  '/announcements': typeof _authenticatedAnnouncementsRoute
   '/contacts': typeof _authenticatedContactsRoute
   '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
   '/insights': typeof _authenticatedInsightsRoute
@@ -249,6 +258,7 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/maintenance': typeof MaintenanceRoute
   '/networkError': typeof NetworkErrorRoute
+  '/__authenticated/announcements': typeof _authenticatedAnnouncementsRoute
   '/__authenticated/contacts': typeof _authenticatedContactsRoute
   '/__authenticated/dataChangeLog': typeof _authenticatedDataChangeLogRoute
   '/__authenticated/insights': typeof _authenticatedInsightsRoute
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/maintenance'
     | '/networkError'
+    | '/announcements'
     | '/contacts'
     | '/dataChangeLog'
     | '/insights'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/maintenance'
     | '/networkError'
+    | '/announcements'
     | '/contacts'
     | '/dataChangeLog'
     | '/insights'
@@ -335,6 +347,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/maintenance'
     | '/networkError'
+    | '/__authenticated/announcements'
     | '/__authenticated/contacts'
     | '/__authenticated/dataChangeLog'
     | '/__authenticated/insights'
@@ -409,6 +422,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof _authenticatedIndexRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/announcements': {
+      id: '/__authenticated/announcements'
+      path: '/announcements'
+      fullPath: '/announcements'
+      preLoaderRoute: typeof _authenticatedAnnouncementsRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/contacts': {
@@ -583,6 +603,7 @@ const _authenticatedRequestingRecordIdRouteWithChildren =
   )
 
 interface _authenticatedRouteChildren {
+  _authenticatedAnnouncementsRoute: typeof _authenticatedAnnouncementsRoute
   _authenticatedContactsRoute: typeof _authenticatedContactsRoute
   _authenticatedDataChangeLogRoute: typeof _authenticatedDataChangeLogRoute
   _authenticatedInsightsRoute: typeof _authenticatedInsightsRoute
@@ -605,6 +626,7 @@ interface _authenticatedRouteChildren {
 }
 
 const _authenticatedRouteChildren: _authenticatedRouteChildren = {
+  _authenticatedAnnouncementsRoute: _authenticatedAnnouncementsRoute,
   _authenticatedContactsRoute: _authenticatedContactsRoute,
   _authenticatedDataChangeLogRoute: _authenticatedDataChangeLogRoute,
   _authenticatedInsightsRoute: _authenticatedInsightsRoute,

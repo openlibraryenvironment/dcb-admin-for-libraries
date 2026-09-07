@@ -1069,5 +1069,22 @@
 				"col_supplied": "Supplied"
 			}
 		}
+	},
+	"announcements": {
+		"title": "Tell your patrons",
+		"scope_help": "For news that affects finding and requesting: an outage, a system change, a branch closure that moves where things are collected. Not events, newsletters or promotions — link to your own website for those. One notice shows at a time, and your patrons see it in the search service, never as a pop-up.",
+		"headline": "Headline",
+		"body": "What you want to say",
+		"body_help": "Plain text. Formatting and links are not shown.",
+		"expires": "Show until",
+		"expires_help": "Required. A notice with no end date is one nobody takes down, and a strip that is always there is one patrons stop reading.",
+		"dismissible": "Patrons can dismiss this",
+		"publish": "Publish",
+		"current": "Your notices",
+		"none": "Nothing published.",
+		"expired": "Finished",
+		"until": "Shows until {{date}}",
+		"withdraw": "Take down",
+		"unavailable": "Announcements are not available on this deployment yet. They need a newer DCB service."
 	}
 }
