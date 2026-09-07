@@ -2,6 +2,11 @@ import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
+import axios from "axios";
+import {
+	BrandUploadError,
+	uploadStagedBrandImages,
+} from "@helpers/brandAssetUpload";
 import request from "graphql-request";
 import { getLibrary } from "../../queries/getLibrary";
 import { useAuth } from "react-oidc-context";
@@ -17,6 +22,7 @@ import {
 	useTheme,
 } from "@mui/material";
 import { BrandImageField } from "@components/BrandImageField/BrandImageField";
+import { useBrandUploadsAvailable } from "@/hooks/useBrandUploadsAvailable";
 import {
 	BRAND_LIMITS,
 	isValidLogoUrl,
@@ -103,6 +109,11 @@ function HomeComponent() {
 	// Read once per render rather than at each call site, so the two cards below
 	// cannot disagree with each other.
 	const insightsEnabled = isInsightsEnabled();
+
+	// R-17b. A deployment with dcb.branding.assets.store=none has no upload route, so the
+	// button would 404. The URL field stays either way — pointing at a CDN the library
+	// already runs is a first-class route in, not a fallback.
+	const brandUploadsAvailable = useBrandUploadsAvailable();
 
 	const [alert, setAlert] = useState<AlertObject>({
 		open: false,
@@ -342,10 +353,38 @@ function HomeComponent() {
 			),
 	});
 
+	/**
+	 * The logo chosen but not yet uploaded — R-17e.
+	 *
+	 * Uploading at pick time left a stored image behind every time somebody reconsidered or
+	 * closed the tab; dcb-service cannot tell those from an image about to be used, so it
+	 * keeps unreferenced uploads for a day and sweeps them. Staging makes that the rare case.
+	 * The cost is that a rejected image is reported at Save.
+	 */
+	const [stagedLogo, setStagedLogo] = useState<File | null>(null);
+
+	const stageLogo = (file: File | null) => setStagedLogo(file);
+
+	/**
+	 * The upload moved here from inside the field, because the upload is now part of Save.
+	 * This app has no shared REST client, so the base URL and bearer token are assembled the
+	 * same way the component used to assemble them.
+	 */
+	const uploadClient = useMemo(
+		() => ({
+			post: (path: string, body: FormData) =>
+				axios.post(`${DCB_API_BASE}${path}`, body, {
+					headers: { Authorization: `Bearer ${auth.user?.access_token}` },
+				}),
+		}),
+		[DCB_API_BASE, auth.user?.access_token],
+	);
+
 	const {
 		control,
 		handleSubmit,
 		reset,
+		setValue,
 		formState: { errors, isDirty },
 		// watch,
 	} = useForm<UpdateLibraryFormData>({
@@ -384,10 +423,47 @@ function HomeComponent() {
 	}, [library, reset]);
 
 	// refactor this into common code
-	const onSubmit = (data: Partial<Library>) => {
-		const newChangedFields = Object.keys(data).reduce((acc, key) => {
+	const onSubmit = async (data: Partial<Library>) => {
+		// The staged logo is uploaded HERE, before the confirmation dialog rather than after
+		// it: asking somebody to confirm a save we already know will be rejected is asking
+		// them to approve something that will not happen.
+		let submitted = data;
+
+		if (stagedLogo) {
+			try {
+				const uploaded = await uploadStagedBrandImages(
+					{ brandLogoUrl: stagedLogo },
+					uploadClient,
+					t("library.brand.upload_failed"),
+				);
+
+				// Into the form as well as the diff, so the URL box shows what was stored
+				// rather than staying empty until the page is reloaded.
+				setValue("brandLogoUrl", uploaded.brandLogoUrl, { shouldDirty: true });
+
+				submitted = { ...data, ...uploaded };
+				setStagedLogo(null);
+			} catch (failure: unknown) {
+				// dcb-service writes its refusals for a person — "the file is not a PNG or
+				// a JPEG", "the image is 6000x4000; the limit is 4096 pixels on either
+				// edge". Shown as-is: the whole argument for validating on the server is
+				// undone if the administrator is told only that it failed.
+				setAlert({
+					open: true,
+					severity: "error",
+					text:
+						failure instanceof BrandUploadError
+							? failure.message
+							: t("library.brand.upload_failed"),
+					title: t("library.brand.logo_url"),
+				});
+				return;
+			}
+		}
+
+		const newChangedFields = Object.keys(submitted).reduce((acc, key) => {
 			const field = key as keyof UpdateLibraryFormData;
-			const currentValue = data[field];
+			const currentValue = submitted[field];
 			const originalValue = library[field];
 
 			if (hasChanged(currentValue, originalValue) && currentValue !== undefined) {
@@ -746,7 +822,10 @@ function HomeComponent() {
   								<BrandImageField
   									value={field.value ?? ""}
   									onChange={field.onChange}
+  									stagedFile={stagedLogo}
+  									onStageFile={stageLogo}
   									label={t("library.brand.logo_url")}
+  									uploadsAvailable={brandUploadsAvailable}
   									error={!!errors.brandLogoUrl}
   									helperText={
   										errors.brandLogoUrl?.message ??
