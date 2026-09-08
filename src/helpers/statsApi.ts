@@ -151,6 +151,24 @@ export interface ConsortialLifelineStat {
 	supplyCount: number;
 }
 
+/**
+ * One library's volume split by whether a van moved — N-5, and V-2.5's measurement.
+ *
+ * The two counts are written by dcb-service to sum to totalRequests, so the UI never has to
+ * decide what an unset expedited-checkout flag means.
+ */
+export interface LibraryBreakdownStat {
+	libraryCode: string;
+	// Null when no library row maps to that Host LMS - a system with requests that is
+	// not onboarded. Callers show the code rather than a blank row.
+	libraryName: string | null;
+	totalRequests: number;
+	// Collected in person at the supplying library. No van moved.
+	walkUpRequests: number;
+	// Sent to the reader's own library for collection.
+	shippedRequests: number;
+}
+
 export interface PeerBenchmarkStat {
 	libraryCode: string;
 	// The name a librarian recognises. Null when no library row maps to that Host
@@ -587,6 +605,23 @@ export function consortialLifelineQueryOptions(
 		queryKey: ["stats", "consortial-lifeline", params] as const,
 		queryFn: async (): Promise<ConsortialLifelineStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/consortial-lifeline`, {
+				params: cleanParams(params),
+			});
+			return data;
+		},
+	};
+}
+
+// SCOPED, unlike peer benchmarks below. This answers "what did MY library do" and takes the
+// same library filter every other stats call does, so a library administrator sees one row.
+export function libraryBreakdownQueryOptions(
+	client: AxiosInstance,
+	params: StatsParams,
+) {
+	return {
+		queryKey: ["stats", "library-breakdown", params] as const,
+		queryFn: async (): Promise<LibraryBreakdownStat[]> => {
+			const { data } = await client.get(`${STATS_BASE}/library-breakdown`, {
 				params: cleanParams(params),
 			});
 			return data;

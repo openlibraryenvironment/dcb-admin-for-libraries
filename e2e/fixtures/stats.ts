@@ -133,6 +133,24 @@ export const DEFAULT_STATS: StatsMocks = {
 			supplyCount: 9,
 		},
 	],
+	"library-breakdown": [
+		{
+			libraryCode: "e2e-lms",
+			libraryName: "E2E Test Library",
+			totalRequests: 908,
+			walkUpRequests: 227,
+			shippedRequests: 681,
+		},
+		{
+			// The degrade-honestly case, as above: requests but no library row, so the
+			// panel shows the code rather than a blank cell.
+			libraryCode: "unnamed-lms",
+			libraryName: null,
+			totalRequests: 120,
+			walkUpRequests: 0,
+			shippedRequests: 120,
+		},
+	],
 	"peer-benchmarks": [
 		{
 			libraryCode: "e2e-lms",

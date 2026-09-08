@@ -5,6 +5,7 @@ import {
 	colorSchemeAttribute,
 	type ColorScheme,
 } from "./fixtures/color-scheme";
+import { scrollUntilPresent } from "./fixtures/lazy";
 
 /**
  * The accessibility gate. WCAG 2.2 AA is the floor, and this is where it is
@@ -40,26 +41,6 @@ interface Surface {
 }
 
 /**
- * Step down the page until `locator` exists, so everything deferred behind an
- * IntersectionObserver has mounted before axe scans.
- *
- * Driven by the thing it is trying to reveal rather than by a step count. A fixed
- * number of steps is open-loop, and this reveal runs the instant `page.goto`
- * resolves: under parallel load the document at that moment is shorter than the
- * viewport, so every step is spent against a page with nothing to scroll, the
- * panels render below the fold afterwards, and no observer ever fires. The gate
- * then scanned the KPI header and the trend chart alone - eleven headings out of
- * twenty-five - and reported no violations over the fifteen panels it exists to
- * cover. Observed at ten concurrent workers; CI (workers: 1) rendered fast enough
- * to hide it.
- *
- * Polling fixes that because a pass costs nothing while the page is still empty
- * and starts doing work the moment there is any. One viewport per pass, not a
- * jump to the bottom: an observer whose sentinel never crosses the viewport never
- * fires, and the poll interval is what gives each newly mounted panel a frame to
- * paint and a fetch to land before the next step.
- */
-/**
  * The last panel on the insights page, and the only one whose presence proves the
  * deferred half actually mounted. RareGemPanel is unconditional, so unlike a
  * panel that hides itself when empty this cannot be satisfied vacuously, and its
@@ -67,27 +48,6 @@ interface Surface {
  * on fetch.
  */
 const RARE_GEM = "Unique collection value";
-
-async function scrollUntilPresent(
-	page: import("@playwright/test").Page,
-	locator: import("@playwright/test").Locator,
-) {
-	await expect
-		.poll(
-			async () => {
-				await page.evaluate(() =>
-					window.scrollBy(0, Math.max(window.innerHeight - 100, 200)),
-				);
-				return locator.count();
-			},
-			{
-				message:
-					"scrolled to the bottom without the last deferred panel ever mounting",
-				timeout: 30_000,
-			},
-		)
-		.toBeGreaterThan(0);
-}
 
 const PAGES: Surface[] = [
 	{

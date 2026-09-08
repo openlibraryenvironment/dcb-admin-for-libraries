@@ -52,6 +52,7 @@ import BarStatPanel from "./BarStatPanel";
 import TableStatPanel from "./TableStatPanel";
 import LazyPanel from "./LazyPanel";
 import PeerBenchmarkPanel from "./PeerBenchmarkPanel";
+import WalkUpDiversionPanel from "./WalkUpDiversionPanel";
 import CollectionDimensionPanel from "./CollectionDimensionPanel";
 import NewAcquisitionsPanel from "./NewAcquisitionsPanel";
 
@@ -290,6 +291,13 @@ export default function InsightsDashboard({
 					params={{ startDate: params.startDate, endDate: params.endDate }}
 					libraryCode={libraryCode}
 				/>
+			</LazyPanel>
+
+			{/* V-2.5. Walk-up versus shipped, so the courier saving is evidence and not a
+			    slide. Beside peer benchmarking because both answer "how are we doing"
+			    rather than "what happened". */}
+			<LazyPanel minHeight={320}>
+				<WalkUpDiversionPanel params={params} />
 			</LazyPanel>
 
 			{/* Operational breakdowns */}
