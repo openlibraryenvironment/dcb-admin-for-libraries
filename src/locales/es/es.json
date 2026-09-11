@@ -1,17 +1,26 @@
 {
-	"header": {
-		"welcome": "Bienvenido a DCB Admin para {{name}}",
-		"library_selector": "Biblioteca"
-	},
-	"library": {
-		"title": "Información para {{library}}"
-	},
-	"patron_request": {
-		"title": "Solicitud de cliente"
-	},
-	"shared_index": {
-		"cluster": "Cluster",
-		"items": "items",
-		"title": "Índice compartido"
-	}
+  "header": {
+    "welcome": "Bienvenido a DCB Admin para {{name}}",
+    "library_selector": "Biblioteca"
+  },
+  "library": {
+    "title": "Información para {{library}}"
+  },
+  "patron_request": {
+    "title": "Solicitud de cliente"
+  },
+  "shared_index": {
+    "cluster": "Cluster",
+    "items": "items",
+    "title": "Índice compartido"
+  },
+  "insights": {
+    "panel": {
+      "retry": "Reintentar",
+      "failed": "No se ha podido cargar este panel."
+    },
+    "announce": {
+      "view": "Mostrando {{range}}."
+    }
+  }
 }
