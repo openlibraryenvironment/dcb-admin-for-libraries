@@ -31,6 +31,10 @@ The two admin apps are on the same generation, so an API that works in one usual
 
 ## Things you will get wrong without being told
 
+**Delete commented-out code; git remembers it for you.** This was the worst repository in the estate for it — 172 sites on 2026-09-08, including a 142-line commented-out component in `ExportToolbar.tsx` and seven consecutive lines in `routes/login.tsx`. It is now at **0**, and the point of saying so is that it is cheap to keep there and expensive to recover: a reader cannot tell dead code from code that is about to matter, so it is read, considered, and left alone by everyone forever.
+
+**A comment earns its line only as** a constraint found by running the thing, a decision the next reader would otherwise undo, a bound the types cannot state, or one line pointing at the document that holds the argument. Design rationale — why this component exists, what shape was rejected — goes to `docs/`, an ADR or the commit message, where it is reviewed and updated when the approach changes. The 49 runs of 12+ lines that were here in September 2026 moved into `docs/`, which is where `theming.md`, `testing.md`, `routing.md`, `formatting.md`, `branding.md`, `insights.md`, `attributes.md` and `service-compatibility.md` came from. `doctrine/scripts/gate.mjs --report` now reads 0 for both counts; check it before quoting either number.
+
 **Releases run from the `release` branch, not `main`.** `semantic-release` is configured with `"branches": ["release"]`, publishes to GitLab, and commits `package.json`, `CHANGELOG.md` and `release-info.json` back with `[skip ci]`. Merging to `main` releases nothing; conventional-commit format is not optional, because commit messages *are* the release notes.
 
 **GraphQL types are generated.** If you touch a `.ts` GraphQL document you MUST run `npm run codegen` and commit the regenerated types. A schema change in `dcb-service` is a full-stack change: update this consumer in the same change, or say explicitly which PR follows.
