@@ -28,8 +28,22 @@ export const WCAG_TAGS = [
  */
 const VENDOR_EXCLUSIONS = ['[style*="z-index: 100000"]'];
 
+/**
+ * Rules outside the WCAG tag sets that we assert anyway, each because it caught something
+ * real here. Named one at a time rather than by turning on best-practice wholesale, so the
+ * gate still cannot fail on opinion.
+ *
+ * heading-order: the Insights panels rendered as <h6> under an <h1>, skipping four levels,
+ * because MUI's h6 variant is an h6 element unless you say otherwise. A screen-reader user
+ * navigating by heading met a page whose outline said every panel was nested four deep
+ * inside nothing. The WCAG tags do not cover it; this does.
+ */
+const EXTRA_RULES = ["heading-order"];
+
 export async function analyse(page: Page): Promise<Result[]> {
-	let builder = new AxeBuilder({ page }).withTags(WCAG_TAGS);
+	let builder = new AxeBuilder({ page })
+		.withTags(WCAG_TAGS)
+		.withRules(EXTRA_RULES);
 	for (const selector of VENDOR_EXCLUSIONS) {
 		builder = builder.exclude(selector);
 	}
