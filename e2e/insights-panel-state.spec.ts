@@ -97,6 +97,32 @@ test.describe("Insights panel states", () => {
     await expect(panel).not.toContainText("This panel could not be loaded.");
   });
 
+  test("the header is five figures, and the rest are a disclosure away", async ({
+    page,
+  }) => {
+    await page.goto("/insights");
+
+    await expect(page.getByText("Net flow")).toBeVisible();
+    await expect(page.getByText("Estimated cost avoided")).toBeHidden();
+
+    await page.getByRole("button", { name: "More measures" }).click();
+    await expect(page.getByText("Estimated cost avoided")).toBeVisible();
+  });
+
+  test("the durations panel names both transit legs, and says when one is unreported", async ({
+    page,
+  }) => {
+    await page.goto("/insights");
+    await reveal(page, "How long things take");
+
+    const panel = cardFor(page, "How long things take");
+
+    await expect(panel).toContainText("Transit, outbound");
+    await expect(panel).toContainText("502 observations");
+    await expect(panel).toContainText("Transit, return");
+    await expect(panel).toContainText("Not reported by this system");
+  });
+
   test("the range change is announced", async ({ page }) => {
     await page.goto("/insights");
 

@@ -2,6 +2,9 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Stack,
   ToggleButton,
@@ -17,19 +20,21 @@ import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
 import { useInsightsPlotStore, RangePreset } from "@/hooks/insightsPlotStore";
 import {
-  dashboardQueryOptions,
-  demandByPickupLocationQueryOptions,
-  demandByPatronGroupQueryOptions,
-  topRequestedTitlesQueryOptions,
-  unmetLocalDemandQueryOptions,
+  ConsortialLifelineStat,
+  PatronGroupDemandStat,
+  PickupLocationDemandStat,
+  RequestedTitleStat,
+  StatsParams,
+  TopClusterStat,
   acquisitionOpportunitiesQueryOptions,
   consortialLifelineQueryOptions,
-  StatsParams,
-  PickupLocationDemandStat,
-  PatronGroupDemandStat,
-  RequestedTitleStat,
-  TopClusterStat,
-  ConsortialLifelineStat,
+  dashboardQueryOptions,
+  demandByPatronGroupQueryOptions,
+  demandByPickupLocationQueryOptions,
+  netFlowQueryOptions,
+  supplierResponseSlaQueryOptions,
+  topRequestedTitlesQueryOptions,
+  unmetLocalDemandQueryOptions,
 } from "@helpers/statsApi";
 import {
   rangeToParams,
@@ -39,6 +44,7 @@ import {
 } from "@helpers/insightsRange";
 
 import KpiTile from "./KpiTile";
+import DurationsPanel from "./DurationsPanel";
 import CostAvoidanceTile from "./CostAvoidanceTile";
 import StatusFlowChart from "./StatusFlowChart";
 import FailureTaxonomyChart from "./FailureTaxonomyChart";
@@ -56,6 +62,8 @@ import CollectionDimensionPanel from "./CollectionDimensionPanel";
 import NewAcquisitionsPanel from "./NewAcquisitionsPanel";
 
 import { visuallyHidden } from "@mui/utils";
+
+import { ExpandMore } from "@mui/icons-material";
 
 const RANGE_PRESETS: RangePreset[] = ["7d", "30d", "90d", "365d"];
 
@@ -94,6 +102,17 @@ export default function InsightsDashboard({
 
   // Scope never changes here - this app is one library - so the range is the whole of
   // what moved.
+  // Both are one row for this app: it reports on one library, so the supplier-side SLA
+  // and the net-flow row are its own. The durations panel asks for the same two keys, and
+  // the query cache serves both from one request each.
+  const myResponse = useQuery(supplierResponseSlaQueryOptions(client, params));
+  const netFlow = useQuery(netFlowQueryOptions(client, params));
+
+  const netRow = netFlow.data?.[0];
+  const netBalance = netRow
+    ? netRow.suppliedCount - netRow.borrowedCount
+    : null;
+
   const announcement = t("insights.announce.view", {
     range: customRange
       ? `${dayjs(customRange.startDate).format("D MMM YYYY")} - ${dayjs(
@@ -212,31 +231,32 @@ export default function InsightsDashboard({
       </Box>
 
       {/* KPI row - auto-fit so the tile count can flex. */}
+      {/* THE FIVE a library director asks: were my patrons served, and am I carrying
+          my share. Ten equal tiles was an index, not a summary - and error rate is the
+          complement of the fill rate now shown beside the request count, so it moves
+          below with the rest rather than saying the same thing twice.
+          INSIGHTS_IA_AND_UX_PLAN.md section 3.3. */}
       <Box
         sx={{
           display: "grid",
           gap: 2,
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
         }}
       >
         <KpiTile
-          title={t("insights.kpi.fill_rate.title")}
-          value={currentRate != null ? `${currentRate.toFixed(1)}%` : "—"}
+          title={t("insights.kpi.resolved.title")}
+          value={resolved.toLocaleString()}
+          subtitle={
+            currentRate != null
+              ? t("insights.headline.filled", { rate: currentRate.toFixed(1) })
+              : t("insights.kpi.resolved.subtitle")
+          }
           deltaPct={rateDelta}
           higherIsBetter
-          subtitle={t("insights.kpi.vs_prior")}
           loading={loading}
         />
         <KpiTile
-          title={t("insights.kpi.error_rate.title")}
-          value={currentErrRate != null ? `${currentErrRate.toFixed(1)}%` : "—"}
-          deltaPct={errDelta}
-          higherIsBetter={false}
-          subtitle={t("insights.kpi.vs_prior")}
-          loading={loading}
-        />
-        <KpiTile
-          title={t("insights.kpi.time_to_loan.title")}
+          title={t("insights.headline.patron_waited")}
           value={formatTurnaround(d?.turnaroundToLoaned?.p50Seconds, t)}
           subtitle={t("insights.kpi.time_to_loan.subtitle", {
             p95: formatTurnaround(d?.turnaroundToLoaned?.p95Seconds, t),
@@ -244,67 +264,115 @@ export default function InsightsDashboard({
           loading={loading}
         />
         <KpiTile
-          title={t("insights.kpi.resolved.title")}
-          value={resolved.toLocaleString()}
-          subtitle={t("insights.kpi.resolved.subtitle")}
-          loading={loading}
-        />
-        <CostAvoidanceTile
-          fulfilled={d?.fulfillmentCurrent.successfulCount ?? 0}
-          loading={loading}
-        />
-      </Box>
-
-      {/* Second KPI row: checkout, flow totals, rescues, unique demand. */}
-      <Box
-        sx={{
-          display: "grid",
-          gap: 2,
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        }}
-      >
-        <KpiTile
-          title={t("insights.kpi.checkout_rate.title")}
-          value={checkoutRate != null ? `${checkoutRate.toFixed(1)}%` : "—"}
-          subtitle={
-            d
-              ? t("insights.kpi.checkout_rate.subtitle", {
-                  reached: d.checkoutRate.reachedCount,
-                  total: d.checkoutRate.totalCount,
-                })
-              : undefined
-          }
-          loading={loading}
-        />
-        <KpiTile
-          title={t("insights.kpi.total_borrows.title")}
-          value={totalBorrows.toLocaleString()}
-          subtitle={t("insights.kpi.total_borrows.subtitle")}
-          loading={loading}
-        />
-        <KpiTile
-          title={t("insights.kpi.total_lends.title")}
+          title={t("insights.headline.supplied")}
           value={totalLends.toLocaleString()}
           subtitle={t("insights.kpi.total_lends.subtitle")}
           loading={loading}
         />
         <KpiTile
-          title={t("insights.kpi.rescued.title")}
-          value={(d?.savedByReResolution ?? 0).toLocaleString()}
-          subtitle={t("insights.kpi.rescued.subtitle")}
-          loading={loading}
+          title={t("insights.headline.my_response")}
+          value={formatTurnaround(
+            myResponse.data?.[0]?.medianResponseSeconds,
+            t,
+          )}
+          subtitle={t("insights.headline.my_response_sub")}
+          loading={myResponse.isLoading}
         />
         <KpiTile
-          title={t("insights.kpi.unique_titles.title")}
-          value={(
-            d?.collectionSummary.uniqueTitlesRequested ?? 0
-          ).toLocaleString()}
-          subtitle={t("insights.kpi.unique_titles.subtitle", {
-            total: d?.collectionSummary.totalRequests ?? 0,
-          })}
-          loading={loading}
+          title={t("insights.headline.net_flow")}
+          value={
+            netBalance == null
+              ? "—"
+              : `${netBalance > 0 ? "+" : ""}${netBalance.toLocaleString()}`
+          }
+          subtitle={
+            netBalance == null
+              ? undefined
+              : t(
+                  netBalance >= 0
+                    ? "insights.headline.net_lender"
+                    : "insights.headline.net_borrower",
+                )
+          }
+          loading={netFlow.isLoading}
         />
       </Box>
+
+      {/* MUI wraps the summary in an <h3> by default, which lands between the page
+          <h1> and the panels' <h2>s and skips a level. The heading slot is the
+          documented way to say otherwise - caught by the heading-order gate. */}
+      <Accordion variant="outlined" disableGutters slots={{ heading: "h2" }}>
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="body2">{t("insights.headline.more")}</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            }}
+          >
+            <KpiTile
+              title={t("insights.kpi.error_rate.title")}
+              value={
+                currentErrRate != null ? `${currentErrRate.toFixed(1)}%` : "—"
+              }
+              deltaPct={errDelta}
+              higherIsBetter={false}
+              subtitle={t("insights.kpi.vs_prior")}
+              loading={loading}
+            />
+            <KpiTile
+              title={t("insights.kpi.checkout_rate.title")}
+              value={checkoutRate != null ? `${checkoutRate.toFixed(1)}%` : "—"}
+              subtitle={
+                d
+                  ? t("insights.kpi.checkout_rate.subtitle", {
+                      reached: d.checkoutRate.reachedCount,
+                      total: d.checkoutRate.totalCount,
+                    })
+                  : undefined
+              }
+              loading={loading}
+            />
+            <KpiTile
+              title={t("insights.kpi.total_borrows.title")}
+              value={totalBorrows.toLocaleString()}
+              subtitle={t("insights.kpi.total_borrows.subtitle")}
+              loading={loading}
+            />
+            <KpiTile
+              title={t("insights.kpi.rescued.title")}
+              value={(d?.savedByReResolution ?? 0).toLocaleString()}
+              subtitle={t("insights.kpi.rescued.subtitle")}
+              loading={loading}
+            />
+            <KpiTile
+              title={t("insights.kpi.unique_titles.title")}
+              value={(
+                d?.collectionSummary.uniqueTitlesRequested ?? 0
+              ).toLocaleString()}
+              subtitle={t("insights.kpi.unique_titles.subtitle", {
+                total: d?.collectionSummary.totalRequests ?? 0,
+              })}
+              loading={loading}
+            />
+            {/* An assumption multiplied by a count, not a measurement. Beside four
+                measured figures it borrowed a confidence it has not earned. */}
+            <CostAvoidanceTile
+              fulfilled={d?.fulfillmentCurrent.successfulCount ?? 0}
+              loading={loading}
+            />
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+
+      <DurationsPanel
+        params={params}
+        toLoaned={d?.turnaroundToLoaned}
+        loading={loading}
+      />
 
       {/* Trend spine + plot-builder */}
       <StatusFlowChart params={params} interval={interval} />

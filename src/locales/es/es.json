@@ -21,6 +21,30 @@
     },
     "announce": {
       "view": "Mostrando {{range}}."
+    },
+    "durations": {
+      "title": "Cuánto tarda cada paso",
+      "subtitle": "Mediana y percentil 95, para los tramos que informa este despliegue.",
+      "to_loan": "Tiempo hasta el préstamo",
+      "to_finalise": "Tiempo hasta la finalización",
+      "supplier_response": "Mi tiempo de respuesta",
+      "transit_out": "Tránsito, ida",
+      "transit_back": "Tránsito, vuelta",
+      "pair": "p50 {{p50}} · p95 {{p95}}",
+      "median": "mediana {{value}}",
+      "sample": "· {{count}} observaciones",
+      "not_reported": "Este sistema no lo informa"
+    },
+    "headline": {
+      "filled": "{{rate}} % satisfechas",
+      "patron_waited": "Espera de mis usuarios",
+      "supplied": "Ejemplares que he suministrado",
+      "my_response": "Mi tiempo de respuesta",
+      "my_response_sub": "Desde la solicitud recibida hasta mi confirmación",
+      "net_flow": "Flujo neto",
+      "net_lender": "Prestador neto",
+      "net_borrower": "Solicitante neto",
+      "more": "Más medidas"
     }
   }
 }

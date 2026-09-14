@@ -52,9 +52,13 @@ export const DEFAULT_STATS: StatsMocks = {
 		{ libraryCode: "e2e-lms", borrowedCount: 908, suppliedCount: 1043 },
 		{ libraryCode: "peer-lms", borrowedCount: 654, suppliedCount: 501 },
 	],
+	// RETURN_TRANSIT is deliberately absent: a host LMS that never reports the status
+	// produces no row, and the durations panel has to say so rather than draw an instant
+	// leg. PICKUP_TRANSIT is present so both paths are exercised on one page.
 	"time-in-status": [
 		{ status: "RESOLVED", medianDwellSeconds: 43200, sampleCount: 611 },
 		{ status: "CONFIRMED", medianDwellSeconds: 21600, sampleCount: 588 },
+		{ status: "PICKUP_TRANSIT", medianDwellSeconds: 108000, sampleCount: 502 },
 	],
 	"supplier-response-sla": [
 		{
