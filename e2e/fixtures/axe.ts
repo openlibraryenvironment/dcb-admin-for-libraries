@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
-import type { Result } from "axe-core";
+import { expect, type Page } from "@playwright/test";
+import axe, { type Result } from "axe-core";
 
 /**
  * WCAG 2.2 AA is the floor. These are the axe tag sets that map to it - the
@@ -40,10 +40,30 @@ const VENDOR_EXCLUSIONS = ['[style*="z-index: 100000"]'];
  */
 const EXTRA_RULES = ["heading-order"];
 
+/**
+ * The tag sets AND the extra rules, as one list of rule ids.
+ *
+ * NOT `.withTags(...).withRules(...)`. Both of those set `runOnly`, so chaining them does
+ * not combine - the second silently REPLACES the first, and this gate spent its life
+ * asserting `heading-order` alone while reporting green on the whole WCAG ladder. It was
+ * found because Lighthouse failed an aria-hidden-focus rule that is tagged wcag2a and
+ * that this scan was therefore not running.
+ */
+const RULES = [
+	...new Set([
+		...axe.getRules(WCAG_TAGS).map((rule) => rule.ruleId),
+		...EXTRA_RULES,
+	]),
+];
+
 export async function analyse(page: Page): Promise<Result[]> {
-	let builder = new AxeBuilder({ page })
-		.withTags(WCAG_TAGS)
-		.withRules(EXTRA_RULES);
+	// Guards the gate: a rule list that has lost the tag sets is exactly what this file
+	// looked like before, and it looked green.
+	expect(RULES).toContain("color-contrast");
+	expect(RULES).toContain("heading-order");
+	expect(RULES.length).toBeGreaterThan(50);
+
+	let builder = new AxeBuilder({ page }).withRules(RULES);
 	for (const selector of VENDOR_EXCLUSIONS) {
 		builder = builder.exclude(selector);
 	}
@@ -62,7 +82,10 @@ export function formatViolations(violations: Result[]): string {
 			const nodes = violation.nodes
 				.map(
 					(node) =>
-						`      - ${node.target.join(" ")}\n        ${node.failureSummary?.replace(/\n/g, "\n        ")}`,
+						// The markup as well as the selector: a React `useId` selector like
+						// "#_r_8_" names nothing a reader can search the source for, and a
+						// log that cannot be acted on sends somebody back to reproduce it.
+						`      - ${node.target.join(" ")}\n        ${node.html}\n        ${node.failureSummary?.replace(/\n/g, "\n        ")}`,
 				)
 				.join("\n");
 			return `  [${violation.impact ?? "unknown"}] ${violation.id}: ${violation.help}\n    ${violation.helpUrl}\n${nodes}`;

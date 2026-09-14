@@ -15,6 +15,32 @@
 		"title": "Índice compartido"
 	},
 	"insights": {
+		"trends": {
+			"strip": {
+				"title": "¿Está mejorando o empeorando?",
+				"subtitle": "La dirección del último tercio de la ventana frente al tercio anterior."
+			},
+			"volume": { "title": "Solicitudes enviadas" },
+			"fill_rate": { "title": "Tasa de satisfacción" },
+			"error_rate": { "title": "Tasa de errores" },
+			"up": "Sube {{change}} respecto al periodo anterior",
+			"down": "Baja {{change}} respecto al periodo anterior",
+			"flat": "Sin cambio claro",
+			"too_short": "Ventana demasiado corta para determinar una dirección",
+			"over_time": "{{label}} a lo largo del tiempo",
+			"buckets_counted_one": "{{count}} periodo completado",
+			"buckets_counted_other": "{{count}} periodos completados",
+			"durations": {
+				"title": "Cómo evolucionan las duraciones",
+				"subtitle": "Mediana y percentil 95 por periodo, para las solicitudes que terminaron en él.",
+				"metric_label": "Duración",
+				"turnaround": "Tiempo hasta el préstamo",
+				"supplier_response": "Respuesta del suministrador",
+				"transit": "Tiempo en tránsito",
+				"p50": "Mediana",
+				"p95": "Percentil 95"
+			}
+		},
 		"sections": {
 			"overview": "Resumen",
 			"trends": "Tendencias",
@@ -63,6 +89,31 @@
 			"more": "Más medidas"
 		},
 		"method": {
+			"request_volume": {
+				"what": "Cuántas solicitudes entraron en DCB en cada periodo de la ventana.",
+				"how": "Transiciones a SUBMITTED_TO_DCB por periodo, a partir del registro de auditoría. El periodo es un día, una semana o un mes según la longitud de la ventana.",
+				"not": "Cuenta las solicitudes que LLEGARON, no las que se satisficieron. Un periodo puede ser intenso y poco exitoso. El periodo más reciente se excluye de la línea hasta que se cierra, porque un periodo parcial siempre parece una caída."
+			},
+			"trend_direction": {
+				"what": "Si una medida se está moviendo, y si el movimiento es el bueno.",
+				"how": "La media del tercio más reciente de periodos frente a la media del tercio anterior. Un cambio menor que el umbral de ruido - un punto porcentual para una tasa, un cinco por ciento para un recuento - se indica como sin cambio claro en lugar de como una dirección. Menos de nueve periodos cerrados se indica como ventana demasiado corta.",
+				"not": "No es una previsión ni una prueba de significación. Dice que el periodo reciente difiere del anterior, nada sobre por qué, y una sola semana extraordinaria dentro del tercio reciente lo moverá."
+			},
+			"turnaround_trend": {
+				"what": "Si la espera entre la llegada de una solicitud y el préstamo del ejemplar se está alargando.",
+				"how": "La mediana y el percentil 95 de esa duración, por periodo, para las solicitudes que ALCANZARON el préstamo en ese periodo.",
+				"not": "Un periodo contiene las solicitudes que terminaron en él, no las que empezaron, así que una racha de solicitudes muy lentas aparece cuando se completan y no cuando llegaron. Un periodo sin finalizaciones está ausente de la línea en lugar de dibujarse como cero."
+			},
+			"supplier_response_trend": {
+				"what": "Si los suministradores tardan más en confirmar las solicitudes que se les envían.",
+				"how": "Desde que se envía al suministrador hasta que este la confirma, como mediana y percentil 95 por periodo, con el alcance de su biblioteca como suministradora.",
+				"not": "Mide al suministrador, no a DCB: el tiempo que DCB dedicó a elegir ese suministrador queda deliberadamente fuera. Las solicitudes nunca confirmadas no entran en la cifra, así que un suministrador que lo ignora todo puede parecer rápido."
+			},
+			"transit_dwell_trend": {
+				"what": "Si los ejemplares pasan más tiempo en tránsito entre bibliotecas.",
+				"how": "Mediana y percentil 95 de permanencia en el estado de tránsito elegido, por periodo, para los ejemplares que salieron de él en ese periodo.",
+				"not": "Mide el estado, no al transportista: un ejemplar registrado tarde en destino es indistinguible de uno que viajó despacio. Un sistema que no informa del trayecto de vuelta no aporta nada en lugar de aportar un cero."
+			},
 			"trigger": "Cómo se calcula {{label}}",
 			"title": "Cómo se calcula {{label}}",
 			"part": {

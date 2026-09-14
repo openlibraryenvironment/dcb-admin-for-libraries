@@ -209,6 +209,35 @@ const PAGES: Surface[] = [
 		}),
 	),
 	{
+		// The duration trends, which sit behind a flag that is off everywhere today - so
+		// the trends scan above does not reach this panel at all. A chart with its own
+		// toggle group, which is where focus order and unlabelled controls go wrong.
+		name: "insights - duration trends",
+		path: "/insights?tab=trends",
+		prepare: async (app) => {
+			await app.enableFeatures([
+				"VITE_FEATURE_INSIGHTS",
+				"VITE_FEATURE_INSIGHTS_TRENDS",
+			]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraryBasics: library,
+			});
+			await app.mockStats();
+		},
+		reveal: (page) =>
+			scrollUntilPresent(
+				page,
+				page.getByRole("heading", { name: "How durations are moving" }),
+			),
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { name: "How durations are moving" }),
+			).toBeVisible();
+		},
+	},
+	{
 		// The surface a mistyped or stale link lands on. It is reached by
 		// accident rather than chosen, so it is the last page that should be
 		// hard to read - and the giant ErrorOutlined glyph it shares with the
