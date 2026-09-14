@@ -245,6 +245,7 @@ export default function InsightsDashboard({
       >
         <KpiTile
           title={t("insights.kpi.resolved.title")}
+          metric="requests_fulfilled"
           value={resolved.toLocaleString()}
           subtitle={
             currentRate != null
@@ -257,6 +258,7 @@ export default function InsightsDashboard({
         />
         <KpiTile
           title={t("insights.headline.patron_waited")}
+          metric="turnaround_to_loan"
           value={formatTurnaround(d?.turnaroundToLoaned?.p50Seconds, t)}
           subtitle={t("insights.kpi.time_to_loan.subtitle", {
             p95: formatTurnaround(d?.turnaroundToLoaned?.p95Seconds, t),
@@ -265,12 +267,14 @@ export default function InsightsDashboard({
         />
         <KpiTile
           title={t("insights.headline.supplied")}
+          metric="items_supplied"
           value={totalLends.toLocaleString()}
           subtitle={t("insights.kpi.total_lends.subtitle")}
           loading={loading}
         />
         <KpiTile
           title={t("insights.headline.my_response")}
+          metric="supplier_response"
           value={formatTurnaround(
             myResponse.data?.[0]?.medianResponseSeconds,
             t,
@@ -280,6 +284,7 @@ export default function InsightsDashboard({
         />
         <KpiTile
           title={t("insights.headline.net_flow")}
+          metric="net_flow"
           value={
             netBalance == null
               ? "—"
@@ -315,6 +320,7 @@ export default function InsightsDashboard({
           >
             <KpiTile
               title={t("insights.kpi.error_rate.title")}
+              metric="error_rate"
               value={
                 currentErrRate != null ? `${currentErrRate.toFixed(1)}%` : "—"
               }
@@ -325,6 +331,7 @@ export default function InsightsDashboard({
             />
             <KpiTile
               title={t("insights.kpi.checkout_rate.title")}
+              metric="checkout_rate"
               value={checkoutRate != null ? `${checkoutRate.toFixed(1)}%` : "—"}
               subtitle={
                 d

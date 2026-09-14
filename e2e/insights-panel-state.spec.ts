@@ -18,11 +18,19 @@ const mocks = { LoadLibrary: library, LoadLibraryBasics: library };
 
 const FAILING_PANEL = "**/insights/failure-taxonomy**";
 
-/** The card a heading belongs to, without reaching for an internal MUI class name. */
+/**
+ * The card a heading belongs to.
+ *
+ * MuiCard-root, not an ancestor-with-a-heading walk: once a heading is wrapped alongside
+ * its info button, the nearest ancestor holding it is that wrapper rather than the panel,
+ * and the locator silently starts matching two elements instead of the card. This is one
+ * of MUI's DOCUMENTED class names, which is the distinction the doctrine draws - a css-
+ * hash is not.
+ */
 const cardFor = (page: Page, heading: string) =>
   page
     .getByRole("heading", { level: 2, name: heading })
-    .locator("xpath=ancestor::*[self::div][.//h2][1]");
+    .locator("xpath=ancestor::div[contains(@class,'MuiCard-root')][1]");
 
 /**
  * Wheel down until the panel mounts. Below-the-fold panels render a placeholder until an
@@ -121,6 +129,35 @@ test.describe("Insights panel states", () => {
     await expect(panel).toContainText("502 observations");
     await expect(panel).toContainText("Transit, return");
     await expect(panel).toContainText("Not reported by this system");
+  });
+
+  test("a figure explains where it came from, by keyboard alone", async ({
+    page,
+  }) => {
+    await page.goto("/insights");
+
+    // Named for its metric, not "info": a screen-reader user listing the buttons on this
+    // page would otherwise hear the same word a dozen times.
+    const trigger = page.getByRole("button", {
+      name: "How Net flow is calculated",
+    });
+    await expect(trigger).toBeVisible();
+
+    // Click, not hover. Four paragraphs behind a tooltip meets none of the dismissable,
+    // hoverable, persistent requirements of WCAG 2.2 SC 1.4.13.
+    await trigger.focus();
+    await page.keyboard.press("Enter");
+
+    const popover = page.getByRole("dialog", {
+      name: "How Net flow is calculated",
+    });
+    await expect(popover).toBeVisible();
+    await expect(popover).toContainText("What it counts");
+    await expect(popover).toContainText("What it does not include");
+
+    await page.keyboard.press("Escape");
+    await expect(popover).toBeHidden();
+    await expect(trigger).toBeFocused();
   });
 
   test("the range change is announced", async ({ page }) => {

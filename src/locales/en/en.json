@@ -1,1104 +1,1202 @@
 {
-  "agency": {
-    "code": "Agency code",
-    "name": "Agency name"
-  },
-  "audit": {
-    "no_results": "No audits found",
-    "audit": "Audit data",
-    "audit_entry": "Audit entry",
-    "data": "Audit data (JSON)",
-    "date": "Audit date",
-    "description": "Brief description",
-    "from_status": "fromStatus",
-    "uuid": "Audit UUID",
-    "log": "Audit log",
-    "no_data": "No audit log entries found.",
-    "no_rows": "Try changing your filters or search terms.",
-    "to_status": "toStatus"
-  },
-  "a11y": {
-    "empty": "This field is empty",
-    "navigation": "Main navigation"
-  },
-  "bibs": {
-    "author": "Author",
-    "canonical_metadata": "Canonical metadata",
-    "cluster_uuid": "Bib cluster UUID",
-    "date_created": "Date created",
-    "date_of_publication": "Date of publication",
-    "date_updated": "Date updated",
-    "edition": "Edition",
-    "id": "Bib record UUID",
-    "large_print": "Is large print?",
-    "metadata_score": "Metadata score",
-    "place_of_publication": "Place of publication",
-    "process_version": "Process version",
-    "publisher": "Publisher",
-    "record_created": "Record created",
-    "record_title": "Record title",
-    "record_type": "Type of record",
-    "record_updated": "Record updated",
-    "search": "Search by title",
-    "selected_bib_uuid": "Selected bib UUID",
-    "source_error": "An error occurred loading the source record for this bib",
-    "source_record": "Source record",
-    "source_record_id": "Source record ID",
-    "source_system_id": "Source system UUID",
-    "title": "Bib record",
-    "title_actual": "Title",
-    "view_cluster_record": "Click to view the page for this record, which has the title {{title}}"
-  },
-  "common": {
-    "discovery": "Link to discovery",
-    "patron_website": "Link to patron website",
-    "error": "Error",
-    "latitude": "Latitude",
-    "longitude": "Longitude",
-    "success": "Success",
-    "updated": "Updated",
-    "update_success": "The {{entity}} {{name}} was updated successfully",
-    "update_failure": "An error occurred while updating {{entity}} {{name}}"
-  },
-  "data_change_log": {
-    "action": "Action",
-    "category": "Change category",
-    "category_required": "Please select a category before proceeding.",
-    "categories": {
-      "additional_information": "Additional information provided",
-      "changing_status": "Status changed",
-      "details_changed": "Details changed",
-      "error_correction": "Error correction",
-      "initial_setup": "Initial setup",
-      "mappings_replacement": "Mappings replacement",
-      "membership_ended": "Membership ended",
-      "new_contact": "New contact",
-      "new_member": "New member",
-      "other": "Other"
-    },
-    "changes": "Changes",
-    "characters_remaining": "{{characters}} characters remaining",
-    "deleted_value": "Deleted value",
-    "entity_id": "Entity UUID",
-    "entity_type": "Entity type",
-    "field_label": "Field label",
-    "field_name": "Field name",
-    "id": "Data change log UUID",
-    "last_edited_by": "Last edited by",
-    "loading_details": "data change details",
-    "max_length_exceeded": "Values must not exceed 200 characters. Please provide a shorter value.",
-    "max_length_reached": "Maximum length of {{maxLength}} characters reached",
-    "new_data": "New data",
-    "new_value": "New value",
-    "no_eligible_changes": "There are no eligible changes to show. This can occur when an entity is updated immediately before deletion.",
-    "no_results": "No data change log entries were found. Try changing your search terms or filters.",
-    "no_rows": "No data change log entries are available. If you're expecting data to be here, please refresh the page.",
-    "old_data": "Old data",
-    "old_value": "Old value",
-    "reason": "Reason for change",
-    "reason_addition": "Reason for adding",
-    "reason_required": "Please provide a reason for this change.",
-    "reference_url": "Change reference URL",
-    "ref_url_helper": "The URL of the ticket describing the change requested, if applicable.",
-    "table_name": "Database table name",
-    "timestamp": "Timestamp",
-    "user": "User"
-  },
-  "entities": {
-    "contact": "contact",
-    "functional_setting": "functional setting",
-    "location": "location",
-    "library": "library",
-    "numeric_range_mapping": "numeric range mapping",
-    "reference_value_mapping": "reference value mapping"
-  },
-  "header": {
-    "title": "DCB Admin for {{library}}",
-    "title_requesting": "DCB Admin for {{library}} - requesting only mode",
-    "user": "Welcome, {{user}}",
-    "welcome": "Welcome to DCB Admin for {{name}}",
-    "library_selector": "Library"
-  },
-  "hostlms": {
-    "alert_text": "Failed to fetch HostLMS, will retry. If this error persists, please refresh the page.",
-    "bibSuppressionRulesetName": "Bib suppression ruleset",
-    "code": "Host LMS code",
-    "configuration": "Host LMS configuration",
-    "hostlms_one": "Host LMS",
-    "id": "Host LMS UUID",
-    "itemSuppressionRulesetName": "Item suppression ruleset",
-    "lms_client": "LmsClientClass",
-    "name": "Host LMS name",
-    "no_results": "No Host LMSs were found. Try changing your search terms or filters.",
-    "no_rows": "No Host LMSs are available. If you're expecting data to be here, please refresh the page.",
-    "roles": "Roles",
-    "search_placeholder": "Search by name",
-    "client_config": {
-      "title": "Client config",
-      "access_id": "Access ID",
-      "access_key": "Access key",
-      "api": "API key",
-      "barcode_prefix": "Item barcode prefix",
-      "base": "Base URL",
-      "base_application": "Base application services URL",
-      "context_hierarchy": "Context hierarchy",
-      "default_agency": "Default agency",
-      "default_agency_code": "Default agency code",
-      "domain_id": "Domain ID",
-      "fine": "Fine code ID",
-      "folio_tenant": "FOLIO tenant",
-      "ill_location_id": "ILL location ID",
-      "ingest": "Ingest",
-      "item": "Item config",
-      "history_action_id": "History action ID",
-      "hold_policy": "Hold policy",
-      "key": "Key: ",
-      "loan_id": "Loan period code ID",
-      "logon_branch_id": "Logon branch ID",
-      "logon_user_id": "Logon user ID",
-      "metadata": "Metadata prefix",
-      "page_size": "Page size",
-      "papi": "PAPI config",
-      "papi_app_id": "PAPI app ID",
-      "papi_org_id": "PAPI organisation ID",
-      "papi_lang_id": "PAPI language ID",
-      "papi_version": "PAPI version: ",
-      "record_syntax": "Record syntax",
-      "renewal_limit": "Renewal limit",
-      "roles": "Roles",
-      "secret": "Secret",
-      "services": "Services config",
-      "services_language": "Language",
-      "services_patron_barcode_prefix": "Patron barcode prefix",
-      "services_product_id": "Product ID",
-      "services_site_domain": "Site domain",
-      "services_workstation_id": "Workstation ID",
-      "services_organisation_id": "Organisation ID",
-      "services_version": "Version",
-      "shelving_scheme_id": "Shelving scheme ID",
-      "staff_password": "Staff password",
-      "staff_username": "Staff username",
-      "user_base_url": "User base URL"
-    }
-  },
-  "library": {
-    "abbreviated_name": "Abbreviated name",
-    "backup_schedule": "Backup / downtime schedule",
-    "brand": {
-      "section": "How your library appears to patrons",
-      "section_help": "Used in the discovery app, where your library's logo and name appear alongside the consortium's.",
-      "logo_url": "Logo",
-      "logo_url_help": "Upload an image, or paste a full web address beginning http:// or https://. Leave blank to show your library's name on its own.",
-      "logo_url_invalid": "Upload an image, or enter a full web address beginning http:// or https://, or leave this blank.",
-      "upload": "Upload image",
-      "uploading": "Uploading…",
-      "upload_formats": "PNG or JPEG. SVG and WebP are not accepted.",
-      "upload_too_large": "That image is larger than 2 MB. Export it smaller and try again.",
-      "upload_failed": "The image could not be uploaded. Try again, or paste a web address instead.",
-      "staged": "{{filename}} will be uploaded when you save.",
-      "staged_remove": "Remove",
-      "image_url": "Or paste a web address",
-      "image_url_staged": "Remove the chosen file to enter a web address instead.",
-      "external_url_cost": "An address on someone else's server means every patron's browser fetches the image from them: if their site is down the logo disappears, and their logs record each patron's IP address. Uploading avoids both.",
-      "logo_alt": "Logo description",
-      "logo_alt_help": "Read aloud in place of the logo. Leave blank to use your library's full name.",
-      "theme": "Discovery theme",
-      "theme_help": "Applied when a patron is searching your library. Every theme has been checked for colour contrast in light, dark and high-contrast modes.",
-      "theme_inherit": "Use the consortium's theme"
-    },
-    "presence": {
-      "section": "Links for patrons",
-      "section_help": "Where the discovery app sends a patron who needs something it does not hold. Both appear in the footer of every page.",
-      "website": "Library website",
-      "website_help": "Opening hours, branches, joining — your own site. Discovery is not your website and should not try to be.",
-      "support": "Report a problem URL",
-      "support_help": "Where a patron says the search itself is wrong: a record with the wrong details, a result that will not request. Usually a different desk from the one that answers opening hours.",
-      "url_invalid": "Enter a full web address starting with https:// or http://"
-    },
-    "config": {
-      "patronAuth": {
-        "auth_profile": "Authentication profile",
-        "saml": "SAML based SSO?",
-        "title": "Patron authentication"
-      }
-    },
-    "full_name": "Full name",
-    "no_contact": "not recorded",
-    "id": "Library UUID",
-    "primary_location": {
-      "address": "Address",
-      "latitude": "Latitude",
-      "location": "Location",
-      "longitude": "Longitude",
-      "title": "Primary location"
-    },
-    "service": {
-      "environments": {
-        "api": "Host LMS API",
-        "api_key": "API key",
-        "api_secret": "API secret",
-        "backup_schedule": "Backup / downtime schedule",
-        "polaris_domain": "Polaris staff account: Domain",
-        "polaris_password": "Polaris staff account: Password",
-        "polaris_org_id": "Polaris staff account: Organisation ID",
-        "polaris_username": "Polaris staff account: Username"
-      },
-      "hostlms_title": "Host LMS - {{name}}",
-      "systems": {
-        "discovery": "Discovery system/PAC(s)",
-        "ils": "ILS",
-        "patron_site": "Patron website",
-        "title": "Systems"
-      },
-      "title": "Service for {{name}}"
-    },
-    "short_name": "Short name",
-    "site_designation": "Site designation",
-    "statistics": {
-      "no_requesters": "No requesters this month",
-      "no_titles": "No titles requested this month",
-      "requests_made": "Requests made",
-      "requests_supplied": "Requests supplied",
-      "title": "Your library's DCB experience",
-      "top_requesters_month": "Top requesters this month",
-      "top_titles_month": "Your patrons' favourite titles this month",
-      "unknown_patron": "Unknown patron"
-    },
-    "support_hours": "Support hours",
-    "title": "Information for {{library}}",
-    "type": "Type"
-  },
-  "location": {
-    "code": "Location code",
-    "latitude": "Latitude",
-    "local_id": "Local ID",
-    "location_id": "Location UUID",
-    "longitude": "Longitude",
-    "name": "Location name",
-    "not_set": "Not set",
-    "pickup_status": "Pickup status",
-    "pickup_anywhere_status": "Pickup anywhere status",
-    "polaris_org": "Polaris org ID",
-    "print_label": "Print label",
-    "service_point": "FOLIO service point ID",
-    "sierra": "Sierra location ID",
-    "type": "Location type",
-    "view_location": "View pickup location"
-  },
-  "login": {
-    "access": "Welcome to DCB Admin for Libraries! To get started, please sign in with your library credentials",
-    "authenticating": "Authenticating",
-    "error": "Authentication error: {{message}}",
-    "keycloak": "Sign in with Keycloak",
-    "initialising": "Initialising the application",
-    "loading_title": "Logging in",
-    "title": "Log in to DCB Admin for Libraries"
-  },
-  "mappings": {
-    "category": "Category",
-    "delete_warning": "Are you sure you want to delete this mapping?",
-    "domain": "Domain",
-    "editing_disabled": "Editing mappings has been disabled by your consortium administrator",
-    "from_value": "From value",
-    "last_imported": "Last imported",
-    "title": "Mappings",
-    "to_value": "To value"
-  },
-  "nav": {
-    "bibs": {
-      "title": "Bib records"
-    },
-    "contacts": {
-      "title": "Contacts"
-    },
-    "data_change_log": {
-      "title": "Data change log"
-    },
-    "home": {
-      "title": "Home"
-    },
-    "library": {
-      "service": "Service",
-      "title": "Your library"
-    },
-    "locations": {
-      "title": "Locations"
-    },
-    "mappings": {
-      "title": "Mappings",
-      "numeric": "Numeric range mappings",
-      "reference": "Reference value mappings"
-    },
-    "patron_requests": {
-      "title": "Patron requests",
-      "tooltip": "The requests made by patrons of your library"
-    },
-    "requesting": {
-      "title": "Requesting"
-    },
-    "settings": {
-      "title": "Settings"
-    },
-    "supplier_requests": {
-      "title": "Supplier requests",
-      "tooltip": "The requests for which your library is acting as a supplier"
-    },
-    "insights": {
-      "title": "Insights"
-    }
-  },
-  "patron_request": {
-    "active": "isActive",
-    "active_workflow": "Active workflow",
-    "borrowing": "Borrowing",
-    "borrowing_patron_barcode": "Local patron barcode",
-    "borrowing_patron_id": "Local patron ID",
-    "borrowing_patron_type": "Local patron type",
-    "borrowing_request_id": "Borrowing request ID",
-    "borrowing_request_status": "Borrowing request status",
-    "borrowing_request_status_raw": "Raw borrowing request status",
-    "borrowing_virtual_bib_id": "Virtual Bib ID",
-    "borrowing_virtual_id": "Virtual item ID",
-    "borrowing_virtual_item_status": "Virtual item status",
-    "borrowing_virtual_item_status_raw": "Raw virtual item status",
-    "borrowing_virtual_type": "Virtual item type",
-    "canonical_metadata": "Canonical metadata",
-    "check_for_updates": "Check for updates",
-    "check_for_updates_disabled": "You cannot check for updates when a patron request is in status {{status}}.",
-    "check_successful": "Check complete",
-    "check_unsuccessful": "Check unsuccessful",
-    "cleanup": "Force clean up",
-    "cleanup_complete": "Cleanup complete",
-    "cleanup_disabled": "Clean up is only available for requests supplied by your library that are either in an ERROR state, or have not yet been shipped.",
-    "cleanup_info": "Bypass circulation; clean up and finalise request. This auto-finalises a request and can be used to return an unwanted item. ",
-    "cleanup_in_progress": "Cleanup in progress",
-    "cleanup_successful": "The cleanup operation has been successful, and the patron request has been finalised.",
-    "cleanup_unsuccessful": "The clean up operation has failed, and the patron request remains in an ERROR state. Please try again later.",
-    "cluster_record_uuid": "Cluster record UUID",
-    "date_created": "Date created",
-    "date_updated": "Date updated",
-    "description": "Description",
-    "error_identities": "Error loading patron identity information",
-    "error_message": "Error message",
-    "error_pickup": "Error loading pickup location information",
-    "general": "General",
-    "item": "Item",
-    "item_barcode": "Item barcode",
-    "item_manual_agency_code": "Manually selected agency code",
-    "item_manual_hostlms_code": "Manually selected host LMS code",
-    "item_manually_selected": "Manually selected?",
-    "local_agency": "Local agency",
-    "local_barcode": "Local barcode",
-    "local_bib_id": "Local bib ID",
-    "local_id": "Local ID",
-    "local_item_barcode": "Local item barcode",
-    "local_item_id": "Local item ID",
-    "local_item_uuid": "Local item UUID",
-    "local_item_loc": "Local item location code",
-    "local_item_status": "Local item status",
-    "local_item_status_raw": "Raw local item status",
-    "local_item_type": "Local item type",
-    "local_request_status": "Local request status",
-    "local_request_status_raw": "Raw local request status",
-    "local_supplier_id": "Supplier request ID",
-    "next_expected_status": "Next expected status",
-    "next_poll": "Next status check after",
-    "no_requests": "No patron requests to display",
-    "out_of_sequence": "Out of sequence",
-    "patron": "Patron",
-    "patron_home_id": "Home identity",
-    "patron_hostlms": "Patron host LMS",
-    "patron_uuid": "Patron UUID",
-    "patron_local_names": "Local names",
-    "patron_library": "Patron library",
-    "patron_canonical_ptype": "Canonical patron type",
-    "patron_local_ptype": "Local patron type",
-    "patron_request": "Patron request data",
-    "patron_request_uuid": "Patron request UUID",
-    "patron_type_dcb": "DCB patron type",
-    "polling_checks_in_status": "Polling checks in status",
-    "previous_status": "Previous status",
-    "pickup": "Pickup",
-    "pickup_code_uuid": "Pickup location code UUID",
-    "pickup_bib_id": "Pickup bib ID",
-    "pickup_item_id": "Pickup item ID",
-    "pickup_item_status": "Pickup item status",
-    "pickup_item_status_raw": "Raw pickup item status",
-    "pickup_item_type": "Pickup item type",
-    "pickup_location_name": "Pickup location name",
-    "pickup_patron_id": "Pickup patron ID",
-    "pickup_request_id": "Pickup request ID",
-    "pickup_request_status": "Pickup request status",
-    "pickup_request_status_raw": "Raw pickup request status",
-    "pickup_agency_code": "Pickup agency code",
-    "pickup_library": "Pickup library",
-    "pickup_hostlms_code": "Pickup host LMS",
-    "renewal_count": "Renewal count",
-    "renewal_count_borrower": "Borrower renewal count",
-    "renewal_count_supplier": "Supplier renewal count",
-    "renewal_status": "Renewal status",
-    "request_created": "Request created",
-    "request_uuid": "Request UUID",
-    "requestor_uuid": "Patron UUID at requesting agency",
-    "requestor_note": "Requestor note",
-    "request_tooltip": "This is a {{ils}} library. The primary contact(s) are {{contact}}",
-    "request_updated": "Request updated",
-    "resolution_count": "Resolution count",
-    "return": "Return to patron request",
-    "status": "Current status",
-    "source_record_not_found": "Source record not found",
-    "statuses": {
-      "SUBMITTED_TO_DCB": "Submitted to DCB",
-      "PATRON_VERIFIED": "Patron verified",
-      "RESOLVED": "Resolved",
-      "NOT_SUPPLIED_CURRENT_SUPPLIER": "Not supplied by current supplier",
-      "NO_ITEMS_SELECTABLE_AT_ANY_AGENCY": "No items selectable at any agency",
-      "REQUEST_PLACED_AT_SUPPLYING_AGENCY": "Request placed at supplying agency",
-      "CONFIRMED": "Confirmed",
-      "HANDED_OFF_AS_LOCAL": "Handed off as local",
-      "REQUEST_PLACED_AT_BORROWING_AGENCY": "Request placed at borrowing agency",
-      "REQUEST_PLACED_AT_PICKUP_AGENCY": "Request placed at pickup agency",
-      "RECEIVED_AT_PICKUP": "Received at pickup",
-      "READY_FOR_PICKUP": "Ready for pickup",
-      "LOANED": "Loaned",
-      "PICKUP_TRANSIT": "Pickup transit",
-      "RETURN_TRANSIT": "Return transit",
-      "CANCELLED": "Cancelled",
-      "COMPLETED": "Completed",
-      "FINALISED": "Finalised",
-      "ERROR": "Error",
-      "ARCHIVED": "Archived"
-    },
-    "status_changed": "Status changed",
-    "supplier": "Supplier",
-    "supplier_library": "Supplier library",
-    "supplier_uuid": "Supplier UUID",
-    "supplier_ctype": "Canonical item type",
-    "supplier_request": "Supplier request data",
-    "supplying": "Supplying",
-    "supplying_agency_code": "Supplying agency code",
-    "time_in_status": "Time in status",
-    "view": "View",
-    "virtual_item": "Virtual item",
-    "virtual_patron": "Virtual patron",
-    "title": "Patron request"
-  },
-  "requesting": {
-    "available_at": "Items present at {{total}} institution(s)",
-    "available_for_walk_up": "Available for walk-up requesting",
-    "available_for_walk_up_description": "Available for walk-up requesting: at least one item for this record is available in your library.",
-    "available_for_staff_request": "Available for staff requesting",
-    "available_for_staff_request_description": "Available for staff requesting: at least one item for this record is available in your consortium.",
-    "available_to_request": "{{number}} available items at {{total}} institution(s)",
-    "barcode": "Barcode",
-    "bib_record": "Bib record",
-    "bib_record_id": "Bib record UUID",
-    "call_no": "Call number",
-    "cannot_request_no_items": "There are no items available to request for this record.",
-    "context": "Context",
-    "contributors": "Contributors",
-    "cluster": "Cluster record",
-    "cluster_title": "Cluster details for {{record}}",
-    "cluster_tooltip": "View cluster record",
-    "cluster_id": "Cluster UUID",
-    "cluster_deleted": "Is cluster deleted?",
-    "contributor": "Contributor(s): {{contributors}}",
-    "date_available": "Date available",
-    "date_due": "Date due",
-    "description": "Description",
-    "format": "Format: {{formats}}",
-    "format_title": "Format(s)",
-    "history": "Requesting history",
-    "hold_count": "Hold count",
-    "identifiers": "Identifiers",
-    "isbn_title": "ISBN identifiers",
-    "isbn": "ISBN identifier(s): {{isbn}}",
-    "issn": "ISSN identifier(s): {{issn}}",
-    "items": "Items",
-    "items_error_title": "We could not load the associated items",
-    "item_id": "Item ID",
-    "items_not_found": "No items found",
-    "items_search": "Search items",
-    "items_title": "Items available for cluster {{cluster}}",
-    "languages": "Language(s)",
-    "live_availability_no_items": "No items found for this record",
-    "live_availability_unavailable": "Item availability information unavailable",
-    "local_item_type_code": "Local item type code",
-    "local_item_type_name": "Local item type name",
-    "no_data": "No data available. Please enter a search term, or change your current search.",
-    "no_history": "Your patrons haven't placed any OpenRS requests for this record.",
-    "not_available_for_staff_request": "Not available for staff requesting",
-    "not_available_for_staff_request_description": "Not available for staff requesting: there is currently no available item for this record in your consortium.",
-    "not_available_for_walk_up": "Not available for walk up requesting",
-    "not_available_for_walk_up_description": "Not available for walk up requesting: there is currently no available item for this record at your library.",
-    "notes": "Notes",
-    "options": "Request options",
-    "physical_descriptions": "Physical descriptions",
-    "publication_date": "Publication date: {{publicationDate}} ",
-    "publication_year": "Publication year",
-    "publisher": "Publisher",
-    "place_description": "You have chosen to place a request for {{title}}. Please select a requesting option below.",
-    "place_title": "Place a request",
-    "record_created": "Record created",
-    "record_information": "Record information",
-    "record_updated": "Record updated",
-    "requestable": "Requestable",
-    "series": "Series",
-    "shared_index_unavailable_title": "Shared index is not configured on this system",
-    "shared_index_unavailable_message": "Please set a valid DCB_SEARCH_BASE environment variable for this deployment.",
-    "source_system_code": "Source system code",
-    "subjects": "Subjects",
-    "supplier_type": "Supplier type",
-    "suppressed": "Suppressed",
-    "titles_found": "{{number}} titles found",
-    "volume_parsed": "Parsed volume statement",
-    "volume_raw": "Raw volume statement",
-    "expedited_checkout": {
-      "actions": {
-        "place": "Place a walk-up request."
-      },
-      "create_request": "Create request",
-      "creating_request": "Creating request ...",
-      "description": "Welcome to DCB walk-up requesting. Please provide the barcode and the library of the patron you would like to make a request for. <paragraph>Provided that the patron's details are valid and the item exists and is available at your library, DCB will instantly check out this item to the specified patron.</paragraph>",
-      "feedback": {
-        "current_status": "Current status: {{status}}",
-        "in_progress": "Your walk-up request has been successfully placed and DCB is now attempting to check it out.",
-        "in_progress_explanation": "Your walk-up request has been successfully placed and DCB is now attempting to check it out.",
-        "success": "Your walk-up request has been checked out successfully and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
-        "success_requesting_only": "Your walk-up request has been checked out successfully.",
-        "time_elapsed": "Time elapsed: {{time}}"
-      },
-      "option_description": "Place a walk-up request for an item at your library for a visiting OpenRS patron. This will instantly check out the item.",
-      "request_title": "Walk-up request",
-      "return": "Return to requesting",
-      "steps": {
-        "checkout": "Check out item",
-        "checkout_failure": "Item checkout is taking too long. Please view the request and use the 'check for updates' option to refresh its status.",
-        "checkout_failure_request_only": "Item checkout is taking too long. Please ask a library admin to view this request.",
-        "checkout_success": "The item has been successfully checked out, and all steps are complete. The due date for this item is {{dueDate}}.",
-        "checkout_waiting": "The request has been created. Please wait while we attempt to check out the item.",
-        "complete": "All steps complete!",
-        "due_date": "Loading due date ...",
-        "patron_validation": "Patron validation",
-        "patron_validation_instruction": "Please provide the barcode and the affiliated institution of the patron.",
-        "quick_walk_up": {
-          "instructions": "Scan the item barcode and select a pickup location for this request"
-        },
-        "request_creation": "Request creation",
-        "request_creation_instruction": "The patron barcode is valid. Please now provide the remaining details."
-      },
-      "title_on_site": "Walk-up request",
-      "view_request": "View request"
-    },
-    "search_types": {
-      "cql": "CQL",
-      "default": "Default",
-      "query_builder": "Query builder",
-      "locate": "Locate"
-    },
-    "shared_index": {
-      "cluster": "Cluster",
-      "cluster_details": "Cluster details",
-      "boolean": {
-        "and": "AND",
-        "or": "OR",
-        "not": "NOT"
-      },
-      "languages": {
-        "ara": "Arabic",
-        "chi": "Chinese",
-        "eng": "English",
-        "fre": "French",
-        "ger": "German",
-        "ita": "Italian",
-        "jpn": "Japanese",
-        "lat": "Latin",
-        "por": "Portuguese",
-        "spa": "Spanish"
-      },
-      "search_fields": {
-        "any": "Any",
-        "author": "Author",
-        "cluster_record_id": "Cluster record ID",
-        "contributor": "Contributor",
-        "format": "Format",
-        "isbn": "ISBN",
-        "issn": "ISSN",
-        "keyword": "Keyword",
-        "language": "Language",
-        "publisher": "Publisher",
-        "subject": "Subject",
-        "title": "Title"
-      },
-      "query_syntax": {
-        "label": "Query input type",
-        "cql": "CQL",
-        "lucene": "LuceneQL",
-        "lucene_builder": "Lucene builder",
-        "simple": "Simple"
-      },
-      "error_connecting": "There was an error connecting to the search service. Please try again later.",
-      "error_connecting_title": "Could not connect to dcb-locate",
-      "items": "Items",
-      "items_for_cluster": "{{number}} item(s) associated with this record.",
-      "items_not_shown": "{{number}} item(s) unable to be shown",
-      "items_not_shown_helper_item": "Items without an item type are usually the result of a missing or misconfigured item type mapping. Please review the item type mappings for this library.",
-      "items_not_shown_helper_location": "Items without an 'Agency' value are usually the result of a missing or misconfigured Location mapping, or a missing agency. Please review the Location mappings for this library and the agency configuration.",
-      "items_not_shown_long": "{{number}} item(s) unable to be shown. You may have missing mappings or other configuration issues.",
-      "items_not_shown_resolution": "If the item(s) below belong to your library and should be available to users, please review the mappings in the 'Mappings' section. There may be incorrect or missing mappings preventing DCB from showing the items below",
-      "items_unavailable": "No items are available for this cluster",
-      "return": "Return to shared index",
-      "title": "Shared index",
-      "title_details": "Title details for {{title}}"
-    },
-    "staff_request": {
-      "actions": {
-        "place": "Place a staff request"
-      },
-      "new": "New request",
-      "option_description": "Place a request on behalf of a patron at your institution. This request will follow the standard DCB workflow.",
-      "patron": {
-        "affiliated": "Affiliated institution",
-        "barcode": "Patron barcode",
-        "description": "Please provide the barcode and the library of the patron you would like to make a staff request for.",
-        "error": {
-          "no_brackets": "Please remove any brackets from the barcode.",
-          "request": {
-            "duplicate": "A request already exists for this patron at this library within the time window of 900 seconds.",
-            "generic": "Error: {{code}}. More info: {{description}}"
-          },
-          "validation_failure": "We were unable to validate this patron. Please correct the barcode and/or affiliated institution, and try again.",
-          "validate_first": "You must validate a patron before attempting to make a staff request on their behalf."
-        },
-        "item_agency_code": "Item agency",
-        "item_host_lms": "Item Host LMS",
-        "item_library": "Item library",
-        "item_local_id": "Item local ID",
-        "item_select": "Item Barcode: {{barcode}}, Location: {{name}}, Call number: {{callNo}}",
-        "item_select_volume": "Item Barcode: {{barcode}}, Location: {{name}}, Call number: {{callNo}}, Volume: {{volumeStatement}}",
-        "pickup_location": "Pickup location",
-        "pickup_location_no_agency": "Other locations",
-        "requester_note": "Requester note",
-        "selection": {
-          "automatic": "Automatic",
-          "automatic_context": "DCB will automatically select an item to fulfil this request.",
-          "manual": "Manual",
-          "manual_context": "DCB will use the criteria provided to select an item to fulfil this request",
-          "type": "Selection type"
-        },
-        "success": {
-          "lookup": "The patron {{barcode}} has been successfully validated for {{library}}.",
-          "request": "Your staff request has been successfully placed and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
-          "request_requesting_only": "Your staff request has been successfully placed."
-        },
-        "validate": "Validate patron",
-        "validating": "Validating patron"
-      },
-      "select_pickup": "We have succesfully validated the patron provided. Please choose a pickup location and click 'Submit' to finish placing this staff request."
-    }
-  },
-  "settings": {
-    "customisation": "Customisation",
-    "dark_mode": "Dark mode",
-    "language": {
-      "en": "English",
-      "es": "Spanish"
-    },
-    "library": "Library",
-    "light_mode": "Light mode",
-    "system_mode": "System mode",
-    "theme_selection": "Theme selection"
-  },
-  "ui": {
-    "actions": {
-      "add_filter": "Add filter",
-      "apply_filters": "Apply filters",
-      "cancel": "Cancel",
-      "clear_all": "Clear all",
-      "clear_search": "Clear search",
-      "close": "Close",
-      "collapse": "Collapse",
-      "collapse_all": "Collapse all rows",
-      "delete": "Delete",
-      "confirm_changes": "Confirm changes",
-      "continue": "Continue",
-      "edit": "Edit",
-      "expand": "Expand",
-      "expand_all": "Expand all rows",
-      "go_back": "Go back",
-      "go_back_message": "Click below to return to your previous page",
-      "go_home": "Go to the home page",
-      "hide_advanced_search": "Hide advanced search",
-      "hide_shown": "Hide shown",
-      "login": "Login",
-      "logout": "Logout",
-      "newer": "Newer",
-      "older": "Older",
-      "place_request": "Place request",
-      "reload": "Reload",
-      "search": "Search",
-      "save": "Save",
-      "show_advanced_search": "Show advanced search",
-      "show_hidden": "Show hidden",
-      "submit": "Submit",
-      "submitting": "Submitting",
-      "title": "Actions"
-    },
-    "common": {
-      "author": "Author",
-      "field": "Field",
-      "language": "Language",
-      "last_updated": "Last updated",
-      "none": "None",
-      "operator": "Operator",
-      "search_term": "Search term",
-      "status": "Status",
-      "title": "Title"
-    },
-    "data_grid": {
-      "active_filters": "{{number}} Active filters",
-      "cleanup": {
-        "error_count": "Error: {{count}}",
-        "selected": "Cleanup selected requests ({{count}})",
-        "skipped_count": "Not eligible: {{count}}",
-        "success_count": "Successful: {{count}}"
-      },
-      "export": {
-        "all": "Export all",
-        "all_csv": "Export all as CSV",
-        "all_tsv": "Export all as TSV",
-        "complete": "{{percentage}} complete",
-        "current": "Export current page as CSV",
-        "failed": "The data grid export has failed. Please try again.",
-        "success": "Successfully exported {{count}} records from the data grid.",
-        "filtered": "Export filtered",
-        "modal_title": "Exporting data",
-        "print": "Print current page",
-        "records": "Exporting {{count}} records from the data grid."
-      },
-      "filters": {
-        "active_description": "{{length}} filter(s) active: {{description}}",
-        "between": "Between",
-        "days_from": "Days from",
-        "days_to": "Days to",
-        "equals": "Equals",
-        "from": "From",
-        "greater_than_exclusive": "Greater than",
-        "greater_than_inclusive": "Greater than or equal to",
-        "last_thirty_days": "Last 30 days",
-        "last_ninety_days": "Last 90 days",
-        "less_than_exclusive": "Less than",
-        "less_than_inclusive": "Less than or equal to",
-        "not_equal": "Does not equal",
-        "on_or_after": "On or after",
-        "on_or_before": "On or before",
-        "to": "To"
-      },
-      "edit_summary": "Edit {{entity}}",
-      "find_column": "Find column",
-      "columns": "Columns",
-      "delete_body": "This {{entity}} will be permanently deleted.",
-      "delete_body_library": "The library details and all its contacts and group memberships will be permanently deleted.",
-      "delete_header": "Delete {{entity}} {{name}}",
-      "edit_url": "Enter a valid URL",
-      "open": "Open",
-      "master_detail": "Master detail",
-      "no_data": "No data available"
-    },
-    "feedback": {
-      "complete": "{{percentage}} complete",
-      "disabled": "Disabled",
-      "enabled": "Enabled",
-      "error": {
-        "cannot_process": "We could not process that operation, so we have reset the data grid options.",
-        "cannot_retrieve_record": "Unable to retrieve the record",
-        "cannot_find_record": "Unable to find the record",
-        "fetching": "Error fetching value",
-        "fetch_items_aggregated": "Failed to fetch live availability information for the following {{count}} bib record(s): {{bibs}} at the libraries: {{libraries}}",
-        "general": "Something went wrong",
-        "invalid_UUID": "The record might have been deleted or the identifier could be wrong",
-        "loading": "Error loading {{entity}}",
-        "loading_message": "An error has occurred loading this page",
-        "reload_message": "Reloading the page will often clear this. If it keeps happening, contact your library administrator.",
-        "too_long_load": "The record is taking too long to load"
-      },
-      "info": {
-        "general": "Information"
-      },
-      "maintenance": "Maintenance in progress",
-      "maintenance_message": "OpenRS DCB is undergoing maintenance, and DCB Admin for Libraries will be back soon!",
-      "network_error": "Network error detected",
-      "network_error_message": "This doesn't seem to be working at the moment. Please check your network and reload the page",
-      "not_found": "Page not found",
-      "not_found_description": "We could not match {{path}} to a page. The address may be mistyped, or the page may have been moved or deleted.",
-      "not_found_message": "That page does not exist",
-      "not_set": "Not set",
-      "please_wait": "Please wait",
-      "reveal_more": "and {{number}} more",
-      "show_less": "Show less",
-      "show_more": "Show more",
-      "warning": {
-        "general": "Warning"
-      }
-    },
-    "info": {
-      "contact": "contact",
-      "coming_soon": "This page is not available yet",
-      "connection_issue": "There may be a connection issue",
-      "correct_as_of": "Status correct as of",
-      "description": "Description: {{description}}",
-      "loading": {
-        "document": "Loading {{document_type}}"
-      },
-      "reload": "Try reloading the page",
-      "try_later": "Please try again later",
-      "wait": "Please wait",
-      "check_address": "Please check the web address",
-      "oldest_entry": "This is the oldest audit entry in the log.",
-      "newest_entry": "This is the most recent audit entry in the log."
-    },
-    "logout": {
-      "again": "Log in again",
-      "failure": "We have encountered an error during logout. Please try again.",
-      "out": "Logged out",
-      "out_current": "Logging you out",
-      "out_progress": "Please wait while we sign you out securely...",
-      "success": "You have successfully logged out from DCB Admin for Libraries. We hope to see you again soon!"
-    },
-    "tooltips": {
-      "logo": "Click this logo to go to the home page"
-    },
-    "unsaved_changes": {
-      "keep_editing": "Keep editing"
-    },
-    "validation": {
-      "locations": {
-        "lat": "Enter the latitude: a number between -90 and 90.",
-        "long": "Enter the longitude: a number between -180 and 180",
-        "local_id_folio": "FOLIO service point ID must be a valid UUID.",
-        "local_id_polaris": "Polaris org ID must be a non-negative integer",
-        "local_id_sierra": "Sierra location ID must be a non-negative integer"
-      },
-      "invalid_email": "Please supply a valid email.",
-      "max_length": "This field has a maximum length of {{length}} characters",
-      "required": "Enter the {{field}}.",
-      "case_sensitive": "{{field}} is case sensitive"
-    }
-  },
-  "welcome": {
-    "background": "Thank you for participating in the DCB Admin for Libraries pre-release! DCB Admin for Libraries is an all-new part of the DCB experience, tailored to the tasks library staff do every day. Expect this pre-release to change constantly as we add new functionality and continue to improve the product. You can provide feedback <linkComponent>here</linkComponent>.",
-    "library": "Library information for {{library}}",
-    "library_short": "Your library information",
-    "title": "Welcome to DCB Admin for {{library}}, {{name}}."
-  },
-  "workflows": {
-    "RET-STD": "Standard",
-    "RET-EXP": "Walk-up",
-    "RET-PUA": "Pickup anywhere",
-    "RET-LOCAL": "Local"
-  },
-  "insights": {
-    "title": "Library insights",
-    "subtitle": "Requesting activity, fulfilment and value for {{library}}.",
-    "loading": "Loading insights",
-    "no_host_lms": "This library has no associated Host LMS, so insights cannot be shown.",
-    "no_data": "No data for the selected period.",
-    "duration": {
-      "days": "{{value}} days",
-      "hours": "{{value}} hrs",
-      "minutes": "{{value}} min",
-      "none": "—"
-    },
-    "range": {
-      "label": "Time range",
-      "7d": "7 days",
-      "30d": "30 days",
-      "90d": "90 days",
-      "365d": "1 year",
-      "from": "From",
-      "to": "To"
-    },
-    "kpi": {
-      "vs_prior": "vs previous period",
-      "fill_rate": {
-        "title": "Fill rate"
-      },
-      "error_rate": {
-        "title": "Error rate"
-      },
-      "time_to_loan": {
-        "title": "Median time to loan",
-        "subtitle": "p50 · p95 {{p95}}"
-      },
-      "resolved": {
-        "title": "Requests resolved",
-        "subtitle": "completed or failed"
-      },
-      "cost_avoidance": {
-        "title": "Estimated cost avoided",
-        "basis": "Based on {{count}} successful fulfilments",
-        "input_label": "Cost per ILL",
-        "input_help": "Your own average interlibrary loan cost"
-      },
-      "checkout_rate": {
-        "title": "Checkout rate",
-        "subtitle": "{{reached}} of {{total}} reached the shelf"
-      },
-      "total_borrows": {
-        "title": "Total borrows",
-        "subtitle": "requests placed as borrower"
-      },
-      "total_lends": {
-        "title": "Total lends",
-        "subtitle": "items supplied to the network"
-      },
-      "rescued": {
-        "title": "Requests rescued",
-        "subtitle": "fulfilled after re-resolution"
-      },
-      "unique_titles": {
-        "title": "Unique titles requested",
-        "subtitle": "across {{total}} requests"
-      }
-    },
-    "charts": {
-      "status_flow": {
-        "title": "Requesting activity over time",
-        "subtitle": "Requests entering each status per period. Pick the statuses to plot.",
-        "picker_label": "Choose which statuses to plot"
-      },
-      "failure_taxonomy": {
-        "title": "Why requests fail",
-        "subtitle": "Failed requests broken down by reason.",
-        "series": "Failed requests"
-      },
-      "supplier_reliability": {
-        "title": "Supplier reliability",
-        "subtitle": "Fulfilled versus failed requests per supplying library.",
-        "fulfilled": "Fulfilled",
-        "failed": "Failed"
-      },
-      "net_flow": {
-        "title": "Borrowing vs supplying",
-        "subtitle": "Reciprocity across the network — net givers and takers.",
-        "borrowed": "Borrowed",
-        "supplied": "Supplied"
-      },
-      "rare_gem": {
-        "title": "Unique collection value",
-        "subtitle": "Requested titles that only this library supplies to the network.",
-        "col_title": "Title",
-        "col_author": "Author",
-        "col_requests": "Requests"
-      },
-      "time_in_status": {
-        "title": "Where requests stall",
-        "subtitle": "Median time spent in each status — the biggest bottleneck first.",
-        "series": "Median dwell",
-        "axis_hours": "Hours"
-      },
-      "supplier_response": {
-        "title": "Supplier responsiveness",
-        "subtitle": "Median time from request placed to supplier confirmation, per lender.",
-        "series": "Median response",
-        "axis_hours": "Hours"
-      },
-      "demand_heatmap": {
-        "title": "When requests arrive",
-        "subtitle": "Request volume by day of week and hour of day (server time zone)."
-      },
-      "demand_by_format": {
-        "title": "Demand by format",
-        "subtitle": "Requesting volume by material format.",
-        "series": "Requests"
-      },
-      "top_titles": {
-        "title": "Most requested titles",
-        "subtitle": "The titles the network asks for most.",
-        "col_title": "Title",
-        "col_requests": "Requests"
-      },
-      "demand_by_pickup": {
-        "title": "Demand by pickup location",
-        "subtitle": "Where patrons collect their requests.",
-        "series": "Requests"
-      },
-      "demand_by_patron_group": {
-        "title": "Demand by patron group",
-        "subtitle": "Which patron categories drive requesting.",
-        "series": "Requests"
-      },
-      "unmet_local": {
-        "title": "Unmet local demand",
-        "subtitle": "Titles your own patrons requested but you do not hold.",
-        "col_supplied": "Supplied"
-      },
-      "acquisition_opportunities": {
-        "title": "Acquisition opportunities",
-        "subtitle": "Highly requested titles across the network that you do not hold.",
-        "col_supplied": "Supplied"
-      },
-      "consortial_lifeline": {
-        "title": "Consortial lifeline",
-        "subtitle": "Titles you uniquely keep flowing to the network.",
-        "col_supplied": "Supplied"
-      },
-      "peer_benchmark": {
-        "title": "Peer benchmarking",
-        "subtitle": "Each library vs the consortium median (fill {{fill}}, checkout {{checkout}}).",
-        "col_library": "Library",
-        "col_requests": "Requests",
-        "col_checkout": "Checkout rate",
-        "col_fill": "Fill rate",
-        "your_library": "(your library)"
-      },
-      "collection_dimension": {
-        "title": "Collection analysis",
-        "subtitle": "Requesting demand sliced by a bibliographic dimension.",
-        "select_label": "Dimension",
-        "series": "Requests",
-        "dim_format": "Format",
-        "dim_language": "Language",
-        "dim_subject": "Subject",
-        "dim_decade": "Publication decade"
-      },
-      "new_acquisitions": {
-        "title": "New acquisitions performance",
-        "subtitle": "How your recently-added titles perform in the network.",
-        "acquired_since": "Acquired since",
-        "col_supplied": "Supplied"
-      }
-    },
-    "panel": {
-      "retry": "Retry",
-      "failed": "This panel could not be loaded."
-    },
-    "announce": {
-      "view": "Showing {{range}}."
-    },
-    "durations": {
-      "title": "How long things take",
-      "subtitle": "Median and 95th percentile, for the legs this deployment reports.",
-      "to_loan": "Time to loan",
-      "to_finalise": "Time to finalise",
-      "supplier_response": "My response time",
-      "transit_out": "Transit, outbound",
-      "transit_back": "Transit, return",
-      "pair": "p50 {{p50}} · p95 {{p95}}",
-      "median": "median {{value}}",
-      "sample": "· {{count}} observations",
-      "not_reported": "Not reported by this system"
-    },
-    "headline": {
-      "filled": "{{rate}}% filled",
-      "patron_waited": "My patron waited",
-      "supplied": "Items I supplied",
-      "my_response": "My response time",
-      "my_response_sub": "Placed at me, to confirmed by me",
-      "net_flow": "Net flow",
-      "net_lender": "Net lender",
-      "net_borrower": "Net borrower",
-      "more": "More measures"
-    }
-  }
+	"agency": {
+		"code": "Agency code",
+		"name": "Agency name"
+	},
+	"audit": {
+		"no_results": "No audits found",
+		"audit": "Audit data",
+		"audit_entry": "Audit entry",
+		"data": "Audit data (JSON)",
+		"date": "Audit date",
+		"description": "Brief description",
+		"from_status": "fromStatus",
+		"uuid": "Audit UUID",
+		"log": "Audit log",
+		"no_data": "No audit log entries found.",
+		"no_rows": "Try changing your filters or search terms.",
+		"to_status": "toStatus"
+	},
+	"a11y": {
+		"empty": "This field is empty",
+		"navigation": "Main navigation"
+	},
+	"bibs": {
+		"author": "Author",
+		"canonical_metadata": "Canonical metadata",
+		"cluster_uuid": "Bib cluster UUID",
+		"date_created": "Date created",
+		"date_of_publication": "Date of publication",
+		"date_updated": "Date updated",
+		"edition": "Edition",
+		"id": "Bib record UUID",
+		"large_print": "Is large print?",
+		"metadata_score": "Metadata score",
+		"place_of_publication": "Place of publication",
+		"process_version": "Process version",
+		"publisher": "Publisher",
+		"record_created": "Record created",
+		"record_title": "Record title",
+		"record_type": "Type of record",
+		"record_updated": "Record updated",
+		"search": "Search by title",
+		"selected_bib_uuid": "Selected bib UUID",
+		"source_error": "An error occurred loading the source record for this bib",
+		"source_record": "Source record",
+		"source_record_id": "Source record ID",
+		"source_system_id": "Source system UUID",
+		"title": "Bib record",
+		"title_actual": "Title",
+		"view_cluster_record": "Click to view the page for this record, which has the title {{title}}"
+	},
+	"common": {
+		"discovery": "Link to discovery",
+		"patron_website": "Link to patron website",
+		"error": "Error",
+		"latitude": "Latitude",
+		"longitude": "Longitude",
+		"success": "Success",
+		"updated": "Updated",
+		"update_success": "The {{entity}} {{name}} was updated successfully",
+		"update_failure": "An error occurred while updating {{entity}} {{name}}"
+	},
+	"data_change_log": {
+		"action": "Action",
+		"category": "Change category",
+		"category_required": "Please select a category before proceeding.",
+		"categories": {
+			"additional_information": "Additional information provided",
+			"changing_status": "Status changed",
+			"details_changed": "Details changed",
+			"error_correction": "Error correction",
+			"initial_setup": "Initial setup",
+			"mappings_replacement": "Mappings replacement",
+			"membership_ended": "Membership ended",
+			"new_contact": "New contact",
+			"new_member": "New member",
+			"other": "Other"
+		},
+		"changes": "Changes",
+		"characters_remaining": "{{characters}} characters remaining",
+		"deleted_value": "Deleted value",
+		"entity_id": "Entity UUID",
+		"entity_type": "Entity type",
+		"field_label": "Field label",
+		"field_name": "Field name",
+		"id": "Data change log UUID",
+		"last_edited_by": "Last edited by",
+		"loading_details": "data change details",
+		"max_length_exceeded": "Values must not exceed 200 characters. Please provide a shorter value.",
+		"max_length_reached": "Maximum length of {{maxLength}} characters reached",
+		"new_data": "New data",
+		"new_value": "New value",
+		"no_eligible_changes": "There are no eligible changes to show. This can occur when an entity is updated immediately before deletion.",
+		"no_results": "No data change log entries were found. Try changing your search terms or filters.",
+		"no_rows": "No data change log entries are available. If you're expecting data to be here, please refresh the page.",
+		"old_data": "Old data",
+		"old_value": "Old value",
+		"reason": "Reason for change",
+		"reason_addition": "Reason for adding",
+		"reason_required": "Please provide a reason for this change.",
+		"reference_url": "Change reference URL",
+		"ref_url_helper": "The URL of the ticket describing the change requested, if applicable.",
+		"table_name": "Database table name",
+		"timestamp": "Timestamp",
+		"user": "User"
+	},
+	"entities": {
+		"contact": "contact",
+		"functional_setting": "functional setting",
+		"location": "location",
+		"library": "library",
+		"numeric_range_mapping": "numeric range mapping",
+		"reference_value_mapping": "reference value mapping"
+	},
+	"header": {
+		"title": "DCB Admin for {{library}}",
+		"title_requesting": "DCB Admin for {{library}} - requesting only mode",
+		"user": "Welcome, {{user}}",
+		"welcome": "Welcome to DCB Admin for {{name}}",
+		"library_selector": "Library"
+	},
+	"hostlms": {
+		"alert_text": "Failed to fetch HostLMS, will retry. If this error persists, please refresh the page.",
+		"bibSuppressionRulesetName": "Bib suppression ruleset",
+		"code": "Host LMS code",
+		"configuration": "Host LMS configuration",
+		"hostlms_one": "Host LMS",
+		"id": "Host LMS UUID",
+		"itemSuppressionRulesetName": "Item suppression ruleset",
+		"lms_client": "LmsClientClass",
+		"name": "Host LMS name",
+		"no_results": "No Host LMSs were found. Try changing your search terms or filters.",
+		"no_rows": "No Host LMSs are available. If you're expecting data to be here, please refresh the page.",
+		"roles": "Roles",
+		"search_placeholder": "Search by name",
+		"client_config": {
+			"title": "Client config",
+			"access_id": "Access ID",
+			"access_key": "Access key",
+			"api": "API key",
+			"barcode_prefix": "Item barcode prefix",
+			"base": "Base URL",
+			"base_application": "Base application services URL",
+			"context_hierarchy": "Context hierarchy",
+			"default_agency": "Default agency",
+			"default_agency_code": "Default agency code",
+			"domain_id": "Domain ID",
+			"fine": "Fine code ID",
+			"folio_tenant": "FOLIO tenant",
+			"ill_location_id": "ILL location ID",
+			"ingest": "Ingest",
+			"item": "Item config",
+			"history_action_id": "History action ID",
+			"hold_policy": "Hold policy",
+			"key": "Key: ",
+			"loan_id": "Loan period code ID",
+			"logon_branch_id": "Logon branch ID",
+			"logon_user_id": "Logon user ID",
+			"metadata": "Metadata prefix",
+			"page_size": "Page size",
+			"papi": "PAPI config",
+			"papi_app_id": "PAPI app ID",
+			"papi_org_id": "PAPI organisation ID",
+			"papi_lang_id": "PAPI language ID",
+			"papi_version": "PAPI version: ",
+			"record_syntax": "Record syntax",
+			"renewal_limit": "Renewal limit",
+			"roles": "Roles",
+			"secret": "Secret",
+			"services": "Services config",
+			"services_language": "Language",
+			"services_patron_barcode_prefix": "Patron barcode prefix",
+			"services_product_id": "Product ID",
+			"services_site_domain": "Site domain",
+			"services_workstation_id": "Workstation ID",
+			"services_organisation_id": "Organisation ID",
+			"services_version": "Version",
+			"shelving_scheme_id": "Shelving scheme ID",
+			"staff_password": "Staff password",
+			"staff_username": "Staff username",
+			"user_base_url": "User base URL"
+		}
+	},
+	"library": {
+		"abbreviated_name": "Abbreviated name",
+		"backup_schedule": "Backup / downtime schedule",
+		"brand": {
+			"section": "How your library appears to patrons",
+			"section_help": "Used in the discovery app, where your library's logo and name appear alongside the consortium's.",
+			"logo_url": "Logo",
+			"logo_url_help": "Upload an image, or paste a full web address beginning http:// or https://. Leave blank to show your library's name on its own.",
+			"logo_url_invalid": "Upload an image, or enter a full web address beginning http:// or https://, or leave this blank.",
+			"upload": "Upload image",
+			"uploading": "Uploading…",
+			"upload_formats": "PNG or JPEG. SVG and WebP are not accepted.",
+			"upload_too_large": "That image is larger than 2 MB. Export it smaller and try again.",
+			"upload_failed": "The image could not be uploaded. Try again, or paste a web address instead.",
+			"staged": "{{filename}} will be uploaded when you save.",
+			"staged_remove": "Remove",
+			"image_url": "Or paste a web address",
+			"image_url_staged": "Remove the chosen file to enter a web address instead.",
+			"external_url_cost": "An address on someone else's server means every patron's browser fetches the image from them: if their site is down the logo disappears, and their logs record each patron's IP address. Uploading avoids both.",
+			"logo_alt": "Logo description",
+			"logo_alt_help": "Read aloud in place of the logo. Leave blank to use your library's full name.",
+			"theme": "Discovery theme",
+			"theme_help": "Applied when a patron is searching your library. Every theme has been checked for colour contrast in light, dark and high-contrast modes.",
+			"theme_inherit": "Use the consortium's theme"
+		},
+		"presence": {
+			"section": "Links for patrons",
+			"section_help": "Where the discovery app sends a patron who needs something it does not hold. Both appear in the footer of every page.",
+			"website": "Library website",
+			"website_help": "Opening hours, branches, joining — your own site. Discovery is not your website and should not try to be.",
+			"support": "Report a problem URL",
+			"support_help": "Where a patron says the search itself is wrong: a record with the wrong details, a result that will not request. Usually a different desk from the one that answers opening hours.",
+			"url_invalid": "Enter a full web address starting with https:// or http://"
+		},
+		"config": {
+			"patronAuth": {
+				"auth_profile": "Authentication profile",
+				"saml": "SAML based SSO?",
+				"title": "Patron authentication"
+			}
+		},
+		"full_name": "Full name",
+		"no_contact": "not recorded",
+		"id": "Library UUID",
+		"primary_location": {
+			"address": "Address",
+			"latitude": "Latitude",
+			"location": "Location",
+			"longitude": "Longitude",
+			"title": "Primary location"
+		},
+		"service": {
+			"environments": {
+				"api": "Host LMS API",
+				"api_key": "API key",
+				"api_secret": "API secret",
+				"backup_schedule": "Backup / downtime schedule",
+				"polaris_domain": "Polaris staff account: Domain",
+				"polaris_password": "Polaris staff account: Password",
+				"polaris_org_id": "Polaris staff account: Organisation ID",
+				"polaris_username": "Polaris staff account: Username"
+			},
+			"hostlms_title": "Host LMS - {{name}}",
+			"systems": {
+				"discovery": "Discovery system/PAC(s)",
+				"ils": "ILS",
+				"patron_site": "Patron website",
+				"title": "Systems"
+			},
+			"title": "Service for {{name}}"
+		},
+		"short_name": "Short name",
+		"site_designation": "Site designation",
+		"statistics": {
+			"no_requesters": "No requesters this month",
+			"no_titles": "No titles requested this month",
+			"requests_made": "Requests made",
+			"requests_supplied": "Requests supplied",
+			"title": "Your library's DCB experience",
+			"top_requesters_month": "Top requesters this month",
+			"top_titles_month": "Your patrons' favourite titles this month",
+			"unknown_patron": "Unknown patron"
+		},
+		"support_hours": "Support hours",
+		"title": "Information for {{library}}",
+		"type": "Type"
+	},
+	"location": {
+		"code": "Location code",
+		"latitude": "Latitude",
+		"local_id": "Local ID",
+		"location_id": "Location UUID",
+		"longitude": "Longitude",
+		"name": "Location name",
+		"not_set": "Not set",
+		"pickup_status": "Pickup status",
+		"pickup_anywhere_status": "Pickup anywhere status",
+		"polaris_org": "Polaris org ID",
+		"print_label": "Print label",
+		"service_point": "FOLIO service point ID",
+		"sierra": "Sierra location ID",
+		"type": "Location type",
+		"view_location": "View pickup location"
+	},
+	"login": {
+		"access": "Welcome to DCB Admin for Libraries! To get started, please sign in with your library credentials",
+		"authenticating": "Authenticating",
+		"error": "Authentication error: {{message}}",
+		"keycloak": "Sign in with Keycloak",
+		"initialising": "Initialising the application",
+		"loading_title": "Logging in",
+		"title": "Log in to DCB Admin for Libraries"
+	},
+	"mappings": {
+		"category": "Category",
+		"delete_warning": "Are you sure you want to delete this mapping?",
+		"domain": "Domain",
+		"editing_disabled": "Editing mappings has been disabled by your consortium administrator",
+		"from_value": "From value",
+		"last_imported": "Last imported",
+		"title": "Mappings",
+		"to_value": "To value"
+	},
+	"nav": {
+		"bibs": {
+			"title": "Bib records"
+		},
+		"contacts": {
+			"title": "Contacts"
+		},
+		"data_change_log": {
+			"title": "Data change log"
+		},
+		"home": {
+			"title": "Home"
+		},
+		"library": {
+			"service": "Service",
+			"title": "Your library"
+		},
+		"locations": {
+			"title": "Locations"
+		},
+		"mappings": {
+			"title": "Mappings",
+			"numeric": "Numeric range mappings",
+			"reference": "Reference value mappings"
+		},
+		"patron_requests": {
+			"title": "Patron requests",
+			"tooltip": "The requests made by patrons of your library"
+		},
+		"requesting": {
+			"title": "Requesting"
+		},
+		"settings": {
+			"title": "Settings"
+		},
+		"supplier_requests": {
+			"title": "Supplier requests",
+			"tooltip": "The requests for which your library is acting as a supplier"
+		},
+		"insights": {
+			"title": "Insights"
+		}
+	},
+	"patron_request": {
+		"active": "isActive",
+		"active_workflow": "Active workflow",
+		"borrowing": "Borrowing",
+		"borrowing_patron_barcode": "Local patron barcode",
+		"borrowing_patron_id": "Local patron ID",
+		"borrowing_patron_type": "Local patron type",
+		"borrowing_request_id": "Borrowing request ID",
+		"borrowing_request_status": "Borrowing request status",
+		"borrowing_request_status_raw": "Raw borrowing request status",
+		"borrowing_virtual_bib_id": "Virtual Bib ID",
+		"borrowing_virtual_id": "Virtual item ID",
+		"borrowing_virtual_item_status": "Virtual item status",
+		"borrowing_virtual_item_status_raw": "Raw virtual item status",
+		"borrowing_virtual_type": "Virtual item type",
+		"canonical_metadata": "Canonical metadata",
+		"check_for_updates": "Check for updates",
+		"check_for_updates_disabled": "You cannot check for updates when a patron request is in status {{status}}.",
+		"check_successful": "Check complete",
+		"check_unsuccessful": "Check unsuccessful",
+		"cleanup": "Force clean up",
+		"cleanup_complete": "Cleanup complete",
+		"cleanup_disabled": "Clean up is only available for requests supplied by your library that are either in an ERROR state, or have not yet been shipped.",
+		"cleanup_info": "Bypass circulation; clean up and finalise request. This auto-finalises a request and can be used to return an unwanted item. ",
+		"cleanup_in_progress": "Cleanup in progress",
+		"cleanup_successful": "The cleanup operation has been successful, and the patron request has been finalised.",
+		"cleanup_unsuccessful": "The clean up operation has failed, and the patron request remains in an ERROR state. Please try again later.",
+		"cluster_record_uuid": "Cluster record UUID",
+		"date_created": "Date created",
+		"date_updated": "Date updated",
+		"description": "Description",
+		"error_identities": "Error loading patron identity information",
+		"error_message": "Error message",
+		"error_pickup": "Error loading pickup location information",
+		"general": "General",
+		"item": "Item",
+		"item_barcode": "Item barcode",
+		"item_manual_agency_code": "Manually selected agency code",
+		"item_manual_hostlms_code": "Manually selected host LMS code",
+		"item_manually_selected": "Manually selected?",
+		"local_agency": "Local agency",
+		"local_barcode": "Local barcode",
+		"local_bib_id": "Local bib ID",
+		"local_id": "Local ID",
+		"local_item_barcode": "Local item barcode",
+		"local_item_id": "Local item ID",
+		"local_item_uuid": "Local item UUID",
+		"local_item_loc": "Local item location code",
+		"local_item_status": "Local item status",
+		"local_item_status_raw": "Raw local item status",
+		"local_item_type": "Local item type",
+		"local_request_status": "Local request status",
+		"local_request_status_raw": "Raw local request status",
+		"local_supplier_id": "Supplier request ID",
+		"next_expected_status": "Next expected status",
+		"next_poll": "Next status check after",
+		"no_requests": "No patron requests to display",
+		"out_of_sequence": "Out of sequence",
+		"patron": "Patron",
+		"patron_home_id": "Home identity",
+		"patron_hostlms": "Patron host LMS",
+		"patron_uuid": "Patron UUID",
+		"patron_local_names": "Local names",
+		"patron_library": "Patron library",
+		"patron_canonical_ptype": "Canonical patron type",
+		"patron_local_ptype": "Local patron type",
+		"patron_request": "Patron request data",
+		"patron_request_uuid": "Patron request UUID",
+		"patron_type_dcb": "DCB patron type",
+		"polling_checks_in_status": "Polling checks in status",
+		"previous_status": "Previous status",
+		"pickup": "Pickup",
+		"pickup_code_uuid": "Pickup location code UUID",
+		"pickup_bib_id": "Pickup bib ID",
+		"pickup_item_id": "Pickup item ID",
+		"pickup_item_status": "Pickup item status",
+		"pickup_item_status_raw": "Raw pickup item status",
+		"pickup_item_type": "Pickup item type",
+		"pickup_location_name": "Pickup location name",
+		"pickup_patron_id": "Pickup patron ID",
+		"pickup_request_id": "Pickup request ID",
+		"pickup_request_status": "Pickup request status",
+		"pickup_request_status_raw": "Raw pickup request status",
+		"pickup_agency_code": "Pickup agency code",
+		"pickup_library": "Pickup library",
+		"pickup_hostlms_code": "Pickup host LMS",
+		"renewal_count": "Renewal count",
+		"renewal_count_borrower": "Borrower renewal count",
+		"renewal_count_supplier": "Supplier renewal count",
+		"renewal_status": "Renewal status",
+		"request_created": "Request created",
+		"request_uuid": "Request UUID",
+		"requestor_uuid": "Patron UUID at requesting agency",
+		"requestor_note": "Requestor note",
+		"request_tooltip": "This is a {{ils}} library. The primary contact(s) are {{contact}}",
+		"request_updated": "Request updated",
+		"resolution_count": "Resolution count",
+		"return": "Return to patron request",
+		"status": "Current status",
+		"source_record_not_found": "Source record not found",
+		"statuses": {
+			"SUBMITTED_TO_DCB": "Submitted to DCB",
+			"PATRON_VERIFIED": "Patron verified",
+			"RESOLVED": "Resolved",
+			"NOT_SUPPLIED_CURRENT_SUPPLIER": "Not supplied by current supplier",
+			"NO_ITEMS_SELECTABLE_AT_ANY_AGENCY": "No items selectable at any agency",
+			"REQUEST_PLACED_AT_SUPPLYING_AGENCY": "Request placed at supplying agency",
+			"CONFIRMED": "Confirmed",
+			"HANDED_OFF_AS_LOCAL": "Handed off as local",
+			"REQUEST_PLACED_AT_BORROWING_AGENCY": "Request placed at borrowing agency",
+			"REQUEST_PLACED_AT_PICKUP_AGENCY": "Request placed at pickup agency",
+			"RECEIVED_AT_PICKUP": "Received at pickup",
+			"READY_FOR_PICKUP": "Ready for pickup",
+			"LOANED": "Loaned",
+			"PICKUP_TRANSIT": "Pickup transit",
+			"RETURN_TRANSIT": "Return transit",
+			"CANCELLED": "Cancelled",
+			"COMPLETED": "Completed",
+			"FINALISED": "Finalised",
+			"ERROR": "Error",
+			"ARCHIVED": "Archived"
+		},
+		"status_changed": "Status changed",
+		"supplier": "Supplier",
+		"supplier_library": "Supplier library",
+		"supplier_uuid": "Supplier UUID",
+		"supplier_ctype": "Canonical item type",
+		"supplier_request": "Supplier request data",
+		"supplying": "Supplying",
+		"supplying_agency_code": "Supplying agency code",
+		"time_in_status": "Time in status",
+		"view": "View",
+		"virtual_item": "Virtual item",
+		"virtual_patron": "Virtual patron",
+		"title": "Patron request"
+	},
+	"requesting": {
+		"available_at": "Items present at {{total}} institution(s)",
+		"available_for_walk_up": "Available for walk-up requesting",
+		"available_for_walk_up_description": "Available for walk-up requesting: at least one item for this record is available in your library.",
+		"available_for_staff_request": "Available for staff requesting",
+		"available_for_staff_request_description": "Available for staff requesting: at least one item for this record is available in your consortium.",
+		"available_to_request": "{{number}} available items at {{total}} institution(s)",
+		"barcode": "Barcode",
+		"bib_record": "Bib record",
+		"bib_record_id": "Bib record UUID",
+		"call_no": "Call number",
+		"cannot_request_no_items": "There are no items available to request for this record.",
+		"context": "Context",
+		"contributors": "Contributors",
+		"cluster": "Cluster record",
+		"cluster_title": "Cluster details for {{record}}",
+		"cluster_tooltip": "View cluster record",
+		"cluster_id": "Cluster UUID",
+		"cluster_deleted": "Is cluster deleted?",
+		"contributor": "Contributor(s): {{contributors}}",
+		"date_available": "Date available",
+		"date_due": "Date due",
+		"description": "Description",
+		"format": "Format: {{formats}}",
+		"format_title": "Format(s)",
+		"history": "Requesting history",
+		"hold_count": "Hold count",
+		"identifiers": "Identifiers",
+		"isbn_title": "ISBN identifiers",
+		"isbn": "ISBN identifier(s): {{isbn}}",
+		"issn": "ISSN identifier(s): {{issn}}",
+		"items": "Items",
+		"items_error_title": "We could not load the associated items",
+		"item_id": "Item ID",
+		"items_not_found": "No items found",
+		"items_search": "Search items",
+		"items_title": "Items available for cluster {{cluster}}",
+		"languages": "Language(s)",
+		"live_availability_no_items": "No items found for this record",
+		"live_availability_unavailable": "Item availability information unavailable",
+		"local_item_type_code": "Local item type code",
+		"local_item_type_name": "Local item type name",
+		"no_data": "No data available. Please enter a search term, or change your current search.",
+		"no_history": "Your patrons haven't placed any OpenRS requests for this record.",
+		"not_available_for_staff_request": "Not available for staff requesting",
+		"not_available_for_staff_request_description": "Not available for staff requesting: there is currently no available item for this record in your consortium.",
+		"not_available_for_walk_up": "Not available for walk up requesting",
+		"not_available_for_walk_up_description": "Not available for walk up requesting: there is currently no available item for this record at your library.",
+		"notes": "Notes",
+		"options": "Request options",
+		"physical_descriptions": "Physical descriptions",
+		"publication_date": "Publication date: {{publicationDate}} ",
+		"publication_year": "Publication year",
+		"publisher": "Publisher",
+		"place_description": "You have chosen to place a request for {{title}}. Please select a requesting option below.",
+		"place_title": "Place a request",
+		"record_created": "Record created",
+		"record_information": "Record information",
+		"record_updated": "Record updated",
+		"requestable": "Requestable",
+		"series": "Series",
+		"shared_index_unavailable_title": "Shared index is not configured on this system",
+		"shared_index_unavailable_message": "Please set a valid DCB_SEARCH_BASE environment variable for this deployment.",
+		"source_system_code": "Source system code",
+		"subjects": "Subjects",
+		"supplier_type": "Supplier type",
+		"suppressed": "Suppressed",
+		"titles_found": "{{number}} titles found",
+		"volume_parsed": "Parsed volume statement",
+		"volume_raw": "Raw volume statement",
+		"expedited_checkout": {
+			"actions": {
+				"place": "Place a walk-up request."
+			},
+			"create_request": "Create request",
+			"creating_request": "Creating request ...",
+			"description": "Welcome to DCB walk-up requesting. Please provide the barcode and the library of the patron you would like to make a request for. <paragraph>Provided that the patron's details are valid and the item exists and is available at your library, DCB will instantly check out this item to the specified patron.</paragraph>",
+			"feedback": {
+				"current_status": "Current status: {{status}}",
+				"in_progress": "Your walk-up request has been successfully placed and DCB is now attempting to check it out.",
+				"in_progress_explanation": "Your walk-up request has been successfully placed and DCB is now attempting to check it out.",
+				"success": "Your walk-up request has been checked out successfully and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
+				"success_requesting_only": "Your walk-up request has been checked out successfully.",
+				"time_elapsed": "Time elapsed: {{time}}"
+			},
+			"option_description": "Place a walk-up request for an item at your library for a visiting OpenRS patron. This will instantly check out the item.",
+			"request_title": "Walk-up request",
+			"return": "Return to requesting",
+			"steps": {
+				"checkout": "Check out item",
+				"checkout_failure": "Item checkout is taking too long. Please view the request and use the 'check for updates' option to refresh its status.",
+				"checkout_failure_request_only": "Item checkout is taking too long. Please ask a library admin to view this request.",
+				"checkout_success": "The item has been successfully checked out, and all steps are complete. The due date for this item is {{dueDate}}.",
+				"checkout_waiting": "The request has been created. Please wait while we attempt to check out the item.",
+				"complete": "All steps complete!",
+				"due_date": "Loading due date ...",
+				"patron_validation": "Patron validation",
+				"patron_validation_instruction": "Please provide the barcode and the affiliated institution of the patron.",
+				"quick_walk_up": {
+					"instructions": "Scan the item barcode and select a pickup location for this request"
+				},
+				"request_creation": "Request creation",
+				"request_creation_instruction": "The patron barcode is valid. Please now provide the remaining details."
+			},
+			"title_on_site": "Walk-up request",
+			"view_request": "View request"
+		},
+		"search_types": {
+			"cql": "CQL",
+			"default": "Default",
+			"query_builder": "Query builder",
+			"locate": "Locate"
+		},
+		"shared_index": {
+			"cluster": "Cluster",
+			"cluster_details": "Cluster details",
+			"boolean": {
+				"and": "AND",
+				"or": "OR",
+				"not": "NOT"
+			},
+			"languages": {
+				"ara": "Arabic",
+				"chi": "Chinese",
+				"eng": "English",
+				"fre": "French",
+				"ger": "German",
+				"ita": "Italian",
+				"jpn": "Japanese",
+				"lat": "Latin",
+				"por": "Portuguese",
+				"spa": "Spanish"
+			},
+			"search_fields": {
+				"any": "Any",
+				"author": "Author",
+				"cluster_record_id": "Cluster record ID",
+				"contributor": "Contributor",
+				"format": "Format",
+				"isbn": "ISBN",
+				"issn": "ISSN",
+				"keyword": "Keyword",
+				"language": "Language",
+				"publisher": "Publisher",
+				"subject": "Subject",
+				"title": "Title"
+			},
+			"query_syntax": {
+				"label": "Query input type",
+				"cql": "CQL",
+				"lucene": "LuceneQL",
+				"lucene_builder": "Lucene builder",
+				"simple": "Simple"
+			},
+			"error_connecting": "There was an error connecting to the search service. Please try again later.",
+			"error_connecting_title": "Could not connect to dcb-locate",
+			"items": "Items",
+			"items_for_cluster": "{{number}} item(s) associated with this record.",
+			"items_not_shown": "{{number}} item(s) unable to be shown",
+			"items_not_shown_helper_item": "Items without an item type are usually the result of a missing or misconfigured item type mapping. Please review the item type mappings for this library.",
+			"items_not_shown_helper_location": "Items without an 'Agency' value are usually the result of a missing or misconfigured Location mapping, or a missing agency. Please review the Location mappings for this library and the agency configuration.",
+			"items_not_shown_long": "{{number}} item(s) unable to be shown. You may have missing mappings or other configuration issues.",
+			"items_not_shown_resolution": "If the item(s) below belong to your library and should be available to users, please review the mappings in the 'Mappings' section. There may be incorrect or missing mappings preventing DCB from showing the items below",
+			"items_unavailable": "No items are available for this cluster",
+			"return": "Return to shared index",
+			"title": "Shared index",
+			"title_details": "Title details for {{title}}"
+		},
+		"staff_request": {
+			"actions": {
+				"place": "Place a staff request"
+			},
+			"new": "New request",
+			"option_description": "Place a request on behalf of a patron at your institution. This request will follow the standard DCB workflow.",
+			"patron": {
+				"affiliated": "Affiliated institution",
+				"barcode": "Patron barcode",
+				"description": "Please provide the barcode and the library of the patron you would like to make a staff request for.",
+				"error": {
+					"no_brackets": "Please remove any brackets from the barcode.",
+					"request": {
+						"duplicate": "A request already exists for this patron at this library within the time window of 900 seconds.",
+						"generic": "Error: {{code}}. More info: {{description}}"
+					},
+					"validation_failure": "We were unable to validate this patron. Please correct the barcode and/or affiliated institution, and try again.",
+					"validate_first": "You must validate a patron before attempting to make a staff request on their behalf."
+				},
+				"item_agency_code": "Item agency",
+				"item_host_lms": "Item Host LMS",
+				"item_library": "Item library",
+				"item_local_id": "Item local ID",
+				"item_select": "Item Barcode: {{barcode}}, Location: {{name}}, Call number: {{callNo}}",
+				"item_select_volume": "Item Barcode: {{barcode}}, Location: {{name}}, Call number: {{callNo}}, Volume: {{volumeStatement}}",
+				"pickup_location": "Pickup location",
+				"pickup_location_no_agency": "Other locations",
+				"requester_note": "Requester note",
+				"selection": {
+					"automatic": "Automatic",
+					"automatic_context": "DCB will automatically select an item to fulfil this request.",
+					"manual": "Manual",
+					"manual_context": "DCB will use the criteria provided to select an item to fulfil this request",
+					"type": "Selection type"
+				},
+				"success": {
+					"lookup": "The patron {{barcode}} has been successfully validated for {{library}}.",
+					"request": "Your staff request has been successfully placed and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
+					"request_requesting_only": "Your staff request has been successfully placed."
+				},
+				"validate": "Validate patron",
+				"validating": "Validating patron"
+			},
+			"select_pickup": "We have succesfully validated the patron provided. Please choose a pickup location and click 'Submit' to finish placing this staff request."
+		}
+	},
+	"settings": {
+		"customisation": "Customisation",
+		"dark_mode": "Dark mode",
+		"language": {
+			"en": "English",
+			"es": "Spanish"
+		},
+		"library": "Library",
+		"light_mode": "Light mode",
+		"system_mode": "System mode",
+		"theme_selection": "Theme selection"
+	},
+	"ui": {
+		"actions": {
+			"add_filter": "Add filter",
+			"apply_filters": "Apply filters",
+			"cancel": "Cancel",
+			"clear_all": "Clear all",
+			"clear_search": "Clear search",
+			"close": "Close",
+			"collapse": "Collapse",
+			"collapse_all": "Collapse all rows",
+			"delete": "Delete",
+			"confirm_changes": "Confirm changes",
+			"continue": "Continue",
+			"edit": "Edit",
+			"expand": "Expand",
+			"expand_all": "Expand all rows",
+			"go_back": "Go back",
+			"go_back_message": "Click below to return to your previous page",
+			"go_home": "Go to the home page",
+			"hide_advanced_search": "Hide advanced search",
+			"hide_shown": "Hide shown",
+			"login": "Login",
+			"logout": "Logout",
+			"newer": "Newer",
+			"older": "Older",
+			"place_request": "Place request",
+			"reload": "Reload",
+			"search": "Search",
+			"save": "Save",
+			"show_advanced_search": "Show advanced search",
+			"show_hidden": "Show hidden",
+			"submit": "Submit",
+			"submitting": "Submitting",
+			"title": "Actions"
+		},
+		"common": {
+			"author": "Author",
+			"field": "Field",
+			"language": "Language",
+			"last_updated": "Last updated",
+			"none": "None",
+			"operator": "Operator",
+			"search_term": "Search term",
+			"status": "Status",
+			"title": "Title"
+		},
+		"data_grid": {
+			"active_filters": "{{number}} Active filters",
+			"cleanup": {
+				"error_count": "Error: {{count}}",
+				"selected": "Cleanup selected requests ({{count}})",
+				"skipped_count": "Not eligible: {{count}}",
+				"success_count": "Successful: {{count}}"
+			},
+			"export": {
+				"all": "Export all",
+				"all_csv": "Export all as CSV",
+				"all_tsv": "Export all as TSV",
+				"complete": "{{percentage}} complete",
+				"current": "Export current page as CSV",
+				"failed": "The data grid export has failed. Please try again.",
+				"success": "Successfully exported {{count}} records from the data grid.",
+				"filtered": "Export filtered",
+				"modal_title": "Exporting data",
+				"print": "Print current page",
+				"records": "Exporting {{count}} records from the data grid."
+			},
+			"filters": {
+				"active_description": "{{length}} filter(s) active: {{description}}",
+				"between": "Between",
+				"days_from": "Days from",
+				"days_to": "Days to",
+				"equals": "Equals",
+				"from": "From",
+				"greater_than_exclusive": "Greater than",
+				"greater_than_inclusive": "Greater than or equal to",
+				"last_thirty_days": "Last 30 days",
+				"last_ninety_days": "Last 90 days",
+				"less_than_exclusive": "Less than",
+				"less_than_inclusive": "Less than or equal to",
+				"not_equal": "Does not equal",
+				"on_or_after": "On or after",
+				"on_or_before": "On or before",
+				"to": "To"
+			},
+			"edit_summary": "Edit {{entity}}",
+			"find_column": "Find column",
+			"columns": "Columns",
+			"delete_body": "This {{entity}} will be permanently deleted.",
+			"delete_body_library": "The library details and all its contacts and group memberships will be permanently deleted.",
+			"delete_header": "Delete {{entity}} {{name}}",
+			"edit_url": "Enter a valid URL",
+			"open": "Open",
+			"master_detail": "Master detail",
+			"no_data": "No data available"
+		},
+		"feedback": {
+			"complete": "{{percentage}} complete",
+			"disabled": "Disabled",
+			"enabled": "Enabled",
+			"error": {
+				"cannot_process": "We could not process that operation, so we have reset the data grid options.",
+				"cannot_retrieve_record": "Unable to retrieve the record",
+				"cannot_find_record": "Unable to find the record",
+				"fetching": "Error fetching value",
+				"fetch_items_aggregated": "Failed to fetch live availability information for the following {{count}} bib record(s): {{bibs}} at the libraries: {{libraries}}",
+				"general": "Something went wrong",
+				"invalid_UUID": "The record might have been deleted or the identifier could be wrong",
+				"loading": "Error loading {{entity}}",
+				"loading_message": "An error has occurred loading this page",
+				"reload_message": "Reloading the page will often clear this. If it keeps happening, contact your library administrator.",
+				"too_long_load": "The record is taking too long to load"
+			},
+			"info": {
+				"general": "Information"
+			},
+			"maintenance": "Maintenance in progress",
+			"maintenance_message": "OpenRS DCB is undergoing maintenance, and DCB Admin for Libraries will be back soon!",
+			"network_error": "Network error detected",
+			"network_error_message": "This doesn't seem to be working at the moment. Please check your network and reload the page",
+			"not_found": "Page not found",
+			"not_found_description": "We could not match {{path}} to a page. The address may be mistyped, or the page may have been moved or deleted.",
+			"not_found_message": "That page does not exist",
+			"not_set": "Not set",
+			"please_wait": "Please wait",
+			"reveal_more": "and {{number}} more",
+			"show_less": "Show less",
+			"show_more": "Show more",
+			"warning": {
+				"general": "Warning"
+			}
+		},
+		"info": {
+			"contact": "contact",
+			"coming_soon": "This page is not available yet",
+			"connection_issue": "There may be a connection issue",
+			"correct_as_of": "Status correct as of",
+			"description": "Description: {{description}}",
+			"loading": {
+				"document": "Loading {{document_type}}"
+			},
+			"reload": "Try reloading the page",
+			"try_later": "Please try again later",
+			"wait": "Please wait",
+			"check_address": "Please check the web address",
+			"oldest_entry": "This is the oldest audit entry in the log.",
+			"newest_entry": "This is the most recent audit entry in the log."
+		},
+		"logout": {
+			"again": "Log in again",
+			"failure": "We have encountered an error during logout. Please try again.",
+			"out": "Logged out",
+			"out_current": "Logging you out",
+			"out_progress": "Please wait while we sign you out securely...",
+			"success": "You have successfully logged out from DCB Admin for Libraries. We hope to see you again soon!"
+		},
+		"tooltips": {
+			"logo": "Click this logo to go to the home page"
+		},
+		"unsaved_changes": {
+			"keep_editing": "Keep editing"
+		},
+		"validation": {
+			"locations": {
+				"lat": "Enter the latitude: a number between -90 and 90.",
+				"long": "Enter the longitude: a number between -180 and 180",
+				"local_id_folio": "FOLIO service point ID must be a valid UUID.",
+				"local_id_polaris": "Polaris org ID must be a non-negative integer",
+				"local_id_sierra": "Sierra location ID must be a non-negative integer"
+			},
+			"invalid_email": "Please supply a valid email.",
+			"max_length": "This field has a maximum length of {{length}} characters",
+			"required": "Enter the {{field}}.",
+			"case_sensitive": "{{field}} is case sensitive"
+		}
+	},
+	"welcome": {
+		"background": "Thank you for participating in the DCB Admin for Libraries pre-release! DCB Admin for Libraries is an all-new part of the DCB experience, tailored to the tasks library staff do every day. Expect this pre-release to change constantly as we add new functionality and continue to improve the product. You can provide feedback <linkComponent>here</linkComponent>.",
+		"library": "Library information for {{library}}",
+		"library_short": "Your library information",
+		"title": "Welcome to DCB Admin for {{library}}, {{name}}."
+	},
+	"workflows": {
+		"RET-STD": "Standard",
+		"RET-EXP": "Walk-up",
+		"RET-PUA": "Pickup anywhere",
+		"RET-LOCAL": "Local"
+	},
+	"insights": {
+		"title": "Library insights",
+		"subtitle": "Requesting activity, fulfilment and value for {{library}}.",
+		"loading": "Loading insights",
+		"no_host_lms": "This library has no associated Host LMS, so insights cannot be shown.",
+		"no_data": "No data for the selected period.",
+		"duration": {
+			"days": "{{value}} days",
+			"hours": "{{value}} hrs",
+			"minutes": "{{value}} min",
+			"none": "—"
+		},
+		"range": {
+			"label": "Time range",
+			"7d": "7 days",
+			"30d": "30 days",
+			"90d": "90 days",
+			"365d": "1 year",
+			"from": "From",
+			"to": "To"
+		},
+		"kpi": {
+			"vs_prior": "vs previous period",
+			"fill_rate": {
+				"title": "Fill rate"
+			},
+			"error_rate": {
+				"title": "Error rate"
+			},
+			"time_to_loan": {
+				"title": "Median time to loan",
+				"subtitle": "p50 · p95 {{p95}}"
+			},
+			"resolved": {
+				"title": "Requests resolved",
+				"subtitle": "completed or failed"
+			},
+			"cost_avoidance": {
+				"title": "Estimated cost avoided",
+				"basis": "Based on {{count}} successful fulfilments",
+				"input_label": "Cost per ILL",
+				"input_help": "Your own average interlibrary loan cost"
+			},
+			"checkout_rate": {
+				"title": "Checkout rate",
+				"subtitle": "{{reached}} of {{total}} reached the shelf"
+			},
+			"total_borrows": {
+				"title": "Total borrows",
+				"subtitle": "requests placed as borrower"
+			},
+			"total_lends": {
+				"title": "Total lends",
+				"subtitle": "items supplied to the network"
+			},
+			"rescued": {
+				"title": "Requests rescued",
+				"subtitle": "fulfilled after re-resolution"
+			},
+			"unique_titles": {
+				"title": "Unique titles requested",
+				"subtitle": "across {{total}} requests"
+			}
+		},
+		"charts": {
+			"status_flow": {
+				"title": "Requesting activity over time",
+				"subtitle": "Requests entering each status per period. Pick the statuses to plot.",
+				"picker_label": "Choose which statuses to plot"
+			},
+			"failure_taxonomy": {
+				"title": "Why requests fail",
+				"subtitle": "Failed requests broken down by reason.",
+				"series": "Failed requests"
+			},
+			"supplier_reliability": {
+				"title": "Supplier reliability",
+				"subtitle": "Fulfilled versus failed requests per supplying library.",
+				"fulfilled": "Fulfilled",
+				"failed": "Failed"
+			},
+			"net_flow": {
+				"title": "Borrowing vs supplying",
+				"subtitle": "Reciprocity across the network — net givers and takers.",
+				"borrowed": "Borrowed",
+				"supplied": "Supplied"
+			},
+			"rare_gem": {
+				"title": "Unique collection value",
+				"subtitle": "Requested titles that only this library supplies to the network.",
+				"col_title": "Title",
+				"col_author": "Author",
+				"col_requests": "Requests"
+			},
+			"time_in_status": {
+				"title": "Where requests stall",
+				"subtitle": "Median time spent in each status — the biggest bottleneck first.",
+				"series": "Median dwell",
+				"axis_hours": "Hours"
+			},
+			"supplier_response": {
+				"title": "Supplier responsiveness",
+				"subtitle": "Median time from request placed to supplier confirmation, per lender.",
+				"series": "Median response",
+				"axis_hours": "Hours"
+			},
+			"demand_heatmap": {
+				"title": "When requests arrive",
+				"subtitle": "Request volume by day of week and hour of day (server time zone)."
+			},
+			"demand_by_format": {
+				"title": "Demand by format",
+				"subtitle": "Requesting volume by material format.",
+				"series": "Requests"
+			},
+			"top_titles": {
+				"title": "Most requested titles",
+				"subtitle": "The titles the network asks for most.",
+				"col_title": "Title",
+				"col_requests": "Requests"
+			},
+			"demand_by_pickup": {
+				"title": "Demand by pickup location",
+				"subtitle": "Where patrons collect their requests.",
+				"series": "Requests"
+			},
+			"demand_by_patron_group": {
+				"title": "Demand by patron group",
+				"subtitle": "Which patron categories drive requesting.",
+				"series": "Requests"
+			},
+			"unmet_local": {
+				"title": "Unmet local demand",
+				"subtitle": "Titles your own patrons requested but you do not hold.",
+				"col_supplied": "Supplied"
+			},
+			"acquisition_opportunities": {
+				"title": "Acquisition opportunities",
+				"subtitle": "Highly requested titles across the network that you do not hold.",
+				"col_supplied": "Supplied"
+			},
+			"consortial_lifeline": {
+				"title": "Consortial lifeline",
+				"subtitle": "Titles you uniquely keep flowing to the network.",
+				"col_supplied": "Supplied"
+			},
+			"peer_benchmark": {
+				"title": "Peer benchmarking",
+				"subtitle": "Each library vs the consortium median (fill {{fill}}, checkout {{checkout}}).",
+				"col_library": "Library",
+				"col_requests": "Requests",
+				"col_checkout": "Checkout rate",
+				"col_fill": "Fill rate",
+				"your_library": "(your library)"
+			},
+			"collection_dimension": {
+				"title": "Collection analysis",
+				"subtitle": "Requesting demand sliced by a bibliographic dimension.",
+				"select_label": "Dimension",
+				"series": "Requests",
+				"dim_format": "Format",
+				"dim_language": "Language",
+				"dim_subject": "Subject",
+				"dim_decade": "Publication decade"
+			},
+			"new_acquisitions": {
+				"title": "New acquisitions performance",
+				"subtitle": "How your recently-added titles perform in the network.",
+				"acquired_since": "Acquired since",
+				"col_supplied": "Supplied"
+			}
+		},
+		"panel": {
+			"retry": "Retry",
+			"failed": "This panel could not be loaded."
+		},
+		"announce": {
+			"view": "Showing {{range}}."
+		},
+		"durations": {
+			"title": "How long things take",
+			"subtitle": "Median and 95th percentile, for the legs this deployment reports.",
+			"to_loan": "Time to loan",
+			"to_finalise": "Time to finalise",
+			"supplier_response": "My response time",
+			"transit_out": "Transit, outbound",
+			"transit_back": "Transit, return",
+			"pair": "p50 {{p50}} · p95 {{p95}}",
+			"median": "median {{value}}",
+			"sample": "· {{count}} observations",
+			"not_reported": "Not reported by this system"
+		},
+		"headline": {
+			"filled": "{{rate}}% filled",
+			"patron_waited": "My patron waited",
+			"supplied": "Items I supplied",
+			"my_response": "My response time",
+			"my_response_sub": "Placed at me, to confirmed by me",
+			"net_flow": "Net flow",
+			"net_lender": "Net lender",
+			"net_borrower": "Net borrower",
+			"more": "More measures"
+		},
+		"method": {
+			"trigger": "How {{label}} is calculated",
+			"title": "How {{label}} is calculated",
+			"part": {
+				"what": "What it counts",
+				"how": "How it is computed",
+				"not": "What it does not include",
+				"data": "How much data"
+			},
+			"sample": "{{count}} observations in this window.",
+			"sample_low": "Only {{count}} observations in this window - a single outlier moves this figure.",
+			"sample_unknown": "This endpoint reports percentiles without a count, so how many requests are behind this figure is not known here.",
+			"requests_fulfilled": {
+				"what": "Requests that reached a settled outcome in the window, whether they were filled or not.",
+				"how": "The successful and failed counts from the borrower fulfilment query, added together. Successful means the request reached loaned, completed or finalised.",
+				"not": "Requests still in flight when the window closed are in neither count, so a busy week looks smaller until its requests settle."
+			},
+			"fill_rate": {
+				"what": "The share of settled requests that reached the patron.",
+				"how": "Successful divided by successful plus failed, over the same window. The delta compares it with the equal-length window immediately before.",
+				"not": "It says nothing about how long the fill took, and nothing about requests still open. A service that fills everything slowly scores the same as one that fills everything quickly."
+			},
+			"error_rate": {
+				"what": "The share of settled requests that did not reach the patron.",
+				"how": "The exact complement of the fill rate: one minus successful over successful plus failed.",
+				"not": "It does not separate a cancellation from a breakdown. The failure taxonomy panel answers why; this only answers how often."
+			},
+			"libraries_active": {
+				"what": "Members that borrowed or supplied at least once in the window.",
+				"how": "One row per Host LMS from the net flow query, counting those whose borrowed and supplied counts do not both sit at zero.",
+				"not": "It counts Host LMS systems, not libraries. Where several libraries share one system they cannot be told apart here, so a shared system counts once however many members sit behind it."
+			},
+			"net_flow": {
+				"what": "Whether this library gave the network more than it took.",
+				"how": "Items supplied to other members minus items borrowed from them, over the window. Errored requests are excluded from both sides.",
+				"not": "It is a count of requests, not of value or of effort, and it says nothing about which titles moved."
+			},
+			"items_supplied": {
+				"what": "Requests this library filled for another member's patron.",
+				"how": "Requests whose supplying Host LMS is this library, excluding errored ones.",
+				"not": "Local fulfilment is excluded: an item this library supplied to its own patron is not network traffic."
+			},
+			"turnaround_to_loan": {
+				"what": "How long a patron waits between asking for an item and being issued it.",
+				"how": "Median and 95th percentile of the interval from request creation to the first audit entry reaching loaned. A status re-entered during tracking counts once.",
+				"not": "Requests that never reached loaned are absent, and so are those still open. A rising median can therefore mean faster failures as well as slower loans."
+			},
+			"turnaround_to_finalise": {
+				"what": "The full administrative cycle, from request to the point where nothing is left to do.",
+				"how": "Median and 95th percentile from request creation to the first audit entry reaching finalised.",
+				"not": "Finalisation trails the patron's experience by a long way - the item has usually been back on the shelf for some time - so this is an operations figure, not a service one."
+			},
+			"supplier_response": {
+				"what": "How quickly a supplying library answers a request placed with it.",
+				"how": "Median from the request being placed at the supplying agency to that supplier confirming it, using the earliest audit entry for each so a tracking repeat cannot double-count.",
+				"not": "It deliberately does not start at request creation, which would fold DCB's own resolution time into a supplier's score. Across several libraries it is one figure per supplier, so no single number is shown."
+			},
+			"transit_dwell": {
+				"what": "How long an item spends in transit on one leg of its journey.",
+				"how": "Median time between the request entering the transit status and leaving it, taken from the audit trail.",
+				"not": "It depends on the host LMS reporting the status at all. A system that never sets it produces no observation, which is shown as not reported rather than as a fast leg. A journey that began before the window opened is excluded."
+			},
+			"failure_taxonomy": {
+				"what": "Why requests failed, grouped by the reason rather than counted together.",
+				"how": "Requests that ended in error or cancellation, or whose previous status was that no item was selectable at any agency, bucketed by that reason.",
+				"not": "A request that failed and was then re-resolved successfully is not here: it succeeded. The rescued count in the header is where those appear."
+			},
+			"supplier_reliability": {
+				"what": "How often each supplying library delivered what it was asked for.",
+				"how": "Per supplier, requests that reached loaned, completed or finalised against those that errored, were cancelled, or found no selectable item.",
+				"not": "A supplier that is asked rarely can look perfect or terrible on a handful of requests, so read it with the count beside it."
+			},
+			"trading_partners": {
+				"what": "Which members this library exchanges most traffic with, in each direction.",
+				"how": "Requests grouped by the partner at the other end, excluding errored requests and local fulfilment, because a failed request is not traffic and a local loan is not a partnership.",
+				"not": "A partner is never one of the caller's own libraries. Consortium-wide there is no own set to exclude, so the lists rank every supplier and every borrower."
+			},
+			"unfillable_demand": {
+				"what": "Titles patrons asked for that nothing in the network could satisfy.",
+				"how": "Requests whose previous status was that no item was selectable at any agency, grouped by title.",
+				"not": "It is demand nobody could meet, not demand that failed for another reason - a request that errored during transit is in the failure taxonomy instead."
+			},
+			"peer_benchmarks": {
+				"what": "This library's volume and outcomes beside every other member's.",
+				"how": "One row per borrowing library, with its request count, checkouts, successes and failures over the window.",
+				"not": "It is deliberately not pseudonymised: members are named, because a benchmark nobody can act on is decoration."
+			},
+			"checkout_rate": {
+				"what": "How often an item that arrived was actually collected.",
+				"how": "Requests that reached loaned as a share of those that got far enough to be collectable.",
+				"not": "An item a patron never came for is a cost the fill rate cannot see, which is why this sits beside it rather than inside it."
+			},
+			"cost_avoidance": {
+				"what": "What these fulfilments would have cost through traditional interlibrary loan.",
+				"how": "Successful fulfilments in the window multiplied by a unit cost you supply. No cost is shipped with the product.",
+				"not": "It is an assumption multiplied by a count, not a measurement. The count is ours; the unit cost is yours, and the figure is only as defensible as that number."
+			}
+		}
+	}
 }
