@@ -160,6 +160,37 @@ test.describe("Insights panel states", () => {
     await expect(trigger).toBeFocused();
   });
 
+  test("a link carries the whole view, and survives a reload", async ({
+    page,
+  }) => {
+    // The thing that did not work before: this URL opened on somebody else's default,
+    // because the range and the plotted series lived in a store.
+    await page.goto("/insights?range=90d&series=LOANED&unitCost=17.5");
+
+    const live = page.locator('[aria-live="polite"]');
+    await expect(live).toHaveText("Showing 90 days.");
+
+    await page.reload();
+    await expect(live).toHaveText("Showing 90 days.");
+
+    await page.getByRole("button", { name: "7 days" }).click();
+    await expect(page).toHaveURL(/range=7d/);
+    await expect(live).toHaveText("Showing 7 days.");
+  });
+
+  test("a junk URL degrades to a view rather than an error", async ({
+    page,
+  }) => {
+    await page.goto("/insights?range=forever&from=last%20tuesday&series=%3C%3E");
+
+    await expect(page.locator('[aria-live="polite"]')).toHaveText(
+      "Showing 30 days.",
+    );
+    await expect(
+      page.getByRole("heading", { level: 1, name: /insights/i }),
+    ).toBeVisible();
+  });
+
   test("the range change is announced", async ({ page }) => {
     await page.goto("/insights");
 

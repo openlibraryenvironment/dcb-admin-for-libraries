@@ -17,17 +17,30 @@ import { useInsightsCostStore } from "@/hooks/insightsCostStore";
 // the backend never ships a "traditional ILL cost".
 export default function CostAvoidanceTile({
   fulfilled,
+  unitCost,
+  onUnitCostChange,
   loading = false,
 }: {
   fulfilled: number;
+  unitCost: number | null;
+  onUnitCostChange: (cost: number | null) => void;
   loading?: boolean;
 }) {
   const { t } = useTranslation();
 
   // Atomic selectors.
-  const illUnitCost = useInsightsCostStore((s) => s.illUnitCost);
+  // The store is the per-user default for a fresh visit; the URL is what a shared link
+  // carries, because this is the figure most likely to end up in a board pack and a link
+  // that shows the recipient a different number is worse than no link.
+  const storedCost = useInsightsCostStore((s) => s.illUnitCost);
   const currencySymbol = useInsightsCostStore((s) => s.currencySymbol);
-  const setIllUnitCost = useInsightsCostStore((s) => s.setIllUnitCost);
+  const setStoredCost = useInsightsCostStore((s) => s.setIllUnitCost);
+
+  const illUnitCost = unitCost ?? storedCost;
+  const setIllUnitCost = (cost: number | null) => {
+    setStoredCost(cost);
+    onUnitCostChange(cost);
+  };
 
   const avoidance =
     illUnitCost != null && illUnitCost >= 0 ? fulfilled * illUnitCost : null;

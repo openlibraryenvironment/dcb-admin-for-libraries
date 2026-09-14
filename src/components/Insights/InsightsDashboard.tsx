@@ -18,7 +18,6 @@ import dayjs from "dayjs";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
-import { useInsightsPlotStore, RangePreset } from "@/hooks/insightsPlotStore";
 import {
   ConsortialLifelineStat,
   PatronGroupDemandStat,
@@ -65,6 +64,9 @@ import { visuallyHidden } from "@mui/utils";
 
 import { ExpandMore } from "@mui/icons-material";
 
+import type { InsightsView } from "@/hooks/useInsightsView";
+import type { RangePreset } from "@helpers/insightsSearch";
+
 const RANGE_PRESETS: RangePreset[] = ["7d", "30d", "90d", "365d"];
 
 function fillRate(successful: number, failed: number): number | null {
@@ -74,20 +76,22 @@ function fillRate(successful: number, failed: number): number | null {
 
 export default function InsightsDashboard({
   libraryCode,
+  view,
 }: {
   // Always the signed-in user's own library. This app has no consortium-wide
   // scope and no library picker: the code is derived from the access token's
   // agency claim by the route, never chosen in the UI.
   libraryCode: string;
+  /** The view as the URL states it, and the writers that change it. */
+  view: InsightsView;
 }) {
   const { t } = useTranslation();
   const client = useDcbRestClient();
   const { categorical } = useChartPalette();
 
-  const rangePreset = useInsightsPlotStore((s) => s.rangePreset);
-  const setRangePreset = useInsightsPlotStore((s) => s.setRangePreset);
-  const customRange = useInsightsPlotStore((s) => s.customRange);
-  const setCustomRange = useInsightsPlotStore((s) => s.setCustomRange);
+  const { range: rangePreset, custom: customRange } = view;
+  const setRangePreset = view.setRange;
+  const setCustomRange = view.setCustomRange;
 
   const { params, interval } = useMemo(() => {
     // An explicit custom window wins over the preset.
@@ -369,6 +373,8 @@ export default function InsightsDashboard({
                 measured figures it borrowed a confidence it has not earned. */}
             <CostAvoidanceTile
               fulfilled={d?.fulfillmentCurrent.successfulCount ?? 0}
+              unitCost={view.unitCost}
+              onUnitCostChange={view.setUnitCost}
               loading={loading}
             />
           </Box>
@@ -382,7 +388,7 @@ export default function InsightsDashboard({
       />
 
       {/* Trend spine + plot-builder */}
-      <StatusFlowChart params={params} interval={interval} />
+      <StatusFlowChart params={params} interval={interval} view={view} />
 
       {/* Peer benchmarking - this library vs the consortium median */}
       <LazyPanel minHeight={320}>

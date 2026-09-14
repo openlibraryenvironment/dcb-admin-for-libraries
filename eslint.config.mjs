@@ -61,6 +61,23 @@ export default defineConfig(
 					message:
 						"A console message must be a plain string literal. Interpolating a value is how PII reaches the console.",
 				},
+				// The Insights view belongs in the URL. The range and the plotted series
+				// were held in a Zustand store, so a link to "last quarter, plotting these
+				// statuses" opened on somebody else's default. These two catch the next
+				// piece of dashboard state reaching for the same place. insightsCostStore
+				// is deliberately NOT banned: it is the per-user default for a fresh visit,
+				// and the tile writes the assumption through to the URL.
+				{
+					selector:
+						"CallExpression[callee.name='useState'] > Literal[value=/^(7d|30d|90d|365d)$/]",
+					message:
+						"A time range is part of the view: put it in the URL (insightsSearch.ts), not in component state.",
+				},
+				{
+					selector: "ImportDeclaration[source.value=/insightsPlotStore/]",
+					message:
+						"insightsPlotStore was deleted: the range and the plotted series live in the URL now. See insightsSearch.ts.",
+				},
 			],
 		},
 	},
