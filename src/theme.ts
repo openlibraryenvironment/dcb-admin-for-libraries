@@ -1,6 +1,7 @@
 import { createTheme } from "@mui/material/styles";
 import { red } from "@mui/material/colors";
 import type {} from "@mui/x-data-grid/themeAugmentation";
+import { SCROLL_PADDING_TOP } from "@helpers/stickyOffsets";
 
 // The DCB Admin for Libraries custom theme. Make it configurable and switchable.
 const theme = createTheme({
@@ -8,6 +9,21 @@ const theme = createTheme({
 		colorSchemeSelector: "data",
 	},
 	components: {
+		MuiCssBaseline: {
+			styleOverrides: {
+				html: {
+					// WCAG 2.2 2.4.11 Focus Not Obscured. The browser scrolls a focused
+					// element to the top of the scrollport knowing nothing about what is
+					// painted over it, which on Insights is a sticky subject bar. One
+					// number, shared with the bar that has to sit at the same offset -
+					// see helpers/stickyOffsets. Set globally rather than per page: a
+					// page without the bar scrolls 49px further than it needs to, which
+					// nobody notices, and the alternative is a value that is right on one
+					// route and wrong on the rest.
+					scrollPaddingTop: `${SCROLL_PADDING_TOP}px`,
+				},
+			},
+		},
 		MuiAccordion: {
 			defaultProps: {
 				slotProps: { transition: { timeout: 400 } },

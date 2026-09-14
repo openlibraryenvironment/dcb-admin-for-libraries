@@ -89,6 +89,20 @@ async function scrollUntilPresent(
 		.toBeGreaterThan(0);
 }
 
+/**
+ * Every subject, and the heading that proves its last panel has mounted.
+ *
+ * Waiting on a NAMED heading rather than a count is what makes the reveal
+ * deterministic: the panel either mounted or the test says which one did not.
+ */
+const INSIGHTS_SUBJECTS = [
+	{ subject: "trends", lastPanel: "Requesting activity over time" },
+	{ subject: "service", lastPanel: "Supplier responsiveness" },
+	{ subject: "demand", lastPanel: "Demand by patron group" },
+	{ subject: "partners", lastPanel: "Borrowing vs supplying" },
+	{ subject: "gaps", lastPanel: RARE_GEM },
+] as const;
+
 const PAGES: Surface[] = [
 	{
 		// The library profile: the biggest FORM in the app and the only surface where an
@@ -147,50 +161,53 @@ const PAGES: Surface[] = [
 			await expect(page.getByRole("radiogroup")).toBeVisible();
 		},
 	},
-	{
-		// Insights is the chart-heavy surface, and charts are where contrast
-		// failures hide: series colours, axis ticks and legend swatches are all
-		// painted from the palette rather than the theme's text tokens, and a
-		// palette that clears AA on the light ground routinely fails on the dark
-		// one. Scanned with populated data (see DEFAULT_STATS) so the charts are
-		// actually drawn - an empty state would pass this gate without testing
-		// anything it exists to test.
-		name: "insights",
-		path: "/insights",
-		prepare: async (app) => {
-			await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
-			await app.signIn();
-			await app.mockGraphQL({
-				LoadLibrary: library,
-				LoadLibraryBasics: library,
-			});
-			await app.mockStats();
-		},
-		// InsightsDashboard wraps nineteen panels in LazyPanel. Without this the scan
-		// saw the KPI header and nothing else: every chart, table and heading below
-		// the fold was unmounted, so the WCAG gate passed over most of the page it
-		// exists to cover. Charts are where a palette actually fails contrast.
-		reveal: (page) =>
-			scrollUntilPresent(page, page.getByRole("heading", { name: RARE_GEM })),
-		ready: async (page) => {
-			await expect(
-				page.getByRole("heading", { level: 1, name: /insights/i }),
-			).toBeVisible();
-			// The KPI header is fed by the one combined /stats/dashboard call, so a
-			// rendered figure means the page got past its loader rather than being
-			// caught mid-skeleton. `.first()` because the same fill rate legitimately
-			// appears again in the peer-benchmark table further down - which it could
-			// not do before `reveal`, and which is itself a sign the scroll worked.
-			await expect(page.getByText("89.4%").first()).toBeVisible();
-			// ...and the LAST panel on the page, which is what proves the scroll
-			// actually mounted the deferred half rather than merely running. It is
-			// unconditional (RareGemPanel, always rendered), so this cannot pass
-			// vacuously the way a conditional panel would.
-			await expect(
-				page.getByRole("heading", { name: RARE_GEM }),
-			).toBeVisible();
-		},
-	},
+	...INSIGHTS_SUBJECTS.map(
+		({ subject, lastPanel }): Surface => ({
+			// Insights is the chart-heavy surface, and charts are where contrast
+			// failures hide: series colours, axis ticks and legend swatches are all
+			// painted from the palette rather than the theme's text tokens, and a
+			// palette that clears AA on the light ground routinely fails on the dark
+			// one. Scanned with populated data (see DEFAULT_STATS) so the charts are
+			// actually drawn - an empty state would pass this gate without testing
+			// anything it exists to test.
+			//
+			// ONE SCAN PER SUBJECT. A subject that is not open does not render, so a
+			// scan of the default view would cover a fifth of the feature and report
+			// clean - the same failure this gate exists to prevent, wearing a new shape.
+			name: `insights - ${subject}`,
+			path: `/insights?tab=${subject}`,
+			prepare: async (app) => {
+				await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+				await app.signIn();
+				await app.mockGraphQL({
+					LoadLibrary: library,
+					LoadLibraryBasics: library,
+				});
+				await app.mockStats();
+			},
+			// The open subject still wraps its panels in LazyPanel. Without this the
+			// scan saw the KPI header and nothing else: every chart, table and heading
+			// below the fold was unmounted, so the WCAG gate passed over most of what
+			// it exists to cover.
+			reveal: (page) =>
+				scrollUntilPresent(page, page.getByRole("heading", { name: lastPanel })),
+			ready: async (page) => {
+				await expect(
+					page.getByRole("heading", { level: 1, name: /insights/i }),
+				).toBeVisible();
+				// The KPI header is fed by the one combined /stats/dashboard call, so a
+				// rendered figure means the page got past its loader rather than being
+				// caught mid-skeleton. `.first()` because the same fill rate can
+				// legitimately appear again further down the open subject.
+				await expect(page.getByText("89.4%").first()).toBeVisible();
+				// ...and the LAST panel of this subject, which is what proves the scroll
+				// mounted the deferred half rather than merely running.
+				await expect(
+					page.getByRole("heading", { name: lastPanel }),
+				).toBeVisible();
+			},
+		}),
+	),
 	{
 		// The surface a mistyped or stale link lands on. It is reached by
 		// accident rather than chosen, so it is the last page that should be

@@ -898,6 +898,22 @@
 		"RET-LOCAL": "Local"
 	},
 	"insights": {
+		"sections": {
+			"overview": "Overview",
+			"trends": "Trends",
+			"performance": "Service performance",
+			"demand": "Demand",
+			"partners": "Trading partners",
+			"gaps": "Collection gaps and supply value"
+		},
+		"subjects": {
+			"label": "Insights subjects",
+			"trends": "Trends",
+			"service": "Service",
+			"demand": "Demand",
+			"partners": "Partners",
+			"gaps": "Gaps"
+		},
 		"title": "Library insights",
 		"subtitle": "Requesting activity, fulfilment and value for {{library}}.",
 		"loading": "Loading insights",

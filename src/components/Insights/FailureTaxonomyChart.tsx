@@ -32,7 +32,7 @@ export default function FailureTaxonomyChart({
     <Card variant="outlined">
       <CardContent>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <Typography variant="h6" component="h2">
+          <Typography variant="h6" component="h3">
             {t("insights.charts.failure_taxonomy.title")}
           </Typography>
           <MetricInfo

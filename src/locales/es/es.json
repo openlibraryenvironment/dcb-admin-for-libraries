@@ -15,6 +15,22 @@
 		"title": "Índice compartido"
 	},
 	"insights": {
+		"sections": {
+			"overview": "Resumen",
+			"trends": "Tendencias",
+			"performance": "Rendimiento del servicio",
+			"demand": "Demanda",
+			"partners": "Socios de intercambio",
+			"gaps": "Lagunas de la colección y valor de suministro"
+		},
+		"subjects": {
+			"label": "Temas de Insights",
+			"trends": "Tendencias",
+			"service": "Servicio",
+			"demand": "Demanda",
+			"partners": "Socios",
+			"gaps": "Lagunas"
+		},
 		"panel": {
 			"retry": "Reintentar",
 			"failed": "No se ha podido cargar este panel."

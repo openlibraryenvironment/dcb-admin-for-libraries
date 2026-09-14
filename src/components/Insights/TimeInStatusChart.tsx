@@ -32,7 +32,7 @@ export default function TimeInStatusChart({ params }: { params: StatsParams }) {
     <Card variant="outlined">
       <CardContent>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <Typography variant="h6" component="h2">
+          <Typography variant="h6" component="h3">
             {t("insights.charts.time_in_status.title")}
           </Typography>
           <MetricInfo

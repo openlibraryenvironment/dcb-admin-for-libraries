@@ -29,7 +29,7 @@ const FAILING_PANEL = "**/insights/failure-taxonomy**";
  */
 const cardFor = (page: Page, heading: string) =>
   page
-    .getByRole("heading", { level: 2, name: heading })
+    .getByRole("heading", { level: 3, name: heading })
     .locator("xpath=ancestor::div[contains(@class,'MuiCard-root')][1]");
 
 /**
@@ -37,7 +37,7 @@ const cardFor = (page: Page, heading: string) =>
  * IntersectionObserver fires, so the heading does not exist to be scrolled to.
  */
 async function reveal(page: Page, heading: string) {
-  const target = page.getByRole("heading", { level: 2, name: heading });
+  const target = page.getByRole("heading", { level: 3, name: heading });
 
   for (let i = 0; i < 14 && !(await target.isVisible()); i++) {
     await page.mouse.wheel(0, 1200);
@@ -70,7 +70,7 @@ test.describe("Insights panel states", () => {
       });
     });
 
-    await page.goto("/insights");
+    await page.goto("/insights?tab=service");
     await reveal(page, "Why requests fail");
 
     const panel = cardFor(page, "Why requests fail");
@@ -96,7 +96,7 @@ test.describe("Insights panel states", () => {
       await route.fulfill({ json: [] });
     });
 
-    await page.goto("/insights");
+    await page.goto("/insights?tab=service");
     await reveal(page, "Why requests fail");
 
     const panel = cardFor(page, "Why requests fail");
@@ -120,7 +120,7 @@ test.describe("Insights panel states", () => {
   test("the durations panel names both transit legs, and says when one is unreported", async ({
     page,
   }) => {
-    await page.goto("/insights");
+    await page.goto("/insights?tab=service");
     await reveal(page, "How long things take");
 
     const panel = cardFor(page, "How long things take");
@@ -200,5 +200,61 @@ test.describe("Insights panel states", () => {
 
     await page.getByRole("button", { name: "7 days" }).click();
     await expect(live).toHaveText("Showing 7 days.");
+  });
+});
+
+test.describe("Insights subjects", () => {
+  test.beforeEach(async ({ app }) => {
+    await app.signIn();
+    await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+    await app.mockGraphQL(mocks);
+    await app.mockStats();
+  });
+
+  test("is one h1, then the open subject's sections, then its panels", async ({
+    page,
+  }) => {
+    await page.goto("/insights?tab=partners");
+
+    // A screen-reader user navigates this page by heading. The open subject's sections
+    // are the outline; the ones that are not open must not be in it, or the outline
+    // promises content that is not on the page.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+
+    expect(await page.getByRole("heading", { level: 2 }).allTextContents()).toEqual([
+      "Overview",
+      "More measures",
+      "Trading partners",
+    ]);
+  });
+
+  test("the subjects are links, and the open one says so", async ({ page }) => {
+    await page.goto("/insights?tab=demand");
+
+    const nav = page.getByRole("navigation", { name: "Insights subjects" });
+
+    // Links, not tabs: the layout already owns the application's tab strip, and a
+    // second tablist inside the panel of the first gives a keyboard user two sets of
+    // arrow keys with no way to tell which has focus.
+    await expect(nav.getByRole("link")).toHaveCount(5);
+    await expect(nav.getByRole("link", { name: "Demand" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    // The sixth subject belongs to DCB Admin: the collection-analysis endpoints
+    // describe the consortium's catalogue, and this app has no panels for them.
+    await expect(nav.getByRole("link", { name: "Collection" })).toHaveCount(0);
+  });
+
+  test("a subject this app does not offer falls back rather than blanking", async ({
+    page,
+  }) => {
+    // A link copied from DCB Admin, which has a sixth subject.
+    await page.goto("/insights?tab=collection");
+
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Trends" }),
+    ).toBeVisible();
   });
 });
