@@ -901,6 +901,10 @@
 		"RET-LOCAL": "Local"
 	},
 	"insights": {
+		"export": {
+			"csv": "Download {{panel}} as CSV",
+			"this_library": "This library"
+		},
 		"trends": {
 			"strip": {
 				"title": "Is it getting better or worse?",

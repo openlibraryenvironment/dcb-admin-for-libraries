@@ -15,6 +15,10 @@
 		"title": "Índice compartido"
 	},
 	"insights": {
+		"export": {
+			"csv": "Descargar {{panel}} en CSV",
+			"this_library": "Esta biblioteca"
+		},
 		"trends": {
 			"strip": {
 				"title": "¿Está mejorando o empeorando?",

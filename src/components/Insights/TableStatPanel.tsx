@@ -3,7 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 
 import PanelState from "./PanelState";
+import PanelExport from "./PanelExport";
 import {
+  Box,
   Card,
   CardContent,
   Typography,
@@ -21,6 +23,14 @@ export interface StatColumn<T> {
   headerKey: string;
   align?: "left" | "right";
   cell: (row: T) => ReactNode;
+  /**
+   * The same value as plain text, for the CSV.
+   *
+   * Separate from `cell` because a cell is a ReactNode and a file cannot hold one. Where it
+   * is omitted the column is left out of the export rather than guessed at: a column of
+   * "[object Object]" is worse than a column that is not there.
+   */
+  text?: (row: T) => string | number | null | undefined;
 }
 
 interface TableStatPanelProps<T> {
@@ -54,9 +64,21 @@ export default function TableStatPanel<T>({
   return (
     <Card variant="outlined">
       <CardContent>
-        <Typography variant="h6" component="h3" gutterBottom>
-          {t(titleKey)}
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <Typography variant="h6" component="h3" gutterBottom>
+            {t(titleKey)}
+          </Typography>
+          <PanelExport
+            rows={rows}
+            panel={t(titleKey)}
+            columns={columns
+              .filter((col) => col.text)
+              .map((col) => ({
+                header: t(col.headerKey),
+                value: col.text!,
+              }))}
+          />
+        </Box>
         <Typography variant="body2" color="text.secondary" gutterBottom>
           {t(subtitleKey)}
         </Typography>
