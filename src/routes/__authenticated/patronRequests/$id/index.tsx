@@ -34,6 +34,7 @@ import { isAgencyScopedRequestsEnabled } from "@helpers/featureFlags";
 import { getLocation } from "@queries/getLocation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
+import axios from "axios";
 import request from "graphql-request";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -384,12 +385,8 @@ function RouteComponent() {
 
 	// Mutation for updating the patron request
 	const updateMutation = useMutation({
-		mutationFn: () => {
-			return fetch(updateUrl, {
-				method: "POST",
-				headers,
-			});
-		},
+		// axios rather than fetch: fetch resolves on a 4xx/5xx, which reported every refusal as success.
+		mutationFn: () => axios.post(updateUrl, {}, { headers }),
 		onSuccess: () => {
 			// When the mutation is successful, invalidate the query to refetch the data
 			queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
@@ -402,12 +399,7 @@ function RouteComponent() {
 
 	// Mutation for cleaning up the patron request
 	const cleanupMutation = useMutation({
-		mutationFn: () => {
-			return fetch(cleanupUrl, {
-				method: "POST",
-				headers,
-			});
-		},
+		mutationFn: () => axios.post(cleanupUrl, {}, { headers }),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
 			setCleanupSuccessAlertVisibility(true);
