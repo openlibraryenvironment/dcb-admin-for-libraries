@@ -98,7 +98,9 @@ export const CleanupProgressDialog = ({
 								variant="determinate"
 								value={progress}
 								color={isCleaning ? "primary" : "success"}
-								aria-labelledby="progressOfCleanup"
+								// An aria-labelledby pointing at an id nothing renders leaves the bar
+								// with no accessible name (axe: aria-progressbar-name).
+								aria-label={t("patron_request.cleanup_in_progress")}
 								sx={{ flex: 1 }}
 								// sx={{ height: 10, borderRadius: 5 }}
 							/>
