@@ -37,6 +37,8 @@ interface CleanupProgressDialogProps {
 	successRows: any[];
 	errorRows: any[];
 	skippedRows: any[];
+	/** Refused by dcb-service because the item is not back at the supplying library. */
+	refusedRows?: any[];
 	onClose: () => void;
 }
 
@@ -50,6 +52,7 @@ export const CleanupProgressDialog = ({
 	successRows,
 	errorRows,
 	skippedRows,
+	refusedRows = [],
 	onClose,
 }: CleanupProgressDialogProps) => {
 	const { t } = useTranslation();
@@ -239,6 +242,16 @@ export const CleanupProgressDialog = ({
 									/>
 								</AccordionDetails>
 							</Accordion>
+						</Stack>
+					) : null}
+					{refusedRows?.length > 0 ? (
+						<Stack direction={"row"} spacing={1} sx={{ mt: 2 }}>
+							<WarningAmber color="warning" />
+							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+								{t("ui.data_grid.cleanup.refused_count", {
+									count: refusedRows.length,
+								})}
+							</Typography>
 						</Stack>
 					) : null}
 					{skippedRows?.length > 0 ? (

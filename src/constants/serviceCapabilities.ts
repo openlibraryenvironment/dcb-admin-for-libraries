@@ -90,6 +90,13 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		fields: {},
 	},
 	{
+		// REST behaviour again: 9.0.0 refuses an unsafe cleanup with a 409 this app reports.
+		id: "guarded_cleanup",
+		flag: "VITE_FEATURE_GUARDED_CLEANUP",
+		since: "9.0.0",
+		fields: {},
+	},
+	{
 		// Which library a patron request belongs to. PatronIdentity gained resolvedAgency
 		// in 9.0.0; before it the only recorded answer was patronHostlmsCode, which names
 		// the system rather than the library and so cannot distinguish co-tenants on a

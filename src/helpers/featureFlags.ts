@@ -14,6 +14,17 @@ const readFlag = (name: string): boolean => {
 };
 
 /**
+ * The guarded cleanup flow - dcb-service 9.0.0 and later.
+ *
+ * 9.0.0 refuses a cleanup that would delete the borrowing library's temporary records while
+ * the item is out, and says so with a 409 this app reports. 8.71.0 has no such refusal: it
+ * cleans up whatever it is asked to, so with this off the status list in
+ * isCleanupEligible is the only gate and an item that has left the library is never offered.
+ */
+export const isGuardedCleanupEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_GUARDED_CLEANUP");
+
+/**
  * Insights depends on the /insights/** endpoints, first released in dcb-service 9.0.0.
  * Enable with VITE_FEATURE_INSIGHTS=true once the environment's dcb-service is new
  * enough - an older one answers 404 to all of them.

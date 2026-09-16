@@ -8,9 +8,7 @@ import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePatronRequestExport } from "@/hooks/useExport";
-import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
 import DataGrid from "@components/DataGrid/DataGrid";
-import { CleanupProgressDialog } from "@components/DataGrid/components/CleanupProgressDialog";
 import { ExportProgressDialog } from "@components/DataGrid/components/ExportProgressDialog";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -311,7 +309,6 @@ function RouteComponent() {
 		isError: isPatronRequestError,
 		error,
 		isFetching,
-		refetch,
 	} = useQuery<PatronRequestQueryData>({
 		queryKey: [
 			"getPatronRequests",
@@ -462,15 +459,8 @@ function RouteComponent() {
 			}),
 	);
 
-	const { cleanupState, handleCleanup, handleCloseCleanup } =
-		usePatronRequestCleanup({
-			apiRef,
-			dcbApiBase,
-			headers,
-			onSuccess: () => {
-				refetch();
-			},
-		});
+	// No cleanup here: this grid lists what THIS library borrowed, and cleanup belongs to
+	// the library that supplied the request - see supplierRequests.tsx.
 	// The export must carry the same scope as the grid - it is the same data leaving
 	// the building in a file rather than on screen
 	const exportBaseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
@@ -568,8 +558,6 @@ function RouteComponent() {
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
-					enableCleanup={true}
-					onCleanup={handleCleanup}
 					onExport={handleExport}
 					isExporting={exportProgress.isExporting}
 				/>
@@ -578,21 +566,6 @@ function RouteComponent() {
 				open={exportProgress.isExporting}
 				progress={exportProgress.progress}
 				totalRecords={exportProgress.totalRecords}
-			/>
-			<CleanupProgressDialog
-				open={cleanupState.open}
-				isCleaning={cleanupState.isCleaning}
-				progress={
-					cleanupState.total > 0
-						? (cleanupState.processed / cleanupState.total) * 100
-						: 0
-				}
-				total={cleanupState.total}
-				processed={cleanupState.processed}
-				successRows={cleanupState.successRows}
-				errorRows={cleanupState.errorRows}
-				skippedRows={cleanupState.skippedRows}
-				onClose={handleCloseCleanup}
 			/>
 
 			{

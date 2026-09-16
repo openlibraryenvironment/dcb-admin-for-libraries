@@ -30,7 +30,10 @@ import {
 } from "@mui/material";
 import { getPatronIdentities } from "@queries/getPatronIdentities";
 import { getPatronRequest } from "@queries/getPatronRequest";
-import { isAgencyScopedRequestsEnabled } from "@helpers/featureFlags";
+import {
+	isAgencyScopedRequestsEnabled,
+	isGuardedCleanupEnabled,
+} from "@helpers/featureFlags";
 import { getLocation } from "@queries/getLocation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -59,7 +62,11 @@ import { Agency } from "@models/Agency";
 import { HostLMS } from "@models/HostLMS";
 import { getHostLms } from "@queries/getHostLms";
 import { getAgency } from "@queries/getAgency";
-import { cleanupStatuses } from "@constants/statuses/cleanupStatuses";
+import {
+	cleanupPatronRequest,
+	isCleanupEligible,
+} from "@helpers/cleanupPatronRequest";
+import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 import { useGridStore } from "@/hooks/useDataGridStore";
 
@@ -82,6 +89,9 @@ function RouteComponent() {
 	const [updateErrorAlertVisibility, setErrorAlertVisibility] = useState(false);
 	const [cleanupErrorAlertVisibility, setCleanupErrorAlertVisibility] =
 		useState(false);
+	const [cleanupRefusal, setCleanupRefusal] = useState<string | null>(null);
+	const { agencyCodes } = useAgencyCodes();
+	const guardedCleanup = isGuardedCleanupEnabled();
 	const headers = useMemo(
 		() => ({
 			Authorization: `Bearer ${auth.user?.access_token}`,
@@ -129,12 +139,14 @@ function RouteComponent() {
 			),
 	});
 	const patronRequest = data?.patronRequests?.content?.[0];
+	const canCleanup = isCleanupEligible(patronRequest, {
+		guarded: guardedCleanup,
+		agencyCodes,
+	});
 	const members = patronRequest?.clusterRecord?.members;
 	const queryClient = useQueryClient();
 
 	// URLs for our various operations
-	const cleanupUrl =
-		cfg.VITE_DCB_API_BASE + "/patrons/requests/" + id + "/transition/cleanup";
 	const bibClusterRecordUrl = cfg.VITE_DCB_SEARCH_BASE // This needs fixing
 		? "/requesting/" + patronRequest?.bibClusterId
 		: "";
@@ -399,10 +411,23 @@ function RouteComponent() {
 
 	// Mutation for cleaning up the patron request
 	const cleanupMutation = useMutation({
-		mutationFn: () => axios.post(cleanupUrl, {}, { headers }),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
-			setCleanupSuccessAlertVisibility(true);
+		mutationFn: () =>
+			cleanupPatronRequest(cfg.VITE_DCB_API_BASE, headers, patronRequest, {
+				refreshFirst: guardedCleanup,
+			}),
+		// A refusal is the server declining, not a transport failure, so it arrives here.
+		onSuccess: (outcome) => {
+			if (outcome.kind === "cleaned") {
+				queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
+				setCleanupSuccessAlertVisibility(true);
+				return;
+			}
+
+			setCleanupRefusal(
+				outcome.kind === "refused"
+					? (outcome.detail ?? "")
+					: t("patron_request.cleanup_not_supplier"),
+			);
 		},
 		onError: () => {
 			setCleanupErrorAlertVisibility(true);
@@ -732,9 +757,8 @@ function RouteComponent() {
 							{auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
 								<Tooltip
 									title={
-										cleanupStatuses.includes(patronRequest?.status)
-											? // Must be both request with ERROR or non-terminal state and a user with LIBRARY_ADMIN
-												t("patron_request.cleanup_info")
+										canCleanup
+											? t("patron_request.cleanup_info")
 											: t("patron_request.cleanup_disabled") // Tooltip text when disabled
 									}>
 									<span>
@@ -744,10 +768,7 @@ function RouteComponent() {
 											sx={{ marginTop: 1 }}
 											onClick={() => cleanupMutation.mutate()}
 											aria-disabled={cleanupMutation.isPending ? true : false}
-											disabled={
-												cleanupMutation.isPending ||
-												!cleanupStatuses.includes(patronRequest?.status)
-											}>
+											disabled={cleanupMutation.isPending || !canCleanup}>
 											{t("patron_request.cleanup")}
 											{cleanupMutation.isPending ? (
 												<CircularProgress
@@ -760,6 +781,16 @@ function RouteComponent() {
 									</span>
 								</Tooltip>
 							) : null}
+							<TimedAlert
+								open={cleanupRefusal !== null}
+								severityType="warning"
+								autoHideDuration={10000}
+								alertText={t("patron_request.cleanup_refused", {
+									detail: cleanupRefusal ?? "",
+								})}
+								key="cleanup-refused-alert"
+								onCloseFunc={() => setCleanupRefusal(null)}
+							/>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.next_expected_status")}>
