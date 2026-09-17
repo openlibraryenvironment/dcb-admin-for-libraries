@@ -22,6 +22,7 @@ import { RefObject, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NoResultsOverlay } from "./components/NoResultsOverlay";
 import { useNavigate } from "@tanstack/react-router";
+import { appUrl } from "@helpers/appBase";
 import {
 	expandedFilterPanelTypes,
 	nonClickableTypes,
@@ -155,20 +156,20 @@ export default function DataGrid({
 					if (type == "audits") {
 						if (event.ctrlKey || event.metaKey) {
 							window.open(
-								`/patronRequests/audits/${params?.row?.id}`,
+								appUrl(`/patronRequests/audits/${params?.row?.id}`),
 								"_blank",
 							);
 						} else {
 							navigate({ to: `/patronRequests/audits/${params?.row?.id}` });
 						}
 					} else {
-						window.open(`/patronRequests/${params?.row?.id}`, "_blank");
+						window.open(appUrl(`/patronRequests/${params?.row?.id}`), "_blank");
 					}
 				if (!(event.ctrlKey || event.metaKey))
 					if (type == "audits") {
 						if (event.ctrlKey || event.metaKey) {
 							window.open(
-								`/patronRequests/audits/${params?.row?.id}`,
+								appUrl(`/patronRequests/audits/${params?.row?.id}`),
 								"_blank",
 							);
 						} else {
@@ -182,7 +183,7 @@ export default function DataGrid({
 				!nonClickableTypes.includes(type)
 			) {
 				if (event.ctrlKey || event.metaKey)
-					window.open(`/${type}/${params?.row?.id}`, "_blank");
+					window.open(appUrl(`/${type}/${params?.row?.id}`), "_blank");
 				if (!(event.ctrlKey || event.metaKey))
 					navigate({ to: `/${type}/${params?.row?.id}` });
 			}

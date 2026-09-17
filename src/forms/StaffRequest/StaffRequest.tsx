@@ -4,12 +4,12 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import {
 	DialogContent,
-	Link,
 	Step,
 	StepLabel,
 	Stepper,
 	Typography,
 } from "@mui/material";
+import { CustomLink } from "@components/CustomLink";
 import { Trans, useTranslation } from "react-i18next";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import { getLibraries } from "@queries/getLibraries";
@@ -68,12 +68,12 @@ export default function StaffRequest({
 		open: boolean;
 		severity: "success" | "error";
 		text: string | null;
-		patronRequestLink?: string;
+		patronRequestId?: string;
 	}>({
 		open: false,
 		severity: "success",
 		text: null,
-		patronRequestLink: "",
+		patronRequestId: "",
 	});
 
 	const [activeStep, setActiveStep] = useState(0);
@@ -415,7 +415,6 @@ export default function StaffRequest({
 				})
 				.then((res) => res.data),
 		onSuccess: (data) => {
-			const patronRequestLink = `/patronRequests/${data.id}`;
 			setStepError(null); // Clear error on success
 			setAlert({
 				open: true,
@@ -423,7 +422,7 @@ export default function StaffRequest({
 				text: isReadOnly
 					? t("requesting.staff_request.patron.success.request_requesting_only")
 					: t("requesting.staff_request.patron.success.request"),
-				patronRequestLink,
+				patronRequestId: data.id,
 			});
 			setTimeout(() => {
 				handleClose();
@@ -630,9 +629,10 @@ export default function StaffRequest({
 						i18nKey={alert.text || ""}
 						components={{
 							linkComponent: (
-								<Link
+								<CustomLink
 									key="patron-request-link"
-									href={alert.patronRequestLink ?? ""}
+									to="/patronRequests/$id"
+									params={{ id: alert.patronRequestId ?? "" }}
 									target="_blank"
 									rel="noopener noreferrer"
 								/>

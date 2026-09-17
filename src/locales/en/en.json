@@ -564,7 +564,7 @@
 				"current_status": "Current status: {{status}}",
 				"in_progress": "Your walk-up request has been successfully placed and DCB is now attempting to check it out.",
 				"in_progress_explanation": "Your walk-up request has been successfully placed and DCB is now attempting to check it out.",
-				"success": "Your walk-up request has been checked out successfully and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
+				"success": "Your walk-up request has been checked out successfully and can be tracked in DCB Admin for Libraries <linkComponent> here </linkComponent>.",
 				"success_requesting_only": "Your walk-up request has been checked out successfully.",
 				"time_elapsed": "Time elapsed: {{time}}"
 			},
@@ -688,7 +688,7 @@
 				},
 				"success": {
 					"lookup": "The patron {{barcode}} has been successfully validated for {{library}}.",
-					"request": "Your staff request has been successfully placed and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
+					"request": "Your staff request has been successfully placed and can be tracked in DCB Admin for Libraries <linkComponent> here </linkComponent>.",
 					"request_requesting_only": "Your staff request has been successfully placed."
 				},
 				"validate": "Validate patron",

@@ -2,7 +2,6 @@ import {
 	Accordion,
 	AccordionDetails,
 	AccordionSummary,
-	Link,
 	List,
 	ListItem,
 	ListItemText,
@@ -10,6 +9,7 @@ import {
 	Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
+import { CustomLink } from "@components/CustomLink";
 import { GridApiPremium, useGridApiContext } from "@mui/x-data-grid-premium";
 import { useTranslation } from "react-i18next";
 import { RefObject, useCallback, useEffect, useState } from "react";
@@ -61,14 +61,15 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 									{t("requesting.bib_record_id")}
 								</Typography>
 								<Typography variant="attributeText" component="div">
-									<Link
-										href={`/bibs/${row?.id}`}
+									<CustomLink
+										to="/bibs/$id"
+										params={{ id: row?.id }}
 										underline="hover"
 										onClick={(e) => {
 											e.stopPropagation();
 										}}>
 										<RenderAttribute attribute={row?.id} />
-									</Link>
+									</CustomLink>
 								</Typography>
 							</Stack>
 						</Grid>

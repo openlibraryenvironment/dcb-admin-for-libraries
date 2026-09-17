@@ -61,6 +61,27 @@ export default defineConfig(
 					message:
 						"A console message must be a plain string literal. Interpolating a value is how PII reaches the console.",
 				},
+				// Mobius serves this app at /dcb-admin-for-libraries/ beside dcb-admin on one
+				// origin, and only the router adds the base: a root-relative href or a bare
+				// window.open leaves the app.
+				{
+					selector:
+						"JSXAttribute[name.name='href'] > Literal[value=/^\\/(?!\\/)/]",
+					message:
+						"A root-relative href leaves the app's base path. Navigate with `to` on a router link (CustomLink, or `component={Link} to=…`).",
+				},
+				{
+					selector:
+						"JSXAttribute[name.name='href'] > JSXExpressionContainer > TemplateLiteral[quasis.0.value.raw=/^\\/(?!\\/)/]",
+					message:
+						"A root-relative href leaves the app's base path. Navigate with `to` on a router link (CustomLink, or `component={Link} to=…`).",
+				},
+				{
+					selector:
+						"CallExpression[callee.object.name='window'][callee.property.name='open']:not([arguments.0.callee.name='appUrl']):not([arguments.0.value=/^https?:/])",
+					message:
+						"window.open resolves a path against the origin root, outside the deployment base. Pass appUrl(path).",
+				},
 			],
 		},
 	},
