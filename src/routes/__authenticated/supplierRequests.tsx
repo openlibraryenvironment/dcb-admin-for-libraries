@@ -1,3 +1,4 @@
+import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -357,6 +358,9 @@ function RouteComponent() {
 		(isFetching && !!patronRequestData);
 	return (
 		<>
+			<Typography variant="h1">
+				{t("nav.supplier_requests.title")}
+			</Typography>
 			{
 				<DataGrid
 					disablePivoting

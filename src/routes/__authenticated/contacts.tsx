@@ -22,5 +22,10 @@ export const Route = createFileRoute("/__authenticated/contacts")({
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	return <Typography variant="body1">{t("ui.info.coming_soon")}</Typography>;
+	return (
+		<>
+			<Typography variant="h1">{t("nav.contacts.title")}</Typography>
+			<Typography variant="body1">{t("ui.info.coming_soon")}</Typography>
+		</>
+	);
 }

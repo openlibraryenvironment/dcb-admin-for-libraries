@@ -8,5 +8,12 @@ export const Route = createFileRoute("/__authenticated/dataChangeLog")({
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	return <Typography variant="body1">{t("ui.info.coming_soon")}</Typography>;
+	return (
+		<>
+			<Typography variant="h1">
+				{t("nav.data_change_log.title")}
+			</Typography>
+			<Typography variant="body1">{t("ui.info.coming_soon")}</Typography>
+		</>
+	);
 }

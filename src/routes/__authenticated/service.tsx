@@ -64,9 +64,7 @@ function ServiceComponent() {
 			spacing={{ xs: 2, md: 3 }}
 			columns={{ xs: 4, sm: 8, md: 12 }}>
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="accordionSummary">
-					{t("nav.library.service")}
-				</Typography>
+				<Typography variant="h1">{t("nav.library.service")}</Typography>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
