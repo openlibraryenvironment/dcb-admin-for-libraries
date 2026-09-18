@@ -131,7 +131,11 @@ describe("theme contrast", () => {
 			["unselected tab", "navigationText", "navigationBackground"],
 			["selected tab", "navigationTextActive", "navigationBackground"],
 			["sub tab", "subTabText", "subTabBackground"],
-		] as const)("the %s reads on its bar", (_name, inkToken, groundToken) => {
+			// The dark scheme copied the light ink verbatim onto a #424242 card,
+			// which is the failure mode this whole file exists to catch: a pair that
+			// is fine in one scheme and unreadable in the other.
+			["search result title", "searchResultTitle", "searchResultBackground"],
+		] as const)("the %s reads on its ground", (_name, inkToken, groundToken) => {
 			expect(
 				contrast(palette.primary![inkToken]!, palette.primary![groundToken]!),
 			).toBeGreaterThanOrEqual(AA_TEXT);

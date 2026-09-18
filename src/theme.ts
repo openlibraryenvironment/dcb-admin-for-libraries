@@ -271,7 +271,9 @@ const theme = createTheme({
 					inactiveBackground: "#757575",
 					main: "#35B7FF",
 					searchResultBackground: "#424242",
-					searchResultTitle: "#186498",
+					// The light scheme's #186498 was copied here verbatim, which put it
+					// at 1.59:1 on this card. #90CAF9 is 5.74:1 on the same ground.
+					searchResultTitle: "#90CAF9",
 					navigationBackground: "#0C4068",
 					navigationText: "#E2EEF6",
 					navigationTextActive: "#FFFFFF",
