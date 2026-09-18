@@ -58,7 +58,13 @@
 		"success": "Success",
 		"updated": "Updated",
 		"update_success": "The {{entity}} {{name}} was updated successfully",
-		"update_failure": "An error occurred while updating {{entity}} {{name}}"
+		"update_failure": "An error occurred while updating {{entity}} {{name}}",
+		"severity": {
+			"error": "Error",
+			"info": "Information",
+			"success": "Success",
+			"warning": "Warning"
+		}
 	},
 	"data_change_log": {
 		"action": "Action",

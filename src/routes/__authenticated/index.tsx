@@ -1177,7 +1177,6 @@ function HomeComponent() {
             <TimedAlert
 				open={alert.open}
 				severityType={alert.severity}
-				autoHideDuration={6000}
 				alertText={alert.text}
 				onCloseFunc={() => setAlert({ ...alert, open: false })}
 				alertTitle={alert.title}

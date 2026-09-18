@@ -732,7 +732,6 @@ function RouteComponent() {
 									updateSuccessAlertVisibility || cleanupSuccessAlertVisibility
 								}
 								severityType="success"
-								autoHideDuration={6000}
 								alertText={
 									updateSuccessAlertVisibility
 										? t("patron_request.check_successful")
@@ -752,7 +751,6 @@ function RouteComponent() {
 							<TimedAlert
 								open={updateErrorAlertVisibility || cleanupErrorAlertVisibility}
 								severityType="error"
-								autoHideDuration={6000}
 								alertText={
 									updateErrorAlertVisibility
 										? t("patron_request.check_unsuccessful")

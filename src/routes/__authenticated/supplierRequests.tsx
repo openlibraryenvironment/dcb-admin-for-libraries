@@ -425,7 +425,6 @@ function RouteComponent() {
 					severityType={alert.severity}
 					// variant="filled"
 					// sx={{ width: "100%" }}
-					autoHideDuration={6000}
 					alertText={alert.text}></TimedAlert>
 			}
 		</>

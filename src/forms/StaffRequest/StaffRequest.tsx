@@ -622,7 +622,6 @@ export default function StaffRequest({
             <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
-				autoHideDuration={6000}
 				onCloseFunc={() => setAlert({ ...alert, open: false })}
 				alertText={
 					<Trans

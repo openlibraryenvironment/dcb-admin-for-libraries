@@ -515,7 +515,6 @@ export default function QuickWalkUpRequest({
             <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
-				autoHideDuration={6000}
 				onCloseFunc={handleAlertClose}
 				alertText={alert.text}
 				key="quick-walk-up-alert"

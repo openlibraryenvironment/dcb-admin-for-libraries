@@ -299,7 +299,6 @@ function RouteComponent() {
 					severityType="warning"
 					// variant="filled"
 					// sx={{ width: "100%" }}
-					autoHideDuration={6000}
 					alertText={
 						t("ui.feedback.error.cannot_process") ||
 						"We could not process that operation, so we have reset the data grid options."

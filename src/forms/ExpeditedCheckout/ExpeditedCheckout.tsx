@@ -719,7 +719,6 @@ export default function ExpeditedCheckout({
             <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
-				autoHideDuration={6000}
 				onCloseFunc={handleAlertClose}
 				alertText={alert.text}
 				key="expedited-checkout-alert"
