@@ -7,6 +7,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { AuthContextProps, useAuth } from "react-oidc-context";
 import { QueryClient } from "@tanstack/react-query";
 import Loading from "@components/Loading/Loading";
+import { Announcer } from "@components/Layout/Announcer";
 import { useTranslation } from "react-i18next";
 
 // Define the context available to the router
@@ -46,6 +47,7 @@ function RootComponent() {
 			{/* Renders each route's `head`. React 19 hoists a <title> to the
 			    document head from wherever it is rendered. */}
 			<HeadContent />
+			<Announcer />
 			<Outlet />
 			{process.env.NODE_ENV !== "production" && <TanStackRouterDevtools />}
 		</>
