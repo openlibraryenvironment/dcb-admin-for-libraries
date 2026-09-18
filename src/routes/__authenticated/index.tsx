@@ -20,7 +20,6 @@ import {
 	MenuItem,
 	Stack,
 	TextField,
-	useTheme,
 } from "@mui/material";
 import { BrandImageField } from "@components/BrandImageField/BrandImageField";
 import { useBrandUploadsAvailable } from "@/hooks/useBrandUploadsAvailable";
@@ -99,7 +98,6 @@ function HomeComponent() {
 
 	const { agencyCode: code } = useAgencyCodes();
 
-	const theme = useTheme();
 	const [editMode, setEditMode] = useState(false);
 	const [showConfirmationEdit, setConfirmationEdit] = useState(false);
 	const firstEditableFieldRef = useRef<HTMLInputElement>(null);
@@ -627,13 +625,7 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.fullName
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
+					<Typography variant="attributeTitle">
 						{t("library.full_name")}
 					</Typography>
 				</Stack>
@@ -660,13 +652,7 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.shortName
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
+					<Typography variant="attributeTitle">
 						{t("library.short_name")}
 					</Typography>
 					<Controller
@@ -692,13 +678,7 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.abbreviatedName
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
+					<Typography variant="attributeTitle">
 						{t("library.abbreviated_name")}
 					</Typography>
 					<Controller
@@ -736,13 +716,7 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.supportHours
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
+					<Typography variant="attributeTitle">
 						{t("library.support_hours")}
 					</Typography>
 					<Controller
@@ -768,13 +742,7 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.backupDowntimeSchedule
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
+					<Typography variant="attributeTitle">
 						{t("library.backup_schedule")}
 					</Typography>
 					<Controller
@@ -852,13 +820,7 @@ function HomeComponent() {
   			</Grid>
               <Grid size={{ xs: 2, sm: 4, md: 4 }}>
   				<Stack direction={"column"}>
-  					<Typography
-  						variant="attributeTitle"
-  						color={
-  							errors.brandLogoUrl
-  								? (theme.vars || theme).palette.error.main
-  								: (theme.vars || theme).palette.text.primary
-  						}>
+  					<Typography variant="attributeTitle">
   						{t("library.brand.logo_url")}
   					</Typography>
   					<Controller
@@ -888,13 +850,7 @@ function HomeComponent() {
   			</Grid>
               <Grid size={{ xs: 2, sm: 4, md: 4 }}>
   				<Stack direction={"column"}>
-  					<Typography
-  						variant="attributeTitle"
-  						color={
-  							errors.brandLogoAlt
-  								? (theme.vars || theme).palette.error.main
-  								: (theme.vars || theme).palette.text.primary
-  						}>
+  					<Typography variant="attributeTitle">
   						{t("library.brand.logo_alt")}
   					</Typography>
   					<Controller
@@ -922,13 +878,7 @@ function HomeComponent() {
   			</Grid>
               <Grid size={{ xs: 2, sm: 4, md: 4 }}>
   				<Stack direction={"column"}>
-  					<Typography
-  						variant="attributeTitle"
-  						color={
-  							errors.defaultThemeName
-  								? (theme.vars || theme).palette.error.main
-  								: (theme.vars || theme).palette.text.primary
-  						}>
+  					<Typography variant="attributeTitle">
   						{t("library.brand.theme")}
   					</Typography>
   					<Controller
@@ -991,13 +941,7 @@ function HomeComponent() {
             </Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
               <Stack direction={"column"}>
-                <Typography
-                  variant="attributeTitle"
-                  color={
-                    errors.patronWebsite
-                      ? (theme.vars || theme).palette.error.main
-                      : (theme.vars || theme).palette.text.primary
-                  }>
+                <Typography variant="attributeTitle">
                   {t("library.presence.website")}
                 </Typography>
                 <Controller
@@ -1031,13 +975,7 @@ function HomeComponent() {
             {isLibrarySupportUrlEnabled() && (
               <Grid size={{ xs: 2, sm: 4, md: 4 }}>
                 <Stack direction={"column"}>
-                  <Typography
-                    variant="attributeTitle"
-                    color={
-                      errors.supportUrl
-                        ? (theme.vars || theme).palette.error.main
-                        : (theme.vars || theme).palette.text.primary
-                    }>
+                  <Typography variant="attributeTitle">
                     {t("library.presence.support")}
                   </Typography>
                   <Controller
@@ -1083,13 +1021,7 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.latitude
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
+					<Typography variant="attributeTitle">
 						{t("common.latitude")}
 					</Typography>
 					<Controller
@@ -1115,13 +1047,7 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.longitude
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
+					<Typography variant="attributeTitle">
 						{t("common.longitude")}
 					</Typography>
 					<Controller
