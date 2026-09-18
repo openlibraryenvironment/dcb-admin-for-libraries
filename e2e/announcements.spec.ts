@@ -41,3 +41,18 @@ test("a search announces how many titles it found", async ({ app, page }) => {
 	await expect(results.getByRole("listitem")).toHaveCount(3);
 	await expect(page.getByRole("grid")).toHaveCount(0);
 });
+
+test("a navigation announces the page it arrived at", async ({ app, page }) => {
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library });
+
+	await page.goto("/contacts");
+	const region = page.getByRole("status");
+
+	await page.getByRole("tab", { name: /^settings$/i }).click();
+
+	// A full page load announces itself and resets focus. A client-side
+	// navigation does neither, so both have to be arranged.
+	await expect(region).toHaveText(/Settings/);
+	await expect(page.getByRole("main")).toBeFocused();
+});

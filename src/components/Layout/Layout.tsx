@@ -12,6 +12,7 @@ import { matchActiveTab } from "@helpers/activeTab";
 import { isInsightsEnabled } from "@helpers/featureFlags";
 import { MAIN_CONTENT_ID } from "@constants/landmarks";
 import { SkipLink } from "./SkipLink";
+import { useRouteAnnouncement } from "@/hooks/useRouteAnnouncement";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -41,6 +42,8 @@ export const Layout = ({ children }: LayoutProps) => {
 	const auth = useAuth();
 	const { pathname } = useLocation();
 	const { t } = useTranslation();
+
+	useRouteAnnouncement();
 
 	const tabsReadOnly = useMemo(() => {
 		return [
