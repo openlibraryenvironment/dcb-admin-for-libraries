@@ -9,6 +9,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid-premium";
 import { useTranslation } from "react-i18next";
+import { useAnnounce } from "@/hooks/useAnnouncer";
 import {
 	Button,
 	Dialog,
@@ -62,6 +63,7 @@ export function SharedIndexV2() {
 	const router = useRouter();
 	const { cfg } = router.options.context as { cfg: any };
 	const { t } = useTranslation();
+	const announce = useAnnounce();
 	const roles = auth?.user?.profile?.roles ? auth?.user?.profile?.roles : [];
 
 	const isAdmin = roles.includes("CONSORTIUM_ADMIN");
@@ -276,6 +278,17 @@ export function SharedIndexV2() {
 		placeholderData: keepPreviousData,
 	});
 
+	const totalRecords = searchResults?.totalRecords;
+
+	// The result count changes on screen and nothing else says so - the count
+	// renders into a span, and the grid below it redraws silently. WCAG 4.1.3.
+	// Announcing on the settled value rather than on each keystroke: isFetching
+	// would narrate every intermediate state of a debounced search.
+	useEffect(() => {
+		if (typeof totalRecords !== "number") return;
+		announce(t("requesting.titles_found", { number: totalRecords }));
+	}, [totalRecords, announce, t]);
+
 	// // Reset pagination when the query changes ???????
 	// useEffect(() => {
 	// 	setPaginationModel((prev) => ({ ...prev, page: 0 }));
@@ -397,17 +410,9 @@ export function SharedIndexV2() {
 					</Stack>
 				</form>
 
-				{searchResults?.totalRecords ? (
+				{typeof totalRecords === "number" ? (
 					<Typography variant="hitCount">
-						{t("requesting.titles_found", {
-							number: searchResults?.totalRecords,
-						})}
-					</Typography>
-				) : searchResults?.totalRecords == 0 ? (
-					<Typography variant="hitCount">
-						{t("requesting.titles_found", {
-							number: searchResults?.totalRecords,
-						})}
+						{t("requesting.titles_found", { number: totalRecords })}
 					</Typography>
 				) : null}
 			</Stack>
