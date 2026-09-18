@@ -195,7 +195,6 @@ const theme = createTheme({
 					backgroundColor: (theme.vars || theme).palette.primary
 						.navigationBackground,
 					"& .MuiTab-root": {
-						color: (theme.vars || theme).palette.primary.headerText,
 						"&.Mui-selected": {
 							fontWeight: "bold",
 						},
@@ -228,7 +227,11 @@ const theme = createTheme({
 					inactiveBackground: "#757575",
 					main: "#0C4068",
 					navigationBackground: "#1B76B4",
-					navigationText: "#E2EEF6",
+					// White, because this bar leaves no room for anything dimmer: white
+					// itself is only 4.89:1 on it, and #E2EEF6 - which this was, and
+					// which the dark scheme can afford at 9.13:1 - is 4.14:1. Selection
+					// is carried by weight and the indicator, not by colour.
+					navigationText: "#FFFFFF",
 					navigationTextActive: "#FFFFFF",
 					searchResultBackground: "#F6F9FC",
 					searchResultTitle: "#186498",

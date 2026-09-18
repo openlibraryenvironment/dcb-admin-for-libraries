@@ -121,6 +121,22 @@ describe("theme contrast", () => {
 		 * 20px regular - text, so 4.5:1, not the 3:1 a glyph would get. Both appear
 		 * in all three requesting workflows, none of which the axe gate reaches.
 		 */
+		/**
+		 * The main navigation strip and the nested one on detail pages. Two theme
+		 * rules used to set the unselected tab's ink and disagree - MuiTabs' own
+		 * descendant selector beat MuiTab's root on specificity, so the token the
+		 * comment defended was never the one that rendered.
+		 */
+		it.each([
+			["unselected tab", "navigationText", "navigationBackground"],
+			["selected tab", "navigationTextActive", "navigationBackground"],
+			["sub tab", "subTabText", "subTabBackground"],
+		] as const)("the %s reads on its bar", (_name, inkToken, groundToken) => {
+			expect(
+				contrast(palette.primary![inkToken]!, palette.primary![groundToken]!),
+			).toBeGreaterThanOrEqual(AA_TEXT);
+		});
+
 		it.each([
 			["inactive", "iconSymbol", "inactiveBackground"],
 			["active", "contrastText", "main"],
