@@ -34,4 +34,10 @@ test("a search announces how many titles it found", async ({ app, page }) => {
 	// The region carries the count, so a screen reader hears the result rather
 	// than only seeing it.
 	await expect(region).toHaveText(/3 titles found/);
+
+	// ...and the results are a list, not a one-column grid announced as a table.
+	const results = page.getByRole("list", { name: /search results/i });
+	await expect(results).toBeVisible();
+	await expect(results.getByRole("listitem")).toHaveCount(3);
+	await expect(page.getByRole("grid")).toHaveCount(0);
 });

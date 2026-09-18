@@ -7,7 +7,11 @@ import Box from "@mui/material/Box";
 // import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { GridColDef, GridPaginationModel } from "@mui/x-data-grid-premium";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import LinearProgress from "@mui/material/LinearProgress";
+import TablePagination from "@mui/material/TablePagination";
+import { GridPaginationModel } from "@mui/x-data-grid-premium";
 import { useTranslation } from "react-i18next";
 import { useAnnounce } from "@/hooks/useAnnouncer";
 import {
@@ -21,9 +25,12 @@ import {
 
 // import { Route } from "@/routes/__authenticated/requesting";
 import { AdvancedSearchFilter } from "./AdvancedSearchFilter";
-import { SearchField, SearchFilter } from "@models/SearchTypes";
+import {
+	SearchField,
+	SearchFilter,
+	SearchInstance,
+} from "@models/SearchTypes";
 import { buildQuery } from "@helpers/search/queryBuilder";
-import DataGrid from "@components/DataGrid/DataGrid";
 import { SearchResult } from "@components/SearchResultComponent/SearchResultComponent";
 import Error from "@components/Error/Error";
 import { useSearchGridStore } from "@/hooks/useSearchGridStore";
@@ -279,6 +286,7 @@ export function SharedIndexV2() {
 	});
 
 	const totalRecords = searchResults?.totalRecords;
+	const instances: SearchInstance[] = searchResults?.instances ?? [];
 
 	// The result count changes on screen and nothing else says so - the count
 	// renders into a span, and the grid below it redraws silently. WCAG 4.1.3.
@@ -307,16 +315,6 @@ export function SharedIndexV2() {
 	// 		</Box>
 	// 	);
 	// }
-	const columns: GridColDef[] = [
-		{
-			field: "card",
-			flex: 1,
-			disableColumnMenu: true,
-			renderHeader: () => null,
-			renderCell: (params) => <SearchResult params={params} />,
-		},
-	];
-
 	// The quick walk up is locked to consortia admin for testing, for now
 	return (
         <Box sx={{ width: "100%" }}>
@@ -423,90 +421,49 @@ export function SharedIndexV2() {
 					action={t("ui.actions.go_back")}
 					goBack="/"></Error>
 			)}
-            <DataGrid
-				autoRowHeight
-				rows={searchResults?.instances || []}
-				columns={columns}
-				pagination
-				paginationModel={paginationModel}
-				onPaginationModelChange={handlePaginationModelChange} // Need a pagination handler. Solve first. Then get it to persist.
-				rowCount={searchResults?.totalRecords || 0}
-				paginationMode="server"
-				pivotingEnabled={false}
-				loading={isFetching || isLoading}
-				checkboxSelection={false}
-				disableHoverInteractions={true} // But we must also specify in style overrides for this case only
-				filterMode="server"
-				listViewEnabled={false}
-				identifier="SharedIndexSearchGrid"
-				// getRowId={(row) => row.id}
-				// slots={{
-				// 	columnHeaders: () => null,
-				// 	noRowsOverlay: () => (
-				// 		<Box
-				// 			sx={{
-				// 				display: "flex",
-				// 				justifyContent: "center",
-				// 				alignItems: "center",
-				// 				height: "50%",
-				// 			}}>
-				// 			{filters.some((f) => f.value)
-				// 				? "No results found"
-				// 				: "Configure filters above to search"}
-				// 		</Box>
-				// 	),
-				// }}
-				// We don't need any of this, happily.
-				disableAggregation={true}
-				disablePivoting={true}
-				disableRowGrouping={true}
-				rowModesModel={{}}
-				scrollbarVisible={false}
-				toolbarVisible={false}
-				noResultsText="No results found" // Doesn't seem to be taken into account
-				searchText="Select an option and type in your search!"
-				sortingMode="server"
-				type="SharedIndexSearchGrid"
-				// To commit to card layout over grid - disable gridlines - there is probably a better way of doing this
-				// This is also how we will separate the cards
-				styleOverrides={{
-					// Also need to hide sorting indicator FOR NOW - we can provide sorting options later but we must integrate them
-					"& .MuiDataGrid-columnSeparator": { display: "none" },
-					"& .MuiDataGrid-cell": {
-						borderBottom: "none",
-						borderTop: "none",
-						padding: 0,
-					},
-					border: "none",
-					"& .MuiDataGrid-row": {
-						borderBottom: "none", // These 2 remove the row borders
-						borderTop: "none",
-						paddingBottom: "32px", // Add space while respecting virtualisation! Very important lesson NOT to use margin
-					},
-					"@media print": {
-						".MuiDataGrid-main": { color: "rgba(0, 0, 0, 0.87)" },
-					},
-
-					".MuiDataGrid-virtualScroller": {
-						overflow: "hidden",
-					},
-					// both hover styles need to be added, otherwise a flashing effect appears when hovering
-					// https://stackoverflow.com/questions/76563478/disable-hover-effect-on-mui-datagrid
-					"& .MuiDataGrid-row.Mui-hovered": {
-						backgroundColor: "transparent", // Because we are overriding, we must specify these styles also
-					},
-					"& .MuiDataGrid-row:hover": {
-						backgroundColor: "transparent",
-					},
-					"& .MuiDataGrid-cell:focus": {
-						outline: "none",
-					},
-					"& .MuiDataGrid-detailPanel": {
-						overflow: "hidden", // Prevent scrollbars in the detail panel
-						height: "auto", // Adjust height automatically
-					},
-				}}
-			/>
+            {/* A LIST, not a one-column grid. These are search results: rendering
+			    them through DataGridPremium with a null column header announced
+			    "grid, row, column 1 of 1" before each card and bought nothing -
+			    sorting and filtering are both server-side and the toolbar was
+			    hidden. */}
+			<List
+				aria-label={t("requesting.results_label")}
+				sx={{ p: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+				{instances.map((record) => (
+					<ListItem key={record.id} disablePadding sx={{ display: "block" }}>
+						<SearchResult record={record} />
+					</ListItem>
+				))}
+			</List>
+			{isFetching || isLoading ? (
+				<LinearProgress aria-label={t("ui.info.loading")} sx={{ mt: 2 }} />
+			) : null}
+			{!isFetching && !isLoading && instances.length === 0 ? (
+				<Typography sx={{ mt: 2 }}>
+					{queryParam
+						? t("requesting.no_results")
+						: t("requesting.search_prompt")}
+				</Typography>
+			) : null}
+			{typeof totalRecords === "number" && totalRecords > 0 ? (
+				<TablePagination
+					component="div"
+					count={totalRecords}
+					page={paginationModel.page}
+					rowsPerPage={paginationModel.pageSize}
+					rowsPerPageOptions={[10, 25, 50, 100]}
+					onPageChange={(_event, page) =>
+						handlePaginationModelChange({ ...paginationModel, page })
+					}
+					onRowsPerPageChange={(event) =>
+						handlePaginationModelChange({
+							page: 0,
+							pageSize: Number(event.target.value),
+						})
+					}
+					labelRowsPerPage={t("requesting.results_per_page")}
+				/>
+			) : null}
             <Dialog
 				open={showModal}
 				onClose={() => setShowModal(false)}

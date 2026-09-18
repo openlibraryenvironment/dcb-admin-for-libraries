@@ -1,3 +1,4 @@
+import { SearchInstance } from "@models/SearchTypes";
 import { useItemAvailability } from "@/hooks/useItemAvailability";
 import { CustomLink } from "@components/CustomLink";
 import { Button, CardActions, Link, Tooltip } from "@mui/material";
@@ -6,7 +7,6 @@ import Skeleton from "@mui/material/Skeleton";
 import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { GridRenderCellParams } from "@mui/x-data-grid-premium";
 import { useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -21,7 +21,8 @@ import {
 } from "@mui/icons-material";
 
 interface SearchResultProps {
-	params: GridRenderCellParams;
+	/** One instance from the shared index. */
+	record: SearchInstance;
 	// indexCode: string;
 }
 // Key information for this component to display - note that description might change
@@ -33,9 +34,9 @@ interface SearchResultProps {
 // Potential actions
 // One-click request button IF we can check live availability sensibly (to grey it out if no items are available)
 // export const SearchResult = ({ params, indexCode }: SearchResultProps) => {
-export const SearchResult = ({ params }: SearchResultProps) => {
+export const SearchResult = ({ record }: SearchResultProps) => {
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const recordId = params?.row?.id;
+	const recordId = record.id;
 	const { agencyCode: userAgencyCode } = useAgencyCodes();
 
 	const cardRef = useRef<HTMLDivElement | null>(null);
@@ -161,9 +162,9 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 							<CustomLink
 								// to="/indexes/$indexCode/$recordId"
 								to="/requesting/$recordId"
-								params={{ recordId: params.row.id }}>
-								{/* params={{ indexCode: indexCode, recordId: params.row.id }}> */}
-								{params.row.title}
+								params={{ recordId: record.id }}>
+								{/* params={{ indexCode: indexCode, recordId: record.id }}> */}
+								{record.title}
 							</CustomLink>
 						</Typography>
 						<Typography
@@ -174,7 +175,7 @@ export const SearchResult = ({ params }: SearchResultProps) => {
                                 mb: 2
                             }}>
 							{t("requesting.format", {
-								formats: params.row.sourceTypes?.join(","),
+								formats: record.sourceTypes?.join(","),
 							})}
 						</Typography>
 						<Typography
@@ -184,7 +185,7 @@ export const SearchResult = ({ params }: SearchResultProps) => {
                                 fontWeight: "bold"
                             }}>
 							{t("requesting.contributor", {
-								contributors: params.row.contributors
+								contributors: record.contributors
 									?.map((c: Contributor) => c.name)
 									.join(", "),
 							})}
@@ -196,9 +197,9 @@ export const SearchResult = ({ params }: SearchResultProps) => {
                                 fontWeight: "bold"
                             }}>
 							{t("requesting.publication_date", {
-								publicationDate: params?.row?.publicationDate
-									? params?.row?.publicationDate
-									: params.row.publication
+								publicationDate: record.publicationDate
+									? record.publicationDate
+									: record.publication
 											?.map(
 												(pub: {
 													publisher: string;
@@ -208,7 +209,7 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 											.join(", "),
 							})}
 						</Typography>
-						<Typography variant="body2">{params.row.description}</Typography>
+						<Typography variant="body2">{record.description}</Typography>
 						<Typography
                             variant="body2"
                             sx={{
@@ -216,12 +217,12 @@ export const SearchResult = ({ params }: SearchResultProps) => {
                                 fontWeight: "bold"
                             }}>
 							{t("requesting.isbn", {
-								isbn: params?.row?.isbns
-									? params?.row?.isbns?.map((isbn: string) => isbn).join(", ")
+								isbn: record.isbns
+									? record.isbns?.map((isbn: string) => isbn).join(", ")
 									: t("ui.common.none"),
 							})}
 						</Typography>
-						{params?.row?.issns ? (
+						{record.issns ? (
 							<Typography
                                 variant="body2"
                                 sx={{
@@ -229,8 +230,8 @@ export const SearchResult = ({ params }: SearchResultProps) => {
                                     fontWeight: "bold"
                                 }}>
 								{t("requesting.issn", {
-									issn: params?.row?.issns
-										? params?.row?.issns?.map((issn: string) => issn).join(", ")
+									issn: record.issns
+										? record.issns?.map((issn: string) => issn).join(", ")
 										: t("ui.common.none"),
 								})}
 							</Typography>
@@ -383,8 +384,8 @@ export const SearchResult = ({ params }: SearchResultProps) => {
             <CombinedRequestingModal
 				show={showCombinedModal}
 				onClose={() => setShowCombinedModal(false)}
-				bibClusterId={params.row.id}
-				title={params.row.title}
+				bibClusterId={record.id}
+				title={record.title}
 			/>
         </>
     );
