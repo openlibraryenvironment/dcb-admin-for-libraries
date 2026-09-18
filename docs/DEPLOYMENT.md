@@ -61,6 +61,30 @@ does not show the feature.
 | --- | --- | --- |
 | `VITE_FEATURE_LIBRARY_BRANDING` | **9.0.0** or later | The "How your library appears to patrons" block on the library profile: logo, logo description and discovery theme |
 | `VITE_FEATURE_INSIGHTS` | **9.0.0** or later | The Insights page, and the top-titles / top-requesters panels on the library profile (all of them call `/insights/**`) |
+| `VITE_FEATURE_LIBRARY_SUPPORT_URL` | **after 9.0.0** (`V9_0_008`, on main) | The "Report a problem URL" field in the "Links for patrons" block |
+| `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | **9.0.0** or later | Scoping the request grids by agency code rather than by Host LMS code, and the library column that needs it |
+
+## 2b. Is there a discovery front end? `VITE_DISCOVERY_ACTIVE`
+
+This one is **not** about which dcb-service you run, which is why it is not a
+`VITE_FEATURE_*` and is listed separately.
+
+| Variable | Set it when | What it turns on |
+| --- | --- | --- |
+| `VITE_DISCOVERY_ACTIVE` | Symposia (or another OpenRS discovery front end) is deployed for this consortium | The two blocks on the library profile that configure discovery and nothing else: "How your library appears to patrons" (logo, logo description, theme) and "Links for patrons" (library website, report-a-problem URL) |
+
+A consortium using DCB with its own discovery layer has nowhere for a patron logo, a theme
+name or a footer link to appear. Leaving this unset hides them rather than offering an
+administrator settings nothing will ever read.
+
+**It composes with the flags above, it does not replace them.** The brand block needs both
+a discovery app to render it *and* a dcb-service that can store it, so
+`VITE_DISCOVERY_ACTIVE` and `VITE_FEATURE_LIBRARY_BRANDING` must both be `true`.
+
+**Switching it off is safe and reversible.** Unlike every flag in 2a it changes only what
+is rendered: the GraphQL documents are untouched, and the library mutation sends changed
+fields only - so a brand already stored stays stored, and turning the flag back on shows it
+again. `e2e/discovery-inactive.spec.ts` asserts both halves.
 
 ### Getting it wrong in each direction
 
@@ -173,6 +197,7 @@ docker run -p 8080:80 \
   -e VITE_DCB_API_BASE="https://api..." \
   -e VITE_DCB_SEARCH_BASE="https://search..." \
   -e VITE_PUBLIC_URL="/libraries-admin/" \
+  -e VITE_DISCOVERY_ACTIVE="true" \
   -e VITE_FEATURE_LIBRARY_BRANDING="true" \
   -e VITE_FEATURE_INSIGHTS="true" \
   dcb-admin-libraries

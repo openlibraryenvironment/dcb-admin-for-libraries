@@ -8,6 +8,7 @@
 		"codegen": "graphql-codegen --config codegen.ts",
 		"coverage": "vitest run --coverage",
 		"dev": "vite",
+		"dev:localstack": "vite --mode localstack",
 		"e2e": "playwright test",
 		"e2e:a11y": "playwright test e2e/accessibility.spec.ts",
 		"e2e:base-path": "playwright test --config playwright.base-path.config.ts",

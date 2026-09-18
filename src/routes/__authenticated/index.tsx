@@ -36,6 +36,7 @@ import { UpdateLibraryFormData } from "../../models/UpdateLibraryFormData";
 import { updateLibrary } from "../../mutations/updateLibrary";
 import { stripUnsupportedInput } from "@helpers/capabilityFields";
 import {
+	isDiscoveryActive,
 	isInsightsEnabled,
 	isLibraryBrandingEnabled,
 	isLibrarySupportUrlEnabled,
@@ -116,6 +117,12 @@ function HomeComponent() {
 	// Read once per render rather than at each call site, so the two cards below
 	// cannot disagree with each other.
 	const insightsEnabled = isInsightsEnabled();
+
+	// No discovery front end means nowhere for a patron logo, a theme or a footer link to
+	// appear, so the two blocks below are not offered. Unlike the capability flags they
+	// compose with, this one is only a render switch: the fields stay in the document and
+	// the mutation sends changed fields only, so a stored brand survives being hidden.
+	const discoveryActive = isDiscoveryActive();
 
 	// R-17b. A deployment with dcb.branding.assets.store=none has no upload route, so the
 	// button would 404. The URL field stays either way — pointing at a CDN the library
@@ -810,12 +817,13 @@ function HomeComponent() {
 					<RenderAttribute attribute={library?.id} />
 				</Stack>
 			</Grid>
-            {/* Hidden before dcb-service 9.0.0, which has no brand columns on Library
-                at all - the query does not ask for them and the mutation could not
-                store them. Hiding the fields is UX; the flag also removes them from the
-                document and the variables, which is what actually keeps the page
-                working. See @constants/serviceCapabilities. */}
-            {isLibraryBrandingEnabled() && (
+            {/* Two gates, and they answer different questions. `discoveryActive` asks
+                whether anything renders a patron logo at all. The branding flag asks
+                whether this environment's dcb-service can store one: before 9.0.0 Library
+                has no brand columns, so the flag also removes the fields from the document
+                and the variables, which is what keeps the page working rather than merely
+                tidy. See @constants/serviceCapabilities. */}
+            {discoveryActive && isLibraryBrandingEnabled() && (
               <>
               {/* Patron-facing brand — N-1B. Its own labelled block because everything
   			    above configures this library's participation in DCB and these three
@@ -968,7 +976,13 @@ function HomeComponent() {
 
                 Two fields rather than one because they are two questions and rarely the
                 same desk: collapsing them sends "your search is broken" to whoever
-                answers "when do you open". */}
+                answers "when do you open".
+
+                Both are discovery's footer and nothing else's, so the whole block goes
+                with it — heading included. `patronWebsite` needs no capability flag
+                (Library has carried it since 5.11.1) and is gated here only. */}
+            {discoveryActive && (
+            <>
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
               <Typography variant="h3" sx={{ fontWeight: "bold" }}>
                 {t("library.presence.section")}
@@ -1049,6 +1063,8 @@ function HomeComponent() {
                   />
                 </Stack>
               </Grid>
+            )}
+            </>
             )}
             {/* /* 'Primary location' title goes here/* */}
             {/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>

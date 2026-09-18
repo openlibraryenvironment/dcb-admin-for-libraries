@@ -100,6 +100,7 @@ const PAGES: Surface[] = [
 		path: "/",
 		prepare: async (app) => {
 			await app.enableFeatures([
+				"VITE_DISCOVERY_ACTIVE",
 				"VITE_FEATURE_LIBRARY_BRANDING",
 				"VITE_FEATURE_LIBRARY_SUPPORT_URL",
 			]);

@@ -6,6 +6,7 @@ import {
 	areBrandUploadsAvailable,
 	brandAssetStoreFrom,
 } from "@constants/discoveryBranding";
+import { isDiscoveryActive } from "@helpers/featureFlags";
 
 /**
  * Whether to offer the brand image upload control — R-17b.
@@ -39,13 +40,18 @@ export function useBrandUploadsAvailable(): boolean {
 	};
 	const apiBase = cfg?.VITE_DCB_API_BASE;
 
+	// A deployment with no discovery front end never renders the upload control, so the
+	// probe is a request whose answer nothing reads. Read here rather than at the call
+	// site: the hook exists for one control, and its caller cannot skip a hook.
+	const discoveryActive = isDiscoveryActive();
+
 	const { data } = useQuery({
 		queryKey: ["dcbServiceInfo", "brandAssetStore", apiBase],
 		queryFn: async () => {
 			const response = await axios.get(apiBase + "/info");
 			return brandAssetStoreFrom(response.data);
 		},
-		enabled: !!apiBase,
+		enabled: !!apiBase && discoveryActive,
 		staleTime: INFO_STALE_TIME,
 		gcTime: INFO_STALE_TIME,
 		// One retry. /info is cheap and unauthenticated, but a deployment that cannot
@@ -56,5 +62,5 @@ export function useBrandUploadsAvailable(): boolean {
 
 	// `data` is undefined until the query resolves, and stays undefined if it fails or is
 	// disabled. undefined -> null -> available.
-	return areBrandUploadsAvailable(data ?? null);
+	return discoveryActive && areBrandUploadsAvailable(data ?? null);
 }

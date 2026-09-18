@@ -31,6 +31,7 @@ const mocks = {
 test.describe("the library's presence links", () => {
 	test.beforeEach(async ({ app }) => {
 		await app.enableFeatures([
+			"VITE_DISCOVERY_ACTIVE",
 			"VITE_FEATURE_LIBRARY_BRANDING",
 			"VITE_FEATURE_LIBRARY_SUPPORT_URL",
 		]);
@@ -94,7 +95,10 @@ test.describe("a deployment that cannot store the support link", () => {
 		// A form offering a field that cannot be saved is worse than one that does not
 		// offer it — and the flag also keeps it out of the document, without which
 		// nothing on this form saves at all.
-		await app.enableFeatures(["VITE_FEATURE_LIBRARY_BRANDING"]);
+		await app.enableFeatures([
+			"VITE_DISCOVERY_ACTIVE",
+			"VITE_FEATURE_LIBRARY_BRANDING",
+		]);
 		await app.signIn();
 		await app.mockGraphQL(mocks);
 
