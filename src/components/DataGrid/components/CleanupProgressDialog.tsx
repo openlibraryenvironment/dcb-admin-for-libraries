@@ -80,7 +80,7 @@ export const CleanupProgressDialog = ({
 
 	return (
         <Dialog open={open} fullWidth maxWidth="sm">
-            <DialogTitle variant="modalTitle">
+            <DialogTitle id="progressOfCleanup" variant="modalTitle">
 				{isCleaning
 					? t("patron_request.cleanup_in_progress")
 					: t("patron_request.cleanup_complete")}

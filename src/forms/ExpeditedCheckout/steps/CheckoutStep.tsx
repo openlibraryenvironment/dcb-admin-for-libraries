@@ -41,7 +41,7 @@ export const CheckoutStep = ({
 
 	return (
 		<Stack direction="column" spacing={2}>
-			<Typography>
+			<Typography id="progress-bar-checkout">
 				{checkoutCompleted &&
 					t("requesting.expedited_checkout.steps.checkout_success", {
 						dueDate: displayDueDate,

@@ -154,7 +154,9 @@ const Confirmation = ({
 			aria-labelledby="confirmation-modal"
 			fullWidth>
 			{/* // Enforcing the style of bold, centered modal or dialog headers */}
-			<DialogTitle variant="modalTitle">{getHeaderText()}</DialogTitle>
+			<DialogTitle id="confirmation-modal" variant="modalTitle">
+				{getHeaderText()}
+			</DialogTitle>
 			<Divider aria-hidden="true"></Divider>
 			<DialogContent>
 				<Box

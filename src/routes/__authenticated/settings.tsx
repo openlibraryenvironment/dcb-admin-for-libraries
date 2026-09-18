@@ -32,7 +32,7 @@ function RouteComponent() {
 						{t("settings.theme_selection")}
 					</FormLabel>
 					<RadioGroup
-						aria-labelledby="demo-theme-toggle"
+						aria-labelledby="theme-toggle"
 						name="theme-toggle"
 						row
 						value={mode}
