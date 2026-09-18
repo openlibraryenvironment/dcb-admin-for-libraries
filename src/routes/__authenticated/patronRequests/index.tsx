@@ -546,6 +546,7 @@ function RouteComponent() {
 					columnVisibilityModel={columnVisibilityModel}
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
 					type="patronRequests"
+					label={t("nav.patron_requests.title")}
 					identifier="patronRequestsMain"
 					checkboxSelection={true}
 					disableAggregation={true}

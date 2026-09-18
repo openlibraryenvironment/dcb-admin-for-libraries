@@ -372,6 +372,7 @@ function RouteComponent() {
 					checkboxSelection={true}
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
 					type="patronRequests"
+					label={t("nav.supplier_requests.title")}
 					identifier="supplierPatronRequests"
 					disableAggregation={true}
 					disableHoverInteractions={true}

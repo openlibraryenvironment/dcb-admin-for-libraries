@@ -84,6 +84,8 @@ interface DataGridProps {
 	filterModel?: GridFilterModel;
 	getDetailPanelContent?: any; // Function for returning detail panel content, where applicable
 	identifier: string; // The specific type or identifier. Must be unique in the application, as it is used to retrieve data grid settings.
+	/** The grid's accessible name. Required: several grids share a page. */
+	label: string;
 	loading: boolean;
 	listViewEnabled: boolean;
 	noResultsText: string;
@@ -134,6 +136,7 @@ export default function DataGrid({
 	getDetailPanelContent,
 	isExporting = false,
 	loading,
+	label,
 	listViewEnabled,
 	noResultsText,
 	onCleanup,
@@ -196,6 +199,7 @@ export default function DataGrid({
 	return (
 		<div style={{ display: "flex", flexDirection: "column" }}>
 			<DataGridPremium
+				aria-label={label}
 				apiRef={apiRef}
 				checkboxSelection={checkboxSelection}
 				columns={columns}

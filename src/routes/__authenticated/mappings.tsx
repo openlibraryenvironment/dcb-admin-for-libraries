@@ -472,6 +472,7 @@ function RouteComponent() {
 			{
 				<DataGrid
 					disablePivoting
+					label={t("nav.mappings.title")}
 					identifier={gridId}
 					type="referenceValueMappings"
 					columns={refValueColumns}

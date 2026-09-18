@@ -269,6 +269,7 @@ function RouteComponent() {
 					columnVisibilityModel={columnVisibilityModel}
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
 					type="locations"
+					label={t("nav.locations.title")}
 					identifier="locations"
 					checkboxSelection={false}
 					disableAggregation={true}

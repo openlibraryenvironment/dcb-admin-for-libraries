@@ -262,6 +262,7 @@ function RouteComponent() {
 					columnVisibilityModel={columnVisibilityModel}
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
 					type="bibs"
+					label={t("nav.bibs.title")}
 					identifier="bibs"
 					checkboxSelection={false}
 					disableAggregation={true}

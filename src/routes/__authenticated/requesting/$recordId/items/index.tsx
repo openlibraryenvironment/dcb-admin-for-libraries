@@ -158,6 +158,7 @@ function ItemsPageComponent() {
 					getDetailPanelContent={({ row }: GridRowParams) => (
 						<MasterDetail type="items" row={row} />
 					)}
+					label={t("requesting.items_label")}
 					identifier="ClusterRecordItems"
 					listViewEnabled={false}
 					loading={isLoading}
@@ -218,6 +219,7 @@ function ItemsPageComponent() {
 								getDetailPanelContent={({ row }: any) => (
 									<MasterDetail type="items" row={row} />
 								)}
+								label={t("requesting.items_not_shown_label")}
 								identifier={itemsNotShownGridId}
 								loading={isLoading}
 								listViewEnabled={false}

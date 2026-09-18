@@ -1831,6 +1831,7 @@ function RouteComponent() {
 							},
 						]}
 						type="audits"
+						label={t("patron_request.audit_log")}
 						identifier="AuditPatronRequestDetails"
 						// This grid could show click-through details of its own for each audit log entry
 						checkboxSelection={false}

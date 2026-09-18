@@ -20,7 +20,10 @@ test("a patron request opens from the keyboard alone", async ({ app, page }) => 
 	});
 
 	await page.goto("/patronRequests");
-	await expect(page.getByRole("grid")).toBeVisible();
+	// Named, so the several grids that can share a page are distinguishable.
+	await expect(
+		page.getByRole("grid", { name: /patron requests/i }),
+	).toBeVisible();
 
 	const rowLink = page
 		.getByRole("link", { name: /2026-09-01/ })
