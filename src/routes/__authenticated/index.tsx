@@ -625,9 +625,11 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography variant="attributeTitle">
-						{t("library.full_name")}
-					</Typography>
+					{!editMode && (
+						<Typography variant="attributeTitle">
+							{t("library.full_name")}
+						</Typography>
+					)}
 				</Stack>
 				<Controller
 					name="fullName"
@@ -652,9 +654,11 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography variant="attributeTitle">
-						{t("library.short_name")}
-					</Typography>
+					{!editMode && (
+						<Typography variant="attributeTitle">
+							{t("library.short_name")}
+						</Typography>
+					)}
 					<Controller
 						name="shortName"
 						control={control}
@@ -678,9 +682,11 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography variant="attributeTitle">
-						{t("library.abbreviated_name")}
-					</Typography>
+					{!editMode && (
+						<Typography variant="attributeTitle">
+							{t("library.abbreviated_name")}
+						</Typography>
+					)}
 					<Controller
 						name="abbreviatedName"
 						control={control}
@@ -716,9 +722,11 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography variant="attributeTitle">
-						{t("library.support_hours")}
-					</Typography>
+					{!editMode && (
+						<Typography variant="attributeTitle">
+							{t("library.support_hours")}
+						</Typography>
+					)}
 					<Controller
 						name="supportHours"
 						control={control}
@@ -742,9 +750,11 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography variant="attributeTitle">
-						{t("library.backup_schedule")}
-					</Typography>
+					{!editMode && (
+						<Typography variant="attributeTitle">
+							{t("library.backup_schedule")}
+						</Typography>
+					)}
 					<Controller
 						name="backupDowntimeSchedule"
 						control={control}
@@ -850,9 +860,11 @@ function HomeComponent() {
   			</Grid>
               <Grid size={{ xs: 2, sm: 4, md: 4 }}>
   				<Stack direction={"column"}>
-  					<Typography variant="attributeTitle">
-  						{t("library.brand.logo_alt")}
-  					</Typography>
+  					{!editMode && (
+  						<Typography variant="attributeTitle">
+  							{t("library.brand.logo_alt")}
+  						</Typography>
+  					)}
   					<Controller
   						name="brandLogoAlt"
   						control={control}
@@ -878,9 +890,11 @@ function HomeComponent() {
   			</Grid>
               <Grid size={{ xs: 2, sm: 4, md: 4 }}>
   				<Stack direction={"column"}>
-  					<Typography variant="attributeTitle">
-  						{t("library.brand.theme")}
-  					</Typography>
+  					{!editMode && (
+  						<Typography variant="attributeTitle">
+  							{t("library.brand.theme")}
+  						</Typography>
+  					)}
   					<Controller
   						name="defaultThemeName"
   						control={control}
@@ -941,9 +955,11 @@ function HomeComponent() {
             </Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
               <Stack direction={"column"}>
-                <Typography variant="attributeTitle">
-                  {t("library.presence.website")}
-                </Typography>
+                {!editMode && (
+                	<Typography variant="attributeTitle">
+                		{t("library.presence.website")}
+                	</Typography>
+                )}
                 <Controller
                   name="patronWebsite"
                   control={control}
@@ -975,9 +991,11 @@ function HomeComponent() {
             {isLibrarySupportUrlEnabled() && (
               <Grid size={{ xs: 2, sm: 4, md: 4 }}>
                 <Stack direction={"column"}>
-                  <Typography variant="attributeTitle">
-                    {t("library.presence.support")}
-                  </Typography>
+                  {!editMode && (
+                  	<Typography variant="attributeTitle">
+                  		{t("library.presence.support")}
+                  	</Typography>
+                  )}
                   <Controller
                     name="supportUrl"
                     control={control}
@@ -1021,9 +1039,11 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography variant="attributeTitle">
-						{t("common.latitude")}
-					</Typography>
+					{!editMode && (
+						<Typography variant="attributeTitle">
+							{t("common.latitude")}
+						</Typography>
+					)}
 					<Controller
 						name="latitude"
 						control={control}
@@ -1047,9 +1067,11 @@ function HomeComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction="column">
-					<Typography variant="attributeTitle">
-						{t("common.longitude")}
-					</Typography>
+					{!editMode && (
+						<Typography variant="attributeTitle">
+							{t("common.longitude")}
+						</Typography>
+					)}
 					<Controller
 						name="longitude"
 						control={control}
