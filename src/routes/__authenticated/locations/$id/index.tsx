@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
@@ -16,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 
 export const Route = createFileRoute("/__authenticated/locations/$id/")({
+	head: () => ({ meta: [{ title: pageTitle("nav.locations.title") }] }),
 	component: RouteComponent,
 });
 // Read only by default

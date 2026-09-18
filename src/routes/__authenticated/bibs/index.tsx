@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
@@ -35,6 +36,7 @@ import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/bibs/")({
+	head: () => ({ meta: [{ title: pageTitle("nav.bibs.title") }] }),
 	component: RouteComponent,
 });
 

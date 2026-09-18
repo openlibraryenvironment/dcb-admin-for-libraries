@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import Grid from "@mui/material/Grid";
 import { useTranslation } from "react-i18next";
@@ -17,6 +18,7 @@ import PrivateData from "@components/PrivateData/PrivateData";
 import { useMemo } from "react";
 
 export const Route = createFileRoute("/__authenticated/service")({
+	head: () => ({ meta: [{ title: pageTitle("nav.library.service") }] }),
 	component: ServiceComponent,
 });
 

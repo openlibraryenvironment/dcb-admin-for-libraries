@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import { useAuth } from "react-oidc-context";
 import { createFileRoute } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
@@ -99,5 +100,6 @@ export const Route = createFileRoute("/login")({
 	validateSearch: z.object({
 		redirect: z.string().optional().catch(""),
 	}),
+	head: () => ({ meta: [{ title: pageTitle("login.title") }] }),
 	component: Login,
 });

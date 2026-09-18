@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import Error from "@components/Error/Error";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import {
@@ -59,6 +60,7 @@ import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 import { useGridStore } from "@/hooks/useDataGridStore";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
+	head: () => ({ meta: [{ title: pageTitle("patron_request.title") }] }),
 	component: RouteComponent,
 });
 

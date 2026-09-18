@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
@@ -31,6 +32,7 @@ import { getAuditsByPatronRequest } from "@queries/getAuditByPatronRequest";
 export const Route = createFileRoute(
 	"/__authenticated/patronRequests/audits/$auditId/"
 )({
+	head: () => ({ meta: [{ title: pageTitle("audit.title") }] }),
 	component: AuditDetailsComponent,
 });
 

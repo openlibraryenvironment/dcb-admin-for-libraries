@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
@@ -18,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 
 export const Route = createFileRoute("/__authenticated/bibs/$id/")({
+	head: () => ({ meta: [{ title: pageTitle("bibs.title") }] }),
 	component: RouteComponent,
 });
 

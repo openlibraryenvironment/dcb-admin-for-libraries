@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -106,6 +107,7 @@ export const Route = createFileRoute("/__authenticated/insights")({
 	},
 
 	pendingComponent: InsightsPending,
+	head: () => ({ meta: [{ title: pageTitle("nav.insights.title") }] }),
 	component: LibraryInsights,
 });
 

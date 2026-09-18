@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -65,6 +66,7 @@ import TopRequestorsSummary from "@components/TopRequestorSummary/TopRequestorSu
 
 // Landing page, also library information page
 export const Route = createFileRoute("/__authenticated/")({
+	head: () => ({ meta: [{ title: pageTitle("nav.home.title") }] }),
 	component: HomeComponent,
 });
 

@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import {
 	FormControl,
 	FormControlLabel,
@@ -11,6 +12,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/__authenticated/settings")({
+	head: () => ({ meta: [{ title: pageTitle("nav.settings.title") }] }),
 	component: RouteComponent,
 });
 

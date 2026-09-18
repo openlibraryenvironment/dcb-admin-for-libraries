@@ -1,5 +1,6 @@
 // import { createFileRoute, redirect } from "@tanstack/react-router";
 
+import { pageTitle } from "@helpers/pageTitle";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import Typography from "@mui/material/Typography";
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/__authenticated/contacts")({
 	// 		});
 	// 	}
 	// },
+	head: () => ({ meta: [{ title: pageTitle("nav.contacts.title") }] }),
 	component: RouteComponent,
 });
 
