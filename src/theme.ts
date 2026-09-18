@@ -156,6 +156,21 @@ const theme = createTheme({
 				},
 			},
 		},
+		MuiTypography: {
+			defaultProps: {
+				// An unrecognised variant falls through to `span`
+				// (Typography.js:141). A partial map is safe - Typography still
+				// falls back to its own default for anything absent.
+				//
+				// attributeTitle is absent deliberately: it is a field label, not a
+				// heading. modalTitle too - DialogTitle sets component="h2" itself.
+				variantMapping: {
+					accordionSummary: "h2",
+					componentSubheading: "h2",
+					loadingText: "h1",
+				},
+			},
+		},
 		MuiTooltip: {
 			defaultProps: {
 				arrow: true,
