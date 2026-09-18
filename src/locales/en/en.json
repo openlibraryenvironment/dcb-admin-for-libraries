@@ -19,7 +19,9 @@
 	},
 	"a11y": {
 		"empty": "This field is empty",
-		"navigation": "Main navigation"
+		"main_content": "Main content",
+		"navigation": "Main navigation",
+		"skip_to_content": "Skip to main content"
 	},
 	"bibs": {
 		"author": "Author",

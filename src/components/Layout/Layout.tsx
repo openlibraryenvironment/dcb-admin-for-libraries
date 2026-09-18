@@ -10,6 +10,8 @@ import { CustomLink } from "@components/CustomLink";
 import { useTranslation } from "react-i18next";
 import { matchActiveTab } from "@helpers/activeTab";
 import { isInsightsEnabled } from "@helpers/featureFlags";
+import { MAIN_CONTENT_ID } from "@constants/landmarks";
+import { SkipLink } from "./SkipLink";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -94,12 +96,15 @@ export const Layout = ({ children }: LayoutProps) => {
 
 	return (
 		<>
+			<SkipLink />
 			<Header />
 			{auth.isAuthenticated && (
-				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+				<Box
+					component="nav"
+					aria-label={t("a11y.navigation")}
+					sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
 					<Tabs
 						value={activeTab}
-						aria-label={t("a11y.navigation")}
 						variant="scrollable"
 						scrollButtons="auto"
 						color="primary">
@@ -116,7 +121,15 @@ export const Layout = ({ children }: LayoutProps) => {
 					</Tabs>
 				</Box>
 			)}
-			<Container sx={{ mt: 3, mb: 5 }}>{children}</Container>
+			<Container
+				component="main"
+				id={MAIN_CONTENT_ID}
+				// Focusable only as a skip-link target: without it the browser moves
+				// the page but not the focus, and the next Tab returns to the header.
+				tabIndex={-1}
+				sx={{ mt: 3, mb: 5 }}>
+				{children}
+			</Container>
 		</>
 	);
 };
