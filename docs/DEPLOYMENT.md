@@ -42,6 +42,9 @@ The application requires the following environment variables to function properl
 > [!NOTE]
 > `VITE_PUBLIC_URL` is not runtime tenant configuration. Set it only at build time for standalone/subpath deployments. Host-specific backend, search, Keycloak and licence values should be supplied by `inject_env.json` in standalone runtime-config deployments or by the KI bootloader host configuration.
 
+> [!IMPORTANT]
+> Under a subpath, only the router adds the base. A root-relative `href` or `window.open("/patronRequests/…")` resolves against the origin root, outside this app — on a shared origin such as Mobius, into whatever else is mounted there. Navigate with `to` on a router link (`CustomLink`), and pass `appUrl(path)` to `window.open`. ESLint fails both patterns when the path is a literal; it cannot see a path held in a variable.
+
 ---
 
 ## 2a. Feature flags: which dcb-service this deployment is talking to
