@@ -1,3 +1,4 @@
+import ChartDataTable from "./ChartDataTable";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, Typography, Skeleton, Box } from "@mui/material";
@@ -79,6 +80,11 @@ export default function SupplierReliabilityChart({
 						]}
 					/>
 				)}
+				<ChartDataTable
+					caption={t("insights.charts.supplier_reliability.title")}
+					columns={[t("insights.charts.supplier_reliability.supplier"), t("insights.charts.supplier_reliability.fulfilled"), t("insights.charts.supplier_reliability.failed")]}
+					rows={rows.map((r) => [r.supplierCode, r.fulfilledCount, r.failedCount])}
+				/>
 			</CardContent>
 		</Card>
 	);

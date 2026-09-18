@@ -312,95 +312,10 @@
 			}
 		},
 		"charts": {
-			"status_flow": {
-				"title": "Requesting activity over time",
-				"subtitle": "Requests entering each status per period. Pick the statuses to plot.",
-				"picker_label": "Choose which statuses to plot"
-			},
-			"failure_taxonomy": {
-				"title": "Why requests fail",
-				"subtitle": "Failed requests broken down by reason.",
-				"series": "Failed requests"
-			},
-			"supplier_reliability": {
-				"title": "Supplier reliability",
-				"subtitle": "Fulfilled versus failed requests per supplying library.",
-				"fulfilled": "Fulfilled",
-				"failed": "Failed"
-			},
-			"net_flow": {
-				"title": "Borrowing vs supplying",
-				"subtitle": "Reciprocity across the network — net givers and takers.",
-				"borrowed": "Borrowed",
-				"supplied": "Supplied"
-			},
-			"rare_gem": {
-				"title": "Unique collection value",
-				"subtitle": "Requested titles that only this library supplies to the network.",
-				"col_title": "Title",
-				"col_author": "Author",
-				"col_requests": "Requests"
-			},
-			"time_in_status": {
-				"title": "Where requests stall",
-				"subtitle": "Median time spent in each status — the biggest bottleneck first.",
-				"series": "Median dwell",
-				"axis_hours": "Hours"
-			},
-			"supplier_response": {
-				"title": "Supplier responsiveness",
-				"subtitle": "Median time from request placed to supplier confirmation, per lender.",
-				"series": "Median response",
-				"axis_hours": "Hours"
-			},
-			"demand_heatmap": {
-				"title": "When requests arrive",
-				"subtitle": "Request volume by day of week and hour of day (server time zone)."
-			},
-			"demand_by_format": {
-				"title": "Demand by format",
-				"subtitle": "Requesting volume by material format.",
-				"series": "Requests"
-			},
-			"top_titles": {
-				"title": "Most requested titles",
-				"subtitle": "The titles the network asks for most.",
-				"col_title": "Title",
-				"col_requests": "Requests"
-			},
-			"demand_by_pickup": {
-				"title": "Demand by pickup location",
-				"subtitle": "Where patrons collect their requests.",
-				"series": "Requests"
-			},
-			"demand_by_patron_group": {
-				"title": "Demand by patron group",
-				"subtitle": "Which patron categories drive requesting.",
-				"series": "Requests"
-			},
-			"unmet_local": {
-				"title": "Unmet local demand",
-				"subtitle": "Titles your own patrons requested but you do not hold.",
-				"col_supplied": "Supplied"
-			},
 			"acquisition_opportunities": {
 				"title": "Acquisition opportunities",
 				"subtitle": "Highly requested titles across the network that you do not hold.",
 				"col_supplied": "Supplied"
-			},
-			"consortial_lifeline": {
-				"title": "Consortial lifeline",
-				"subtitle": "Titles you uniquely keep flowing to the network.",
-				"col_supplied": "Supplied"
-			},
-			"peer_benchmark": {
-				"title": "Peer benchmarking",
-				"subtitle": "Each library vs the consortium median (fill {{fill}}, checkout {{checkout}}).",
-				"col_library": "Library",
-				"col_requests": "Requests",
-				"col_checkout": "Checkout rate",
-				"col_fill": "Fill rate",
-				"your_library": "(your library)"
 			},
 			"collection_dimension": {
 				"title": "Collection analysis",
@@ -412,10 +327,100 @@
 				"dim_subject": "Subject",
 				"dim_decade": "Publication decade"
 			},
+			"consortial_lifeline": {
+				"title": "Consortial lifeline",
+				"subtitle": "Titles you uniquely keep flowing to the network.",
+				"col_supplied": "Supplied"
+			},
+			"demand_by_format": {
+				"title": "Demand by format",
+				"subtitle": "Requesting volume by material format.",
+				"series": "Requests"
+			},
+			"demand_by_patron_group": {
+				"title": "Demand by patron group",
+				"subtitle": "Which patron categories drive requesting.",
+				"series": "Requests"
+			},
+			"demand_by_pickup": {
+				"title": "Demand by pickup location",
+				"subtitle": "Where patrons collect their requests.",
+				"series": "Requests"
+			},
+			"demand_heatmap": {
+				"title": "When requests arrive",
+				"subtitle": "Request volume by day of week and hour of day (server time zone)."
+			},
+			"failure_taxonomy": {
+				"reason": "Reason",
+				"series": "Failed requests",
+				"subtitle": "Failed requests broken down by reason.",
+				"title": "Why requests fail"
+			},
+			"net_flow": {
+				"borrowed": "Borrowed",
+				"library": "Library",
+				"subtitle": "Reciprocity across the network — net givers and takers.",
+				"supplied": "Supplied",
+				"title": "Borrowing vs supplying"
+			},
 			"new_acquisitions": {
 				"title": "New acquisitions performance",
 				"subtitle": "How your recently-added titles perform in the network.",
 				"acquired_since": "Acquired since",
+				"col_supplied": "Supplied"
+			},
+			"peer_benchmark": {
+				"title": "Peer benchmarking",
+				"subtitle": "Each library vs the consortium median (fill {{fill}}, checkout {{checkout}}).",
+				"col_library": "Library",
+				"col_requests": "Requests",
+				"col_checkout": "Checkout rate",
+				"col_fill": "Fill rate",
+				"your_library": "(your library)"
+			},
+			"rare_gem": {
+				"title": "Unique collection value",
+				"subtitle": "Requested titles that only this library supplies to the network.",
+				"col_title": "Title",
+				"col_author": "Author",
+				"col_requests": "Requests"
+			},
+			"status_flow": {
+				"bucket": "Date",
+				"picker_label": "Choose which statuses to plot",
+				"subtitle": "Requests entering each status per period. Pick the statuses to plot.",
+				"title": "Requesting activity over time"
+			},
+			"supplier_reliability": {
+				"failed": "Failed",
+				"fulfilled": "Fulfilled",
+				"subtitle": "Fulfilled versus failed requests per supplying library.",
+				"supplier": "Supplier",
+				"title": "Supplier reliability"
+			},
+			"supplier_response": {
+				"title": "Supplier responsiveness",
+				"subtitle": "Median time from request placed to supplier confirmation, per lender.",
+				"series": "Median response",
+				"axis_hours": "Hours"
+			},
+			"time_in_status": {
+				"axis_hours": "Hours",
+				"series": "Median dwell",
+				"status": "Status",
+				"subtitle": "Median time spent in each status — the biggest bottleneck first.",
+				"title": "Where requests stall"
+			},
+			"top_titles": {
+				"title": "Most requested titles",
+				"subtitle": "The titles the network asks for most.",
+				"col_title": "Title",
+				"col_requests": "Requests"
+			},
+			"unmet_local": {
+				"title": "Unmet local demand",
+				"subtitle": "Titles your own patrons requested but you do not hold.",
 				"col_supplied": "Supplied"
 			}
 		}

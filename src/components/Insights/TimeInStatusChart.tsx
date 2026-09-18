@@ -1,3 +1,4 @@
+import ChartDataTable from "./ChartDataTable";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, Typography, Skeleton, Box } from "@mui/material";
@@ -69,6 +70,11 @@ export default function TimeInStatusChart({ params }: { params: StatsParams }) {
 						margin={{ left: 180 }}
 					/>
 				)}
+				<ChartDataTable
+					caption={t("insights.charts.time_in_status.title")}
+					columns={[t("insights.charts.time_in_status.status"), t("insights.charts.time_in_status.axis_hours")]}
+					rows={rows.map((r) => [r.status, Math.round((r.medianDwellSeconds / 3600) * 10) / 10])}
+				/>
 			</CardContent>
 		</Card>
 	);
