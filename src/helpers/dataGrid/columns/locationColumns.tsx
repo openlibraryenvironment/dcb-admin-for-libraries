@@ -9,7 +9,7 @@ import { dateTimeRangeOperators } from "@constants/filters/dateTimeRangeOperator
 export const defaultLocationColumns: GridColDef[] = [
 	{
 		field: "hostSystemName",
-		headerName: "Host LMS name",
+		headerName: i18n.t("grid.headers.host_lms_name"),
 		minWidth: 150,
 		flex: 0.6,
 		filterable: false,
@@ -27,7 +27,7 @@ export const defaultLocationColumns: GridColDef[] = [
 				</CustomLink>
 			)),
 		field: "name",
-		headerName: "Location name",
+		headerName: i18n.t("grid.headers.location_name"),
 		minWidth: 150,
 		flex: 0.6,
 		editable: true,
@@ -35,7 +35,7 @@ export const defaultLocationColumns: GridColDef[] = [
 	},
 	{
 		field: "printLabel",
-		headerName: "Print label",
+		headerName: i18n.t("grid.headers.print_label"),
 		minWidth: 150,
 		flex: 0.6,
 		editable: true,
@@ -43,7 +43,7 @@ export const defaultLocationColumns: GridColDef[] = [
 	},
 	{
 		field: "code",
-		headerName: "Location code",
+		headerName: i18n.t("grid.headers.location_code"),
 		minWidth: 50,
 		flex: 0.4,
 		filterOperators: standardFilters,
@@ -76,7 +76,7 @@ export const defaultLocationColumns: GridColDef[] = [
 	},
 	{
 		field: "id",
-		headerName: "Location UUID",
+		headerName: i18n.t("grid.headers.location_uuid"),
 		minWidth: 50,
 		flex: 0.8,
 		sortable: false,
@@ -84,7 +84,7 @@ export const defaultLocationColumns: GridColDef[] = [
 	},
 	{
 		field: "lastImported",
-		headerName: "Last imported",
+		headerName: i18n.t("grid.headers.last_imported"),
 		minWidth: 100,
 		flex: 0.5,
 		sortable: true,

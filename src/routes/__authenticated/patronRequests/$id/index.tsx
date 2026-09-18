@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 import { pageTitle } from "@helpers/pageTitle";
 import Error from "@components/Error/Error";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
@@ -1799,7 +1800,7 @@ function RouteComponent() {
 						columns={[
 							{
 								field: "auditDate",
-								headerName: "Audit date",
+								headerName: i18n.t("grid.headers.audit_date"),
 								minWidth: 60,
 								flex: 0.2,
 								editable: false,
@@ -1812,19 +1813,19 @@ function RouteComponent() {
 							},
 							{
 								field: "briefDescription",
-								headerName: "Description",
+								headerName: i18n.t("grid.headers.description"),
 								minWidth: 100,
 								flex: 0.4,
 							},
 							{
 								field: "fromStatus",
-								headerName: "fromStatus",
+								headerName: i18n.t("grid.headers.fromstatus"),
 								minWidth: 50,
 								flex: 0.25,
 							},
 							{
 								field: "toStatus",
-								headerName: "toStatus",
+								headerName: i18n.t("grid.headers.tostatus"),
 								minWidth: 50,
 								flex: 0.25,
 							},
@@ -1858,7 +1859,7 @@ function RouteComponent() {
 						onRowModesModelChange={setRowModesModel}
 						toolbarVisible
 						rowModesModel={rowModesModel}
-						searchText="Search by audit"
+						searchText={t("ui.data_grid.search_audits")}
 						scrollbarVisible={false}
 						sortingMode="client"
 						sortModel={currentSort}

@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 import { dateTimeRangeOperators } from "@constants/filters/dateTimeRangeOperators";
 import { standardFilters } from "@constants/filters/filters";
 import { GridColDef } from "@mui/x-data-grid-premium";
@@ -6,7 +7,7 @@ import dayjs from "dayjs";
 export const standardRefValueMappingColumns: GridColDef[] = [
 	{
 		field: "fromCategory",
-		headerName: "Category",
+		headerName: i18n.t("grid.headers.category"),
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
@@ -15,7 +16,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 	},
 	{
 		field: "fromContext",
-		headerName: "From context",
+		headerName: i18n.t("grid.headers.from_context"),
 		minWidth: 50,
 		flex: 0.5,
 		filterable: false,
@@ -24,7 +25,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 	},
 	{
 		field: "fromValue",
-		headerName: "From value",
+		headerName: i18n.t("grid.headers.from_value"),
 		minWidth: 50,
 		flex: 0.4,
 		filterOperators: standardFilters,
@@ -33,7 +34,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 	},
 	{
 		field: "toContext",
-		headerName: "To context",
+		headerName: i18n.t("grid.headers.to_context"),
 		minWidth: 50,
 		flex: 0.5,
 		filterable: false,
@@ -42,7 +43,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 	},
 	{
 		field: "toValue",
-		headerName: "To value",
+		headerName: i18n.t("grid.headers.to_value"),
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
@@ -52,7 +53,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 	},
 	{
 		field: "lastImported",
-		headerName: "Last imported",
+		headerName: i18n.t("grid.headers.last_imported"),
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: dateTimeRangeOperators,
@@ -70,7 +71,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 	},
 	{
 		field: "toCategory",
-		headerName: "To category",
+		headerName: i18n.t("grid.headers.to_category"),
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
@@ -84,7 +85,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 	{
 		field: "fromCategory",
-		headerName: "Category",
+		headerName: i18n.t("grid.headers.category"),
 		minWidth: 50,
 		flex: 0.5,
 		filterable: false,
@@ -93,7 +94,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 	},
 	{
 		field: "fromContext",
-		headerName: "From context",
+		headerName: i18n.t("grid.headers.from_context"),
 		minWidth: 50,
 		flex: 0.5,
 		filterable: false,
@@ -102,7 +103,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 	},
 	{
 		field: "fromValue",
-		headerName: "From value",
+		headerName: i18n.t("grid.headers.from_value"),
 		minWidth: 50,
 		flex: 0.4,
 		filterOperators: standardFilters,
@@ -111,7 +112,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 	},
 	{
 		field: "toContext",
-		headerName: "To context",
+		headerName: i18n.t("grid.headers.to_context"),
 		minWidth: 50,
 		flex: 0.5,
 		filterable: false,
@@ -120,7 +121,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 	},
 	{
 		field: "toValue",
-		headerName: "To value",
+		headerName: i18n.t("grid.headers.to_value"),
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
@@ -130,7 +131,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 	},
 	{
 		field: "lastImported",
-		headerName: "Last imported",
+		headerName: i18n.t("grid.headers.last_imported"),
 		minWidth: 100,
 		flex: 0.5,
 		sortable: true,
@@ -146,7 +147,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 	},
 	{
 		field: "toCategory",
-		headerName: "To category",
+		headerName: i18n.t("grid.headers.to_category"),
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,

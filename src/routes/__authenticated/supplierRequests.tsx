@@ -382,7 +382,7 @@ function RouteComponent() {
 					pagination
 					pivotingEnabled={false}
 					toolbarVisible
-					searchText="Search supplier patron requests"
+					searchText={t("ui.data_grid.search_supplier_requests")}
 					scrollbarVisible={false}
 					paginationMode="server"
 					paginationModel={paginationModel}

@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 import { CustomLink } from "@components/CustomLink";
 import { detailLinkCell } from "@helpers/dataGrid/detailLinkCell";
 import { dateTimeRangeOperators } from "@constants/filters/dateTimeRangeOperators";
@@ -26,7 +27,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 				</CustomLink>
 			)),
 		field: "dateCreated",
-		headerName: "Request created",
+		headerName: i18n.t("grid.headers.request_created"),
 		minWidth: 150,
 		filterOperators: dateTimeRangeOperators,
 		type: "dateTime",
@@ -39,7 +40,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "patronHostlmsCode",
-		headerName: "Patron library",
+		headerName: i18n.t("grid.headers.patron_library"),
 		filterable: true, // Should present library options but with the HOST LMS code as a mapping.
 		sortable: false,
 		type: "singleSelect",
@@ -48,7 +49,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "patronBarcode",
-		headerName: "Patron barcode",
+		headerName: i18n.t("grid.headers.patron_barcode"),
 		filterable: false,
 		sortable: false,
 		flex: 0.75,
@@ -57,7 +58,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "clusterRecordTitle",
-		headerName: "Title",
+		headerName: i18n.t("grid.headers.title"),
 		minWidth: 100,
 		flex: 1.5,
 		filterable: false, // Cannot currently filter on nested properties.
@@ -67,14 +68,14 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "pickupRequestId",
-		headerName: "Pickup request UUID",
+		headerName: i18n.t("grid.headers.pickup_request_uuid"),
 		minWidth: 100,
 		sortable: true,
 		filterable: false,
 	},
 	{
 		field: "pickupRequestStatus",
-		headerName: "Pickup request status",
+		headerName: i18n.t("grid.headers.pickup_request_status"),
 		minWidth: 100,
 		sortable: true, // Maybe this shouldn't be filterable. one to check
 		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
@@ -83,7 +84,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "canonicalPtype",
-		headerName: "DCB canonical patron type",
+		headerName: i18n.t("grid.headers.dcb_canonical_patron_type"),
 		minWidth: 100,
 		flex: 0.5,
 		filterable: false,
@@ -95,7 +96,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "canonicalItemType",
-		headerName: "DCB canonical item type",
+		headerName: i18n.t("grid.headers.dcb_canonical_item_type"),
 		minWidth: 100,
 		flex: 0.5,
 		filterable: false,
@@ -113,7 +114,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "previousStatus",
-		headerName: "Previous status",
+		headerName: i18n.t("grid.headers.previous_status"),
 		minWidth: 100,
 		flex: 1.5,
 		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
@@ -122,7 +123,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "status",
-		headerName: "Status",
+		headerName: i18n.t("grid.headers.status"),
 		minWidth: 100,
 		flex: 1.0,
 		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
@@ -131,7 +132,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "nextExpectedStatus",
-		headerName: "Next status",
+		headerName: i18n.t("grid.headers.next_status"),
 		minWidth: 100,
 		flex: 1.5,
 		type: "singleSelect", // Note - may need to support IS and IS NOT, but not is any of as we have a different way of doing that
@@ -140,28 +141,28 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "errorMessage",
-		headerName: "Error message",
+		headerName: i18n.t("grid.headers.error_message"),
 		minWidth: 100,
 		flex: 1.5,
 		filterOperators: containsOnly, // Should probably still be free text
 	},
 	{
 		field: "outOfSequenceFlag",
-		headerName: "Out of sequence", // Should be true/false
+		headerName: i18n.t("grid.headers.out_of_sequence"), // Should be true/false
 		flex: 0.75,
 		filterOperators: equalsOnly,
 		type: "boolean",
 	},
 	{
 		field: "pollCountForCurrentStatus",
-		headerName: "Polling count",
+		headerName: i18n.t("grid.headers.polling_count"),
 		flex: 0.75,
 		filterOperators: equalsOnly, // Should be numeric
 		type: "number",
 	},
 	{
 		field: "elapsedTimeInCurrentStatus",
-		headerName: "Time in state (days)",
+		headerName: i18n.t("grid.headers.time_in_state_days"),
 		description:
 			"The time the request has been in its current status, in the format dd:hh:mm:ss", // Can we replicate this elsewhere?
 		minWidth: 50,
@@ -176,14 +177,14 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "isManuallySelectedItem",
-		headerName: "Manually selected?",
+		headerName: i18n.t("grid.headers.manually_selected"),
 		flex: 0.75, // true false
 		filterOperators: equalsOnly,
 		type: "boolean",
 	},
 	{
 		field: "dateUpdated",
-		headerName: "Request updated",
+		headerName: i18n.t("grid.headers.request_updated"),
 		minWidth: 150,
 		filterOperators: dateTimeRangeOperators,
 		type: "dateTime",
@@ -196,26 +197,26 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "description",
-		headerName: "Description", // free text
+		headerName: i18n.t("grid.headers.description"), // free text
 		filterOperators: standardFilters,
 		flex: 0.5,
 	},
 	{
 		field: "requesterNote",
-		headerName: "Requester note", // free text
+		headerName: i18n.t("grid.headers.requester_note"), // free text
 		filterOperators: standardFilters,
 		flex: 0.5,
 	},
 	{
 		field: "id",
-		headerName: "Request UUID", // free text
+		headerName: i18n.t("grid.headers.request_uuid"), // free text
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: equalsOnly,
 	},
 	{
 		field: "activeWorkflow",
-		headerName: "Active workflow", // should have options
+		headerName: i18n.t("grid.headers.active_workflow"), // should have options
 		minWidth: 100,
 		sortable: true,
 		filterable: true,
@@ -225,7 +226,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "isExpeditedCheckout",
-		headerName: "Walk-up request?", // true false
+		headerName: i18n.t("grid.headers.walk_up_request"), // true false
 		flex: 0.5,
 		filterOperators: equalsOnly,
 		filterable: true,
@@ -234,7 +235,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "renewalCount",
-		headerName: "Renewal count",
+		headerName: i18n.t("grid.headers.renewal_count"),
 		flex: 0.5,
 		filterOperators: equalsOnly,
 		filterable: true,
@@ -243,7 +244,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	// Item values
 	{
 		field: "itemBarcode",
-		headerName: "Item barcode",
+		headerName: i18n.t("grid.headers.item_barcode"),
 		filterable: false,
 		sortable: false,
 		flex: 0.3,
@@ -257,7 +258,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "localItemStatus",
-		headerName: "Local item status",
+		headerName: i18n.t("grid.headers.local_item_status"),
 		flex: 0.3,
 		filterOperators: equalsOnly,
 		filterable: true,
@@ -265,7 +266,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "rawLocalItemStatus",
-		headerName: "Raw local item status",
+		headerName: i18n.t("grid.headers.raw_local_item_status"),
 		flex: 0.3,
 		filterOperators: equalsOnly,
 		filterable: true,
@@ -273,7 +274,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "localItemType",
-		headerName: "Local item type",
+		headerName: i18n.t("grid.headers.local_item_type"),
 		flex: 0.3,
 		filterOperators: equalsOnly,
 		filterable: true,
@@ -281,7 +282,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "localItemId",
-		headerName: "Local item ID",
+		headerName: i18n.t("grid.headers.local_item_id"),
 		flex: 0.3,
 		filterOperators: equalsOnly,
 		filterable: true,
@@ -290,7 +291,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	// Local requests
 	{
 		field: "localRequestStatus",
-		headerName: "Local request status",
+		headerName: i18n.t("grid.headers.local_request_status"),
 		flex: 0.5,
 		filterOperators: equalsOnly,
 		filterable: true,
@@ -298,7 +299,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "rawLocalRequestStatus",
-		headerName: "Raw local request status",
+		headerName: i18n.t("grid.headers.raw_local_request_status"),
 		flex: 0.5,
 		filterOperators: equalsOnly,
 		filterable: true,
@@ -306,7 +307,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	},
 	{
 		field: "localRequestId",
-		headerName: "Local request ID",
+		headerName: i18n.t("grid.headers.local_request_id"),
 		flex: 0.3,
 		filterOperators: equalsOnly,
 		filterable: true,

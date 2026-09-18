@@ -503,7 +503,7 @@ function RouteComponent() {
 					pagination
 					toolbarVisible
 					noResultsText={t("audit.no_results")}
-					searchText="Search by mappings"
+					searchText={t("ui.data_grid.search_mappings")}
 					scrollbarVisible={false}
 				/>
 			}
