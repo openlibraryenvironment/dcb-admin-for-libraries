@@ -1,3 +1,5 @@
+import { CustomLink } from "@components/CustomLink";
+import { detailLinkCell } from "@helpers/dataGrid/detailLinkCell";
 import { dateTimeRangeOperators } from "@constants/filters/dateTimeRangeOperators";
 import {
 	containsOnly,
@@ -16,6 +18,14 @@ import dayjs from "dayjs";
 // Lots of translation keys needed
 export const standardPatronRequestColumns: GridColDef[] = [
 	{
+		// The row's handle: the leading cell is the link to this row's detail
+		// page, so the grid is navigable without a pointer.
+		renderCell: (params) =>
+			detailLinkCell(params, (id, label) => (
+				<CustomLink to="/patronRequests/$id" params={{ id: id }}>
+					{label}
+				</CustomLink>
+			)),
 		field: "dateCreated",
 		headerName: "Request created",
 		minWidth: 150,

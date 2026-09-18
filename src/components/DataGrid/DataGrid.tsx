@@ -23,11 +23,7 @@ import { useTranslation } from "react-i18next";
 import { NoResultsOverlay } from "./components/NoResultsOverlay";
 import { useNavigate } from "@tanstack/react-router";
 import { appUrl } from "@helpers/appBase";
-import {
-	expandedFilterPanelTypes,
-	nonClickableTypes,
-	specialRedirectionTypes,
-} from "@constants/dataGrid/types";
+import { expandedFilterPanelTypes } from "@constants/dataGrid/types";
 import { SxProps, Theme } from "@mui/material";
 import ExportToolbar from "./components/ExportToolbar";
 
@@ -40,6 +36,39 @@ declare module "@mui/x-data-grid-premium" {
 		selectionCount?: number;
 	}
 }
+
+/**
+ * Where a row in a given grid opens, or null when its rows open nothing.
+ *
+ * `href` duplicates `navigate` as a string only because window.open needs one:
+ * the router has no typed API for opening a tab.
+ */
+const detailTarget = (
+	type: string,
+	id: string,
+): { navigate: { to: string; params: Record<string, string> }; href: string } | null => {
+	switch (type) {
+		case "audits":
+			return {
+				navigate: { to: "/patronRequests/audits/$auditId", params: { auditId: id } },
+				href: `/patronRequests/audits/${id}`,
+			};
+		case "patronRequests":
+			return {
+				navigate: { to: "/patronRequests/$id", params: { id } },
+				href: `/patronRequests/${id}`,
+			};
+		case "bibs":
+			return { navigate: { to: "/bibs/$id", params: { id } }, href: `/bibs/${id}` };
+		case "locations":
+			return {
+				navigate: { to: "/locations/$id", params: { id } },
+				href: `/locations/${id}`,
+			};
+		default:
+			return null;
+	}
+};
 
 interface DataGridProps {
 	autoRowHeight?: boolean;
@@ -147,50 +176,22 @@ export default function DataGrid({
 		ids: new Set(),
 	});
 	const handleRowClick: GridEventListener<"rowClick"> = (params, event) => {
-		//UseNavigateResult<string>
-
-		if (rowModesModel[params?.row?.id]?.mode !== GridRowModes.Edit) {
-			// Some grids, like the PRs on the library page, need special redirection
-			if (specialRedirectionTypes.includes(type)) {
-				if (event.ctrlKey || event.metaKey)
-					if (type == "audits") {
-						if (event.ctrlKey || event.metaKey) {
-							window.open(
-								appUrl(`/patronRequests/audits/${params?.row?.id}`),
-								"_blank",
-							);
-						} else {
-							navigate({ to: `/patronRequests/audits/${params?.row?.id}` });
-						}
-					} else {
-						window.open(appUrl(`/patronRequests/${params?.row?.id}`), "_blank");
-					}
-				if (!(event.ctrlKey || event.metaKey))
-					if (type == "audits") {
-						if (event.ctrlKey || event.metaKey) {
-							window.open(
-								appUrl(`/patronRequests/audits/${params?.row?.id}`),
-								"_blank",
-							);
-						} else {
-							navigate({ to: `/patronRequests/audits/${params?.row?.id}` });
-						}
-					} else {
-						navigate({ to: `/patronRequests/${params?.row?.id}` });
-					}
-			} else if (
-				// Others we don't want users to be able to click through on
-				!nonClickableTypes.includes(type)
-			) {
-				if (event.ctrlKey || event.metaKey)
-					window.open(appUrl(`/${type}/${params?.row?.id}`), "_blank");
-				if (!(event.ctrlKey || event.metaKey))
-					navigate({ to: `/${type}/${params?.row?.id}` });
-			}
-		} else {
-			// Don't let them navigate away if editing is present
+		// Don't let them navigate away if editing is present
+		if (rowModesModel[params?.row?.id]?.mode === GridRowModes.Edit) {
 			event.defaultMuiPrevented = true;
+			return;
 		}
+
+		const target = detailTarget(type, String(params?.row?.id));
+		if (!target) {
+			return;
+		}
+
+		if (event.ctrlKey || event.metaKey) {
+			window.open(appUrl(target.href), "_blank");
+			return;
+		}
+		navigate(target.navigate);
 	};
 
 	//identifier may not be needed

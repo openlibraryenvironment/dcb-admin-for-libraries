@@ -1,3 +1,5 @@
+import { CustomLink } from "@components/CustomLink";
+import { detailLinkCell } from "@helpers/dataGrid/detailLinkCell";
 import dayjs from "dayjs";
 import i18n from "@/i18n";
 import { GridColDef } from "@mui/x-data-grid-premium";
@@ -6,6 +8,14 @@ import { dateTimeRangeOperators } from "@constants/filters/dateTimeRangeOperator
 
 export const standardBibColumns: GridColDef[] = [
 	{
+		// The row's handle: the leading cell is the link to this row's detail
+		// page, so the grid is navigable without a pointer.
+		renderCell: (params) =>
+			detailLinkCell(params, (id, label) => (
+				<CustomLink to="/bibs/$id" params={{ id: id }}>
+					{label}
+				</CustomLink>
+			)),
 		field: "title",
 		headerName: i18n.t("bibs.title_actual"),
 		minWidth: 150,

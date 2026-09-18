@@ -1,9 +1,19 @@
+import { CustomLink } from "@components/CustomLink";
+import { detailLinkCell } from "@helpers/dataGrid/detailLinkCell";
 import { GridColDef } from "@mui/x-data-grid-premium";
 import dayjs from "dayjs";
 import i18n from "@/i18n";
 
 export const auditColumns: GridColDef[] = [
 	{
+		// The row's handle: the leading cell is the link to this row's detail
+		// page, so the grid is navigable without a pointer.
+		renderCell: (params) =>
+			detailLinkCell(params, (id, label) => (
+				<CustomLink to="/patronRequests/audits/$auditId" params={{ auditId: id }}>
+					{label}
+				</CustomLink>
+			)),
 		field: "auditDate",
 		headerName: i18n.t("audit.date"),
 		minWidth: 60,

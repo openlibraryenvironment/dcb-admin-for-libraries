@@ -1,3 +1,5 @@
+import { CustomLink } from "@components/CustomLink";
+import { detailLinkCell } from "@helpers/dataGrid/detailLinkCell";
 import dayjs from "dayjs";
 import i18n from "@/i18n";
 import { GridColDef } from "@mui/x-data-grid-premium";
@@ -16,6 +18,14 @@ export const defaultLocationColumns: GridColDef[] = [
 			row?.hostSystem?.name,
 	},
 	{
+		// The row's handle: the leading cell is the link to this row's detail
+		// page, so the grid is navigable without a pointer.
+		renderCell: (params) =>
+			detailLinkCell(params, (id, label) => (
+				<CustomLink to="/locations/$id" params={{ id: id }}>
+					{label}
+				</CustomLink>
+			)),
 		field: "name",
 		headerName: "Location name",
 		minWidth: 150,
