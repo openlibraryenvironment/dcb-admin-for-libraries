@@ -223,7 +223,9 @@ const theme = createTheme({
 					headingColour: "#0C4068",
 					hitCountText: "#333333",
 					iconSymbol: "#FFFFFF",
-					inactiveBackground: "#8C8C8C",
+					// Carries the white step number in DCBStepIcon, so it is a text ground.
+					// #8C8C8C left that number at 3.36:1; this is 4.61:1.
+					inactiveBackground: "#757575",
 					main: "#0C4068",
 					navigationBackground: "#1B76B4",
 					navigationText: "#E2EEF6",
@@ -261,7 +263,9 @@ const theme = createTheme({
 					headingColour: "#FFFFFF",
 					hitCountText: "#FFFFFF",
 					iconSymbol: "#FFFFFF",
-					inactiveBackground: "#8C8C8C",
+					// Carries the white step number in DCBStepIcon, so it is a text ground.
+					// #8C8C8C left that number at 3.36:1; this is 4.61:1.
+					inactiveBackground: "#757575",
 					main: "#35B7FF",
 					searchResultBackground: "#424242",
 					searchResultTitle: "#186498",

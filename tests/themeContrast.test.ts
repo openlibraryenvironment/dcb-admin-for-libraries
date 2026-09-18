@@ -34,7 +34,18 @@ const channel = (value: number): number => {
 	return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
 };
 
-const rgb = (colour: string): [number, number, number] => {
+type Rgba = [number, number, number, number];
+
+// MUI derives contrastText and the text.* ramp as `rgba(...)`, not hex. Parsing
+// those as hex yields NaN, and `NaN >= threshold` is false - so an unparsed ink
+// would fail loudly rather than pass silently, but it would fail for the wrong
+// reason. Both notations are handled.
+const rgba = (colour: string): Rgba => {
+	const fn = colour.match(/^rgba?\(([^)]+)\)$/);
+	if (fn) {
+		const parts = fn[1].split(",").map((p) => parseFloat(p.trim()));
+		return [parts[0], parts[1], parts[2], parts[3] ?? 1];
+	}
 	const hex = colour.replace("#", "");
 	const full =
 		hex.length === 3
@@ -44,16 +55,23 @@ const rgb = (colour: string): [number, number, number] => {
 					.join("")
 			: hex;
 	const at = (i: number) => parseInt(full.slice(i, i + 2), 16);
-	return [at(0), at(2), at(4)];
+	return [at(0), at(2), at(4), 1];
 };
 
-const luminance = (colour: string): number => {
-	const [r, g, b] = rgb(colour);
-	return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-};
+/** A translucent ink is only as dark as what shows through it. */
+const over = (fg: Rgba, bg: Rgba): Rgba => [
+	fg[0] * fg[3] + bg[0] * (1 - fg[3]),
+	fg[1] * fg[3] + bg[1] * (1 - fg[3]),
+	fg[2] * fg[3] + bg[2] * (1 - fg[3]),
+	1,
+];
 
-export const contrast = (a: string, b: string): number => {
-	const [l1, l2] = [luminance(a), luminance(b)];
+const luminance = ([r, g, b]: Rgba): number =>
+	0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+
+export const contrast = (ink: string, ground: string): number => {
+	const bg = rgba(ground);
+	const [l1, l2] = [luminance(over(rgba(ink), bg)), luminance(bg)];
 	return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 };
 
@@ -94,6 +112,23 @@ describe("theme contrast", () => {
 				).toBeGreaterThanOrEqual(AA_TEXT);
 				expect(
 					contrast(palette.primary!.outcomeBad!, ground),
+				).toBeGreaterThanOrEqual(AA_TEXT);
+			},
+		);
+
+		/**
+		 * DCBStepIcon paints the step NUMBER on these two grounds, at the Avatar's
+		 * 20px regular - text, so 4.5:1, not the 3:1 a glyph would get. Both appear
+		 * in all three requesting workflows, none of which the axe gate reaches.
+		 */
+		it.each([
+			["inactive", "iconSymbol", "inactiveBackground"],
+			["active", "contrastText", "main"],
+		] as const)(
+			"the %s step number reads on its own ground",
+			(_name, inkToken, groundToken) => {
+				expect(
+					contrast(palette.primary![inkToken]!, palette.primary![groundToken]!),
 				).toBeGreaterThanOrEqual(AA_TEXT);
 			},
 		);
