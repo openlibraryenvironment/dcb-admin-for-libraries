@@ -28,7 +28,7 @@ export default function TimeInStatusChart({ params }: { params: StatsParams }) {
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				<Typography variant="h6" gutterBottom>
+				<Typography variant="h6" component="h2" gutterBottom>
 					{t("insights.charts.time_in_status.title")}
 				</Typography>
 				<Typography variant="body2" color="text.secondary" gutterBottom>

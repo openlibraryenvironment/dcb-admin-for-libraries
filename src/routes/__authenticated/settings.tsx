@@ -1,3 +1,4 @@
+import Typography from "@mui/material/Typography";
 import { pageTitle } from "@helpers/pageTitle";
 import {
 	FormControl,
@@ -28,6 +29,9 @@ function RouteComponent() {
 			container
 			spacing={{ xs: 2, md: 3 }}
 			columns={{ xs: 4, sm: 8, md: 12 }}>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Typography variant="h1">{t("nav.settings.title")}</Typography>
+			</Grid>
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<FormControl>
 					<FormLabel id="theme-toggle">

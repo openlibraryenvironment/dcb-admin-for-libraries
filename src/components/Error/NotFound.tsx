@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import { useTranslation } from "react-i18next";
 import Error from "@components/Error/Error";
+import { useInsideMain } from "@/hooks/useInsideMain";
 
 /**
  * The router's notFoundComponent: every URL that matches no route, and every
@@ -17,6 +18,8 @@ import Error from "@components/Error/Error";
  */
 export default function NotFound() {
 	const { t } = useTranslation();
+	// Bare, this page IS the main landmark; inside Layout there is already one.
+	const insideMain = useInsideMain();
 
 	// The BROWSER path, deliberately, not useLocation().pathname - the router
 	// strips the deployment base off the latter, and the base is exactly what a
@@ -25,6 +28,7 @@ export default function NotFound() {
 
 	return (
 		<Box
+			component={insideMain ? "div" : "main"}
 			sx={{
 				display: "flex",
 				justifyContent: "center",

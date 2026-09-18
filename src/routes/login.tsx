@@ -46,6 +46,7 @@ const Login = () => {
 
 	return (
 		<Box
+			component="main"
 			sx={(theme) => ({
 				display: "flex",
 				justifyContent: "center",

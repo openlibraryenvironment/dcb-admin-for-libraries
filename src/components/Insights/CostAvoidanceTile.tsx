@@ -42,7 +42,14 @@ export default function CostAvoidanceTile({
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				<Typography variant="subtitle2" color="text.secondary" gutterBottom>
+				{/* component, because MUI maps subtitle2 to h6 by default and this is a
+				    LABEL for the figure below it, not a section heading - it put an
+				    h6 straight after the page h1. */}
+				<Typography
+					variant="subtitle2"
+					component="p"
+					color="text.secondary"
+					gutterBottom>
 					{t("insights.kpi.cost_avoidance.title")}
 				</Typography>
 

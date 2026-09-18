@@ -13,6 +13,7 @@ import { isInsightsEnabled } from "@helpers/featureFlags";
 import { MAIN_CONTENT_ID } from "@constants/landmarks";
 import { SkipLink } from "./SkipLink";
 import { useRouteAnnouncement } from "@/hooks/useRouteAnnouncement";
+import { InsideMainContext } from "@/hooks/useInsideMain";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -131,7 +132,9 @@ export const Layout = ({ children }: LayoutProps) => {
 				// the page but not the focus, and the next Tab returns to the header.
 				tabIndex={-1}
 				sx={{ mt: 3, mb: 5 }}>
-				{children}
+				<InsideMainContext.Provider value={true}>
+					{children}
+				</InsideMainContext.Provider>
 			</Container>
 		</>
 	);

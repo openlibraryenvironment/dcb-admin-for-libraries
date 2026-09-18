@@ -623,7 +623,7 @@ function HomeComponent() {
 				</Grid>
 			) : null}
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" sx={{
+				<Typography variant="h3" component="h2" sx={{
                     fontWeight: "bold"
                 }}>
 					{/* {t("welcome.library", { library: library?.fullName })} */}
@@ -817,7 +817,7 @@ function HomeComponent() {
   			    patron is using their library, and the consortium is the supply network
   			    behind it. */}
               <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-  				<Typography variant="h3" sx={{
+  				<Typography variant="h3" component="h2" sx={{
                       fontWeight: "bold"
                   }}>
   					{t("library.brand.section")}
@@ -955,7 +955,7 @@ function HomeComponent() {
             {discoveryActive && (
             <>
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-              <Typography variant="h3" sx={{ fontWeight: "bold" }}>
+              <Typography variant="h3" component="h2" sx={{ fontWeight: "bold" }}>
                 {t("library.presence.section")}
               </Typography>
               <Typography>{t("library.presence.section_help")}</Typography>
@@ -1031,7 +1031,7 @@ function HomeComponent() {
             )}
             {/* /* 'Primary location' title goes here/* */}
             {/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" fontWeight={"bold"}>
+				<Typography variant="h3" component="h2" fontWeight={"bold"}>
 					{t("library.primary_location.title")}
 				</Typography>
 			</Grid> */}
@@ -1101,7 +1101,7 @@ function HomeComponent() {
 				</Stack>
 			</Grid>
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" sx={{
+				<Typography variant="h3" component="h2" sx={{
                     fontWeight: "bold"
                 }}>
 					{t("library.statistics.title")}
@@ -1159,7 +1159,7 @@ function HomeComponent() {
 				<>
 					<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 						<Stack spacing={1} direction={"column"}>
-							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+							<Typography variant="h3" component="h2" sx={{ fontWeight: "bold" }}>
 								{t("library.statistics.top_titles_month")}
 							</Typography>
 							<TopTitlesSummary
@@ -1170,7 +1170,7 @@ function HomeComponent() {
 					</Grid>
 					<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 						<Stack spacing={1} direction={"column"}>
-							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+							<Typography variant="h3" component="h2" sx={{ fontWeight: "bold" }}>
 								{t("library.statistics.top_requesters_month")}
 							</Typography>
 							<TopRequestorsSummary

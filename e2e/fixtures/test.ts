@@ -55,11 +55,22 @@ export const test = base.extend<{ app: AppFixture; runtimeConfig: void }>({
 			enableFeatures: (flags) => enableFeatures(page, flags),
 			useColorScheme: (scheme) => useColorScheme(page, scheme),
 			expectNoAccessibilityViolations: async () => {
-				const violations = await analyse(page);
+				const { violations, incomplete } = await analyse(page);
 				expect(
 					violations,
 					violations.length
 						? `axe found ${violations.length} WCAG 2.2 AA violation(s):\n\n${formatViolations(violations)}`
+						: undefined,
+				).toEqual([]);
+
+				// Asserted too, because axe reports a check it could not DECIDE
+				// separately from one it failed - and a dangling aria-labelledby is
+				// an "incomplete", not a violation. Reading `violations` alone is how
+				// five unnamed dialogs passed this gate.
+				expect(
+					incomplete,
+					incomplete.length
+						? `axe could not verify ${incomplete.length} check(s):\n\n${formatViolations(incomplete)}`
 						: undefined,
 				).toEqual([]);
 			},
