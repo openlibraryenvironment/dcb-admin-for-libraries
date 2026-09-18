@@ -1,5 +1,4 @@
 import { createTheme } from "@mui/material/styles";
-import { red } from "@mui/material/colors";
 import type {} from "@mui/x-data-grid/themeAugmentation";
 
 // The DCB Admin for Libraries custom theme. Make it configurable and switchable.
@@ -238,10 +237,7 @@ const theme = createTheme({
 					// Measured against both grounds this text sits on, white and the
 					// selected-row tint #ecf0f3: 7.87 / 6.87 and 5.62 / 4.91.
 					//
-					// Deliberately not success.main or error.main. success.main is
-					// 4.47 on the selected row, and error.main is red.A400, which is
-					// 3.85 against white in EITHER direction - no shade of that ramp
-					// clears 4.5 on both grounds in both schemes.
+					// Deliberately not success.main, which is 4.47 on the selected row.
 					outcomeGood: "#1b5e20",
 					outcomeBad: "#c62828",
 				},
@@ -249,7 +245,12 @@ const theme = createTheme({
 					main: "#1e7ebf",
 				},
 				error: {
-					main: red.A400,
+					// NOT red.A400. MUI paints FormHelperText in the error state from
+					// this token, so it is every validation message in the application,
+					// and red.A400 is 3.85 against white - under AA on the page the axe
+					// gate scans, but only once a form is actually in error, which no
+					// scan puts it in. themeContrast.test.ts measures it instead.
+					main: "#c62828",
 				},
 			},
 		},
@@ -279,7 +280,10 @@ const theme = createTheme({
 					main: "#75BEDB",
 				},
 				error: {
-					main: red.A400,
+					// See the light scheme. red.A400 clears AA on the dark page (4.87)
+					// but not on the selected row (3.75), so it fails in both schemes -
+					// just on different grounds.
+					main: "#e57373",
 				},
 			},
 		},
