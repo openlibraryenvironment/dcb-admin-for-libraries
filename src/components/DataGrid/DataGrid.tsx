@@ -93,6 +93,8 @@ interface DataGridProps {
 	onPaginationModelChange?: any;
 	onRowModesModelChange?: (model: GridRowModesModel) => void;
 	onRowEditStop?: (params: any, event: any) => void;
+	/** Told when an inline edit fails to save, with the message to show. */
+	onRowUpdateError?: (message: string) => void;
 	onSortModelChange?: (model: GridSortModel) => void;
 	pagination: boolean;
 	paginationMode: GridFeatureMode; // Determines client or server side pagination
@@ -141,6 +143,7 @@ export default function DataGrid({
 	onPaginationModelChange,
 	onRowModesModelChange,
 	onRowEditStop,
+	onRowUpdateError,
 	onSortModelChange,
 	pagination,
 	paginationMode,
@@ -163,11 +166,6 @@ export default function DataGrid({
 	const navigate = useNavigate();
 	const expandedFilterPanel = expandedFilterPanelTypes.includes(type);
 	const getDetailPanelHeight = useCallback(() => "auto", []); // Only necessary because master detail is not applicable to all grids yet
-	const [, setAlert] = useState<any>({
-		open: false,
-		severity: "success",
-		text: null,
-	}); // We do need to give feedback on editing s
 	const internalApiRef = useGridApiRef();
 	const apiRef = parentApiRef || internalApiRef;
 
@@ -237,10 +235,8 @@ export default function DataGrid({
 				onPaginationModelChange={onPaginationModelChange}
 				onProcessRowUpdateError={(params: GridRowParams) => {
 					const name = params?.row?.name ?? params?.row?.fullName;
-					setAlert({
-						open: true,
-						severity: "error",
-						text: t("common.update_failure", {
+					onRowUpdateError?.(
+						t("common.update_failure", {
 							// entities.* are already lowercase singulars written for exactly
 							// this sentence, so no toLowerCase() is needed on them.
 							entity:
@@ -251,7 +247,7 @@ export default function DataGrid({
 										: type?.toLowerCase(),
 							name: name,
 						}),
-					});
+					);
 				}}
 				onSortModelChange={onSortModelChange}
 				onRowClick={handleRowClick}

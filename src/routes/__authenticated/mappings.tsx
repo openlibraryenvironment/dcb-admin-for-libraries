@@ -105,6 +105,9 @@ function RouteComponent() {
 		storedState.columnVisibility ?? referenceValueMappingColumnVisibility
 	);
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
+	// An inline edit that did not save. The grid used to build this message and
+	// throw it away, so a failed save reverted the row and said nothing.
+	const [rowUpdateError, setRowUpdateError] = useState<string | null>(null);
 
 	const handleSnackbarClose = (
 		event?: React.SyntheticEvent | Event,
@@ -486,6 +489,7 @@ function RouteComponent() {
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
 					processRowUpdate={processRowUpdate}
+					onRowUpdateError={setRowUpdateError}
 					checkboxSelection={false}
 					disableAggregation
 					disableHoverInteractions
@@ -520,6 +524,13 @@ function RouteComponent() {
 					action="deletion"
 				/>
 			}
+			<TimedAlert
+				open={rowUpdateError !== null}
+				onCloseFunc={() => setRowUpdateError(null)}
+				severityType="error"
+				autoHideDuration={6000}
+				alertText={rowUpdateError ?? ""}
+			/>
 			{
 				<TimedAlert
 					open={snackbarOpen}
