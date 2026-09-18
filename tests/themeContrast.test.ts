@@ -3,43 +3,33 @@ import type { CssVarsTheme } from "@mui/material/styles";
 
 import theme from "@/theme";
 
-/*
- * createTheme's return type is `Theme`, which does not carry `colorSchemes` -
- * that half is described by `CssVarsTheme`, and the two are merged only at the
- * ThemeProvider boundary. Reading the schemes off the built theme is the point
- * of this file (a copy of the values would pass while the theme drifted), so
- * the two types are joined here rather than the values duplicated.
- */
-const schemes = (theme as unknown as CssVarsTheme).colorSchemes;
-
 // Measures what the theme DECLARES; the axe gate measures what is rendered. The
 // gap between them is a token used on a page the gate does not scan, or only
 // when a form is in error - which is where error.main hid at 3.85:1.
 
 /** WCAG 1.4.3: body text. */
 const AA_TEXT = 4.5;
+/** WCAG 1.4.11: a graphical object against what sits beside it. */
+const AA_NON_TEXT = 3;
 
-/**
- * The grounds this application's ink sits on. `selectedRow` is the Data Grid's
- * tint and consistently the tighter of the two, so a token measured only
- * against the page passes and then fails on a selected row.
+/*
+ * createTheme's return type is `Theme`, which does not carry `colorSchemes` -
+ * that half is described by `CssVarsTheme`. Reading the schemes off the built
+ * theme is the point of this file; a copy of the values would pass while the
+ * theme drifted.
  */
-const GROUND = {
-	light: { page: "#FFFFFF", selectedRow: "#ECF0F3" },
-	dark: { page: "#121212", selectedRow: "#182C38" },
-} as const;
+const schemes = (theme as unknown as CssVarsTheme).colorSchemes;
+
+type Rgba = [number, number, number, number];
 
 const channel = (value: number): number => {
 	const s = value / 255;
 	return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
 };
 
-type Rgba = [number, number, number, number];
-
-// MUI derives contrastText and the text.* ramp as `rgba(...)`, not hex. Parsing
-// those as hex yields NaN, and `NaN >= threshold` is false - so an unparsed ink
-// would fail loudly rather than pass silently, but it would fail for the wrong
-// reason. Both notations are handled.
+// MUI derives contrastText and the text.* ramp as `rgba(...)`, not hex. Both
+// notations are handled; a CSS variable reference is not a colour and is
+// rejected loudly rather than measured as NaN.
 const rgba = (colour: string): Rgba => {
 	const fn = colour.match(/^rgba?\(([^)]+)\)$/);
 	if (fn) {
@@ -54,6 +44,9 @@ const rgba = (colour: string): Rgba => {
 					.map((c) => c + c)
 					.join("")
 			: hex;
+	if (!/^[0-9a-fA-F]{6}$/.test(full)) {
+		throw new Error(`not a measurable colour: ${colour}`);
+	}
 	const at = (i: number) => parseInt(full.slice(i, i + 2), 16);
 	return [at(0), at(2), at(4), 1];
 };
@@ -71,86 +64,91 @@ const luminance = ([r, g, b]: Rgba): number =>
 
 export const contrast = (ink: string, ground: string): number => {
 	const bg = rgba(ground);
-	const [l1, l2] = [luminance(over(rgba(ink), bg)), luminance(bg)];
-	return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+	const [a, b] = [luminance(over(rgba(ink), bg)), luminance(bg)];
+	const [hi, lo] = a > b ? [a, b] : [b, a];
+	return (hi + 0.05) / (lo + 0.05);
 };
 
-/** Reads a scheme's palette off the built theme rather than a copy of the values. */
-const paletteFor = (scheme: "light" | "dark") => {
+/**
+ * The Data Grid's selected-row tint. Not a theme token - MUI composites it from
+ * primary.main at a low alpha - so it is written down here as the measured
+ * result, and it is consistently the tighter of the two grounds a row's ink
+ * sits on.
+ */
+const SELECTED_ROW = { light: "#ECF0F3", dark: "#182C38" } as const;
+
+describe.each(["light", "dark"] as const)("%s scheme", (scheme) => {
 	const palette = schemes?.[scheme]?.palette;
 	if (!palette) throw new Error(`theme has no ${scheme} colour scheme`);
-	return palette;
-};
 
-describe("theme contrast", () => {
-	describe.each(["light", "dark"] as const)("%s scheme", (scheme) => {
-		const palette = paletteFor(scheme);
-		const grounds = GROUND[scheme];
+	const p = palette.primary as unknown as Record<string, string>;
+	const page = palette.background!.default!;
+	const paper = palette.background!.paper!;
+	const ink = palette.text!.primary!;
+	const row = SELECTED_ROW[scheme];
 
-		/**
-		 * error.main is not only the Alert ramp: MUI paints FormHelperText in the
-		 * error state from it, so this token is every Yup message in the
-		 * application. It was red.A400 (#ff1744), which is 3.85:1 on white - so
-		 * every validation message in light mode was under AA, on a page the axe
-		 * gate scans but never with an error on screen.
-		 */
-		it.each(Object.entries(grounds))(
-			"error.main reads as text on the %s ground",
-			(_name, ground) => {
-				expect(contrast(palette.error!.main!, ground)).toBeGreaterThanOrEqual(
-					AA_TEXT,
-				);
-			},
-		);
+	/**
+	 * The AppBar does NOT use primary.main in dark: enableColorOnDark defaults to
+	 * false, so MUI paints it background.paper and only light mode puts the
+	 * header's label on the brand colour. Measuring white against #35B7FF here
+	 * would report a failure the application does not have.
+	 */
+	const headerGround = scheme === "light" ? p.main : paper;
 
-		/** The outcome pair the insights panels colour good/bad results with. */
-		it.each(Object.entries(grounds))(
-			"outcome tokens read as text on the %s ground",
-			(_name, ground) => {
-				expect(
-					contrast(palette.primary!.outcomeGood!, ground),
-				).toBeGreaterThanOrEqual(AA_TEXT);
-				expect(
-					contrast(palette.primary!.outcomeBad!, ground),
-				).toBeGreaterThanOrEqual(AA_TEXT);
-			},
-		);
+	/** Every ink this theme places on a ground, and the ground it lands on. */
+	const TEXT_PAIRS: [string, string, string][] = [
+		["text.primary / page", ink, page],
+		["headerText / header bar", p.headerText, headerGround],
+		["navigationText / navigationBackground", p.navigationText, p.navigationBackground],
+		[
+			"navigationTextActive / navigationBackground",
+			p.navigationTextActive,
+			p.navigationBackground,
+		],
+		["subTabText / subTabBackground", p.subTabText, p.subTabBackground],
+		[
+			"searchResultTitle / searchResultBackground",
+			p.searchResultTitle,
+			p.searchResultBackground,
+		],
+		["headingColour / page", p.headingColour, page],
+		["hitCountText / page", p.hitCountText, page],
+		["primary.main / page", p.main, page],
+		["secondary.main / page", palette.secondary!.main!, page],
+		["error.main / page", palette.error!.main!, page],
+		["error.main / selected row", palette.error!.main!, row],
+		["outcomeGood / page", p.outcomeGood, page],
+		["outcomeGood / selected row", p.outcomeGood, row],
+		["outcomeBad / page", p.outcomeBad, page],
+		["outcomeBad / selected row", p.outcomeBad, row],
+		// DCBStepIcon paints the step NUMBER on these, at the Avatar's 20px
+		// regular - text, so 4.5:1 rather than the 3:1 a glyph would get.
+		["iconSymbol / inactiveBackground", p.iconSymbol, p.inactiveBackground],
+		["primary.contrastText / primary.main", palette.primary!.contrastText!, p.main],
+	];
 
-		/**
-		 * DCBStepIcon paints the step NUMBER on these two grounds, at the Avatar's
-		 * 20px regular - text, so 4.5:1, not the 3:1 a glyph would get. Both appear
-		 * in all three requesting workflows, none of which the axe gate reaches.
-		 */
-		/**
-		 * The main navigation strip and the nested one on detail pages. Two theme
-		 * rules used to set the unselected tab's ink and disagree - MuiTabs' own
-		 * descendant selector beat MuiTab's root on specificity, so the token the
-		 * comment defended was never the one that rendered.
-		 */
-		it.each([
-			["unselected tab", "navigationText", "navigationBackground"],
-			["selected tab", "navigationTextActive", "navigationBackground"],
-			["sub tab", "subTabText", "subTabBackground"],
-			// The dark scheme copied the light ink verbatim onto a #424242 card,
-			// which is the failure mode this whole file exists to catch: a pair that
-			// is fine in one scheme and unreadable in the other.
-			["search result title", "searchResultTitle", "searchResultBackground"],
-		] as const)("the %s reads on its ground", (_name, inkToken, groundToken) => {
-			expect(
-				contrast(palette.primary![inkToken]!, palette.primary![groundToken]!),
-			).toBeGreaterThanOrEqual(AA_TEXT);
-		});
+	it("renders every ink above the text threshold on its own ground", () => {
+		const failures = TEXT_PAIRS.filter(([, fg, bg]) => fg && bg)
+			.map(([label, fg, bg]) => ({ label, fg, bg, ratio: contrast(fg, bg) }))
+			.filter((r) => r.ratio < AA_TEXT)
+			.map(
+				(r) =>
+					`${r.label}: ${r.ratio.toFixed(2)}:1 (${r.fg} on ${r.bg}), needs ${AA_TEXT}:1`,
+			);
 
-		it.each([
-			["inactive", "iconSymbol", "inactiveBackground"],
-			["active", "contrastText", "main"],
-		] as const)(
-			"the %s step number reads on its own ground",
-			(_name, inkToken, groundToken) => {
-				expect(
-					contrast(palette.primary![inkToken]!, palette.primary![groundToken]!),
-				).toBeGreaterThanOrEqual(AA_TEXT);
-			},
+		// The whole list, not the first failure: a palette change usually breaks
+		// several pairs at once and fixing them one run at a time is how a
+		// rebalance takes an afternoon.
+		expect(failures).toEqual([]);
+	});
+
+	it("draws the focus outline visibly against the page", () => {
+		expect(contrast(p.outlineColor, page)).toBeGreaterThanOrEqual(AA_NON_TEXT);
+	});
+
+	it("measures something, so a broken scan cannot pass vacuously", () => {
+		expect(TEXT_PAIRS.filter(([, fg, bg]) => fg && bg).length).toBeGreaterThan(
+			12,
 		);
 	});
 });

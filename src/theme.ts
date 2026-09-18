@@ -262,7 +262,10 @@ const theme = createTheme({
 					outcomeBad: "#c62828",
 				},
 				secondary: {
-					main: "#1e7ebf",
+					// Text, not just a fill: an outlined button's label and the cleanup
+					// dialog's progress readout both ask for color="secondary".
+					// #1e7ebf was 4.38:1 on white - under AA by a tenth.
+					main: "#1a6ea8",
 				},
 				error: {
 					// NOT red.A400. MUI paints FormHelperText in the error state from
