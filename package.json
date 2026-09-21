@@ -21,7 +21,9 @@
 		"lint": "eslint",
 		"preview": "vite preview",
 		"semantic-release": "semantic-release",
-		"test": "vitest"
+		"test": "vitest",
+		"lighthouse": "lhci autorun",
+		"budget": "node scripts/check-bundle-budget.mjs"
 	},
 	"dependencies": {
 		"@emotion/react": "11.14.0",
@@ -64,6 +66,7 @@
 		"@graphql-codegen/typescript": "6.1.0",
 		"@graphql-codegen/typescript-operations": "6.1.6",
 		"@graphql-codegen/typescript-react-query": "7.0.5",
+		"@lhci/cli": "^0.15.1",
 		"@playwright/test": "1.62.1",
 		"@semantic-release/changelog": "6.0.3",
 		"@semantic-release/git": "10.0.1",

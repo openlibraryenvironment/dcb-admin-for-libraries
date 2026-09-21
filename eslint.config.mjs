@@ -110,14 +110,42 @@ export default defineConfig(
 		},
 	},
 	{
+		// Build tooling that runs in Node and whose job is to print a report.
+		//
+		// The console restrictions above exist to keep a barcode or a token out of
+		// a BROWSER console; these never run in a browser, and a budget check that
+		// cannot name the chunk it is failing on is useless. Node globals are
+		// declared for the same reason the .cjs block below declares `module`.
+		files: ["scripts/**/*.{mjs,js}"],
+		languageOptions: {
+			globals: {
+				console: "readonly",
+				process: "readonly",
+				URL: "readonly",
+			},
+		},
+		rules: {
+			"no-console": "off",
+			"no-restricted-syntax": "off",
+		},
+	},
+	{
 		// CommonJS tooling config, not application source. eslint:recommended brings
 		// no-undef, which has no way to know `module` exists here - and the file has to
 		// stay .cjs because the package is "type": "module". Declared inline rather than
 		// pulling in the `globals` package for two identifiers.
 		files: ["**/*.cjs"],
 		languageOptions: {
-			globals: { module: "writable", require: "readonly", __dirname: "readonly" },
+			globals: {
+				module: "writable",
+				require: "readonly",
+				__dirname: "readonly",
+				process: "readonly",
+			},
 		},
+		// lighthouserc.cjs is CommonJS BECAUSE this package is "type": "module" -
+		// lhci require()s its config, so an ESM one throws. require() is the point.
+		rules: { "@typescript-eslint/no-require-imports": "off" },
 	},
 	{
 		// TanStack file-based routes necessarily pair the route component with a

@@ -1,0 +1,32 @@
+{
+	"_why": "Per-chunk gzipped budgets, checked by scripts/check-bundle-budget.mjs after a build. Lighthouse audits pages and cannot reach a route behind Keycloak, which is every route in this application except /login; this reaches every chunk. Numbers are what each chunk measured when the budget was added, plus 2% rounded up - enough that an ordinary edit does not fail the build, not enough to absorb a new dependency. Never raise one to make a build pass.",
+
+	"nameChunksAboveBytes": 15000,
+
+	"totalBytes": 1265000,
+
+	"chunks": {
+		"exceljs.min.js": 281900,
+		"DataGrid.js": 198900,
+		"insights.js": 126800,
+		"application.js": 85200,
+		"useMobileRangePicker.js": 55900,
+		"Typography.js": 32400,
+		"rasterizeHTML.js": 27400,
+		"lodash.js": 26400,
+		"yup.js": 25000,
+		"application.css": 22000,
+		"react.js": 19400,
+		"axios.js": 18100,
+		"TextField.js": 17700,
+		"schemas.js": 16300,
+		"CombinedRequestingModal.js": 15800
+	},
+
+	"_notes": {
+		"exceljs.min.js": "MUI X Premium's Excel export, a direct dependency of @mui/x-data-grid-premium. Lazy - nobody fetches it unless they export - but it is 23% of everything this application ships. It leaves entirely on DataGridPro, which is worth measuring against what Premium features the grids actually use.",
+		"lodash.js": "26 KB for isEmpty in four files and capitalize in one. Scheduled for removal; the budget is here so it cannot grow while it waits.",
+		"rasterizeHTML.js": "Pulled in by the grid's print export. Not obviously load-bearing - worth checking whether print is reachable at all.",
+		"totalBytes": "1211 KB measured. symposia-ui holds 900 KB, which is the number to aim at rather than to declare: this app ships MUI X Premium's grid, charts and pickers where Symposia ships one grid."
+	}
+}
