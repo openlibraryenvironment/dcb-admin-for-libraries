@@ -6,6 +6,11 @@
 // tokens.ts plus one here, rather than a hunt through a 600-line file.
 
 declare module "@mui/material/styles" {
+	// A third colour scheme beside light and dark. MUI takes an extended scheme
+	interface ColorSchemeOverrides {
+		highContrast: true;
+	}
+
 	interface PaletteColor {
 		breadcrumbs?: string;
 		buttonForSelectedChildPage?: string;

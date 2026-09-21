@@ -94,3 +94,58 @@ export const openRSDark: PaletteOptions = {
 		main: "#e57373",
 	},
 };
+
+/**
+ * High contrast: a THIRD colour scheme promising AAA (7:1), light-based.
+ * Why light-based, and why every neutral is re-stated: docs/theming.md §3.
+ */
+export const openRSHighContrast: PaletteOptions = {
+	// An extended scheme still has to say which set of MUI defaults it derives
+	// from; without it the theme does not build at all.
+	mode: "light",
+	// Raises MUI's OWN derivations too: contrastText picks its ink against this
+	// number rather than the default 3, so a component colour we never wrote
+	// down still lands on the right side of AAA.
+	contrastThreshold: 7,
+	primary: {
+		main: "#00407A",
+		headerText: "#FFFFFF",
+		headingColour: "#000000",
+		hitCountText: "#000000",
+		iconSymbol: "#FFFFFF",
+		// 7.34:1 with the white step number on it. The light scheme's #757575 is
+		// 4.61 - fine for AA, not for what this scheme promises.
+		inactiveBackground: "#565656",
+		// A white bar with black labels, separated from the page by the border the
+		// layout already draws rather than by a fill.
+		navigationBackground: "#FFFFFF",
+		navigationText: "#000000",
+		navigationTextActive: "#000000",
+		searchResultBackground: "#FFFFFF",
+		searchResultTitle: "#00407A",
+		outlineColor: "#000000",
+		subTabBackground: "#FFFFFF",
+		subTabText: "#000000",
+		outcomeGood: "#0B4E12",
+		outcomeBad: "#8A0000",
+	},
+	secondary: {
+		// Distinct from primary by HUE as well as darkness: at this contrast two
+		// dark blues read as the same colour.
+		main: "#4A148C",
+	},
+	error: {
+		main: "#8A0000",
+	},
+	background: {
+		default: "#FFFFFF",
+		paper: "#FFFFFF",
+	},
+	text: {
+		primary: "#000000",
+		secondary: "#000000",
+	},
+	// Pure black, because a hairline at 1.5:1 is the commonest way a
+	// "high contrast" theme still fails to separate anything.
+	divider: "#000000",
+};

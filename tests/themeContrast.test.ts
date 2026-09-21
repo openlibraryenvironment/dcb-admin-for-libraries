@@ -9,6 +9,8 @@ import theme from "@/themes";
 
 /** WCAG 1.4.3: body text. */
 const AA_TEXT = 4.5;
+/** WCAG 1.4.6: what the high-contrast scheme promises instead. */
+const AAA_TEXT = 7;
 /** WCAG 1.4.11: a graphical object against what sits beside it. */
 const AA_NON_TEXT = 3;
 
@@ -75,9 +77,15 @@ export const contrast = (ink: string, ground: string): number => {
  * result, and it is consistently the tighter of the two grounds a row's ink
  * sits on.
  */
-const SELECTED_ROW = { light: "#ECF0F3", dark: "#182C38" } as const;
+const SELECTED_ROW = {
+	light: "#ECF0F3",
+	dark: "#182C38",
+	highContrast: "#E8EEF4",
+} as const;
 
-describe.each(["light", "dark"] as const)("%s scheme", (scheme) => {
+describe.each(["light", "dark", "highContrast"] as const)(
+	"%s scheme",
+	(scheme) => {
 	const palette = schemes?.[scheme]?.palette;
 	if (!palette) throw new Error(`theme has no ${scheme} colour scheme`);
 
@@ -93,7 +101,11 @@ describe.each(["light", "dark"] as const)("%s scheme", (scheme) => {
 	 * header's label on the brand colour. Measuring white against #35B7FF here
 	 * would report a failure the application does not have.
 	 */
-	const headerGround = scheme === "light" ? p.main : paper;
+	const headerGround = scheme === "dark" ? paper : p.main;
+
+	// The whole point of the third scheme. Holding it to AA would make it a
+	// second light theme with a different name.
+	const floor = scheme === "highContrast" ? AAA_TEXT : AA_TEXT;
 
 	/** Every ink this theme places on a ground, and the ground it lands on. */
 	const TEXT_PAIRS: [string, string, string][] = [
@@ -130,10 +142,10 @@ describe.each(["light", "dark"] as const)("%s scheme", (scheme) => {
 	it("renders every ink above the text threshold on its own ground", () => {
 		const failures = TEXT_PAIRS.filter(([, fg, bg]) => fg && bg)
 			.map(([label, fg, bg]) => ({ label, fg, bg, ratio: contrast(fg, bg) }))
-			.filter((r) => r.ratio < AA_TEXT)
+			.filter((r) => r.ratio < floor)
 			.map(
 				(r) =>
-					`${r.label}: ${r.ratio.toFixed(2)}:1 (${r.fg} on ${r.bg}), needs ${AA_TEXT}:1`,
+					`${r.label}: ${r.ratio.toFixed(2)}:1 (${r.fg} on ${r.bg}), needs ${floor}:1`,
 			);
 
 		// The whole list, not the first failure: a palette change usually breaks
@@ -151,4 +163,5 @@ describe.each(["light", "dark"] as const)("%s scheme", (scheme) => {
 			12,
 		);
 	});
-});
+	},
+);

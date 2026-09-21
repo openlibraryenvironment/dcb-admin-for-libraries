@@ -64,12 +64,32 @@ describe("getAppTheme", () => {
 		expect(nonsense).toBe(getAppTheme());
 	});
 
-	it("keeps both colour schemes, which the app reads as CSS variables", () => {
+	it("carries all three colour schemes", () => {
 		const schemes = (
 			getAppTheme() as unknown as {
 				colorSchemes?: Record<string, unknown>;
 			}
 		).colorSchemes;
-		expect(Object.keys(schemes ?? {}).sort()).toEqual(["dark", "light"]);
+		expect(Object.keys(schemes ?? {}).sort()).toEqual([
+			"dark",
+			"highContrast",
+			"light",
+		]);
+	});
+
+	/**
+	 * Windows High Contrast Mode, which is the OS replacing every colour - not
+	 * our own highContrast scheme. Without the enhancer MUI's borders and focus
+	 * rings disappear there, because forced-colors overrides the backgrounds they
+	 * were distinguishing themselves against.
+	 */
+	it("answers the operating system's forced-colors mode", () => {
+		// The enhancer spreads forced-colors rules across the components that need
+		// them - twenty of them, rather than one place - so this counts rather than
+		// naming any single component it might reorganise later.
+		const touched = Object.values(getAppTheme().components ?? {}).filter(
+			(definition) => JSON.stringify(definition)?.includes("forced-colors"),
+		);
+		expect(touched.length).toBeGreaterThan(10);
 	});
 });
