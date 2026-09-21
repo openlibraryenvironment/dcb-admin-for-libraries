@@ -24,7 +24,7 @@ import { NoResultsOverlay } from "./components/NoResultsOverlay";
 import { useNavigate } from "@tanstack/react-router";
 import { appUrl } from "@helpers/appBase";
 import { expandedFilterPanelTypes } from "@constants/dataGrid/types";
-import { SxProps, Theme } from "@mui/material";
+import { SxProps, Theme, Tooltip, TooltipProps } from "@mui/material";
 import ExportToolbar from "./components/ExportToolbar";
 
 declare module "@mui/x-data-grid-premium" {
@@ -69,6 +69,17 @@ const detailTarget = (
 			return null;
 	}
 };
+
+/**
+ * The grid's tooltips describe rather than name: MUI X's sort icon sits in a
+ * bare <span>, which Tooltip would otherwise put aria-label on, where the
+ * attribute is prohibited. The icon button inside already carries the name.
+ *
+ * Scoped to the grid - elsewhere a Tooltip IS an icon button's only name.
+ */
+const DescribingTooltip = (props: TooltipProps) => (
+	<Tooltip {...props} describeChild />
+);
 
 interface DataGridProps {
 	autoRowHeight?: boolean;
@@ -274,6 +285,7 @@ export default function DataGrid({
 				sortingMode={sortingMode}
 				sortModel={sortModel}
 				slots={{
+					baseTooltip: DescribingTooltip,
 					detailPanelExpandIcon: GridExpandMoreIcon,
 					detailPanelCollapseIcon: GridExpandLessIcon,
 					noRowsOverlay: () => (

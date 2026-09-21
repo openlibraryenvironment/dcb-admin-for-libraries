@@ -3,6 +3,7 @@ import { injectRuntimeConfig } from "./runtime-config";
 import { seedAuth, type FakeUserOptions } from "./auth";
 import { mockGraphQL, type OperationMocks } from "./graphql";
 import { mockStats, type StatsMocks } from "./stats";
+import { mockSearch, type SearchMock } from "./search";
 import { enableFeatures } from "./features";
 import { useColorScheme, type ColorScheme } from "./color-scheme";
 import { analyse, formatViolations } from "./axe";
@@ -28,6 +29,8 @@ export interface AppFixture {
 	mockGraphQL(mocks: OperationMocks): Promise<void>;
 	/** Mock the REST statistics endpoints by path segment. Call before goto. */
 	mockStats(overrides?: StatsMocks): Promise<void>;
+	/** Mock the shared index search endpoint. Call before goto. */
+	mockSearch(override?: Partial<SearchMock>): Promise<void>;
 	/** Turn runtime feature flags on for this spec. Call before goto. */
 	enableFeatures(flags: string[]): Promise<void>;
 	/** Boot the app in a given colour scheme. Call before goto. */
@@ -52,6 +55,7 @@ export const test = base.extend<{ app: AppFixture; runtimeConfig: void }>({
 			signIn: (options) => seedAuth(page, options),
 			mockGraphQL: (mocks) => mockGraphQL(page, mocks),
 			mockStats: (overrides) => mockStats(page, overrides),
+			mockSearch: (override) => mockSearch(page, override),
 			enableFeatures: (flags) => enableFeatures(page, flags),
 			useColorScheme: (scheme) => useColorScheme(page, scheme),
 			expectNoAccessibilityViolations: async () => {

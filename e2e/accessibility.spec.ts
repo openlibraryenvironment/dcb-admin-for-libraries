@@ -1,6 +1,7 @@
 import { test, expect, type AppFixture } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
+import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 import {
 	colorSchemeAttribute,
 	type ColorScheme,
@@ -190,6 +191,80 @@ const PAGES: Surface[] = [
 			await expect(
 				page.getByRole("heading", { name: RARE_GEM }),
 			).toBeVisible();
+		},
+	},
+	{
+		// The requesting page: the ONLY surface a read-only user has, and it was
+		// not scanned at all. Every Stepper and every requesting dialog lives
+		// behind it.
+		name: "requesting",
+		path: "/requesting?filters=keyword%3Amiddlemarch",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library });
+			await app.mockSearch();
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: /requesting/i }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("list", { name: /search results/i }),
+			).toBeVisible();
+		},
+	},
+	{
+		// A grid page with rows on it. The mappings scan covers a grid, but this
+		// one carries the row links and the detail-panel toggles.
+		name: "patron requests",
+		path: "/patronRequests",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraries: library,
+				LoadPatronRequests: patronRequests,
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("grid", { name: /patron requests/i }),
+			).toBeVisible();
+			await expect(page.getByRole("link", { name: /2026-09-01/ })).toBeVisible();
+		},
+	},
+	{
+		// The library profile IN EDIT MODE, with a validation error on screen.
+		// Neither state was ever scanned, and between them they carry every
+		// form control and every error message in the application - which is
+		// where error.main sat at 3.85:1 unnoticed.
+		name: "library profile, editing with an error",
+		path: "/",
+		prepare: async (app) => {
+			await app.enableFeatures([
+				"VITE_FEATURE_LIBRARY_BRANDING",
+				"VITE_FEATURE_LIBRARY_SUPPORT_URL",
+			]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraryBasics: library,
+				LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
+				LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
+			});
+		},
+		reveal: async (page) => {
+			await expect(page.getByText("E2E Test Library").first()).toBeVisible();
+			await page.getByRole("button", { name: /^edit$/i }).click();
+			const fullName = page
+				.getByRole("textbox", { name: /full name/i })
+				.first();
+			await expect(fullName).toBeVisible();
+			await fullName.fill("");
+			await fullName.blur();
+		},
+		ready: async (page) => {
+			await expect(page.getByText(/Enter the Full name/i)).toBeVisible();
 		},
 	},
 	{

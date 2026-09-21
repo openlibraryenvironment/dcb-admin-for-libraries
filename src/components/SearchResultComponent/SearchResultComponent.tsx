@@ -156,11 +156,15 @@ export const SearchResult = ({ record }: SearchResultProps) => {
 					<Stack direction={"column"} spacing={0.5}>
 						<Typography
 							variant="h6"
+							component="h2"
 							sx={{
-                                color: "var(--mui-palette-primary-searchResultTitle)"
-                            }}>
+								color: "var(--mui-palette-primary-searchResultTitle)",
+							}}>
+							{/* color="inherit", or MUI Link paints this primary.main and
+							    the searchResultTitle token above never reaches the text -
+							    4.48:1 on the dark card. */}
 							<CustomLink
-								// to="/indexes/$indexCode/$recordId"
+								color="inherit"
 								to="/requesting/$recordId"
 								params={{ recordId: record.id }}>
 								{/* params={{ indexCode: indexCode, recordId: record.id }}> */}
@@ -367,18 +371,25 @@ export const SearchResult = ({ record }: SearchResultProps) => {
 					<div style={{ flex: "1 0 0" }} />
 					{/** This needs to be pushed back to the right. Clicking should reveal combined modal */}
 					{/** Combined modal should provide options with explanations and radio buttons */}
-					<Tooltip
-						title={!canRequest ? t("requesting.cannot_request_no_items") : ""}>
-						<span>
-							<Button
-								variant="contained"
-								color="primary"
-								disabled={!canRequest}
-								onClick={() => setShowCombinedModal(true)}>
-								{t("ui.actions.place_request")}
-							</Button>
-						</span>
-					</Tooltip>
+					{/* The reason is TEXT, not a tooltip. A disabled button is not
+					    focusable, so a tooltip on it never reaches a keyboard user and
+					    never reaches a touch user at all - and MUI has to wrap a
+					    disabled child in a <span>, which it then puts aria-label on,
+					    where the attribute does nothing. */}
+					<Stack direction="column" spacing={0.5} sx={{ alignItems: "flex-end" }}>
+						<Button
+							variant="contained"
+							color="primary"
+							disabled={!canRequest}
+							onClick={() => setShowCombinedModal(true)}>
+							{t("ui.actions.place_request")}
+						</Button>
+						{!canRequest ? (
+							<Typography variant="body2" color="text.secondary">
+								{t("requesting.cannot_request_no_items")}
+							</Typography>
+						) : null}
+					</Stack>
 				</CardActions>
 			</Card>
             <CombinedRequestingModal
