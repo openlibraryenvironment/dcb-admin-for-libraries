@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CssVarsTheme } from "@mui/material/styles";
 
-import theme from "@/theme";
+import theme from "@/themes";
 
 // Measures what the theme DECLARES; the axe gate measures what is rendered. The
 // gap between them is a token used on a page the gate does not scan, or only
