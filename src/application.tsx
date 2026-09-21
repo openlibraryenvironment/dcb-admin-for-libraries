@@ -3,7 +3,6 @@ import * as ReactDOM from "react-dom/client";
 import "./i18n";
 import { createRouter, type AnyRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
-import theme from "./themes";
 import { LicenseInfo } from "@mui/x-license";
 import { AuthProvider } from "react-oidc-context";
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
@@ -190,7 +189,7 @@ export async function mountDcbAdminForLibraries(
 		ReactDOM.createRoot(rootElement).render(
 			<React.StrictMode>
 				<AuthProvider {...oidcConfig}>
-					<App theme={theme} queryClient={queryClient} router={router} />
+					<App queryClient={queryClient} router={router} />
 				</AuthProvider>
 			</React.StrictMode>,
 		);

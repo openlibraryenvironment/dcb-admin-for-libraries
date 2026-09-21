@@ -1,16 +1,10 @@
-import Typography from "@mui/material/Typography";
-import { pageTitle } from "@helpers/pageTitle";
-import {
-	FormControl,
-	FormControlLabel,
-	FormLabel,
-	Radio,
-	RadioGroup,
-	useColorScheme,
-} from "@mui/material";
 import Grid from "@mui/material/Grid";
+import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+
+import { DisplaySettings } from "@components/App/DisplaySettings";
+import { pageTitle } from "@helpers/pageTitle";
 
 export const Route = createFileRoute("/__authenticated/settings")({
 	head: () => ({ meta: [{ title: pageTitle("nav.settings.title") }] }),
@@ -19,10 +13,6 @@ export const Route = createFileRoute("/__authenticated/settings")({
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	const { mode, setMode } = useColorScheme();
-	if (!mode) {
-		return null;
-	}
 
 	return (
 		<Grid
@@ -33,35 +23,12 @@ function RouteComponent() {
 				<Typography variant="h1">{t("nav.settings.title")}</Typography>
 			</Grid>
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<FormControl>
-					<FormLabel id="theme-toggle">
-						{t("settings.theme_selection")}
-					</FormLabel>
-					<RadioGroup
-						aria-labelledby="theme-toggle"
-						name="theme-toggle"
-						row
-						value={mode}
-						onChange={(event) =>
-							setMode(event.target.value as "system" | "light" | "dark")
-						}>
-						<FormControlLabel
-							value="system"
-							control={<Radio />}
-							label={t("settings.system_mode")}
-						/>
-						<FormControlLabel
-							value="light"
-							control={<Radio />}
-							label={t("settings.light_mode")}
-						/>
-						<FormControlLabel
-							value="dark"
-							control={<Radio />}
-							label={t("settings.dark_mode")}
-						/>
-					</RadioGroup>
-				</FormControl>
+				<Typography variant="h3" component="h2">
+					{t("display.heading")}
+				</Typography>
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<DisplaySettings />
 			</Grid>
 		</Grid>
 	);

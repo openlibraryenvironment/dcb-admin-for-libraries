@@ -3,21 +3,27 @@
 
 export const TEXT_SIZES = ["small", "normal", "large", "largest"] as const;
 export const DENSITIES = ["comfortable", "compact"] as const;
+export const MOTIONS = ["system", "full", "reduced"] as const;
 
 export type TextSize = (typeof TEXT_SIZES)[number];
 export type Density = (typeof DENSITIES)[number];
+export type Motion = (typeof MOTIONS)[number];
 
 /**
  * The preferences that reach the THEME.
  *
- * Motion and typeface are deliberately absent for now: motion is CSS on the root
- * element rather than a theme property, and a typeface registry is its own
- * change. Both join this type when they arrive, and both then belong in the
- * build's cache key.
+ * `motion` is absent on purpose: it is an attribute on the root element that
+ * static CSS answers, not a theme value - so including it would add an axis to
+ * the build's cache key for something the built theme does not depend on.
  */
 export interface ThemeDisplay {
 	textSize: TextSize;
 	density: Density;
+}
+
+/** Everything a user can choose about how the interface is drawn. */
+export interface DisplayPreferences extends ThemeDisplay {
+	motion: Motion;
 }
 
 /**
@@ -27,9 +33,12 @@ export interface ThemeDisplay {
  * moves nobody's interface until they ask it to: `normal` is a 100% root size
  * and `comfortable` is MUI's own 8px spacing unit.
  */
-export const DEFAULT_DISPLAY: ThemeDisplay = {
+export const DEFAULT_DISPLAY: DisplayPreferences = {
 	textSize: "normal",
 	density: "comfortable",
+	// Defers to prefers-reduced-motion, which is the honest default: a device
+	// already configured for someone is a better answer than ours.
+	motion: "system",
 };
 
 /**
@@ -76,3 +85,10 @@ export function isDisplayValue<T extends readonly string[]>(
 		typeof value === "string" && (allowed as readonly string[]).includes(value)
 	);
 }
+
+/**
+ * The `data-motion` value for `<html>`, or null when the user defers to the OS -
+ * in which case the media query answers it alone.
+ */
+export const motionAttribute = (motion: Motion): string | null =>
+	motion === "system" ? null : motion;

@@ -146,7 +146,14 @@ const PAGES: Surface[] = [
 			await app.mockGraphQL({ LoadLibrary: library });
 		},
 		ready: async (page) => {
-			await expect(page.getByRole("radiogroup")).toBeVisible();
+			// Four radiogroups now, so this names one. The high-contrast option is
+			// the reason this page is scanned at all.
+			await expect(
+				page.getByRole("radiogroup", { name: /colour scheme/i }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("radio", { name: /high contrast/i }),
+			).toBeVisible();
 		},
 	},
 	{

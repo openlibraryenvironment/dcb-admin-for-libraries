@@ -16,6 +16,7 @@ import {
 	TEXT_SIZES,
 	type ThemeDisplay,
 } from "./display";
+import { motionStyles } from "./motion";
 import { openRSDark, openRSHighContrast, openRSLight } from "./tokens";
 import { typography } from "./typography";
 
@@ -56,6 +57,7 @@ const buildTheme = (display: ThemeDisplay): Theme =>
 							// in `rem` moves with this one declaration; a px size does not.
 							fontSize: rootFontSize(display.textSize),
 						},
+						...motionStyles,
 					},
 				},
 			},

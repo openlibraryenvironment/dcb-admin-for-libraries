@@ -116,6 +116,37 @@
 		"timestamp": "Timestamp",
 		"user": "User"
 	},
+	"display": {
+		"heading": "Display",
+		"description": "These settings are yours and are remembered on this device.",
+		"reset": "Reset display settings",
+		"reset_done": "Display settings reset",
+		"mode": {
+			"label": "Colour scheme",
+			"system": "Match my device",
+			"light": "Light",
+			"dark": "Dark",
+			"highContrast": "High contrast"
+		},
+		"textSize": {
+			"label": "Text size",
+			"small": "Small",
+			"normal": "Normal",
+			"large": "Large",
+			"largest": "Largest"
+		},
+		"density": {
+			"label": "Spacing",
+			"comfortable": "Comfortable",
+			"compact": "Compact"
+		},
+		"motion": {
+			"label": "Animation",
+			"system": "Match my device",
+			"full": "Full",
+			"reduced": "Reduced"
+		}
+	},
 	"entities": {
 		"contact": "contact",
 		"functional_setting": "functional setting",
