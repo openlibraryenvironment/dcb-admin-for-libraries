@@ -1,7 +1,9 @@
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+
+import MuiLink from "@mui/material/Link";
 
 import { DisplaySettings } from "@components/App/DisplaySettings";
 import { pageTitle } from "@helpers/pageTitle";
@@ -29,6 +31,13 @@ function RouteComponent() {
 			</Grid>
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<DisplaySettings />
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				{/* Beside the settings it describes, which is where somebody looking
+				    for it will be. */}
+				<MuiLink component={Link} to="/accessibility">
+					{t("legal.accessibility.title")}
+				</MuiLink>
 			</Grid>
 		</Grid>
 	);

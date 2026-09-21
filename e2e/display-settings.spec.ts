@@ -105,3 +105,24 @@ test("the typeface reaches the rendered page", async ({ page }) => {
 		.check();
 	expect(await bodyFont()).toContain("Atkinson Hyperlegible");
 });
+
+test("links to the accessibility statement, which says where it falls short", async ({
+	page,
+}) => {
+	await open(page);
+	await page.getByRole("link", { name: /^accessibility$/i }).click();
+
+	await expect(
+		page.getByRole("heading", { level: 1, name: /accessibility/i }),
+	).toBeVisible();
+
+	// The honest half is the reason this is a page rather than a marketing line.
+	await expect(
+		page.getByRole("heading", { level: 2, name: /fall short/i }),
+	).toBeVisible();
+
+	// Somewhere to send a problem, not just a claim.
+	await expect(
+		page.getByRole("link", { name: /dcb@k-int\.com/i }),
+	).toBeVisible();
+});

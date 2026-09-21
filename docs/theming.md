@@ -142,3 +142,21 @@ transition components write `transition-duration` **inline** at runtime, and no
 stylesheet rule beats an inline declaration. `0.01ms` rather than `0`, because a
 zero duration skips `transitionend` and MUI's own callbacks wait on it — a
 Dialog that never fires it never unmounts.
+
+## 8. Language
+
+One language, deliberately. `es` was wired into `src/i18n.ts` carrying 7 of 969
+keys — 0.4%. i18next renders a missing key as the key itself, so selecting
+Spanish would have put `ui.data_grid.export.current` on the export menu in
+front of a librarian. The `LanguageSwitcher` offering it was never mounted, so
+nobody could; but the resource was one import away from being reachable.
+
+Adding a language back needs four things, none of which exists yet:
+
+1. a **complete** bundle — `tests/translationKeys.test.ts` shows the shape;
+2. **lazy-loaded** locales, rather than every locale in the entry chunk;
+3. the choice **persisted**, like the display preferences;
+4. `document.documentElement.lang` written on change — without it assistive
+   technology goes on announcing the new language in English (WCAG 3.1.1).
+
+`lng` is pinned in `src/i18n.ts` until then.

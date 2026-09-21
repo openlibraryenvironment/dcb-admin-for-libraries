@@ -275,6 +275,21 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// The statement about this application's accessibility, which would be a
+		// poor thing to have an accessibility defect on.
+		name: "accessibility statement",
+		path: "/accessibility",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library });
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: /accessibility/i }),
+			).toBeVisible();
+		},
+	},
+	{
 		// The surface a mistyped or stale link lands on. It is reached by
 		// accident rather than chosen, so it is the last page that should be
 		// hard to read - and the giant ErrorOutlined glyph it shares with the
