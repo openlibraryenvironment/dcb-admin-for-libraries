@@ -117,10 +117,13 @@
 		"user": "User"
 	},
 	"display": {
-		"heading": "Display",
+		"density": {
+			"label": "Spacing",
+			"comfortable": "Comfortable",
+			"compact": "Compact"
+		},
 		"description": "These settings are yours and are remembered on this device.",
-		"reset": "Reset display settings",
-		"reset_done": "Display settings reset",
+		"heading": "Display",
 		"mode": {
 			"label": "Colour scheme",
 			"system": "Match my device",
@@ -128,6 +131,14 @@
 			"dark": "Dark",
 			"highContrast": "High contrast"
 		},
+		"motion": {
+			"label": "Animation",
+			"system": "Match my device",
+			"full": "Full",
+			"reduced": "Reduced"
+		},
+		"reset": "Reset display settings",
+		"reset_done": "Display settings reset",
 		"textSize": {
 			"label": "Text size",
 			"small": "Small",
@@ -135,16 +146,28 @@
 			"large": "Large",
 			"largest": "Largest"
 		},
-		"density": {
-			"label": "Spacing",
-			"comfortable": "Comfortable",
-			"compact": "Compact"
-		},
-		"motion": {
-			"label": "Animation",
-			"system": "Match my device",
-			"full": "Full",
-			"reduced": "Reduced"
+		"typeface": {
+			"label": "Typeface",
+			"roboto": {
+				"name": "Roboto",
+				"description": "The default"
+			},
+			"system": {
+				"name": "Your device's font",
+				"description": "Loads nothing extra"
+			},
+			"atkinsonHyperlegible": {
+				"name": "Atkinson Hyperlegible",
+				"description": "Designed for low vision"
+			},
+			"inter": {
+				"name": "Inter",
+				"description": "Even and open at small sizes"
+			},
+			"lexend": {
+				"name": "Lexend",
+				"description": "Designed for reading ease"
+			}
 		}
 	},
 	"entities": {

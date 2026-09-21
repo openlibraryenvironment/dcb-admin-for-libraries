@@ -10,12 +10,23 @@ test.beforeEach(async ({ app }) => {
 	await app.mockGraphQL({ LoadLibrary: library });
 });
 
-test("offers every display preference", async ({ page }) => {
+/**
+ * Computed styles read straight after goto are the BROWSER defaults - React has
+ * not mounted and emotion has injected nothing. 16px and "Times New Roman" both
+ * look like plausible answers, so this waits for the page to exist first.
+ */
+const open = async (page: import("@playwright/test").Page) => {
 	await page.goto("/settings");
+	await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+};
+
+test("offers every display preference", async ({ page }) => {
+	await open(page);
 
 	for (const group of [
 		/colour scheme/i,
 		/text size/i,
+		/typeface/i,
 		/spacing/i,
 		/animation/i,
 	]) {
@@ -31,7 +42,7 @@ test("offers every display preference", async ({ page }) => {
 });
 
 test("high contrast applies, and survives a reload", async ({ page }) => {
-	await page.goto("/settings");
+	await open(page);
 	await page.getByRole("radio", { name: /high contrast/i }).check();
 
 	// MUI marks the document with a bare attribute per scheme.
@@ -43,7 +54,7 @@ test("high contrast applies, and survives a reload", async ({ page }) => {
 });
 
 test("reduced motion reaches the document", async ({ page }) => {
-	await page.goto("/settings");
+	await open(page);
 
 	await page
 		.getByRole("radiogroup", { name: /animation/i })
@@ -61,7 +72,7 @@ test("reduced motion reaches the document", async ({ page }) => {
 });
 
 test("text size and spacing change the rendered page", async ({ page }) => {
-	await page.goto("/settings");
+	await open(page);
 
 	const rootFontSize = () =>
 		page.evaluate(() => getComputedStyle(document.documentElement).fontSize);
@@ -77,4 +88,20 @@ test("text size and spacing change the rendered page", async ({ page }) => {
 	await page.getByRole("button", { name: /reset display settings/i }).click();
 	expect(await rootFontSize()).toBe("16px");
 	await expect(page.getByRole("status")).toHaveText(/reset/i);
+});
+
+test("the typeface reaches the rendered page", async ({ page }) => {
+	await open(page);
+
+	const bodyFont = () =>
+		page.evaluate(() => getComputedStyle(document.body).fontFamily);
+
+	expect(await bodyFont()).toContain("Roboto");
+
+	// Chosen by what it is FOR, not by its name - which is why the picker shows
+	// the description beside each one.
+	await page
+		.getByRole("radio", { name: /atkinson hyperlegible/i })
+		.check();
+	expect(await bodyFont()).toContain("Atkinson Hyperlegible");
 });

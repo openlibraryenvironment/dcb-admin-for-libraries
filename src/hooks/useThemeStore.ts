@@ -12,6 +12,7 @@ import {
 	type Motion,
 	type TextSize,
 } from "@/themes/display";
+import { DEFAULT_FONT, isFontName, type FontName } from "@/themes/fonts";
 
 /** The colour schemes this application declares. */
 export const THEME_MODES = ["light", "dark", "highContrast"] as const;
@@ -28,6 +29,13 @@ interface ThemePreferences {
 	textSize: TextSize;
 	/** MUI's spacing unit: how tight every gap in the interface is. */
 	density: Density;
+	/**
+	 * The reading typeface. PER USER, never per library: it is a comfort and
+	 * accessibility preference belonging to whoever is looking at the screen,
+	 * and a library-wide override would impose one colleague's choice on
+	 * another who needs a different one.
+	 */
+	fontName: FontName;
 	/** Whether to animate. `system` defers to prefers-reduced-motion. */
 	motion: Motion;
 }
@@ -36,6 +44,7 @@ interface ThemeActions {
 	setMode: (mode: ThemeMode | null) => void;
 	setTextSize: (textSize: TextSize) => void;
 	setDensity: (density: Density) => void;
+	setFontName: (fontName: FontName) => void;
 	setMotion: (motion: Motion) => void;
 	/** Returns every display preference to its default. */
 	resetDisplay: () => void;
@@ -67,6 +76,8 @@ export const useThemeStore = create<ThemePreferences & ThemeActions>()(
 						? density
 						: DEFAULT_DISPLAY.density,
 				}),
+			setFontName: (fontName) =>
+				set({ fontName: isFontName(fontName) ? fontName : DEFAULT_FONT }),
 			setMotion: (motion) =>
 				set({
 					motion: isDisplayValue(MOTIONS, motion)
@@ -98,6 +109,9 @@ export const useThemeStore = create<ThemePreferences & ThemeActions>()(
 					density: isDisplayValue(DENSITIES, stored.density)
 						? stored.density
 						: DEFAULT_DISPLAY.density,
+					fontName: isFontName(stored.fontName)
+						? stored.fontName
+						: DEFAULT_FONT,
 					motion: isDisplayValue(MOTIONS, stored.motion)
 						? stored.motion
 						: DEFAULT_DISPLAY.motion,

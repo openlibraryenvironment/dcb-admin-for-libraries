@@ -1,6 +1,8 @@
 // The display preference vocabularies and the arithmetic that turns them into
 // theme values. Kept out of any store so both are testable without a React tree.
 
+import { DEFAULT_FONT, type FontName } from "./fonts";
+
 export const TEXT_SIZES = ["small", "normal", "large", "largest"] as const;
 export const DENSITIES = ["comfortable", "compact"] as const;
 export const MOTIONS = ["system", "full", "reduced"] as const;
@@ -19,6 +21,7 @@ export type Motion = (typeof MOTIONS)[number];
 export interface ThemeDisplay {
 	textSize: TextSize;
 	density: Density;
+	fontName: FontName;
 }
 
 /** Everything a user can choose about how the interface is drawn. */
@@ -36,6 +39,7 @@ export interface DisplayPreferences extends ThemeDisplay {
 export const DEFAULT_DISPLAY: DisplayPreferences = {
 	textSize: "normal",
 	density: "comfortable",
+	fontName: DEFAULT_FONT,
 	// Defers to prefers-reduced-motion, which is the honest default: a device
 	// already configured for someone is a better answer than ours.
 	motion: "system",

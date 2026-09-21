@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useAnnounce } from "@/hooks/useAnnouncer";
 import { THEME_MODES, useThemeStore } from "@/hooks/useThemeStore";
 import { DENSITIES, MOTIONS, TEXT_SIZES } from "@/themes/display";
+import { FONTS, FONT_NAMES, type FontName } from "@/themes/fonts";
 
 /**
  * "Match my device" is the ABSENCE of a stored mode, not a fourth mode. The
@@ -71,6 +72,54 @@ function Choice<T extends string>({
 	);
 }
 
+
+/**
+ * The typeface, with a line saying who each one is for.
+ *
+ * Its own component rather than a `Choice`, because the description is the
+ * point: "Atkinson Hyperlegible" means nothing to most people, and "Designed
+ * for low vision" is what tells somebody it might help them. Each option is
+ * previewed IN its own family, which is the other thing a name cannot convey.
+ */
+function TypefacePicker() {
+	const { t } = useTranslation();
+	const fontName = useThemeStore((state) => state.fontName);
+	const setFontName = useThemeStore((state) => state.setFontName);
+	const labelId = "display-typeface-label";
+
+	return (
+		<FormControl component="fieldset">
+			<FormLabel component="legend" id={labelId}>
+				{t("display.typeface.label")}
+			</FormLabel>
+			<RadioGroup
+				aria-labelledby={labelId}
+				name="typeface"
+				value={fontName}
+				onChange={(event) => setFontName(event.target.value as FontName)}
+			>
+				{FONT_NAMES.map((name) => (
+					<FormControlLabel
+						key={name}
+						value={name}
+						control={<Radio />}
+						label={
+							<Stack sx={{ fontFamily: FONTS[name].stack }}>
+								<Typography component="span" sx={{ font: "inherit" }}>
+									{t(FONTS[name].labelKey)}
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									{t(FONTS[name].descriptionKey)}
+								</Typography>
+							</Stack>
+						}
+					/>
+				))}
+			</RadioGroup>
+		</FormControl>
+	);
+}
+
 export const DisplaySettings = () => {
 	const { t } = useTranslation();
 	const announce = useAnnounce();
@@ -101,6 +150,7 @@ export const DisplaySettings = () => {
 				value={textSize}
 				onChange={setTextSize}
 			/>
+			<TypefacePicker />
 			<Choice
 				name="density"
 				options={DENSITIES}

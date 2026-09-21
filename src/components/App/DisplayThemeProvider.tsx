@@ -37,12 +37,13 @@ export const DisplayThemeProvider = ({ children }: { children: ReactNode }) => {
 	// application on every unrelated change to it.
 	const textSize = useThemeStore((state) => state.textSize);
 	const density = useThemeStore((state) => state.density);
+	const fontName = useThemeStore((state) => state.fontName);
 	const motion = useThemeStore((state) => state.motion);
 	const mode = useResolvedMode();
 
 	const theme = useMemo(
-		() => getAppTheme({ textSize, density }),
-		[textSize, density],
+		() => getAppTheme({ textSize, density, fontName }),
+		[textSize, density, fontName],
 	);
 
 	// MUI owns `data-*-color-scheme`; this is the one it does not know about.

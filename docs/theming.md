@@ -15,12 +15,15 @@ So anything a user can change has to be an **input to the build** rather than a
 patch applied afterwards. That is why `getAppTheme(display)` exists and why
 there is no `withDensity(theme)` helper.
 
-Two preferences work this way today:
+Three preferences work this way:
 
 | Preference | What it sets | Why it cannot be overlaid |
 |---|---|---|
 | Density | MUI's spacing unit (8px / 6px) | `theme.spacing` is a function |
 | Text size | the root font size (93.75%–112.5%) | every `rem` in the type scale derives from it |
+| Typeface | `typography.fontFamily` | every variant derives from it at build time |
+
+The colour scheme and the animation setting do **not**: see §2 and §7.
 
 The rule that follows for components: **a `px` font size opts that element out
 of the text-size preference, silently.** Icons are the exception and stay in px.
@@ -66,7 +69,34 @@ So the high-contrast tokens go through `createTheme` once on their own, and the
 *augmented* result is what the scheme is given. That also puts the scheme's own
 `contrastThreshold: 7` in charge of MUI's derivations rather than the default 3.
 
-## 4. Contrast is measured, not asserted
+## 4. Typefaces
+
+`src/themes/fonts.ts` is a **fixed vocabulary**. A font name ends up inside a
+CSS declaration, so it is never taken from configuration, a URL, or anything a
+user typed: the choice is an id from the list and the stack beside it is the
+only string that reaches the theme.
+
+**Every family is self-hosted.** None loads from `fonts.googleapis.com`. A staff
+console that fetches a typeface from a third party makes every administrator's
+browser announce itself to that third party on every page load, which is a
+data-protection decision nobody has taken. Removing exactly that request from
+`index.html` is what the Lighthouse budget was introduced alongside.
+
+Licences: Roboto is Apache-2.0; Inter, Lexend and Atkinson Hyperlegible Next are
+OFL-1.1. All four are redistributable in a commercial product.
+
+**Payload, measured rather than asserted.** Declaring five families costs 317
+bytes gzipped: a variable font's `@font-face` is small, and the 892 KB of woff2
+beside it is fetched only when something is actually *painted* in that family.
+Somebody who never opens the picker downloads exactly the one they are reading
+in.
+
+The preference is **per user, never per library**. It is a comfort and
+accessibility choice belonging to whoever is looking at the screen; a
+library-wide override would hand one colleague's choice to another who needs a
+different one.
+
+## 5. Contrast is measured, not asserted
 
 `tests/themeContrast.test.ts` measures every ink against the ground it actually
 lands on, per scheme, and reports the **whole** list of failures rather than the
@@ -87,10 +117,28 @@ The axe gate measures what is *rendered*; this measures what is *declared*. The
 gap between them is a token used on a page the gate does not scan, or only when
 a form is in error — which is where `error.main` sat at 3.85:1 unnoticed.
 
-## 5. Adding a token
+## 6. Adding a token
 
 1. Add the value to each scheme in `src/themes/tokens.ts`.
 2. Declare it in `src/themes/augmentation.ts`.
 3. Add its **pair** to `tests/themeContrast.test.ts` — the ink *and* the ground
    it lands on. A ratio asserted against the wrong ground is worse than no
    assertion.
+
+## 7. Motion
+
+`reduced` is CSS on the root element, not a theme value — which is why it is
+absent from `ThemeDisplay` and from the build's cache key.
+
+Two rules, because there are two ways to ask for it: the OS's
+`prefers-reduced-motion`, which applies unless the user has explicitly chosen
+full motion, and the user's own choice, which applies whatever the OS says. A
+preference has to be overridable in **both** directions, or somebody on a
+machine that is not theirs is stuck with someone else's setting. "Match my
+device" writes no attribute at all, so the media query answers alone.
+
+`!important` is correct here and nowhere else in this application: MUI's
+transition components write `transition-duration` **inline** at runtime, and no
+stylesheet rule beats an inline declaration. `0.01ms` rather than `0`, because a
+zero duration skips `transitionend` and MUI's own callbacks wait on it — a
+Dialog that never fires it never unmounts.

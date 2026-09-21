@@ -16,6 +16,7 @@ import {
 	TEXT_SIZES,
 	type ThemeDisplay,
 } from "./display";
+import { DEFAULT_FONT, fontStack, isFontName } from "./fonts";
 import { motionStyles } from "./motion";
 import { openRSDark, openRSHighContrast, openRSLight } from "./tokens";
 import { typography } from "./typography";
@@ -47,7 +48,7 @@ const buildTheme = (display: ThemeDisplay): Theme =>
 				highContrast: { palette: augment(openRSHighContrast) },
 			},
 			spacing: spacingUnit(display.density),
-			typography,
+			typography: { ...typography, fontFamily: fontStack(display.fontName) },
 			components: {
 				...components,
 				MuiCssBaseline: {
@@ -84,11 +85,15 @@ export const getAppTheme = (display: ThemeDisplay = DEFAULT_DISPLAY): Theme => {
 		? display.density
 		: DEFAULT_DISPLAY.density;
 
-	const key = `${textSize}:${density}`;
+	const fontName = isFontName(display?.fontName)
+		? display.fontName
+		: DEFAULT_FONT;
+
+	const key = `${textSize}:${density}:${fontName}`;
 	const cached = cache.get(key);
 	if (cached) return cached;
 
-	const built = buildTheme({ textSize, density });
+	const built = buildTheme({ textSize, density, fontName });
 	cache.set(key, built);
 	return built;
 };
