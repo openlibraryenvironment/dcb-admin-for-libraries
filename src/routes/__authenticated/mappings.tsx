@@ -389,23 +389,23 @@ function RouteComponent() {
 							/>,
 						];
 					}
+					// One element PER action, not a fragment wrapping both: the grid
+					// inspects each returned element (for showInMenu, among others),
+					// and a fragment hides them from it.
 					return [
-						<>
-							<GridActionsCellItem
-								key="edit"
-								icon={<Edit />}
-								label={t("ui.actions.edit")}
-								onClick={handleEditClick(id)}
-								disabled={!editingEnabled}
-							/>
-
-							<GridActionsCellItem
-								key="delete"
-								icon={<Delete />}
-								label={t("ui.actions.delete")}
-								onClick={handleDeleteClick(id)}
-							/>
-						</>,
+						<GridActionsCellItem
+							key="edit"
+							icon={<Edit />}
+							label={t("ui.actions.edit")}
+							onClick={handleEditClick(id)}
+							disabled={!editingEnabled}
+						/>,
+						<GridActionsCellItem
+							key="delete"
+							icon={<Delete />}
+							label={t("ui.actions.delete")}
+							onClick={handleDeleteClick(id)}
+						/>,
 					];
 				},
 			},
