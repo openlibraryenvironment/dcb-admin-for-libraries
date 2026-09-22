@@ -1,3 +1,4 @@
+import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -128,7 +129,7 @@ export default function StaffRequest({
 						order: "fullName",
 						orderBy: "ASC",
 						pageno: 0,
-						pagesize: 1000,
+						pagesize: REFERENCE_LIST_PAGE_SIZE,
 						query: "",
 					},
 					headers,
@@ -185,7 +186,7 @@ export default function StaffRequest({
 					order: "name",
 					orderBy: "ASC",
 					pageno: 0,
-					pagesize: 1000,
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
 					query: locationQuery,
 				},
 				headers,

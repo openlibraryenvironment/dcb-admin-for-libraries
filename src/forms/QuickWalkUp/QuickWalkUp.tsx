@@ -1,3 +1,4 @@
+import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -123,7 +124,7 @@ export default function QuickWalkUpRequest({
 					getLibraries,
 					{
 						pageno: 0,
-						pagesize: 1000,
+						pagesize: REFERENCE_LIST_PAGE_SIZE,
 						order: "fullName",
 						orderBy: "ASC",
 						query: "",
@@ -178,7 +179,7 @@ export default function QuickWalkUpRequest({
 					{
 						query: locationQuery,
 						pageno: 0,
-						pagesize: 1000,
+						pagesize: REFERENCE_LIST_PAGE_SIZE,
 						order: "name",
 						orderBy: "ASC",
 					},

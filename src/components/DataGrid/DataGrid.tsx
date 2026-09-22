@@ -1,3 +1,4 @@
+import { PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
 import {
 	DataGridPremium,
 	GridApiPremium,
@@ -269,7 +270,7 @@ export default function DataGrid({
 				onRowSelectionModelChange={(newSelection) => {
 					setSelectionModel(newSelection);
 				}}
-				pageSizeOptions={[5, 10, 20, 25, 30, 40, 50, 100, 200]}
+				pageSizeOptions={PAGE_SIZE_OPTIONS}
 				pagination={pagination}
 				paginationMode={paginationMode}
 				paginationModel={paginationModel}

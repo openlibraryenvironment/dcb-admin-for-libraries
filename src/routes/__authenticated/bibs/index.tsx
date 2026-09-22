@@ -1,3 +1,4 @@
+import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
@@ -202,7 +203,7 @@ function RouteComponent() {
 				query:
 					processGridFilterModel(debouncedFilterModel, baseQuery, ["title"]) ??
 					"",
-				pagesize: paginationModel.pageSize ?? 200,
+				pagesize: clampPageSize(paginationModel.pageSize),
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "dateUpdated",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",

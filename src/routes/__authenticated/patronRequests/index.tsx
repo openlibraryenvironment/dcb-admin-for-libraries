@@ -1,3 +1,7 @@
+import {
+	clampPageSize,
+	REFERENCE_LIST_PAGE_SIZE,
+} from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
@@ -232,7 +236,7 @@ function RouteComponent() {
 				getLibraries,
 				{
 					query: "",
-					pagesize: 1000,
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
 					pageno: 0,
 					order: "fullName",
 					orderBy: "ASC",
@@ -427,7 +431,7 @@ function RouteComponent() {
 						"status",
 						"description",
 					]) ?? "",
-				pagesize: paginationModel.pageSize ?? 200,
+				pagesize: clampPageSize(paginationModel.pageSize),
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "dateCreated",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",

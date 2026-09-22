@@ -1,3 +1,4 @@
+import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
@@ -236,7 +237,7 @@ function RouteComponent() {
 				getLibraries,
 				{
 					query: "",
-					pagesize: 10000,
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
 					pageno: 0,
 					orderBy: "DESC",
 					order: "fullName",

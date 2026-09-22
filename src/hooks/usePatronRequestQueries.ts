@@ -2,6 +2,10 @@
 // i.e. the requests, the libraries (for the filters), and ideally the locations too
 // It also deals with the models
 // And it needs configuration options as some pages might not need everything, per se
+import {
+	clampPageSize,
+	REFERENCE_LIST_PAGE_SIZE,
+} from "@constants/dataGrid/pagination";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import { useMemo } from "react";
@@ -66,7 +70,7 @@ export const usePatronRequestQueries = ({
 				getLibraries,
 				{
 					query: "",
-					pagesize: 1000,
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
 					pageno: 0,
 					order: "fullName",
 					orderBy: "ASC",
@@ -141,7 +145,7 @@ export const usePatronRequestQueries = ({
 						"status",
 						"description",
 					]) ?? "",
-				pagesize: paginationModel.pageSize ?? 200,
+				pagesize: clampPageSize(paginationModel.pageSize),
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "dateCreated",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",

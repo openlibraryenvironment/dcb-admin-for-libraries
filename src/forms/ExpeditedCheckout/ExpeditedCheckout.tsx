@@ -1,3 +1,4 @@
+import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -141,7 +142,7 @@ export default function ExpeditedCheckout({
 					order: "fullName",
 					orderBy: "ASC",
 					pageno: 0,
-					pagesize: 1000,
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
 					query: "",
 				},
 				headers,
@@ -273,7 +274,7 @@ export default function ExpeditedCheckout({
 						order: "name",
 						orderBy: "ASC",
 						pageno: 0,
-						pagesize: 1000,
+						pagesize: REFERENCE_LIST_PAGE_SIZE,
 						query: locationQuery,
 					},
 					headers,
