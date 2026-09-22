@@ -1,3 +1,4 @@
+import { formatPercent } from "@helpers/formatters";
 import { ReactNode } from "react";
 import {
 	Card,
@@ -78,7 +79,7 @@ export default function KpiTile({
 									) : (
 										<ArrowDropDown fontSize="small" />
 									)}
-									{Math.abs(deltaPct as number).toFixed(1)}%
+									{formatPercent(Math.abs(deltaPct as number))}
 								</Typography>
 							)}
 							{subtitle && (

@@ -1,8 +1,8 @@
 // Step 3: Progress to checkout.
 
+import { formatLongDateTime } from "@helpers/formatters";
 import { Box, Button, LinearProgress, Stack, Typography } from "@mui/material";
 import { TFunction } from "i18next";
-import dayjs from "dayjs";
 import { useAuth } from "react-oidc-context";
 
 // The align items on the stack is to prevent the button taking up full width of the container.
@@ -33,7 +33,7 @@ export const CheckoutStep = ({
 	const roles = auth?.user?.profile?.roles ? auth?.user?.profile?.roles : [];
 	const isReadOnly = roles.includes("LIBRARY_READ_ONLY");
 	const displayDueDate = dueDate
-		? dayjs(dueDate).format("dddd, MMMM D, YYYY h:mm A")
+		? formatLongDateTime(dueDate)
 		: t(
 				"requesting.expedited_checkout.steps.due_date_loading",
 				"Loading due date...",
