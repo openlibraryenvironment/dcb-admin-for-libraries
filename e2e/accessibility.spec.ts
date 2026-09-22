@@ -1,4 +1,4 @@
-import { test, expect, type AppFixture } from "./fixtures/test";
+import { test, expect as strictExpect, type AppFixture } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
@@ -21,6 +21,13 @@ import {
  * Adding a page: add it to PAGES. That is the whole cost, and it is meant to be
  * that low, because a gate people route around is worse than no gate.
  */
+
+/**
+ * Readiness waits are not the thing under test, so they get a longer timeout
+ * than the axe assertion: under fullyParallel, MUI X's grid does not always
+ * paint inside 5s. docs/testing.md explains what that failure looks like.
+ */
+const expect = strictExpect.configure({ timeout: 20_000 });
 
 interface Surface {
 	name: string;
