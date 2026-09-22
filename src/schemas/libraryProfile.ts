@@ -13,10 +13,15 @@ const boundedText = (t: TFunction, length: number) =>
 		.trim()
 		.max(length, t("ui.validation.max_length", { length }));
 
-/** An empty box is not zero degrees: it clears the coordinate. */
+/**
+ * An empty box is not zero degrees: it clears the coordinate. `nullable` is
+ * what makes that true - without it the transform produced a null that
+ * Yup.number() rejects, with its own untranslated "latitude cannot be null".
+ */
 const coordinate = (t: TFunction, bound: number, messageKey: string) =>
 	Yup.number()
 		.transform((value, originalValue) => (originalValue === "" ? null : value))
+		.nullable()
 		.typeError(t(messageKey))
 		.min(-bound, t(messageKey))
 		.max(bound, t(messageKey));

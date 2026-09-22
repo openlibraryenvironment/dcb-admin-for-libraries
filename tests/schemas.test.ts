@@ -86,6 +86,22 @@ describe("libraryProfileSchema", () => {
 	});
 
 
+	/**
+	 * A library that has never set coordinates arrives here with null, and a
+	 * cleared box arrives as "". Both used to fail, which disabled Save for the
+	 * WHOLE profile and put Yup's own English under the field.
+	 */
+	it("treats an absent coordinate as absent, not as an error", async () => {
+		for (const value of [null, "", undefined]) {
+			expect(
+				await messageFor(schema, {
+					fullName: "Anytown Library",
+					latitude: value,
+					longitude: value,
+				}),
+			).toEqual([]);
+		}
+	});
 	it("bounds the coordinates", async () => {
 		expect(
 			await messageFor(schema, { fullName: "Anytown Library", latitude: 91 }),

@@ -79,3 +79,64 @@ test.describe("library profile", () => {
 		}
 	});
 });
+
+/**
+ * dcb-service returns null, not an absent key, for a coordinate a library has
+ * never set. That is the state this reproduces: the fixture above omits the
+ * fields entirely, which is undefined and was always valid.
+ */
+test.describe("a library with no coordinates", () => {
+	const withoutCoordinates = {
+		libraries: {
+			...library.libraries,
+			content: [
+				{ ...library.libraries.content[0], latitude: null, longitude: null },
+			],
+		},
+	};
+
+	test("can still save the rest of its profile", async ({ app, page }) => {
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: withoutCoordinates,
+			LoadLibraryBasics: withoutCoordinates,
+			LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
+			LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
+		});
+		await page.goto("/");
+		await page.getByRole("button", { name: /^edit$/i }).click();
+
+		const fullName = page.getByRole("textbox", { name: /full name/i }).first();
+		await fullName.fill("Anytown Public Library");
+
+		// The symptom is on SAVE, not on typing: with a resolver, react-hook-form
+		// surfaces an error only for the field that changed, so nothing showed until
+		// handleSubmit ran the whole schema - and then the form refused to submit
+		// over a field the user had never touched, in Yup's own English.
+		await page.getByRole("button", { name: /^save$/i }).click();
+
+		await expect(page.getByText(/cannot be null/i)).toHaveCount(0);
+
+		// The save went through, so the form left edit mode. Without the fix it
+		// stays open with the Latitude field red and Save doing nothing.
+		await expect(page.getByRole("button", { name: /^save$/i })).toHaveCount(0);
+	});
+
+	test("still rejects a coordinate that is out of range", async ({
+		app,
+		page,
+	}) => {
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: withoutCoordinates,
+			LoadLibraryBasics: withoutCoordinates,
+			LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
+			LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
+		});
+		await page.goto("/");
+		await page.getByRole("button", { name: /^edit$/i }).click();
+
+		await page.getByRole("textbox", { name: /latitude/i }).first().fill("91");
+		await expect(page.getByRole("button", { name: /^save$/i })).toBeDisabled();
+	});
+});
