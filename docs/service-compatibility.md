@@ -20,6 +20,52 @@ feature, add a row, commit that release's schema as
 A wrong row is otherwise invisible: the flag gets switched on at the upgrade and
 the feature fails in an environment, which is the expensive place to find out.
 
+## Adding the next capability
+
+`src/constants/serviceCapabilities.ts` is the one place a person adding a
+feature cannot forget, because a version gate has to change the **document**
+and the mutation **variables** before they are sent — hiding the component does
+not work for GraphQL.
+
+1. Add a row: an id, a `VITE_FEATURE_*` flag, the release it lands in, and the
+   fields it adds keyed by GraphQL type — **INPUT types included**, because
+   stripping a key from mutation variables is a separate job from leaving it
+   out of a selection.
+2. Declare the flag in `@helpers/featureFlags` and add it to
+   `docker/production/inject_env.json.template`. `featureFlags.test.ts` fails
+   if you forget the second.
+3. Interpolate `capabilitySelection(id, "TypeName")` into the documents instead
+   of listing fields, and pass mutation variables through
+   `stripUnsupportedInput`.
+4. Commit the schema of the release named in `since`, as
+   `schema.v<version>.graphqls`.
+
+### One flag per capability, not one "we are on v9 now"
+
+Read the `since` column: they differ, and they will keep differing. Features
+land in whatever release they land in, and this app's releases do not line up
+with dcb-service's. A single boolean would be a lie about every capability but
+one.
+
+### The flags are runtime, not build-time
+
+They are read from the injected runtime config (`window.__APP_ENV__`, populated
+in `application.tsx` from `/inject_env.json`), not from `import.meta.env` at
+build time. A flag that gates a feature on a *backend* release has to be
+flippable per environment without rebuilding and redeploying the UI; the
+`import.meta.env` read is only the local-dev fallback.
+
+Flags are off unless explicitly turned on, so an environment that has never
+heard of one hides the feature.
+
+### Build the selection at query time, never at module scope
+
+`application.tsx` assigns `window.__APP_ENV__` only after awaiting
+`inject_env.json` — long after the document modules evaluate. A selection built
+at module scope reads every flag as off, in every environment, and **the bug is
+invisible because the app still works**: it silently runs in legacy mode
+forever.
+
 ## Three schema passes, not two
 
 `src/queries/schemaConformance.test.ts` validates every document this

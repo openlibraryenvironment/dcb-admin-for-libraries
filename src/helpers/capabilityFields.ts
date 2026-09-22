@@ -21,16 +21,14 @@ const isOn = (entry: ServiceCapability): boolean =>
 	isCapabilityEnabled(entry.flag);
 
 /**
- * The fields to select for `id` on `type`, indented to sit inside a `gql` template.
+ * The fields to select for `id` on `type`, indented to sit inside a `gql`
+ * template. The capability's fields when the deployment has them, its
+ * `fallback` when it has an older equivalent, the empty string otherwise.
  *
- * Returns the capability's fields when the deployment has them, its `fallback` for that
- * type when it has an older equivalent, and the empty string otherwise.
- *
- * **Call this at query time, never at module scope.** The flags are read from
- * `window.__APP_ENV__`, which `application.tsx` assigns only after awaiting
- * `inject_env.json` — long after the document modules evaluate. A selection built at
- * module scope reads every flag as off, in every environment, and the bug is invisible
- * because the app still works: it just silently runs in legacy mode forever.
+ * CALL THIS AT QUERY TIME, NEVER AT MODULE SCOPE: the flags arrive after
+ * inject_env.json is awaited, so a module-scope selection reads every flag as
+ * off in every environment and the app runs in legacy mode forever without
+ * appearing broken. docs/service-compatibility.md.
  */
 export const capabilitySelection = (id: string, type: string): string => {
 	const entry = capability(id);
