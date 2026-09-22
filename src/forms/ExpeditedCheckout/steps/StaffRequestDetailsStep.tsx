@@ -19,13 +19,12 @@ import {
 	Controller,
 	FieldErrors,
 	UseFormSetValue,
-	UseFormWatch,
+	useWatch,
 } from "react-hook-form";
 
 interface StaffRequestDetailsStepProps {
 	control: Control<StaffRequestFormData, any>;
 	errors: FieldErrors<StaffRequestFormData>;
-	watch: UseFormWatch<StaffRequestFormData>;
 	setValue: UseFormSetValue<StaffRequestFormData>;
 	pickupLocationOptions: PatronRequestAutocompleteOption[];
 	pickupLocationsLoading: boolean;
@@ -45,7 +44,6 @@ interface StaffRequestDetailsStepProps {
 export const StaffRequestDetailsStep = ({
 	control,
 	errors,
-	watch,
 	setValue,
 	pickupLocationOptions,
 	pickupLocationsLoading,
@@ -61,9 +59,13 @@ export const StaffRequestDetailsStep = ({
 	isValid,
 	t,
 }: StaffRequestDetailsStepProps) => {
-	const selectionType = watch("selectionType");
-	const itemAgencyCode = watch("itemAgencyCode");
-	const itemsData = watch("itemLocalId"); // to check if items are fetched
+	// useWatch rather than the form's watch: the subscription belongs to
+	// whichever component called useForm, so reading it here re-rendered the whole
+	// StaffRequest form on every keystroke in these three fields.
+	const [selectionType, itemAgencyCode, itemsData] = useWatch({
+		control,
+		name: ["selectionType", "itemAgencyCode", "itemLocalId"],
+	});
 
 	return (
 		<>

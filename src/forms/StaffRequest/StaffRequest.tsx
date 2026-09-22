@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
+import { staffRequestSchema } from "@/schemas/staffRequest";
 import {
 	DialogContent,
 	Step,
@@ -88,64 +88,7 @@ export default function StaffRequest({
 	];
 	const isReadOnly = auth.user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
 
-	const validationSchema = Yup.object().shape({
-		patronBarcode: Yup.string()
-			.required(
-				t("ui.validation.required", {
-					field: t("requesting.staff_request.patron.barcode").toLowerCase(),
-				}),
-			)
-			.test(
-				"no-square-brackets",
-				t("requesting.staff_request.patron.error.no_brackets"),
-				(value) =>
-					value ? !value.includes("[") && !value.includes("]") : true,
-			),
-		agencyCode: Yup.string().required(
-			t("ui.validation.required", {
-				field: t("agency.code").toLowerCase(),
-			}),
-		),
-		pickupLocationId: Yup.string().required(
-			t("ui.validation.required", {
-				field: t(
-					"requesting.staff_request.patron.pickup_location",
-				).toLowerCase(),
-			}),
-		),
-		requesterNote: Yup.string(),
-		selectionType: Yup.string().required(
-			t("ui.validation.required", {
-				field: t(
-					"requesting.staff_request.patron.selection.type",
-				).toLowerCase(),
-			}),
-		),
-		itemLocalId: Yup.string().when("selectionType", {
-			is: "manual",
-			then: (schema) =>
-				schema.required(
-					t("ui.validation.required", {
-						field: t(
-							"requesting.staff_request.patron.item_local_id",
-						).toLowerCase(),
-					}),
-				),
-			otherwise: (schema) => schema.notRequired(),
-		}),
-		itemAgencyCode: Yup.string().when("selectionType", {
-			is: "manual",
-			then: (schema) =>
-				schema.required(
-					t("ui.validation.required", {
-						field: t(
-							"requesting.staff_request.patron.item_library",
-						).toLowerCase(),
-					}),
-				),
-			otherwise: (schema) => schema.notRequired(),
-		}),
-	});
+	const validationSchema = useMemo(() => staffRequestSchema(t), [t]);
 
 	const {
 		control,
@@ -527,7 +470,6 @@ export default function StaffRequest({
 					<StaffRequestDetailsStep
 						control={control}
 						errors={errors}
-						watch={watch}
 						setValue={setValue}
 						pickupLocationOptions={sortedPickupLocationOptions}
 						pickupLocationsLoading={pickupLocationsLoading}

@@ -24,12 +24,7 @@ import {
 } from "@mui/material";
 import { BrandImageField } from "@components/BrandImageField/BrandImageField";
 import { useBrandUploadsAvailable } from "@/hooks/useBrandUploadsAvailable";
-import {
-	BRAND_LIMITS,
-	isValidLinkUrl,
-	isValidLogoUrl,
-	themeOptions,
-} from "@constants/discoveryBranding";
+import { themeOptions } from "@constants/discoveryBranding";
 import AddressLink from "../../components/Address/AddressLink";
 import { Controller, useForm } from "react-hook-form";
 import { UpdateLibraryFormData } from "../../models/UpdateLibraryFormData";
@@ -43,7 +38,7 @@ import {
 } from "@helpers/featureFlags";
 import { UpdateLibraryResponse } from "../../models/UpdateLibraryResponse";
 import { useEffect, useMemo, useRef, useState } from "react";
-import * as Yup from "yup";
+import { libraryProfileSchema } from "@/schemas/libraryProfile";
 import { yupResolver } from "@hookform/resolvers/yup";
 import TimedAlert from "../../components/TimedAlert/TimedAlert";
 import { formatChangedFields } from "../../helpers/confirmationFunctions";
@@ -318,83 +313,7 @@ function HomeComponent() {
 		},
 	});
 
-	const validationSchema = Yup.object().shape({
-		fullName: Yup.string()
-			.trim()
-			.nonNullable(t("ui.validation.required"))
-			.required(
-				t("ui.validation.required", { field: t("library.full_name") }),
-			)
-			.max(255, t("ui.validation.max_length", { length: 255 })),
-		shortName: Yup.string()
-			.trim()
-			.max(32, t("ui.validation.max_length", { length: 32 })),
-		abbreviatedName: Yup.string()
-			.trim()
-			.nonNullable(t("ui.validation.required"))
-			.max(32, t("ui.validation.max_length", { length: 128 })),
-		latitude: Yup.number()
-			.transform((value, originalValue) =>
-				originalValue === "" ? null : value,
-			)
-			.typeError(t("ui.validation.locations.lat"))
-			.min(-90, t("ui.validation.locations.lat"))
-			.max(90, t("ui.validation.locations.lat")),
-		longitude: Yup.number()
-			.transform((value, originalValue) =>
-				originalValue === "" ? null : value,
-			)
-			.typeError(t("ui.validation.locations.long"))
-			.min(-180, t("ui.validation.locations.long"))
-			.max(180, t("ui.validation.locations.long")),
-		backupDowntimeSchedule: Yup.string()
-			.trim()
-			.max(200, t("ui.validation.max_length", { length: 200 })),
-		supportHours: Yup.string()
-			.trim()
-			.max(200, t("ui.validation.max_length", { length: 200 })),
-		// Mirrors dcb-service's BrandingValidator so the administrator is told at the
-		// field rather than by a rejected save. Blank is valid at all three and means
-		// "clear it" — a library that uploaded the wrong mark must be able to remove it.
-		brandLogoUrl: Yup.string()
-			.trim()
-			.max(
-				BRAND_LIMITS.logoUrl,
-				t("ui.validation.max_length", { length: BRAND_LIMITS.logoUrl }),
-			)
-			.test("absolute-http-url", t("library.brand.logo_url_invalid"), isValidLogoUrl),
-		brandLogoAlt: Yup.string()
-			.trim()
-			.max(
-				BRAND_LIMITS.logoAlt,
-				t("ui.validation.max_length", { length: BRAND_LIMITS.logoAlt }),
-			),
-		defaultThemeName: Yup.string()
-			.trim()
-			.max(
-				BRAND_LIMITS.themeName,
-				t("ui.validation.max_length", { length: BRAND_LIMITS.themeName }),
-			),
-		// V-11.1. Both become an href in the discovery app's footer, and dcb-service now
-		// refuses anything that is not an absolute http(s) URL on write — so the rule is
-		// checked under the box rather than reported as a 400 with no field attached.
-		// patronWebsite gains the check with supportUrl because the server gained it for
-		// both at once.
-		patronWebsite: Yup.string()
-			.trim()
-			.max(
-				BRAND_LIMITS.linkUrl,
-				t("ui.validation.max_length", { length: BRAND_LIMITS.linkUrl }),
-			)
-			.test("absolute-http-url", t("library.presence.url_invalid"), isValidLinkUrl),
-		supportUrl: Yup.string()
-			.trim()
-			.max(
-				BRAND_LIMITS.linkUrl,
-				t("ui.validation.max_length", { length: BRAND_LIMITS.linkUrl }),
-			)
-			.test("absolute-http-url", t("library.presence.url_invalid"), isValidLinkUrl),
-	});
+	const validationSchema = useMemo(() => libraryProfileSchema(t), [t]);
 
 	/**
 	 * The logo chosen but not yet uploaded — R-17e.

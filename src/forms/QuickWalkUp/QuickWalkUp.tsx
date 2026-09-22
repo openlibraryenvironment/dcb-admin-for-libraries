@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import * as Yup from "yup";
+import { quickWalkUpSchema } from "@/schemas/quickWalkUp";
 import {
 	DialogContent,
 	Step,
@@ -89,16 +89,12 @@ export default function QuickWalkUpRequest({
 		t("requesting.expedited_checkout.steps.checkout"),
 	];
 
-	const schema = Yup.object().shape({
-		patronBarcode: Yup.string().required(t("ui.validation.required")),
-		agencyCode: Yup.string().required(t("ui.validation.required")),
-		itemBarcode: Yup.string().required(t("ui.validation.required")),
-		pickupLocationCode: Yup.string().required(t("ui.validation.required")),
-	});
+	const schema = useMemo(() => quickWalkUpSchema(t), [t]);
 
 	const {
 		control,
 		handleSubmit,
+		getValues,
 		watch,
 		setValue,
 		reset,
@@ -428,7 +424,7 @@ export default function QuickWalkUpRequest({
 					<QuickWalkUpRequestStep
 						control={control}
 						setValue={setValue}
-						watch={watch}
+						getValues={getValues}
 						errors={errors}
 						pickupLocationOptions={pickupLocationOptions}
 						pickupLocationsLoading={pickupLocationsLoading}

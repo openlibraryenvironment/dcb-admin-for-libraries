@@ -16,7 +16,7 @@ import {
 	Typography,
 } from "@mui/material";
 import ChangesSummary from "../ChangesSummary/ChangesSummary";
-import * as Yup from "yup";
+import { changeConfirmationSchema } from "@/schemas/changeConfirmation";
 import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ConfirmationForm } from "@models/ConfirmationForm";
@@ -48,22 +48,7 @@ const Confirmation = ({
 		}
 		return baseHelperText;
 	};
-	const validationSchema = useMemo(
-		() =>
-			Yup.object({
-				reason: Yup.string()
-					.required(t("data_change_log.reason_required"))
-					.max(200, t("data_change_log.max_length_exceeded")),
-				changeCategory: Yup.string()
-					.required(t("data_change_log.category_required"))
-					.max(200, t("data_change_log.max_length_exceeded")),
-				changeReferenceUrl: Yup.string()
-					.url(t("ui.data_grid.edit_url"))
-					.typeError(t("ui.data_grid.edit_url"))
-					.max(200, t("data_change_log.max_length_exceeded")),
-			}),
-		[t]
-	);
+	const validationSchema = useMemo(() => changeConfirmationSchema(t), [t]);
 	const {
 		control,
 		handleSubmit,

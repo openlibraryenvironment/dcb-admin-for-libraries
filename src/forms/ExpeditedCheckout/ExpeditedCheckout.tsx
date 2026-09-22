@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import * as Yup from "yup";
+import { expeditedCheckoutSchema } from "@/schemas/expeditedCheckout";
 import {
 	DialogContent,
 	Step,
@@ -216,51 +216,13 @@ export default function ExpeditedCheckout({
 
 	const patronRequest = patronRequestData?.patronRequests?.content?.[0];
 
-	const validationSchema = Yup.object().shape({
-		patronBarcode: Yup.string()
-			.required(
-				t("ui.validation.required", {
-					field: t("requesting.staff_request.patron.barcode").toLowerCase(),
-				}),
-			)
-			.test(
-				"no-square-brackets",
-				t("requesting.staff_request.patron.error.no_brackets"),
-				(value) =>
-					value ? !value.includes("[") && !value.includes("]") : true,
-			),
-		agencyCode: Yup.string().required(
-			t("ui.validation.required", {
-				field: t("agency.code").toLowerCase(),
-			}),
-		),
-		pickupLocationId: Yup.string().required(
-			t("ui.validation.required", {
-				field: t(
-					"requesting.staff_request.patron.pickup_location",
-				).toLowerCase(),
-			}),
-		),
-		requesterNote: Yup.string(),
-		itemLocalId: Yup.string().required(
-			t("ui.validation.required", {
-				field: t("requesting.staff_request.patron.item_local_id").toLowerCase(),
-			}),
-		),
-		itemLocalSystemCode: Yup.string().required(),
-		itemAgencyCode: Yup.string().required(
-			t("ui.validation.required", {
-				field: t("requesting.staff_request.patron.item_library").toLowerCase(),
-			}),
-		),
-	});
+	const validationSchema = useMemo(() => expeditedCheckoutSchema(t), [t]);
 	const staffLibraryHostLmsCode = staffLibrary?.agency?.hostLms?.code;
 
 	const {
 		control,
 		handleSubmit,
 		reset,
-		watch,
 		setValue,
 		formState: { errors, isValid },
 	} = useForm<OnSiteBorrowingFormData>({
@@ -278,14 +240,25 @@ export default function ExpeditedCheckout({
 		mode: "onChange",
 	});
 
-	const formValues = watch();
-	const {
+	// Named rather than watch(): the bare call subscribes to EVERY field, so a
+	// keystroke in requesterNote re-rendered this whole form and both queries below
+	// re-read their inputs.
+	const [
 		patronBarcode,
 		agencyCode,
 		itemAgencyCode,
 		pickupLocationId,
 		itemLocalId,
-	} = formValues;
+	] = useWatch({
+		control,
+		name: [
+			"patronBarcode",
+			"agencyCode",
+			"itemAgencyCode",
+			"pickupLocationId",
+			"itemLocalId",
+		],
+	});
 
 	const locationQuery = `agency:${staffLibrary?.agency?.id}`; // Staff library is always the supplier.
 
