@@ -1,49 +1,18 @@
-import {
-	Outlet,
-	createFileRoute,
-	useLocation,
-	useNavigate,
-} from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { useAuth, withAuthenticationRequired } from "react-oidc-context";
 import { Layout } from "@components/Layout/Layout";
 import Loading from "@components/Loading/Loading";
 import { useTranslation } from "react-i18next";
-import { useEffect } from "react";
 import { storageKey } from "@helpers/appBase";
+import {
+	isReadOnly,
+	isReadOnlyAllowed,
+	READ_ONLY_HOME,
+} from "@helpers/readOnlyAccess";
 
 const AuthenticatedLayout = () => {
-	// This component provides the main app layout (e.g., header, sidebar)
-	// for all authenticated pages.
 	const auth = useAuth();
 	const { t } = useTranslation();
-	const navigate = useNavigate();
-	const location = useLocation();
-
-	useEffect(() => {
-		// If no user, not applicable
-		if (!auth.user) {
-			return;
-		}
-
-		const roles = auth.user.profile?.roles || [];
-		const isReadOnly = roles.includes("LIBRARY_READ_ONLY");
-
-		// If user is not read only, not applicable
-		if (!isReadOnly) {
-			return;
-		}
-		// If user is read only and trying to access something they shouldn't,  do not allow.
-		const isTryingToAccessAllowedPage =
-			location.pathname.includes("/requesting/") ||
-			location.pathname.includes("logout");
-
-		if (!isTryingToAccessAllowedPage) {
-			navigate({
-				to: "/requesting",
-				replace: true,
-			});
-		}
-	}, [auth.user, location.pathname, navigate]);
 
 	if (auth.isLoading) {
 		return (
@@ -56,7 +25,22 @@ const AuthenticatedLayout = () => {
 		</Layout>
 	);
 };
+
 export const Route = createFileRoute("/__authenticated")({
+	/**
+	 * `isAuthenticated` false means UNDECIDABLE, not "no roles": on a cold load
+	 * this runs before the OIDC session is restored, and App.tsx invalidates the
+	 * router so it runs again. Why the guard is here and not in an effect:
+	 * docs/routing.md.
+	 */
+	beforeLoad: ({ context, location }) => {
+		const auth = (context as { auth?: AuthLike })?.auth;
+		if (!auth?.isAuthenticated) return;
+		if (!isReadOnly(auth.user?.profile?.roles)) return;
+		if (isReadOnlyAllowed(location.pathname)) return;
+
+		throw redirect({ to: READ_ONLY_HOME, replace: true });
+	},
 	component: withAuthenticationRequired(AuthenticatedLayout, {
 		onBeforeSignin: () => {
 			// Namespaced: sibling apps share one sessionStorage on this origin.
@@ -64,8 +48,13 @@ export const Route = createFileRoute("/__authenticated")({
 			// handed straight to window.location.replace() after the callback.
 			sessionStorage.setItem(
 				storageKey("afterLoginRedirectPath"),
-				window.location.pathname + window.location.search + window.location.hash
+				window.location.pathname + window.location.search + window.location.hash,
 			);
 		},
 	}),
 });
+
+interface AuthLike {
+	isAuthenticated?: boolean;
+	user?: { profile?: { roles?: string[] } } | null;
+}
