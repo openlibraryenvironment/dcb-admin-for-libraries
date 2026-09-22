@@ -9,7 +9,6 @@ import {
 	Typography,
 } from "@mui/material";
 import { TFunction } from "i18next";
-import { isEmpty } from "lodash";
 import {
 	Control,
 	Controller,
@@ -160,7 +159,7 @@ export const RequestCreationStep = ({
 						getOptionLabel={(option: PatronRequestAutocompleteOption) =>
 							option.label
 						}
-						disabled={isEmpty(itemAgencyCode)}
+						disabled={!itemAgencyCode}
 						renderInput={(params) => (
 							<TextField
 								{...params}

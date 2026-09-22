@@ -1,5 +1,4 @@
-import { capitalize } from "lodash";
-import { splitOnCapitals } from "./splitOnCapitals"; // can we eliminate this
+import { splitOnCapitals } from "./splitOnCapitals";
 
 export function calculateEntityLink(entityType: string) {
 	// Basically a translator for table names to DCB Admin references.
@@ -60,50 +59,36 @@ export function tableNameToEntityName(entityType: string) {
 	}
 }
 
-export function fieldNameToLabel(fieldName: string): string {
-	// Define any special cases that don't meet the standard rule.
-	const specialCases: Record<string, string> = {
-		id: "ID",
-		idp: "IDP",
-		url: "URL",
-		api: "API",
-		lms: "LMS",
-	};
+/**
+ * Acronyms the split cannot infer. Matched case-insensitively against each
+ * word, so `id` and `Id` both reach `ID`.
+ */
+const ACRONYMS: Record<string, string> = {
+	id: "ID",
+	idp: "IDP",
+	url: "URL",
+	api: "API",
+	lms: "LMS",
+};
 
-	// Split the words
-	const words = fieldName.split("_");
-	// Check for special cases in the words
-	const processedWords = words.map(
-		(word) => specialCases[word.toLowerCase()] || word
-	);
-
-	// Join the words with spaces, replacing underscores.
-	const label = processedWords.join(" ");
-
-	// Only capitalise the first letter of the whole string
+/**
+ * Sentence case, applied PER WORD so an acronym survives it. lodash
+ * `capitalize` is `upperFirst(toLower(s))`, which lower-cased the whole label
+ * after the substitution above and made ACRONYMS dead code.
+ */
+const toLabel = (words: string[]): string => {
+	const label = words
+		.map((word) => ACRONYMS[word.toLowerCase()] ?? word.toLowerCase())
+		.join(" ");
 	return label.charAt(0).toUpperCase() + label.slice(1);
+};
+
+/** A snake_case column name as a person reads it. */
+export function fieldNameToLabel(fieldName: string): string {
+	return toLabel(fieldName.split("_"));
 }
 
+/** A camelCase grid field as a person reads it. */
 export function gridFieldNameToLabel(fieldName: string): string {
-	// Define any special cases that don't meet the standard rule.
-	const specialCases: Record<string, string> = {
-		id: "ID",
-		idp: "IDP",
-		url: "URL",
-		api: "API",
-		lms: "LMS",
-	};
-
-	// Split the words
-	const words = splitOnCapitals(fieldName);
-	// Check for special cases in the words
-	const processedWords = words.map(
-		(word: string) => specialCases[word.toLowerCase()] || word
-	);
-
-	// Join the words with spaces, replacing underscores.
-	const label = processedWords.join(" ");
-
-	// Only capitalise the first letter of the whole string
-	return capitalize(label);
+	return toLabel(splitOnCapitals(fieldName));
 }

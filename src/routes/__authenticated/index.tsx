@@ -52,7 +52,6 @@ import Confirmation from "../../components/Confirmation/Confirmation";
 import Cancel from "@mui/icons-material/Cancel";
 import Edit from "@mui/icons-material/Edit";
 import Save from "@mui/icons-material/Save";
-import { isEmpty } from "lodash";
 import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
 import { FunctionalSettingStatus } from "@models/FunctionalSetting";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
@@ -598,7 +597,7 @@ function HomeComponent() {
 									color="primary"
 									startIcon={<Save />}
 									onClick={handleSubmit(onSubmit)}
-									disabled={!isEmpty(errors) || !isDirty}
+									disabled={Object.keys(errors).length > 0 || !isDirty}
 									ref={saveButtonRef}
 									sx={{ mr: 1 }}>
 									{t("ui.actions.save")}

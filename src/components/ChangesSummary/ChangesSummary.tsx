@@ -7,7 +7,6 @@ import {
 	TableBody,
 	Typography,
 } from "@mui/material";
-import { isEmpty } from "lodash";
 import { useTranslation } from "react-i18next";
 import RenderAttribute from "../RenderAttribute/RenderAttribute";
 import {
@@ -67,7 +66,7 @@ export default function ChangesSummary({
 
 	fields = fields.filter((field) => !metaFields.includes(field)); // Remove meta fields from the summary
 
-	return !isEmpty(fields) ? (
+	return fields.length > 0 ? (
 		<TableContainer>
 			<Table>
 				<TableHead>

@@ -14,7 +14,6 @@ import {
 import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocompleteOption";
 import { StaffRequestFormData } from "@models/StaffRequestFormData";
 import { TFunction } from "i18next";
-import { isEmpty } from "lodash";
 import {
 	Control,
 	Controller,
@@ -172,7 +171,7 @@ export const StaffRequestDetailsStep = ({
 					<Controller
 						name="itemLocalId"
 						control={control}
-						disabled={isEmpty(itemAgencyCode)}
+						disabled={!itemAgencyCode}
 						render={({ field: { onChange, value } }) => (
 							<Autocomplete
 								value={
@@ -181,7 +180,7 @@ export const StaffRequestDetailsStep = ({
 								onChange={(_, newValue) => onChange(newValue?.value || "")}
 								options={itemOptions}
 								onOpen={() => {
-									if (isEmpty(itemsData)) fetchItems();
+									if (!itemsData) fetchItems();
 								}}
 								loading={itemsLoading}
 								getOptionLabel={(option) => option.label}
@@ -190,7 +189,7 @@ export const StaffRequestDetailsStep = ({
 										{...params}
 										margin="normal"
 										required
-										disabled={isEmpty(itemAgencyCode)}
+										disabled={!itemAgencyCode}
 										fullWidth
 										label={t("requesting.staff_request.patron.item_local_id")}
 										error={!!errors.itemLocalId || itemsError}
