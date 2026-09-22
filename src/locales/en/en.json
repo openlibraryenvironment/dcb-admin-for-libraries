@@ -492,11 +492,11 @@
 			"standard_heading": "The standard we aim for",
 			"standard_body": "WCAG 2.2 level AA on every screen. The high-contrast setting aims higher, at level AAA for text contrast.",
 			"tested_heading": "How that is checked",
-			"tested_body": "Automated checks run on every change and block a release if they fail: an axe scan of nine screens in light and dark, and arithmetic over every colour pair in each of the three schemes. Automated testing finds roughly a third of accessibility problems, so it is a floor rather than a guarantee.",
+			"tested_body": "Automated checks run on every change and block a release if they fail: an axe scan of ten screens in light and dark, arithmetic over every colour pair in each of the three schemes, and a check that every field label is still attached to its value. Automated testing finds roughly a third of accessibility problems, so it is a floor rather than a guarantee.",
 			"limits_heading": "Where we know we fall short",
 			"limits_body": "Data grids are wide, and reading one on a narrow screen still means scrolling sideways. Some charts convey trends by shape; each carries its figures as a table for screen readers, but the shape itself is not described in words. We have not yet had this interface tested by an external auditor.",
 			"settings_heading": "Settings you can change",
-			"settings_body": "Under Settings you can choose a colour scheme including high contrast, a text size, a typeface including Atkinson Hyperlegible, how tightly the interface is spaced, and whether it animates. These are stored on your own device and are not shared with colleagues.",
+			"settings_body": "Under Settings you can choose a colour scheme including high contrast, a text size, a typeface including Atkinson Hyperlegible, how tightly the interface is spaced, whether it animates, and whether times are shown on your clock or on the service's. These are stored on your own device and are not shared with colleagues.",
 			"report_heading": "Telling us about a problem",
 			"report_body": "If something here stops you doing your job, tell us and we will treat it as a defect. Email dcb@k-int.com, and say which screen and what you were trying to do.",
 			"report_email": "dcb@k-int.com"
