@@ -5,6 +5,43 @@
 		<link rel="icon" type="image/ico" href="/favicon.ico" />
 		<meta name="viewport" content="initial-scale=1, width=device-width" />
 		<title>DCB Admin for Libraries</title>
+		<!--
+			Paints the chosen colour scheme BEFORE the bundle parses. Why this is
+			hand-written rather than MUI's InitColorSchemeScript, and why the two
+			pieces below have to agree: docs/theming.md §9. Gated by
+			tests/initColorScheme.test.ts and e2e/init-color-scheme.spec.ts.
+		-->
+		<style>
+			html {
+				color-scheme: light;
+			}
+			html[data-dark] {
+				color-scheme: dark;
+			}
+		</style>
+		<script>
+			(function () {
+				var schemes = ["light", "dark", "highContrast"];
+				var mode = "light";
+				try {
+					var namespace = "%BASE_URL%".replace(/^\/+|\/+$/g, "") || "root";
+					var raw = localStorage.getItem(
+						namespace + ":dcb-admin-libraries-theme",
+					);
+					var stored = raw ? (JSON.parse(raw).state || {}).mode : null;
+					if (schemes.indexOf(stored) > -1) {
+						mode = stored;
+					} else if (matchMedia("(prefers-contrast: more)").matches) {
+						mode = "highContrast";
+					} else if (matchMedia("(prefers-color-scheme: dark)").matches) {
+						mode = "dark";
+					}
+				} catch (error) {
+					/* No storage, or a value an older build wrote: light is the floor. */
+				}
+				document.documentElement.setAttribute("data-" + mode, "");
+			})();
+		</script>
 	</head>
 	<body>
 		<div id="root"></div>

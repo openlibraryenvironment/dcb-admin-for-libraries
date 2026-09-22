@@ -160,3 +160,39 @@ Adding a language back needs four things, none of which exists yet:
    technology goes on announcing the new language in English (WCAG 3.1.1).
 
 `lng` is pinned in `src/i18n.ts` until then.
+
+## 9. The scheme is painted before the bundle parses
+
+`index.html` carries an inline `<script>` and two CSS rules. Both are
+duplicates of things the application also knows in TypeScript, which is a cost
+worth naming: they run before any module exists, so there is nothing to import.
+`tests/initColorScheme.test.ts` executes the shipped script against the real
+`storageKey()`, the real `THEME_MODES` and the real `readSystemMode()`, so the
+copy cannot drift silently.
+
+**MUI's `InitColorSchemeScript` does not work here**, and it is worth knowing
+why before reaching for it again. It calls `useSyncExternalStore` to ask whether
+this is the server render, and returns `null` when it is not — so in a
+client-only SPA it renders nothing at all. Its script could not express this
+application's state anyway: it reads a bare `light`/`dark`/`system` string from
+its own storage key, where ours is `highContrast`-aware and lives inside
+Zustand's `{state, version}` envelope under a base-path namespace.
+
+**The CSS is `color-scheme`, not a colour.** MUI's palette only exists once
+emotion has injected it, so a rule naming `background.default` would have to
+hardcode the hex. `color-scheme: dark` instead hands the browser its own dark
+canvas, which is `#121212` — the same value MUI's dark `background.default`
+resolves to — and fixes the scrollbars and form controls in the same line. MUI's
+generated rules are more specific, so they take over cleanly on mount.
+
+**`%BASE_URL%` is Vite's**, replaced in `index.html` at build time from
+`config.env`. That is why the script only has to handle the standalone case: KI
+bootloader startup mounts through `src/ki-bootstrap.ts` into a host page that is
+not this file.
+
+**If a Content-Security-Policy is ever added, this script needs a nonce.** It is
+inline, and an inline script is the thing a CSP exists to stop.
+
+Motion and text size are deliberately NOT pre-painted. Nothing animates and
+nothing is laid out before React mounts — `#root` is empty — so the only thing
+a user can see in that window is the canvas.
