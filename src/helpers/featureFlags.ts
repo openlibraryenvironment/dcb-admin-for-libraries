@@ -1,18 +1,9 @@
 /**
- * Runtime feature flags.
- *
- * Deliberately read from the injected runtime config (`window.__APP_ENV__`,
- * populated in application.tsx from /inject_env.json) rather than from
- * `import.meta.env` at build time: a flag that gates a feature on a *backend*
- * release has to be flippable per environment without rebuilding and
- * redeploying the UI. The import.meta.env read is only the local-dev fallback.
- *
- * Adding a flag means adding it to docker/production/inject_env.json.template
- * too, or it is undefined in every deployed environment and the feature can
- * never be turned on. featureFlags.test.ts fails if you forget.
- *
- * Flags are off unless explicitly turned on, so an environment that has never
- * heard of the flag hides the feature.
+ * Runtime feature flags, read from the injected config rather than
+ * import.meta.env: a flag gating a feature on a BACKEND release has to be
+ * flippable per environment without rebuilding the UI. Off unless turned on.
+ * Adding one means touching inject_env.json.template too, and
+ * featureFlags.test.ts fails if you forget. docs/service-compatibility.md.
  */
 const readFlag = (name: string): boolean => {
 	const injected =
@@ -33,14 +24,9 @@ export const isInsightsEnabled = (): boolean =>
 /**
  * The patron-facing library brand - dcb-service 9.0.0 and later.
  *
- * THIS FLAG IS NOT A RENDER SWITCH. brandLogoUrl, brandLogoAlt and defaultThemeName do
- * not exist on Library before 9.0.0, and a GraphQL field the server has never heard of
- * is not a null - it is a validation error that fails the WHOLE operation. LoadLibrary
- * is run by the header on every page and by six routes, so selecting them on an older
- * deployment does not grey out a form, it takes the application down.
- *
- * So the flag changes the DOCUMENT and the mutation VARIABLES. See
- * @constants/serviceCapabilities and @helpers/capabilityFields.
+ * NOT A RENDER SWITCH. It changes the DOCUMENT and the mutation VARIABLES,
+ * because selecting a field 8.71.0 has never heard of takes the application
+ * down rather than greying out a form. @constants/serviceCapabilities.
  */
 export const isLibraryBrandingEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_LIBRARY_BRANDING");

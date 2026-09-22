@@ -1,3 +1,6 @@
+import { clampPageSize } from "@constants/dataGrid/pagination";
+import { pageTitle } from "@helpers/pageTitle";
+import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -34,12 +37,12 @@ import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/locations/")({
+	head: () => ({ meta: [{ title: pageTitle("nav.locations.title") }] }),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	// const navigate = useNavigate();
 	const auth = useAuth();
 
 	const { cfg } = useRouter().options.context as { cfg: any };
@@ -201,7 +204,7 @@ function RouteComponent() {
 						"name",
 						"code",
 					]) ?? "",
-				pagesize: paginationModel.pageSize ?? 200,
+				pagesize: clampPageSize(paginationModel.pageSize),
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "name",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
@@ -257,6 +260,7 @@ function RouteComponent() {
 
 	return (
 		<>
+			<Typography variant="h1">{t("nav.locations.title")}</Typography>
 			{
 				<DataGrid
 					disablePivoting
@@ -265,6 +269,7 @@ function RouteComponent() {
 					columnVisibilityModel={columnVisibilityModel}
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
 					type="locations"
+					label={t("nav.locations.title")}
 					identifier="locations"
 					checkboxSelection={false}
 					disableAggregation={true}
@@ -276,7 +281,7 @@ function RouteComponent() {
 					pagination
 					pivotingEnabled={false}
 					toolbarVisible
-					searchText="Search by location"
+					searchText={t("ui.data_grid.search_locations")}
 					scrollbarVisible={false}
 					paginationMode="server"
 					paginationModel={paginationModel}
@@ -299,7 +304,6 @@ function RouteComponent() {
 					severityType="warning"
 					// variant="filled"
 					// sx={{ width: "100%" }}
-					autoHideDuration={6000}
 					alertText={
 						t("ui.feedback.error.cannot_process") ||
 						"We could not process that operation, so we have reset the data grid options."

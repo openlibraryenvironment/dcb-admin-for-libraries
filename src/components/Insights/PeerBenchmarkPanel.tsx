@@ -1,3 +1,4 @@
+import { formatNumber, formatPercent } from "@helpers/formatters";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -72,12 +73,12 @@ export default function PeerBenchmarkPanel({
 		return { rows: mapped, medianFill: mFill, medianCheckout: mCheckout };
 	}, [data]);
 
-	const pct = (v: number | null) => (v == null ? "—" : `${v.toFixed(1)}%`);
+	const pct = (v: number | null) => (v == null ? "—" : formatPercent(v));
 
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				<Typography variant="h6" gutterBottom>
+				<Typography variant="h6" component="h2" gutterBottom>
 					{t("insights.charts.peer_benchmark.title")}
 				</Typography>
 				<Typography variant="body2" color="text.secondary" gutterBottom>
@@ -156,7 +157,7 @@ export default function PeerBenchmarkPanel({
 												) : null}
 											</TableCell>
 											<TableCell align="right">
-												{row.totalRequests.toLocaleString()}
+												{formatNumber(row.totalRequests)}
 											</TableCell>
 											<TableCell align="right">
 												{pct(row.checkoutRate)}

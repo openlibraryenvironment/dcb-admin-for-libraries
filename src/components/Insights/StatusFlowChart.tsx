@@ -1,3 +1,4 @@
+import ChartDataTable from "./ChartDataTable";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -87,7 +88,7 @@ export default function StatusFlowChart({
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				<Typography variant="h6" gutterBottom>
+				<Typography variant="h6" component="h2" gutterBottom>
 					{t("insights.charts.status_flow.title")}
 				</Typography>
 				<Typography variant="body2" color="text.secondary" gutterBottom>
@@ -153,6 +154,17 @@ export default function StatusFlowChart({
 						series={series}
 					/>
 				)}
+				<ChartDataTable
+					caption={t("insights.charts.status_flow.title")}
+					columns={[
+						t("insights.charts.status_flow.bucket"),
+						...series.map((s) => String(s.label)),
+					]}
+					rows={xAxisData.map((bucket, index) => [
+						bucket.toISOString().slice(0, 10),
+						...series.map((s) => s.data[index] ?? 0),
+					])}
+				/>
 			</CardContent>
 		</Card>
 	);

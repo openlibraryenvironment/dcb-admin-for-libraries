@@ -81,9 +81,6 @@ export const usePatronRequestCleanup = ({
 					} catch {
 						batchError.push(row);
 					}
-					// finally {
-					// 	processed++;
-					// }
 				}),
 			);
 			processed += batch.length;

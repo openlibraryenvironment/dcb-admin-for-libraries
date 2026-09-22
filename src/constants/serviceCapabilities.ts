@@ -1,47 +1,10 @@
 /**
- * Which features need which dcb-service release — R-19.
+ * Which features need which dcb-service release - R-19.
  *
- * <h2>The problem this exists to solve, once</h2>
- *
- * This application ships on its own cadence and a dcb-service upgrade takes time to reach
- * production, so a release of this app has to run against more than one release of the
- * backend. The naive way to handle that — hide the component — does not work for GraphQL:
- *
- *   **A field the server does not declare is not a null. It is a validation error, and it
- *   fails the WHOLE operation.**
- *
- * `LoadLibrary` is fetched by the header on every page and by six routes. Three fields
- * selected one release too early therefore do not grey out a form; they take the
- * application down. So a version gate has to change the DOCUMENT and the mutation
- * VARIABLES before they are sent, and it has to do it somewhere a person adding the next
- * feature cannot forget.
- *
- * <h2>How to add the next one</h2>
- *
- * This registry is that place. To gate a feature on a dcb-service release:
- *
- *  1. Add a row below: an id, a `VITE_FEATURE_*` flag, the release it lands in, and the
- *     fields it adds keyed by the GraphQL type — INPUT types included, because stripping
- *     a key from mutation variables is a separate job from leaving it out of a selection.
- *  2. Declare the flag in `@helpers/featureFlags` and add it to
- *     `docker/production/inject_env.json.template`. `featureFlags.test.ts` fails if you
- *     forget the second.
- *  3. Interpolate `capabilitySelection(id, "TypeName")` into the documents instead of
- *     listing the fields, and pass mutation variables through `stripUnsupportedInput`.
- *  4. Commit the schema of the release named in `since`, as `schema.v<version>.graphqls`.
- *
- * `serviceCapabilities.test.ts` then checks the row is TRUE: every field must exist in the
- * schema for `since` and must be absent from the release before it. A row claiming the
- * wrong release fails the build rather than an environment.
- *
- * `schemaConformance.test.ts` checks the documents: every one of them, in both flag
- * states, against the schema for the deployment that state describes.
- *
- * <h2>Why one flag per capability and not one "we are on v9 now"</h2>
- *
- * Read the `since` column. They differ, and they will keep differing: features land in
- * whatever release they land in, and this app's releases do not line up with dcb-service's.
- * A single boolean would be a lie about every capability but one.
+ * A field the server does not declare is NOT a null: it is a validation error
+ * that fails the whole operation. So a gate has to change the document and the
+ * mutation variables before they are sent, and this registry is the one place
+ * that cannot be forgotten. How to add the next one: docs/service-compatibility.md.
  */
 
 /** A GraphQL type name to the fields a capability adds to it. */

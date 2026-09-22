@@ -1,20 +1,10 @@
 import type { Page } from "@playwright/test";
 
 /**
- * The insights statistics API.
- *
- * These are REST, not GraphQL: axios calls `${VITE_DCB_API_BASE}/insights/<name>`
- * with the window and the library's Host LMS code as query params. Dispatch is on
- * the path segment after `insights/`, mirroring mockGraphQL's dispatch on
- * operationName.
- *
- * The defaults are POPULATED rather than empty on purpose. An empty response
- * renders the "no data" placeholder, which would let the accessibility gate pass
- * without ever drawing a chart - and chart series contrast in dark mode is exactly
- * the kind of failure this gate exists to catch.
- *
- * An unmocked endpoint is aborted rather than continued: the API host does not
- * resolve, so continuing means a 30s DNS wait per call.
+ * The insights statistics API: REST, dispatched on the path segment after
+ * `insights/`. The defaults are POPULATED, because an empty response renders
+ * the no-data placeholder and the axe gate would never see a chart.
+ * docs/testing.md.
  */
 export type StatsMocks = Record<string, unknown>;
 

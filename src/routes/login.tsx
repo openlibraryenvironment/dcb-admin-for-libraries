@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import { useAuth } from "react-oidc-context";
 import { createFileRoute } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
@@ -14,21 +15,9 @@ const Login = () => {
 	const auth = useAuth();
 	const { t } = useTranslation();
 
-	// If user is already authenticated, redirect to home page
 	// Retrieve the redirect path from the URL search parameters.
 	const { redirect } = Route.useSearch();
 
-	// If the user is already authenticated, redirect them to their intended page
-	// or the dashboard. This handles cases where a logged-in user navigates to /login.
-	// useEffect(() => {
-	// 	// console.log(redirect);
-	// 	console.log("Auth: ", auth);
-	// 	if (auth.isAuthenticated) {
-	// 		console.log(redirect);
-	// 		navigate({ to: redirect || "/" });
-	// 	}
-	// }, [auth.isAuthenticated, navigate, redirect]);
-	// Still need to handle this case but this should stop it causing problems.
 
 	const handleLogin = () => {
 		// Store current location. Namespaced: sibling apps on this origin share one
@@ -45,6 +34,7 @@ const Login = () => {
 
 	return (
 		<Box
+			component="main"
 			sx={(theme) => ({
 				display: "flex",
 				justifyContent: "center",
@@ -99,5 +89,6 @@ export const Route = createFileRoute("/login")({
 	validateSearch: z.object({
 		redirect: z.string().optional().catch(""),
 	}),
+	head: () => ({ meta: [{ title: pageTitle("login.title") }] }),
 	component: Login,
 });

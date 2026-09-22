@@ -1,3 +1,9 @@
+import {
+	clampPageSize,
+	REFERENCE_LIST_PAGE_SIZE,
+} from "@constants/dataGrid/pagination";
+import { pageTitle } from "@helpers/pageTitle";
+import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -49,12 +55,12 @@ import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/")({
+	head: () => ({ meta: [{ title: pageTitle("nav.patron_requests.title") }] }),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	// const navigate = useNavigate();
 	const auth = useAuth();
 	const apiRef = useGridApiRef();
 	const { cfg } = useRouter().options.context as { cfg: any };
@@ -87,12 +93,6 @@ function RouteComponent() {
 		columnVisibility: storedColumnVisibilityModel[gridId],
 	};
 
-	// const [alert, setAlert] = useState<AlertObject>({
-	// 	open: false,
-	// 	severity: "success",
-	// 	text: "",
-	// 	title: "",
-	// });
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
 			storedState.pagination ?? { page: 0, pageSize: 25 },
@@ -108,7 +108,6 @@ function RouteComponent() {
 		text: null,
 	});
 
-	// const [snackbarOpen, setSnackbarOpen] = useState(false);
 
 	const handleSnackbarClose = (
 		event?: React.SyntheticEvent | Event,
@@ -229,7 +228,7 @@ function RouteComponent() {
 				getLibraries,
 				{
 					query: "",
-					pagesize: 1000,
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
 					pageno: 0,
 					order: "fullName",
 					orderBy: "ASC",
@@ -424,7 +423,7 @@ function RouteComponent() {
 						"status",
 						"description",
 					]) ?? "",
-				pagesize: paginationModel.pageSize ?? 200,
+				pagesize: clampPageSize(paginationModel.pageSize),
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "dateCreated",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
@@ -531,6 +530,9 @@ function RouteComponent() {
 
 	return (
 		<>
+			<Typography variant="h1">
+				{t("nav.patron_requests.title")}
+			</Typography>
 			{
 				<DataGrid
 					parentApiRef={apiRef}
@@ -540,6 +542,7 @@ function RouteComponent() {
 					columnVisibilityModel={columnVisibilityModel}
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
 					type="patronRequests"
+					label={t("nav.patron_requests.title")}
 					identifier="patronRequestsMain"
 					checkboxSelection={true}
 					disableAggregation={true}
@@ -599,7 +602,6 @@ function RouteComponent() {
 					severityType={alert.severity}
 					// variant="filled"
 					// sx={{ width: "100%" }}
-					autoHideDuration={6000}
 					alertText={alert.text}></TimedAlert>
 			}
 		</>

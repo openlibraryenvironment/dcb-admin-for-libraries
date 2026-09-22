@@ -1,7 +1,9 @@
+import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
+import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
+import { staffRequestSchema } from "@/schemas/staffRequest";
 import {
 	DialogContent,
 	Step,
@@ -88,64 +90,7 @@ export default function StaffRequest({
 	];
 	const isReadOnly = auth.user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
 
-	const validationSchema = Yup.object().shape({
-		patronBarcode: Yup.string()
-			.required(
-				t("ui.validation.required", {
-					field: t("requesting.staff_request.patron.barcode").toLowerCase(),
-				}),
-			)
-			.test(
-				"no-square-brackets",
-				t("requesting.staff_request.patron.error.no_brackets"),
-				(value) =>
-					value ? !value.includes("[") && !value.includes("]") : true,
-			),
-		agencyCode: Yup.string().required(
-			t("ui.validation.required", {
-				field: t("agency.code").toLowerCase(),
-			}),
-		),
-		pickupLocationId: Yup.string().required(
-			t("ui.validation.required", {
-				field: t(
-					"requesting.staff_request.patron.pickup_location",
-				).toLowerCase(),
-			}),
-		),
-		requesterNote: Yup.string(),
-		selectionType: Yup.string().required(
-			t("ui.validation.required", {
-				field: t(
-					"requesting.staff_request.patron.selection.type",
-				).toLowerCase(),
-			}),
-		),
-		itemLocalId: Yup.string().when("selectionType", {
-			is: "manual",
-			then: (schema) =>
-				schema.required(
-					t("ui.validation.required", {
-						field: t(
-							"requesting.staff_request.patron.item_local_id",
-						).toLowerCase(),
-					}),
-				),
-			otherwise: (schema) => schema.notRequired(),
-		}),
-		itemAgencyCode: Yup.string().when("selectionType", {
-			is: "manual",
-			then: (schema) =>
-				schema.required(
-					t("ui.validation.required", {
-						field: t(
-							"requesting.staff_request.patron.item_library",
-						).toLowerCase(),
-					}),
-				),
-			otherwise: (schema) => schema.notRequired(),
-		}),
-	});
+	const validationSchema = useMemo(() => staffRequestSchema(t), [t]);
 
 	const {
 		control,
@@ -185,7 +130,7 @@ export default function StaffRequest({
 						order: "fullName",
 						orderBy: "ASC",
 						pageno: 0,
-						pagesize: 1000,
+						pagesize: REFERENCE_LIST_PAGE_SIZE,
 						query: "",
 					},
 					headers,
@@ -242,7 +187,7 @@ export default function StaffRequest({
 					order: "name",
 					orderBy: "ASC",
 					pageno: 0,
-					pagesize: 1000,
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
 					query: locationQuery,
 				},
 				headers,
@@ -268,6 +213,7 @@ export default function StaffRequest({
 				headers,
 				params: { clusteredBibId: bibClusterId },
 			}),
+		...AVAILABILITY_QUERY_POLICY,
 		enabled: false,
 		select: (response) => response.data,
 	});
@@ -527,7 +473,6 @@ export default function StaffRequest({
 					<StaffRequestDetailsStep
 						control={control}
 						errors={errors}
-						watch={watch}
 						setValue={setValue}
 						pickupLocationOptions={sortedPickupLocationOptions}
 						pickupLocationsLoading={pickupLocationsLoading}
@@ -551,26 +496,6 @@ export default function StaffRequest({
 
 	return (
         <>
-            {/* <Dialog
-				open={show}
-				onClose={handleClose}
-				aria-labelledby="patron-request-modal"
-				fullWidth
-				maxWidth="sm">
-				<DialogTitle id="form-dialog-title" variant="modalTitle">
-					{t("requesting.staff_request.new")}
-				</DialogTitle>
-				<IconButton
-					aria-label={t("ui.actions.close")}
-					onClick={handleClose}
-					sx={{
-						position: "absolute",
-						right: 8,
-						top: 8,
-						color: (theme) => (theme.vars || theme).palette.grey[500],
-					}}>
-					<Close />
-				</IconButton> */}
             <DialogContent>
 				{/* Same style as Expedited Checkout */}
 				<Stepper
@@ -618,11 +543,9 @@ export default function StaffRequest({
 					{getStepContent(activeStep)}
 				</form>
 			</DialogContent>
-            {/* </Dialog> */}
             <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
-				autoHideDuration={6000}
 				onCloseFunc={() => setAlert({ ...alert, open: false })}
 				alertText={
 					<Trans

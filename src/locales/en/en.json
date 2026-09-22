@@ -1,25 +1,31 @@
 {
+	"a11y": {
+		"empty": "This field is empty",
+		"main_content": "Main content",
+		"navigation": "Main navigation",
+		"skip_to_content": "Skip to main content"
+	},
 	"agency": {
 		"code": "Agency code",
 		"name": "Agency name"
 	},
+	"app": {
+		"name": "DCB Admin for Libraries"
+	},
 	"audit": {
-		"no_results": "No audits found",
 		"audit": "Audit data",
 		"audit_entry": "Audit entry",
 		"data": "Audit data (JSON)",
 		"date": "Audit date",
 		"description": "Brief description",
 		"from_status": "fromStatus",
-		"uuid": "Audit UUID",
 		"log": "Audit log",
 		"no_data": "No audit log entries found.",
+		"no_results": "No audits found",
 		"no_rows": "Try changing your filters or search terms.",
-		"to_status": "toStatus"
-	},
-	"a11y": {
-		"empty": "This field is empty",
-		"navigation": "Main navigation"
+		"title": "Audit entry",
+		"to_status": "toStatus",
+		"uuid": "Audit UUID"
 	},
 	"bibs": {
 		"author": "Author",
@@ -58,7 +64,13 @@
 		"success": "Success",
 		"updated": "Updated",
 		"update_success": "The {{entity}} {{name}} was updated successfully",
-		"update_failure": "An error occurred while updating {{entity}} {{name}}"
+		"update_failure": "An error occurred while updating {{entity}} {{name}}",
+		"severity": {
+			"error": "Error",
+			"info": "Information",
+			"success": "Success",
+			"warning": "Warning"
+		}
 	},
 	"data_change_log": {
 		"action": "Action",
@@ -104,6 +116,65 @@
 		"timestamp": "Timestamp",
 		"user": "User"
 	},
+	"display": {
+		"clock": {
+			"label": "Times and dates shown in",
+			"device": "My device’s time zone",
+			"service": "UTC, as the service records it"
+		},
+		"density": {
+			"label": "Spacing",
+			"comfortable": "Comfortable",
+			"compact": "Compact"
+		},
+		"description": "These settings are yours and are remembered on this device.",
+		"heading": "Display",
+		"mode": {
+			"label": "Colour scheme",
+			"system": "Match my device",
+			"light": "Light",
+			"dark": "Dark",
+			"highContrast": "High contrast"
+		},
+		"motion": {
+			"label": "Animation",
+			"system": "Match my device",
+			"full": "Full",
+			"reduced": "Reduced"
+		},
+		"reset": "Reset display settings",
+		"reset_done": "Display settings reset",
+		"textSize": {
+			"label": "Text size",
+			"small": "Small",
+			"normal": "Normal",
+			"large": "Large",
+			"largest": "Largest"
+		},
+		"typeface": {
+			"label": "Typeface",
+			"roboto": {
+				"name": "Roboto",
+				"description": "The default"
+			},
+			"system": {
+				"name": "Your device's font",
+				"description": "Loads nothing extra"
+			},
+			"atkinsonHyperlegible": {
+				"name": "Atkinson Hyperlegible",
+				"description": "Designed for low vision"
+			},
+			"inter": {
+				"name": "Inter",
+				"description": "Even and open at small sizes"
+			},
+			"lexend": {
+				"name": "Lexend",
+				"description": "Designed for reading ease"
+			}
+		}
+	},
 	"entities": {
 		"contact": "contact",
 		"functional_setting": "functional setting",
@@ -111,6 +182,60 @@
 		"library": "library",
 		"numeric_range_mapping": "numeric range mapping",
 		"reference_value_mapping": "reference value mapping"
+	},
+	"grid": {
+		"headers": {
+			"active_workflow": "Active workflow",
+			"audit_date": "Audit date",
+			"category": "Category",
+			"dcb_canonical_item_type": "DCB canonical item type",
+			"dcb_canonical_patron_type": "DCB canonical patron type",
+			"description": "Description",
+			"error_message": "Error message",
+			"from_context": "From context",
+			"from_value": "From value",
+			"fromstatus": "fromStatus",
+			"host_lms_name": "Host LMS name",
+			"item_barcode": "Item barcode",
+			"last_imported": "Last imported",
+			"local_item_id": "Local item ID",
+			"local_item_status": "Local item status",
+			"local_item_type": "Local item type",
+			"local_request_id": "Local request ID",
+			"local_request_status": "Local request status",
+			"location_code": "Location code",
+			"location_name": "Location name",
+			"location_uuid": "Location UUID",
+			"lower_bound": "Lower bound",
+			"manually_selected": "Manually selected?",
+			"mapped_value": "Mapped value",
+			"next_status": "Next status",
+			"out_of_sequence": "Out of sequence",
+			"patron_barcode": "Patron barcode",
+			"patron_library": "Patron library",
+			"pickup_request_status": "Pickup request status",
+			"pickup_request_uuid": "Pickup request UUID",
+			"polling_count": "Polling count",
+			"previous_status": "Previous status",
+			"print_label": "Print label",
+			"raw_local_item_status": "Raw local item status",
+			"raw_local_request_status": "Raw local request status",
+			"renewal_count": "Renewal count",
+			"request_created": "Request created",
+			"request_updated": "Request updated",
+			"request_uuid": "Request UUID",
+			"requester_note": "Requester note",
+			"status": "Status",
+			"supplying_library": "Supplying library",
+			"time_in_state_days": "Time in state (days)",
+			"title": "Title",
+			"to_category": "To category",
+			"to_context": "To context",
+			"to_value": "To value",
+			"tostatus": "toStatus",
+			"upper_bound": "Upper bound",
+			"walk_up_request": "Walk-up request?"
+		}
 	},
 	"header": {
 		"title": "DCB Admin for {{library}}",
@@ -179,6 +304,202 @@
 			"staff_password": "Staff password",
 			"staff_username": "Staff username",
 			"user_base_url": "User base URL"
+		}
+	},
+	"insights": {
+		"title": "Library insights",
+		"subtitle": "Requesting activity, fulfilment and value for {{library}}.",
+		"loading": "Loading insights",
+		"no_host_lms": "This library has no associated Host LMS, so insights cannot be shown.",
+		"no_data": "No data for the selected period.",
+		"duration": {
+			"days": "{{value}} days",
+			"hours": "{{value}} hrs",
+			"minutes": "{{value}} min",
+			"none": "—"
+		},
+		"range": {
+			"label": "Time range",
+			"7d": "7 days",
+			"30d": "30 days",
+			"90d": "90 days",
+			"365d": "1 year",
+			"from": "From",
+			"to": "To"
+		},
+		"kpi": {
+			"vs_prior": "vs previous period",
+			"fill_rate": {
+				"title": "Fill rate"
+			},
+			"error_rate": {
+				"title": "Error rate"
+			},
+			"time_to_loan": {
+				"title": "Median time to loan",
+				"subtitle": "p50 · p95 {{p95}}"
+			},
+			"resolved": {
+				"title": "Requests resolved",
+				"subtitle": "completed or failed"
+			},
+			"cost_avoidance": {
+				"title": "Estimated cost avoided",
+				"basis": "Based on {{count}} successful fulfilments",
+				"input_label": "Cost per ILL",
+				"input_help": "Your own average interlibrary loan cost"
+			},
+			"checkout_rate": {
+				"title": "Checkout rate",
+				"subtitle": "{{reached}} of {{total}} reached the shelf"
+			},
+			"total_borrows": {
+				"title": "Total borrows",
+				"subtitle": "requests placed as borrower"
+			},
+			"total_lends": {
+				"title": "Total lends",
+				"subtitle": "items supplied to the network"
+			},
+			"rescued": {
+				"title": "Requests rescued",
+				"subtitle": "fulfilled after re-resolution"
+			},
+			"unique_titles": {
+				"title": "Unique titles requested",
+				"subtitle": "across {{total}} requests"
+			}
+		},
+		"charts": {
+			"acquisition_opportunities": {
+				"title": "Acquisition opportunities",
+				"subtitle": "Highly requested titles across the network that you do not hold.",
+				"col_supplied": "Supplied"
+			},
+			"collection_dimension": {
+				"title": "Collection analysis",
+				"subtitle": "Requesting demand sliced by a bibliographic dimension.",
+				"select_label": "Dimension",
+				"series": "Requests",
+				"dim_format": "Format",
+				"dim_language": "Language",
+				"dim_subject": "Subject",
+				"dim_decade": "Publication decade"
+			},
+			"consortial_lifeline": {
+				"title": "Consortial lifeline",
+				"subtitle": "Titles you uniquely keep flowing to the network.",
+				"col_supplied": "Supplied"
+			},
+			"demand_by_format": {
+				"title": "Demand by format",
+				"subtitle": "Requesting volume by material format.",
+				"series": "Requests"
+			},
+			"demand_by_patron_group": {
+				"title": "Demand by patron group",
+				"subtitle": "Which patron categories drive requesting.",
+				"series": "Requests"
+			},
+			"demand_by_pickup": {
+				"title": "Demand by pickup location",
+				"subtitle": "Where patrons collect their requests.",
+				"series": "Requests"
+			},
+			"demand_heatmap": {
+				"title": "When requests arrive",
+				"subtitle": "Request volume by day of week and hour of day (server time zone)."
+			},
+			"failure_taxonomy": {
+				"reason": "Reason",
+				"series": "Failed requests",
+				"subtitle": "Failed requests broken down by reason.",
+				"title": "Why requests fail"
+			},
+			"net_flow": {
+				"borrowed": "Borrowed",
+				"library": "Library",
+				"subtitle": "Reciprocity across the network — net givers and takers.",
+				"supplied": "Supplied",
+				"title": "Borrowing vs supplying"
+			},
+			"new_acquisitions": {
+				"title": "New acquisitions performance",
+				"subtitle": "How your recently-added titles perform in the network.",
+				"acquired_since": "Acquired since",
+				"col_supplied": "Supplied"
+			},
+			"peer_benchmark": {
+				"title": "Peer benchmarking",
+				"subtitle": "Each library vs the consortium median (fill {{fill}}, checkout {{checkout}}).",
+				"col_library": "Library",
+				"col_requests": "Requests",
+				"col_checkout": "Checkout rate",
+				"col_fill": "Fill rate",
+				"your_library": "(your library)"
+			},
+			"rare_gem": {
+				"title": "Unique collection value",
+				"subtitle": "Requested titles that only this library supplies to the network.",
+				"col_title": "Title",
+				"col_author": "Author",
+				"col_requests": "Requests"
+			},
+			"status_flow": {
+				"bucket": "Date",
+				"picker_label": "Choose which statuses to plot",
+				"subtitle": "Requests entering each status per period. Pick the statuses to plot.",
+				"title": "Requesting activity over time"
+			},
+			"supplier_reliability": {
+				"failed": "Failed",
+				"fulfilled": "Fulfilled",
+				"subtitle": "Fulfilled versus failed requests per supplying library.",
+				"supplier": "Supplier",
+				"title": "Supplier reliability"
+			},
+			"supplier_response": {
+				"title": "Supplier responsiveness",
+				"subtitle": "Median time from request placed to supplier confirmation, per lender.",
+				"series": "Median response",
+				"axis_hours": "Hours"
+			},
+			"time_in_status": {
+				"axis_hours": "Hours",
+				"series": "Median dwell",
+				"status": "Status",
+				"subtitle": "Median time spent in each status — the biggest bottleneck first.",
+				"title": "Where requests stall"
+			},
+			"top_titles": {
+				"title": "Most requested titles",
+				"subtitle": "The titles the network asks for most.",
+				"col_title": "Title",
+				"col_requests": "Requests"
+			},
+			"unmet_local": {
+				"title": "Unmet local demand",
+				"subtitle": "Titles your own patrons requested but you do not hold.",
+				"col_supplied": "Supplied"
+			}
+		}
+	},
+	"legal": {
+		"accessibility": {
+			"title": "Accessibility",
+			"scope_heading": "What this covers",
+			"scope_body": "This statement applies to DCB Admin for Libraries, the staff interface for OpenRS resource sharing. It does not cover the discovery interface patrons use, or your library management system.",
+			"standard_heading": "The standard we aim for",
+			"standard_body": "WCAG 2.2 level AA on every screen. The high-contrast setting aims higher, at level AAA for text contrast.",
+			"tested_heading": "How that is checked",
+			"tested_body": "Automated checks run on every change and block a release if they fail: an axe scan of ten screens in light and dark, arithmetic over every colour pair in each of the three schemes, and a check that every field label is still attached to its value. Automated testing finds roughly a third of accessibility problems, so it is a floor rather than a guarantee.",
+			"limits_heading": "Where we know we fall short",
+			"limits_body": "Data grids are wide, and reading one on a narrow screen still means scrolling sideways. Some charts convey trends by shape; each carries its figures as a table for screen readers, but the shape itself is not described in words. We have not yet had this interface tested by an external auditor.",
+			"settings_heading": "Settings you can change",
+			"settings_body": "Under Settings you can choose a colour scheme including high contrast, a text size, a typeface including Atkinson Hyperlegible, how tightly the interface is spaced, whether it animates, and whether times are shown on your clock or on the service's. These are stored on your own device and are not shared with colleagues.",
+			"report_heading": "Telling us about a problem",
+			"report_body": "If something here stops you doing your job, tell us and we will treat it as a defect. Email dcb@k-int.com, and say which screen and what you were trying to do.",
+			"report_email": "dcb@k-int.com"
 		}
 	},
 	"library": {
@@ -350,6 +671,7 @@
 	"patron_request": {
 		"active": "isActive",
 		"active_workflow": "Active workflow",
+		"audit_log": "Audit log",
 		"borrowing": "Borrowing",
 		"borrowing_patron_barcode": "Local patron barcode",
 		"borrowing_patron_id": "Local patron ID",
@@ -370,8 +692,11 @@
 		"cleanup": "Force clean up",
 		"cleanup_complete": "Cleanup complete",
 		"cleanup_disabled": "Clean up is only available for requests supplied by your library that are either in an ERROR state, or have not yet been shipped.",
-		"cleanup_info": "Bypass circulation; clean up and finalise request. This auto-finalises a request and can be used to return an unwanted item. ",
+		"cleanup_failed": "Requests that could not be cleaned up",
 		"cleanup_in_progress": "Cleanup in progress",
+		"cleanup_info": "Bypass circulation; clean up and finalise request. This auto-finalises a request and can be used to return an unwanted item. ",
+		"cleanup_skipped": "Requests skipped",
+		"cleanup_succeeded": "Requests cleaned up",
 		"cleanup_successful": "The cleanup operation has been successful, and the patron request has been finalised.",
 		"cleanup_unsuccessful": "The clean up operation has failed, and the patron request remains in an ERROR state. Please try again later.",
 		"cluster_record_uuid": "Cluster record UUID",
@@ -393,11 +718,11 @@
 		"local_id": "Local ID",
 		"local_item_barcode": "Local item barcode",
 		"local_item_id": "Local item ID",
-		"local_item_uuid": "Local item UUID",
 		"local_item_loc": "Local item location code",
 		"local_item_status": "Local item status",
 		"local_item_status_raw": "Raw local item status",
 		"local_item_type": "Local item type",
+		"local_item_uuid": "Local item UUID",
 		"local_request_status": "Local request status",
 		"local_request_status_raw": "Raw local request status",
 		"local_supplier_id": "Supplier request ID",
@@ -406,47 +731,48 @@
 		"no_requests": "No patron requests to display",
 		"out_of_sequence": "Out of sequence",
 		"patron": "Patron",
+		"patron_canonical_ptype": "Canonical patron type",
 		"patron_home_id": "Home identity",
 		"patron_hostlms": "Patron host LMS",
-		"patron_uuid": "Patron UUID",
-		"patron_local_names": "Local names",
 		"patron_library": "Patron library",
-		"patron_canonical_ptype": "Canonical patron type",
+		"patron_local_names": "Local names",
 		"patron_local_ptype": "Local patron type",
 		"patron_request": "Patron request data",
 		"patron_request_uuid": "Patron request UUID",
 		"patron_type_dcb": "DCB patron type",
-		"polling_checks_in_status": "Polling checks in status",
-		"previous_status": "Previous status",
+		"patron_uuid": "Patron UUID",
 		"pickup": "Pickup",
-		"pickup_code_uuid": "Pickup location code UUID",
+		"pickup_agency_code": "Pickup agency code",
 		"pickup_bib_id": "Pickup bib ID",
+		"pickup_code_uuid": "Pickup location code UUID",
+		"pickup_hostlms_code": "Pickup host LMS",
 		"pickup_item_id": "Pickup item ID",
 		"pickup_item_status": "Pickup item status",
 		"pickup_item_status_raw": "Raw pickup item status",
 		"pickup_item_type": "Pickup item type",
+		"pickup_library": "Pickup library",
 		"pickup_location_name": "Pickup location name",
 		"pickup_patron_id": "Pickup patron ID",
 		"pickup_request_id": "Pickup request ID",
 		"pickup_request_status": "Pickup request status",
 		"pickup_request_status_raw": "Raw pickup request status",
-		"pickup_agency_code": "Pickup agency code",
-		"pickup_library": "Pickup library",
-		"pickup_hostlms_code": "Pickup host LMS",
+		"polling_checks_in_status": "Polling checks in status",
+		"previous_status": "Previous status",
 		"renewal_count": "Renewal count",
 		"renewal_count_borrower": "Borrower renewal count",
 		"renewal_count_supplier": "Supplier renewal count",
 		"renewal_status": "Renewal status",
 		"request_created": "Request created",
-		"request_uuid": "Request UUID",
-		"requestor_uuid": "Patron UUID at requesting agency",
-		"requestor_note": "Requestor note",
 		"request_tooltip": "This is a {{ils}} library. The primary contact(s) are {{contact}}",
 		"request_updated": "Request updated",
+		"request_uuid": "Request UUID",
+		"requestor_note": "Requestor note",
+		"requestor_uuid": "Patron UUID at requesting agency",
 		"resolution_count": "Resolution count",
 		"return": "Return to patron request",
-		"status": "Current status",
 		"source_record_not_found": "Source record not found",
+		"status": "Current status",
+		"status_changed": "Status changed",
 		"statuses": {
 			"SUBMITTED_TO_DCB": "Submitted to DCB",
 			"PATRON_VERIFIED": "Patron verified",
@@ -469,90 +795,42 @@
 			"ERROR": "Error",
 			"ARCHIVED": "Archived"
 		},
-		"status_changed": "Status changed",
 		"supplier": "Supplier",
-		"supplier_library": "Supplier library",
-		"supplier_uuid": "Supplier UUID",
 		"supplier_ctype": "Canonical item type",
+		"supplier_library": "Supplier library",
 		"supplier_request": "Supplier request data",
+		"supplier_uuid": "Supplier UUID",
 		"supplying": "Supplying",
 		"supplying_agency_code": "Supplying agency code",
 		"time_in_status": "Time in status",
+		"title": "Patron request",
 		"view": "View",
 		"virtual_item": "Virtual item",
-		"virtual_patron": "Virtual patron",
-		"title": "Patron request"
+		"virtual_patron": "Virtual patron"
 	},
 	"requesting": {
 		"available_at": "Items present at {{total}} institution(s)",
-		"available_for_walk_up": "Available for walk-up requesting",
-		"available_for_walk_up_description": "Available for walk-up requesting: at least one item for this record is available in your library.",
 		"available_for_staff_request": "Available for staff requesting",
 		"available_for_staff_request_description": "Available for staff requesting: at least one item for this record is available in your consortium.",
+		"available_for_walk_up": "Available for walk-up requesting",
+		"available_for_walk_up_description": "Available for walk-up requesting: at least one item for this record is available in your library.",
 		"available_to_request": "{{number}} available items at {{total}} institution(s)",
 		"barcode": "Barcode",
 		"bib_record": "Bib record",
 		"bib_record_id": "Bib record UUID",
 		"call_no": "Call number",
 		"cannot_request_no_items": "There are no items available to request for this record.",
-		"context": "Context",
-		"contributors": "Contributors",
 		"cluster": "Cluster record",
+		"cluster_deleted": "Is cluster deleted?",
+		"cluster_id": "Cluster UUID",
 		"cluster_title": "Cluster details for {{record}}",
 		"cluster_tooltip": "View cluster record",
-		"cluster_id": "Cluster UUID",
-		"cluster_deleted": "Is cluster deleted?",
+		"context": "Context",
 		"contributor": "Contributor(s): {{contributors}}",
+		"contributors": "Contributors",
 		"date_available": "Date available",
 		"date_due": "Date due",
 		"description": "Description",
-		"format": "Format: {{formats}}",
-		"format_title": "Format(s)",
-		"history": "Requesting history",
-		"hold_count": "Hold count",
-		"identifiers": "Identifiers",
-		"isbn_title": "ISBN identifiers",
-		"isbn": "ISBN identifier(s): {{isbn}}",
-		"issn": "ISSN identifier(s): {{issn}}",
-		"items": "Items",
-		"items_error_title": "We could not load the associated items",
-		"item_id": "Item ID",
-		"items_not_found": "No items found",
-		"items_search": "Search items",
-		"items_title": "Items available for cluster {{cluster}}",
-		"languages": "Language(s)",
-		"live_availability_no_items": "No items found for this record",
-		"live_availability_unavailable": "Item availability information unavailable",
-		"local_item_type_code": "Local item type code",
-		"local_item_type_name": "Local item type name",
-		"no_data": "No data available. Please enter a search term, or change your current search.",
-		"no_history": "Your patrons haven't placed any OpenRS requests for this record.",
-		"not_available_for_staff_request": "Not available for staff requesting",
-		"not_available_for_staff_request_description": "Not available for staff requesting: there is currently no available item for this record in your consortium.",
-		"not_available_for_walk_up": "Not available for walk up requesting",
-		"not_available_for_walk_up_description": "Not available for walk up requesting: there is currently no available item for this record at your library.",
-		"notes": "Notes",
-		"options": "Request options",
-		"physical_descriptions": "Physical descriptions",
-		"publication_date": "Publication date: {{publicationDate}} ",
-		"publication_year": "Publication year",
-		"publisher": "Publisher",
-		"place_description": "You have chosen to place a request for {{title}}. Please select a requesting option below.",
-		"place_title": "Place a request",
-		"record_created": "Record created",
-		"record_information": "Record information",
-		"record_updated": "Record updated",
-		"requestable": "Requestable",
-		"series": "Series",
-		"shared_index_unavailable_title": "Shared index is not configured on this system",
-		"shared_index_unavailable_message": "Please set a valid DCB_SEARCH_BASE environment variable for this deployment.",
-		"source_system_code": "Source system code",
-		"subjects": "Subjects",
-		"supplier_type": "Supplier type",
-		"suppressed": "Suppressed",
-		"titles_found": "{{number}} titles found",
-		"volume_parsed": "Parsed volume statement",
-		"volume_raw": "Raw volume statement",
 		"expedited_checkout": {
 			"actions": {
 				"place": "Place a walk-up request."
@@ -590,12 +868,57 @@
 			"title_on_site": "Walk-up request",
 			"view_request": "View request"
 		},
+		"format": "Format: {{formats}}",
+		"format_title": "Format(s)",
+		"history": "Requesting history",
+		"history_label": "Request history",
+		"hold_count": "Hold count",
+		"identifiers": "Identifiers",
+		"isbn": "ISBN identifier(s): {{isbn}}",
+		"isbn_title": "ISBN identifiers",
+		"issn": "ISSN identifier(s): {{issn}}",
+		"item_id": "Item ID",
+		"items": "Items",
+		"items_error_title": "We could not load the associated items",
+		"items_label": "Items",
+		"items_not_found": "No items found",
+		"items_not_shown_label": "Items not shown",
+		"items_search": "Search items",
+		"items_title": "Items available for cluster {{cluster}}",
+		"languages": "Language(s)",
+		"live_availability_no_items": "No items found for this record",
+		"live_availability_unavailable": "Item availability information unavailable",
+		"local_item_type_code": "Local item type code",
+		"local_item_type_name": "Local item type name",
+		"no_data": "No data available. Please enter a search term, or change your current search.",
+		"no_history": "Your patrons haven't placed any OpenRS requests for this record.",
+		"no_results": "No results found",
+		"not_available_for_staff_request": "Not available for staff requesting",
+		"not_available_for_staff_request_description": "Not available for staff requesting: there is currently no available item for this record in your consortium.",
+		"not_available_for_walk_up": "Not available for walk up requesting",
+		"not_available_for_walk_up_description": "Not available for walk up requesting: there is currently no available item for this record at your library.",
+		"notes": "Notes",
+		"options": "Request options",
+		"physical_descriptions": "Physical descriptions",
+		"place_description": "You have chosen to place a request for {{title}}. Please select a requesting option below.",
+		"place_title": "Place a request",
+		"publication_date": "Publication date: {{publicationDate}} ",
+		"publication_year": "Publication year",
+		"publisher": "Publisher",
+		"record_created": "Record created",
+		"record_information": "Record information",
+		"record_updated": "Record updated",
+		"requestable": "Requestable",
+		"results_label": "Search results",
+		"results_per_page": "Results per page",
+		"search_prompt": "Select an option and type in your search.",
 		"search_types": {
 			"cql": "CQL",
 			"default": "Default",
 			"query_builder": "Query builder",
 			"locate": "Locate"
 		},
+		"series": "Series",
 		"shared_index": {
 			"cluster": "Cluster",
 			"cluster_details": "Cluster details",
@@ -651,6 +974,9 @@
 			"title": "Shared index",
 			"title_details": "Title details for {{title}}"
 		},
+		"shared_index_unavailable_message": "Please set a valid DCB_SEARCH_BASE environment variable for this deployment.",
+		"shared_index_unavailable_title": "Shared index is not configured on this system",
+		"source_system_code": "Source system code",
 		"staff_request": {
 			"actions": {
 				"place": "Place a staff request"
@@ -695,15 +1021,17 @@
 				"validating": "Validating patron"
 			},
 			"select_pickup": "We have succesfully validated the patron provided. Please choose a pickup location and click 'Submit' to finish placing this staff request."
-		}
+		},
+		"subjects": "Subjects",
+		"supplier_type": "Supplier type",
+		"suppressed": "Suppressed",
+		"titles_found": "{{number}} titles found",
+		"volume_parsed": "Parsed volume statement",
+		"volume_raw": "Raw volume statement"
 	},
 	"settings": {
 		"customisation": "Customisation",
 		"dark_mode": "Dark mode",
-		"language": {
-			"en": "English",
-			"es": "Spanish"
-		},
 		"library": "Library",
 		"light_mode": "Light mode",
 		"system_mode": "System mode",
@@ -763,6 +1091,12 @@
 				"skipped_count": "Not eligible: {{count}}",
 				"success_count": "Successful: {{count}}"
 			},
+			"columns": "Columns",
+			"delete_body": "This {{entity}} will be permanently deleted.",
+			"delete_body_library": "The library details and all its contacts and group memberships will be permanently deleted.",
+			"delete_header": "Delete {{entity}} {{name}}",
+			"edit_summary": "Edit {{entity}}",
+			"edit_url": "Enter a valid URL",
 			"export": {
 				"all": "Export all",
 				"all_csv": "Export all as CSV",
@@ -794,16 +1128,14 @@
 				"on_or_before": "On or before",
 				"to": "To"
 			},
-			"edit_summary": "Edit {{entity}}",
 			"find_column": "Find column",
-			"columns": "Columns",
-			"delete_body": "This {{entity}} will be permanently deleted.",
-			"delete_body_library": "The library details and all its contacts and group memberships will be permanently deleted.",
-			"delete_header": "Delete {{entity}} {{name}}",
-			"edit_url": "Enter a valid URL",
-			"open": "Open",
 			"master_detail": "Master detail",
-			"no_data": "No data available"
+			"no_data": "No data available",
+			"open": "Open",
+			"search_audits": "Search by audit",
+			"search_locations": "Search by location",
+			"search_mappings": "Search by mappings",
+			"search_supplier_requests": "Search supplier patron requests"
 		},
 		"feedback": {
 			"complete": "{{percentage}} complete",
@@ -896,178 +1228,5 @@
 		"RET-EXP": "Walk-up",
 		"RET-PUA": "Pickup anywhere",
 		"RET-LOCAL": "Local"
-	},
-	"insights": {
-		"title": "Library insights",
-		"subtitle": "Requesting activity, fulfilment and value for {{library}}.",
-		"loading": "Loading insights",
-		"no_host_lms": "This library has no associated Host LMS, so insights cannot be shown.",
-		"no_data": "No data for the selected period.",
-		"duration": {
-			"days": "{{value}} days",
-			"hours": "{{value}} hrs",
-			"minutes": "{{value}} min",
-			"none": "—"
-		},
-		"range": {
-			"label": "Time range",
-			"7d": "7 days",
-			"30d": "30 days",
-			"90d": "90 days",
-			"365d": "1 year",
-			"from": "From",
-			"to": "To"
-		},
-		"kpi": {
-			"vs_prior": "vs previous period",
-			"fill_rate": {
-				"title": "Fill rate"
-			},
-			"error_rate": {
-				"title": "Error rate"
-			},
-			"time_to_loan": {
-				"title": "Median time to loan",
-				"subtitle": "p50 · p95 {{p95}}"
-			},
-			"resolved": {
-				"title": "Requests resolved",
-				"subtitle": "completed or failed"
-			},
-			"cost_avoidance": {
-				"title": "Estimated cost avoided",
-				"basis": "Based on {{count}} successful fulfilments",
-				"input_label": "Cost per ILL",
-				"input_help": "Your own average interlibrary loan cost"
-			},
-			"checkout_rate": {
-				"title": "Checkout rate",
-				"subtitle": "{{reached}} of {{total}} reached the shelf"
-			},
-			"total_borrows": {
-				"title": "Total borrows",
-				"subtitle": "requests placed as borrower"
-			},
-			"total_lends": {
-				"title": "Total lends",
-				"subtitle": "items supplied to the network"
-			},
-			"rescued": {
-				"title": "Requests rescued",
-				"subtitle": "fulfilled after re-resolution"
-			},
-			"unique_titles": {
-				"title": "Unique titles requested",
-				"subtitle": "across {{total}} requests"
-			}
-		},
-		"charts": {
-			"status_flow": {
-				"title": "Requesting activity over time",
-				"subtitle": "Requests entering each status per period. Pick the statuses to plot.",
-				"picker_label": "Choose which statuses to plot"
-			},
-			"failure_taxonomy": {
-				"title": "Why requests fail",
-				"subtitle": "Failed requests broken down by reason.",
-				"series": "Failed requests"
-			},
-			"supplier_reliability": {
-				"title": "Supplier reliability",
-				"subtitle": "Fulfilled versus failed requests per supplying library.",
-				"fulfilled": "Fulfilled",
-				"failed": "Failed"
-			},
-			"net_flow": {
-				"title": "Borrowing vs supplying",
-				"subtitle": "Reciprocity across the network — net givers and takers.",
-				"borrowed": "Borrowed",
-				"supplied": "Supplied"
-			},
-			"rare_gem": {
-				"title": "Unique collection value",
-				"subtitle": "Requested titles that only this library supplies to the network.",
-				"col_title": "Title",
-				"col_author": "Author",
-				"col_requests": "Requests"
-			},
-			"time_in_status": {
-				"title": "Where requests stall",
-				"subtitle": "Median time spent in each status — the biggest bottleneck first.",
-				"series": "Median dwell",
-				"axis_hours": "Hours"
-			},
-			"supplier_response": {
-				"title": "Supplier responsiveness",
-				"subtitle": "Median time from request placed to supplier confirmation, per lender.",
-				"series": "Median response",
-				"axis_hours": "Hours"
-			},
-			"demand_heatmap": {
-				"title": "When requests arrive",
-				"subtitle": "Request volume by day of week and hour of day (server time zone)."
-			},
-			"demand_by_format": {
-				"title": "Demand by format",
-				"subtitle": "Requesting volume by material format.",
-				"series": "Requests"
-			},
-			"top_titles": {
-				"title": "Most requested titles",
-				"subtitle": "The titles the network asks for most.",
-				"col_title": "Title",
-				"col_requests": "Requests"
-			},
-			"demand_by_pickup": {
-				"title": "Demand by pickup location",
-				"subtitle": "Where patrons collect their requests.",
-				"series": "Requests"
-			},
-			"demand_by_patron_group": {
-				"title": "Demand by patron group",
-				"subtitle": "Which patron categories drive requesting.",
-				"series": "Requests"
-			},
-			"unmet_local": {
-				"title": "Unmet local demand",
-				"subtitle": "Titles your own patrons requested but you do not hold.",
-				"col_supplied": "Supplied"
-			},
-			"acquisition_opportunities": {
-				"title": "Acquisition opportunities",
-				"subtitle": "Highly requested titles across the network that you do not hold.",
-				"col_supplied": "Supplied"
-			},
-			"consortial_lifeline": {
-				"title": "Consortial lifeline",
-				"subtitle": "Titles you uniquely keep flowing to the network.",
-				"col_supplied": "Supplied"
-			},
-			"peer_benchmark": {
-				"title": "Peer benchmarking",
-				"subtitle": "Each library vs the consortium median (fill {{fill}}, checkout {{checkout}}).",
-				"col_library": "Library",
-				"col_requests": "Requests",
-				"col_checkout": "Checkout rate",
-				"col_fill": "Fill rate",
-				"your_library": "(your library)"
-			},
-			"collection_dimension": {
-				"title": "Collection analysis",
-				"subtitle": "Requesting demand sliced by a bibliographic dimension.",
-				"select_label": "Dimension",
-				"series": "Requests",
-				"dim_format": "Format",
-				"dim_language": "Language",
-				"dim_subject": "Subject",
-				"dim_decade": "Publication decade"
-			},
-			"new_acquisitions": {
-				"title": "New acquisitions performance",
-				"subtitle": "How your recently-added titles perform in the network.",
-				"acquired_since": "Acquired since",
-				"col_supplied": "Supplied"
-			}
-		}
 	}
 }

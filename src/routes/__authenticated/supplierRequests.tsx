@@ -1,3 +1,6 @@
+import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
+import { pageTitle } from "@helpers/pageTitle";
+import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -38,6 +41,7 @@ import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/supplierRequests")({
+	head: () => ({ meta: [{ title: pageTitle("nav.supplier_requests.title") }] }),
 	component: RouteComponent,
 });
 
@@ -103,12 +107,6 @@ function RouteComponent() {
 			(filterModel.quickFilterValues &&
 				filterModel.quickFilterValues.length > 0);
 
-		// const hasActiveDebounceFilters =
-		// 	debouncedFilterModel.items.some(
-		// 		(item) => item.value && item.value !== "" && item.value !== null
-		// 	) ||
-		// 	(debouncedFilterModel.quickFilterValues &&
-		// 		debouncedFilterModel.quickFilterValues.length > 0);
 
 		const isDifferent =
 			JSON.stringify(filterModel) !== JSON.stringify(debouncedFilterModel);
@@ -233,7 +231,7 @@ function RouteComponent() {
 				getLibraries,
 				{
 					query: "",
-					pagesize: 10000,
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
 					pageno: 0,
 					orderBy: "DESC",
 					order: "fullName",
@@ -357,6 +355,9 @@ function RouteComponent() {
 		(isFetching && !!patronRequestData);
 	return (
 		<>
+			<Typography variant="h1">
+				{t("nav.supplier_requests.title")}
+			</Typography>
 			{
 				<DataGrid
 					disablePivoting
@@ -366,6 +367,7 @@ function RouteComponent() {
 					checkboxSelection={true}
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
 					type="patronRequests"
+					label={t("nav.supplier_requests.title")}
 					identifier="supplierPatronRequests"
 					disableAggregation={true}
 					disableHoverInteractions={true}
@@ -376,7 +378,7 @@ function RouteComponent() {
 					pagination
 					pivotingEnabled={false}
 					toolbarVisible
-					searchText="Search supplier patron requests"
+					searchText={t("ui.data_grid.search_supplier_requests")}
 					scrollbarVisible={false}
 					paginationMode="server"
 					paginationModel={paginationModel}
@@ -425,7 +427,6 @@ function RouteComponent() {
 					severityType={alert.severity}
 					// variant="filled"
 					// sx={{ width: "100%" }}
-					autoHideDuration={6000}
 					alertText={alert.text}></TimedAlert>
 			}
 		</>

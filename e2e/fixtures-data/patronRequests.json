@@ -1,0 +1,85 @@
+{
+	"patronRequests": {
+		"totalSize": 2,
+		"pageable": {
+			"number": 0,
+			"offset": 0
+		},
+		"content": [
+			{
+				"id": "11111111-1111-1111-1111-111111111111",
+				"dateCreated": "2026-09-01T09:15:00Z",
+				"dateUpdated": "2026-09-01T10:15:00Z",
+				"patronHostlmsCode": "E2E-HOST",
+				"pickupLocationCode": "E2E-PICKUP",
+				"description": "First request",
+				"status": "REQUEST_PLACED_AT_SUPPLYING_AGENCY",
+				"previousStatus": "SUBMITTED_TO_DCB",
+				"nextExpectedStatus": "CONFIRMED",
+				"errorMessage": null,
+				"nextScheduledPoll": null,
+				"outOfSequenceFlag": false,
+				"elapsedTimeInCurrentStatus": 3600,
+				"pollCountForCurrentStatus": 1,
+				"isManuallySelectedItem": false,
+				"requesterNote": null,
+				"activeWorkflow": "RET-STD",
+				"rawLocalRequestStatus": null,
+				"rawLocalItemStatus": null,
+				"localRequestId": null,
+				"localRequestStatus": null,
+				"localItemId": null,
+				"suppliers": [
+					{
+						"id": "s0",
+						"localAgency": "E2E-SUP",
+						"hostLmsCode": "E2E-SUP-HOST",
+						"isActive": true,
+						"localItemBarcode": "ITEM0",
+						"localItemLocationCode": "LOC0",
+						"localStatus": "AVAILABLE"
+					}
+				],
+				"clusterRecord": null,
+				"patron": null
+			},
+			{
+				"id": "22222222-2222-2222-2222-222222222222",
+				"dateCreated": "2026-09-02T11:30:00Z",
+				"dateUpdated": "2026-09-02T12:30:00Z",
+				"patronHostlmsCode": "E2E-HOST",
+				"pickupLocationCode": "E2E-PICKUP",
+				"description": "Second request",
+				"status": "COMPLETED",
+				"previousStatus": "FINALISED",
+				"nextExpectedStatus": null,
+				"errorMessage": null,
+				"nextScheduledPoll": null,
+				"outOfSequenceFlag": false,
+				"elapsedTimeInCurrentStatus": 7200,
+				"pollCountForCurrentStatus": 2,
+				"isManuallySelectedItem": false,
+				"requesterNote": null,
+				"activeWorkflow": "RET-STD",
+				"rawLocalRequestStatus": null,
+				"rawLocalItemStatus": null,
+				"localRequestId": null,
+				"localRequestStatus": null,
+				"localItemId": null,
+				"suppliers": [
+					{
+						"id": "s1",
+						"localAgency": "E2E-SUP",
+						"hostLmsCode": "E2E-SUP-HOST",
+						"isActive": true,
+						"localItemBarcode": "ITEM1",
+						"localItemLocationCode": "LOC1",
+						"localStatus": "AVAILABLE"
+					}
+				],
+				"clusterRecord": null,
+				"patron": null
+			}
+		]
+	}
+}

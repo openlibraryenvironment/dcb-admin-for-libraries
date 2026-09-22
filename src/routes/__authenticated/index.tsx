@@ -1,3 +1,5 @@
+import { Attribute } from "@components/Attribute/Attribute";
+import { pageTitle } from "@helpers/pageTitle";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -20,16 +22,10 @@ import {
 	MenuItem,
 	Stack,
 	TextField,
-	useTheme,
 } from "@mui/material";
 import { BrandImageField } from "@components/BrandImageField/BrandImageField";
 import { useBrandUploadsAvailable } from "@/hooks/useBrandUploadsAvailable";
-import {
-	BRAND_LIMITS,
-	isValidLinkUrl,
-	isValidLogoUrl,
-	themeOptions,
-} from "@constants/discoveryBranding";
+import { themeOptions } from "@constants/discoveryBranding";
 import AddressLink from "../../components/Address/AddressLink";
 import { Controller, useForm } from "react-hook-form";
 import { UpdateLibraryFormData } from "../../models/UpdateLibraryFormData";
@@ -42,8 +38,8 @@ import {
 	isLibrarySupportUrlEnabled,
 } from "@helpers/featureFlags";
 import { UpdateLibraryResponse } from "../../models/UpdateLibraryResponse";
-import { useEffect, useMemo, useRef, useState } from "react";
-import * as Yup from "yup";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { libraryProfileSchema } from "@/schemas/libraryProfile";
 import { yupResolver } from "@hookform/resolvers/yup";
 import TimedAlert from "../../components/TimedAlert/TimedAlert";
 import { formatChangedFields } from "../../helpers/confirmationFunctions";
@@ -52,7 +48,6 @@ import Confirmation from "../../components/Confirmation/Confirmation";
 import Cancel from "@mui/icons-material/Cancel";
 import Edit from "@mui/icons-material/Edit";
 import Save from "@mui/icons-material/Save";
-import { isEmpty } from "lodash";
 import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
 import { FunctionalSettingStatus } from "@models/FunctionalSetting";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
@@ -65,7 +60,29 @@ import TopTitlesSummary from "@components/TopTitlesSummary/TopTitlesSummary";
 import TopRequestorsSummary from "@components/TopRequestorSummary/TopRequestorSummary";
 
 // Landing page, also library information page
+/**
+ * A profile field, which is named twice over in the two modes and must not be
+ * named twice at once: in read mode the heading is the value's only label and
+ * is associated with it, and in edit mode the control carries its own, so the
+ * heading goes away rather than sitting seven pixels above a floating label
+ * saying the same thing (WCAG 2.5.3, and e2e/library-profile.spec.ts).
+ *
+ * Local to this route rather than a flag on Attribute: only this page has two
+ * modes, and the difference belongs at the edge that owns it.
+ */
+const ProfileField = ({
+	editMode,
+	label,
+	children,
+}: {
+	editMode: boolean;
+	label: ReactNode;
+	children: ReactNode;
+}) =>
+	editMode ? <>{children}</> : <Attribute label={label}>{children}</Attribute>;
+
 export const Route = createFileRoute("/__authenticated/")({
+	head: () => ({ meta: [{ title: pageTitle("nav.home.title") }] }),
 	component: HomeComponent,
 });
 
@@ -86,7 +103,6 @@ function hasChanged(next: unknown, current: unknown): boolean {
 function HomeComponent() {
 	const auth = useAuth();
 	const { t } = useTranslation();
-	// console.log(auth);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
 
@@ -99,13 +115,11 @@ function HomeComponent() {
 
 	const { agencyCode: code } = useAgencyCodes();
 
-	const theme = useTheme();
 	const [editMode, setEditMode] = useState(false);
 	const [showConfirmationEdit, setConfirmationEdit] = useState(false);
 	const firstEditableFieldRef = useRef<HTMLInputElement>(null);
 	const [changedFields, setChangedFields] = useState<Partial<Library>>({});
 	const saveButtonRef = useRef<HTMLButtonElement>(null);
-	// const FEEDBACK_LINK = "https://forms.gle/pc5yVDufGRdrGz6Y7";
 	const handleCancel = () => {
 		setEditMode(false);
 		setChangedFields({});
@@ -278,7 +292,6 @@ function HomeComponent() {
 			setChangedFields({});
 			setEditMode(false);
 			refetch();
-			// console.log(data);
 			setAlert({
 				open: true,
 				severity: "success",
@@ -319,83 +332,7 @@ function HomeComponent() {
 		},
 	});
 
-	const validationSchema = Yup.object().shape({
-		fullName: Yup.string()
-			.trim()
-			.nonNullable(t("ui.validation.required"))
-			.required(
-				t("ui.validation.required", { field: t("library.full_name") }),
-			)
-			.max(255, t("ui.validation.max_length", { length: 255 })),
-		shortName: Yup.string()
-			.trim()
-			.max(32, t("ui.validation.max_length", { length: 32 })),
-		abbreviatedName: Yup.string()
-			.trim()
-			.nonNullable(t("ui.validation.required"))
-			.max(32, t("ui.validation.max_length", { length: 128 })),
-		latitude: Yup.number()
-			.transform((value, originalValue) =>
-				originalValue === "" ? null : value,
-			)
-			.typeError(t("ui.validation.locations.lat"))
-			.min(-90, t("ui.validation.locations.lat"))
-			.max(90, t("ui.validation.locations.lat")),
-		longitude: Yup.number()
-			.transform((value, originalValue) =>
-				originalValue === "" ? null : value,
-			)
-			.typeError(t("ui.validation.locations.long"))
-			.min(-180, t("ui.validation.locations.long"))
-			.max(180, t("ui.validation.locations.long")),
-		backupDowntimeSchedule: Yup.string()
-			.trim()
-			.max(200, t("ui.validation.max_length", { length: 200 })),
-		supportHours: Yup.string()
-			.trim()
-			.max(200, t("ui.validation.max_length", { length: 200 })),
-		// Mirrors dcb-service's BrandingValidator so the administrator is told at the
-		// field rather than by a rejected save. Blank is valid at all three and means
-		// "clear it" — a library that uploaded the wrong mark must be able to remove it.
-		brandLogoUrl: Yup.string()
-			.trim()
-			.max(
-				BRAND_LIMITS.logoUrl,
-				t("ui.validation.max_length", { length: BRAND_LIMITS.logoUrl }),
-			)
-			.test("absolute-http-url", t("library.brand.logo_url_invalid"), isValidLogoUrl),
-		brandLogoAlt: Yup.string()
-			.trim()
-			.max(
-				BRAND_LIMITS.logoAlt,
-				t("ui.validation.max_length", { length: BRAND_LIMITS.logoAlt }),
-			),
-		defaultThemeName: Yup.string()
-			.trim()
-			.max(
-				BRAND_LIMITS.themeName,
-				t("ui.validation.max_length", { length: BRAND_LIMITS.themeName }),
-			),
-		// V-11.1. Both become an href in the discovery app's footer, and dcb-service now
-		// refuses anything that is not an absolute http(s) URL on write — so the rule is
-		// checked under the box rather than reported as a 400 with no field attached.
-		// patronWebsite gains the check with supportUrl because the server gained it for
-		// both at once.
-		patronWebsite: Yup.string()
-			.trim()
-			.max(
-				BRAND_LIMITS.linkUrl,
-				t("ui.validation.max_length", { length: BRAND_LIMITS.linkUrl }),
-			)
-			.test("absolute-http-url", t("library.presence.url_invalid"), isValidLinkUrl),
-		supportUrl: Yup.string()
-			.trim()
-			.max(
-				BRAND_LIMITS.linkUrl,
-				t("ui.validation.max_length", { length: BRAND_LIMITS.linkUrl }),
-			)
-			.test("absolute-http-url", t("library.presence.url_invalid"), isValidLinkUrl),
-	});
+	const validationSchema = useMemo(() => libraryProfileSchema(t), [t]);
 
 	/**
 	 * The logo chosen but not yet uploaded — R-17e.
@@ -562,6 +499,11 @@ function HomeComponent() {
 			spacing={{ xs: 2, md: 3 }}
 			columns={{ xs: 4, sm: 8, md: 12 }}>
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Typography variant="h1">
+					{t("library.title", { library: library?.fullName })}
+				</Typography>
+			</Grid>
+            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography>
 					{t("welcome.title", {
 						library: library?.fullName,
@@ -569,20 +511,6 @@ function HomeComponent() {
 					})}
 				</Typography>
 			</Grid>
-            {/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography>
-					<Trans
-						i18nKey="welcome.background"
-						values={{
-							library: library?.fullName,
-							name: auth.user?.profile?.name,
-						}}
-						components={{
-							linkComponent: <Link href={FEEDBACK_LINK} />,
-						}}
-					/>
-				</Typography>
-			</Grid> */}
             {editingEnabled ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 					<>
@@ -593,7 +521,7 @@ function HomeComponent() {
 									color="primary"
 									startIcon={<Save />}
 									onClick={handleSubmit(onSubmit)}
-									disabled={!isEmpty(errors) || !isDirty}
+									disabled={Object.keys(errors).length > 0 || !isDirty}
 									ref={saveButtonRef}
 									sx={{ mr: 1 }}>
 									{t("ui.actions.save")}
@@ -618,7 +546,7 @@ function HomeComponent() {
 				</Grid>
 			) : null}
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" sx={{
+				<Typography variant="h3" component="h2" sx={{
                     fontWeight: "bold"
                 }}>
 					{/* {t("welcome.library", { library: library?.fullName })} */}
@@ -626,17 +554,7 @@ function HomeComponent() {
 				</Typography>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.fullName
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
-						{t("library.full_name")}
-					</Typography>
-				</Stack>
+				<ProfileField editMode={editMode} label={t("library.full_name")}>
 				<Controller
 					name="fullName"
 					control={control}
@@ -657,18 +575,10 @@ function HomeComponent() {
 						)
 					}
 				/>
+				</ProfileField>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.shortName
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
-						{t("library.short_name")}
-					</Typography>
+				<ProfileField editMode={editMode} label={t("library.short_name")}>
 					<Controller
 						name="shortName"
 						control={control}
@@ -688,19 +598,10 @@ function HomeComponent() {
 							)
 						}
 					/>
-				</Stack>
+				</ProfileField>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.abbreviatedName
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
-						{t("library.abbreviated_name")}
-					</Typography>
+				<ProfileField editMode={editMode} label={t("library.abbreviated_name")}>
 					<Controller
 						name="abbreviatedName"
 						control={control}
@@ -720,31 +621,20 @@ function HomeComponent() {
 							)
 						}
 					/>
-				</Stack>
+				</ProfileField>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("library.type")}</Typography>
+				<Attribute label={t("library.type")}>
 					<RenderAttribute attribute={library?.type} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("agency.code")}</Typography>
+				<Attribute label={t("agency.code")}>
 					<RenderAttribute attribute={library?.agencyCode} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.supportHours
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
-						{t("library.support_hours")}
-					</Typography>
+				<ProfileField editMode={editMode} label={t("library.support_hours")}>
 					<Controller
 						name="supportHours"
 						control={control}
@@ -764,19 +654,10 @@ function HomeComponent() {
 							)
 						}
 					/>
-				</Stack>
+				</ProfileField>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.backupDowntimeSchedule
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
-						{t("library.backup_schedule")}
-					</Typography>
+				<ProfileField editMode={editMode} label={t("library.backup_schedule")}>
 					<Controller
 						name="backupDowntimeSchedule"
 						control={control}
@@ -796,26 +677,22 @@ function HomeComponent() {
 							)
 						}
 					/>
-				</Stack>
+				</ProfileField>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("library.site_designation")}
-					</Typography>
+				<Attribute label={t("library.site_designation")}>
 					{/* This may need special handling when we have real data and know what format it's coming in */}
 					<RenderAttribute
 						attribute={
 							library?.agency?.hostLms?.clientConfig?.contextHierarchy[0]
 						}
 					/>
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("library.id")}</Typography>
+				<Attribute label={t("library.id")}>
 					<RenderAttribute attribute={library?.id} />
-				</Stack>
+				</Attribute>
 			</Grid>
             {/* Two gates, and they answer different questions. `discoveryActive` asks
                 whether anything renders a patron logo at all. The branding flag asks
@@ -832,7 +709,7 @@ function HomeComponent() {
   			    patron is using their library, and the consortium is the supply network
   			    behind it. */}
               <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-  				<Typography variant="h3" sx={{
+  				<Typography variant="h3" component="h2" sx={{
                       fontWeight: "bold"
                   }}>
   					{t("library.brand.section")}
@@ -851,16 +728,7 @@ function HomeComponent() {
   				</Typography>
   			</Grid>
               <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-  				<Stack direction={"column"}>
-  					<Typography
-  						variant="attributeTitle"
-  						color={
-  							errors.brandLogoUrl
-  								? (theme.vars || theme).palette.error.main
-  								: (theme.vars || theme).palette.text.primary
-  						}>
-  						{t("library.brand.logo_url")}
-  					</Typography>
+  				<Attribute label={t("library.brand.logo_url")}>
   					<Controller
   						name="brandLogoUrl"
   						control={control}
@@ -884,19 +752,10 @@ function HomeComponent() {
   							)
   						}
   					/>
-  				</Stack>
+  				</Attribute>
   			</Grid>
               <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-  				<Stack direction={"column"}>
-  					<Typography
-  						variant="attributeTitle"
-  						color={
-  							errors.brandLogoAlt
-  								? (theme.vars || theme).palette.error.main
-  								: (theme.vars || theme).palette.text.primary
-  						}>
-  						{t("library.brand.logo_alt")}
-  					</Typography>
+  				<ProfileField editMode={editMode} label={t("library.brand.logo_alt")}>
   					<Controller
   						name="brandLogoAlt"
   						control={control}
@@ -918,19 +777,10 @@ function HomeComponent() {
   							)
   						}
   					/>
-  				</Stack>
+  				</ProfileField>
   			</Grid>
               <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-  				<Stack direction={"column"}>
-  					<Typography
-  						variant="attributeTitle"
-  						color={
-  							errors.defaultThemeName
-  								? (theme.vars || theme).palette.error.main
-  								: (theme.vars || theme).palette.text.primary
-  						}>
-  						{t("library.brand.theme")}
-  					</Typography>
+  				<ProfileField editMode={editMode} label={t("library.brand.theme")}>
   					<Controller
   						name="defaultThemeName"
   						control={control}
@@ -965,7 +815,7 @@ function HomeComponent() {
   							)
   						}
   					/>
-  				</Stack>
+  				</ProfileField>
   			</Grid>
               </>
             )}
@@ -984,22 +834,13 @@ function HomeComponent() {
             {discoveryActive && (
             <>
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-              <Typography variant="h3" sx={{ fontWeight: "bold" }}>
+              <Typography variant="h3" component="h2" sx={{ fontWeight: "bold" }}>
                 {t("library.presence.section")}
               </Typography>
               <Typography>{t("library.presence.section_help")}</Typography>
             </Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-              <Stack direction={"column"}>
-                <Typography
-                  variant="attributeTitle"
-                  color={
-                    errors.patronWebsite
-                      ? (theme.vars || theme).palette.error.main
-                      : (theme.vars || theme).palette.text.primary
-                  }>
-                  {t("library.presence.website")}
-                </Typography>
+              <ProfileField editMode={editMode} label={t("library.presence.website")}>
                 <Controller
                   name="patronWebsite"
                   control={control}
@@ -1021,7 +862,7 @@ function HomeComponent() {
                     )
                   }
                 />
-              </Stack>
+              </ProfileField>
             </Grid>
             {/* Behind its own flag, not the branding one: support_url arrived in
                 V9_0_008, after the 9.0.0 tag, and the brand columns arrived in it. The
@@ -1030,16 +871,7 @@ function HomeComponent() {
                 saves against a deployment that cannot accept it. */}
             {isLibrarySupportUrlEnabled() && (
               <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-                <Stack direction={"column"}>
-                  <Typography
-                    variant="attributeTitle"
-                    color={
-                      errors.supportUrl
-                        ? (theme.vars || theme).palette.error.main
-                        : (theme.vars || theme).palette.text.primary
-                    }>
-                    {t("library.presence.support")}
-                  </Typography>
+                <ProfileField editMode={editMode} label={t("library.presence.support")}>
                   <Controller
                     name="supportUrl"
                     control={control}
@@ -1061,37 +893,25 @@ function HomeComponent() {
                       )
                     }
                   />
-                </Stack>
+                </ProfileField>
               </Grid>
             )}
             </>
             )}
             {/* /* 'Primary location' title goes here/* */}
             {/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" fontWeight={"bold"}>
+				<Typography variant="h3" component="h2" fontWeight={"bold"}>
 					{t("library.primary_location.title")}
 				</Typography>
 			</Grid> */}
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("library.primary_location.address")}
-					</Typography>
+				<Attribute label={t("library.primary_location.address")}>
 					{/* This will need address-specific handling, and possibly its own component - leave as placeholder until we're ready + open maps in new tab*/}
 					<AddressLink address={library?.address} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.latitude
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
-						{t("common.latitude")}
-					</Typography>
+				<ProfileField editMode={editMode} label={t("common.latitude")}>
 					<Controller
 						name="latitude"
 						control={control}
@@ -1111,19 +931,10 @@ function HomeComponent() {
 							)
 						}
 					/>
-				</Stack>
+				</ProfileField>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction="column">
-					<Typography
-						variant="attributeTitle"
-						color={
-							errors.longitude
-								? (theme.vars || theme).palette.error.main
-								: (theme.vars || theme).palette.text.primary
-						}>
-						{t("common.longitude")}
-					</Typography>
+				<ProfileField editMode={editMode} label={t("common.longitude")}>
 					<Controller
 						name="longitude"
 						control={control}
@@ -1143,20 +954,17 @@ function HomeComponent() {
 							)
 						}
 					/>
-				</Stack>
+				</ProfileField>
 			</Grid>
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" sx={{
+				<Typography variant="h3" component="h2" sx={{
                     fontWeight: "bold"
                 }}>
 					{t("library.statistics.title")}
 				</Typography>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("library.statistics.requests_made")}
-					</Typography>
+				<Attribute label={t("library.statistics.requests_made")}>
 					{patronRequestStatsLoading || patronRequestStatsFetching ? (
 						<CircularProgress size="1rem" />
 					) : (
@@ -1168,13 +976,10 @@ function HomeComponent() {
 							}
 						/>
 					)}
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("library.statistics.requests_supplied")}
-					</Typography>
+				<Attribute label={t("library.statistics.requests_supplied")}>
 					{supplierRequestStatsLoading || supplierRequestFetching ? (
 						<CircularProgress size="1rem" />
 					) : (
@@ -1186,7 +991,7 @@ function HomeComponent() {
 							}
 						/>
 					)}
-				</Stack>
+				</Attribute>
 			</Grid>
 			{/*
 			 * Both summary cards read the Insights API (/insights/top-requested-titles
@@ -1204,7 +1009,7 @@ function HomeComponent() {
 				<>
 					<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 						<Stack spacing={1} direction={"column"}>
-							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+							<Typography variant="h3" component="h2" sx={{ fontWeight: "bold" }}>
 								{t("library.statistics.top_titles_month")}
 							</Typography>
 							<TopTitlesSummary
@@ -1215,7 +1020,7 @@ function HomeComponent() {
 					</Grid>
 					<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 						<Stack spacing={1} direction={"column"}>
-							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+							<Typography variant="h3" component="h2" sx={{ fontWeight: "bold" }}>
 								{t("library.statistics.top_requesters_month")}
 							</Typography>
 							<TopRequestorsSummary
@@ -1229,7 +1034,6 @@ function HomeComponent() {
             <TimedAlert
 				open={alert.open}
 				severityType={alert.severity}
-				autoHideDuration={6000}
 				alertText={alert.text}
 				onCloseFunc={() => setAlert({ ...alert, open: false })}
 				alertTitle={alert.title}

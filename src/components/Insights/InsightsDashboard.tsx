@@ -1,3 +1,4 @@
+import { formatNumber, formatPercent } from "@helpers/formatters";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -196,7 +197,7 @@ export default function InsightsDashboard({
 			>
 				<KpiTile
 					title={t("insights.kpi.fill_rate.title")}
-					value={currentRate != null ? `${currentRate.toFixed(1)}%` : "—"}
+					value={currentRate != null ? formatPercent(currentRate) : "—"}
 					deltaPct={rateDelta}
 					higherIsBetter
 					subtitle={t("insights.kpi.vs_prior")}
@@ -204,7 +205,7 @@ export default function InsightsDashboard({
 				/>
 				<KpiTile
 					title={t("insights.kpi.error_rate.title")}
-					value={currentErrRate != null ? `${currentErrRate.toFixed(1)}%` : "—"}
+					value={currentErrRate != null ? formatPercent(currentErrRate) : "—"}
 					deltaPct={errDelta}
 					higherIsBetter={false}
 					subtitle={t("insights.kpi.vs_prior")}
@@ -220,7 +221,7 @@ export default function InsightsDashboard({
 				/>
 				<KpiTile
 					title={t("insights.kpi.resolved.title")}
-					value={resolved.toLocaleString()}
+					value={formatNumber(resolved)}
 					subtitle={t("insights.kpi.resolved.subtitle")}
 					loading={loading}
 				/>
@@ -240,7 +241,7 @@ export default function InsightsDashboard({
 			>
 				<KpiTile
 					title={t("insights.kpi.checkout_rate.title")}
-					value={checkoutRate != null ? `${checkoutRate.toFixed(1)}%` : "—"}
+					value={checkoutRate != null ? formatPercent(checkoutRate) : "—"}
 					subtitle={
 						d
 							? t("insights.kpi.checkout_rate.subtitle", {
@@ -253,19 +254,19 @@ export default function InsightsDashboard({
 				/>
 				<KpiTile
 					title={t("insights.kpi.total_borrows.title")}
-					value={totalBorrows.toLocaleString()}
+					value={formatNumber(totalBorrows)}
 					subtitle={t("insights.kpi.total_borrows.subtitle")}
 					loading={loading}
 				/>
 				<KpiTile
 					title={t("insights.kpi.total_lends.title")}
-					value={totalLends.toLocaleString()}
+					value={formatNumber(totalLends)}
 					subtitle={t("insights.kpi.total_lends.subtitle")}
 					loading={loading}
 				/>
 				<KpiTile
 					title={t("insights.kpi.rescued.title")}
-					value={(d?.savedByReResolution ?? 0).toLocaleString()}
+					value={formatNumber(d?.savedByReResolution ?? 0)}
 					subtitle={t("insights.kpi.rescued.subtitle")}
 					loading={loading}
 				/>

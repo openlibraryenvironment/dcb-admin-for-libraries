@@ -1,3 +1,4 @@
+import ChartDataTable from "./ChartDataTable";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, Typography, Skeleton, Box } from "@mui/material";
@@ -28,7 +29,7 @@ export default function NetFlowChart({ params }: { params: StatsParams }) {
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				<Typography variant="h6" gutterBottom>
+				<Typography variant="h6" component="h2" gutterBottom>
 					{t("insights.charts.net_flow.title")}
 				</Typography>
 				<Typography variant="body2" color="text.secondary" gutterBottom>
@@ -70,6 +71,11 @@ export default function NetFlowChart({ params }: { params: StatsParams }) {
 						]}
 					/>
 				)}
+				<ChartDataTable
+					caption={t("insights.charts.net_flow.title")}
+					columns={[t("insights.charts.net_flow.library"), t("insights.charts.net_flow.borrowed"), t("insights.charts.net_flow.supplied")]}
+					rows={rows.map((r) => [r.libraryCode, r.borrowedCount, r.suppliedCount])}
+				/>
 			</CardContent>
 		</Card>
 	);

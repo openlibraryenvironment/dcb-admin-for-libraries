@@ -20,7 +20,8 @@ export default defineConfig({
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
-	workers: process.env.CI ? 1 : undefined,
+	// Capped rather than left to default to half the cores: see docs/testing.md.
+	workers: process.env.CI ? 1 : 4,
 	reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "html",
 
 	use: {

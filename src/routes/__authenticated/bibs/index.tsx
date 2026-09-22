@@ -1,3 +1,6 @@
+import { clampPageSize } from "@constants/dataGrid/pagination";
+import { pageTitle } from "@helpers/pageTitle";
+import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -34,6 +37,7 @@ import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/bibs/")({
+	head: () => ({ meta: [{ title: pageTitle("nav.bibs.title") }] }),
 	component: RouteComponent,
 });
 
@@ -199,7 +203,7 @@ function RouteComponent() {
 				query:
 					processGridFilterModel(debouncedFilterModel, baseQuery, ["title"]) ??
 					"",
-				pagesize: paginationModel.pageSize ?? 200,
+				pagesize: clampPageSize(paginationModel.pageSize),
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "dateUpdated",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
@@ -250,6 +254,7 @@ function RouteComponent() {
 
 	return (
 		<>
+			<Typography variant="h1">{t("nav.bibs.title")}</Typography>
 			{
 				<DataGrid
 					disablePivoting
@@ -258,6 +263,7 @@ function RouteComponent() {
 					columnVisibilityModel={columnVisibilityModel}
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
 					type="bibs"
+					label={t("nav.bibs.title")}
 					identifier="bibs"
 					checkboxSelection={false}
 					disableAggregation={true}
@@ -292,7 +298,6 @@ function RouteComponent() {
 					severityType="warning"
 					// variant="filled"
 					// sx={{ width: "100%" }}
-					autoHideDuration={6000}
 					alertText={
 						t("ui.feedback.error.cannot_process") ||
 						"We could not process that operation, so we have reset the data grid options."

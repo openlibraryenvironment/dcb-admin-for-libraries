@@ -1,3 +1,4 @@
+import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
 import { useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -85,8 +86,9 @@ export const useClusterDetail = (
 	const itemsQuery = useQuery<CombinedItemsData>({
 		queryKey: ["combinedItems", recordId],
 		queryFn: fetchCombinedItems,
+		// Up to TWO fan-outs per attempt, so the retry ceiling matters twice over.
+		...AVAILABILITY_QUERY_POLICY,
 		enabled: shouldFetchItems && !!token && !!apiBase && !!recordId,
-		staleTime: 1000 * 60 * 5,
 	});
 
 	const itemsNotShown = useMemo(() => {

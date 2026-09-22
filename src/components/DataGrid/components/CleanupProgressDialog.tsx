@@ -80,7 +80,7 @@ export const CleanupProgressDialog = ({
 
 	return (
         <Dialog open={open} fullWidth maxWidth="sm">
-            <DialogTitle variant="modalTitle">
+            <DialogTitle id="progressOfCleanup" variant="modalTitle">
 				{isCleaning
 					? t("patron_request.cleanup_in_progress")
 					: t("patron_request.cleanup_complete")}
@@ -146,6 +146,7 @@ export const CleanupProgressDialog = ({
 											onFilterModelChange={(newModel) =>
 												setCleanupFilterModel(successCleanupGridId, newModel)
 											}
+											label={t("patron_request.cleanup_succeeded")}
 											identifier={successCleanupGridId}
 											pagination
 											paginationMode="client"
@@ -213,6 +214,7 @@ export const CleanupProgressDialog = ({
 										onFilterModelChange={(newModel) =>
 											setCleanupFilterModel(failedCleanupGridId, newModel)
 										}
+										label={t("patron_request.cleanup_failed")}
 										identifier={failedCleanupGridId}
 										pagination
 										paginationMode="client"
@@ -276,6 +278,7 @@ export const CleanupProgressDialog = ({
 										onFilterModelChange={(newModel) =>
 											setCleanupFilterModel(skippedCleanupGridId, newModel)
 										}
+										label={t("patron_request.cleanup_skipped")}
 										identifier={skippedCleanupGridId}
 										pagination
 										paginationMode="client"

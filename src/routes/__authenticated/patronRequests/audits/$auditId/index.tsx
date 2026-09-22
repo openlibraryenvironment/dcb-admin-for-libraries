@@ -1,3 +1,7 @@
+import { useClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
+import { Attribute } from "@components/Attribute/Attribute";
+import { pageTitle } from "@helpers/pageTitle";
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
@@ -14,7 +18,6 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import request from "graphql-request";
-import dayjs from "dayjs";
 import { useAuth } from "react-oidc-context";
 import { useMemo } from "react";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
@@ -31,11 +34,13 @@ import { getAuditsByPatronRequest } from "@queries/getAuditByPatronRequest";
 export const Route = createFileRoute(
 	"/__authenticated/patronRequests/audits/$auditId/"
 )({
+	head: () => ({ meta: [{ title: pageTitle("audit.title") }] }),
 	component: AuditDetailsComponent,
 });
 
 function AuditDetailsComponent() {
 	const { t } = useTranslation();
+	const clock = useClock();
 	const navigate = useNavigate();
 	const auth = useAuth();
 
@@ -199,56 +204,43 @@ function AuditDetailsComponent() {
 				<Typography variant="h1">{audit?.id}</Typography>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack>
-					<Typography variant="attributeTitle">{t("audit.uuid")}</Typography>
+				<Attribute label={t("audit.uuid")}>
 					<RenderAttribute attribute={audit?.id} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack>
-					<Typography variant="attributeTitle">{t("audit.date")}</Typography>
+				<Attribute label={t("audit.date")}>
 					<RenderAttribute
-						attribute={dayjs(audit?.auditDate).format(
-							"YYYY-MM-DD HH:mm:ss.SSS"
-						)}
+						attribute={formatTimestamp(audit?.auditDate, clock, {
+							precise: true,
+						})}
 					/>
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack>
-					<Typography variant="attributeTitle">
-						{t("audit.description")}
-					</Typography>
+				<Attribute label={t("audit.description")}>
 					<RenderAttribute attribute={audit?.briefDescription} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack>
-					<Typography variant="attributeTitle">
-						{t("audit.from_status")}
-					</Typography>
+				<Attribute label={t("audit.from_status")}>
 					<RenderAttribute attribute={audit?.fromStatus} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack>
-					<Typography variant="attributeTitle">
-						{t("audit.to_status")}
-					</Typography>
+				<Attribute label={t("audit.to_status")}>
 					<RenderAttribute attribute={audit?.toStatus} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack>
-					<Typography variant="attributeTitle">
-						{t("patron_request.patron_request_uuid")}
-					</Typography>
+				<Attribute label={t("patron_request.patron_request_uuid")}>
 					<RenderAttribute attribute={audit?.patronRequest?.id} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Typography variant="attributeTitle">{t("audit.data")}</Typography>
-				<pre>{JSON.stringify(audit?.auditData, null, 2)}</pre>
+				<Attribute label={t("audit.data")}>
+					<pre>{JSON.stringify(audit?.auditData, null, 2)}</pre>
+				</Attribute>
 			</Grid>
             {/* Navigation Buttons */}
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>

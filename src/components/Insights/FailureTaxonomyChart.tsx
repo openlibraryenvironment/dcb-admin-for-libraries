@@ -1,3 +1,4 @@
+import ChartDataTable from "./ChartDataTable";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, Typography, Skeleton, Box } from "@mui/material";
@@ -27,7 +28,7 @@ export default function FailureTaxonomyChart({
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				<Typography variant="h6" gutterBottom>
+				<Typography variant="h6" component="h2" gutterBottom>
 					{t("insights.charts.failure_taxonomy.title")}
 				</Typography>
 				<Typography variant="body2" color="text.secondary" gutterBottom>
@@ -65,6 +66,11 @@ export default function FailureTaxonomyChart({
 						margin={{ left: 160 }}
 					/>
 				)}
+				<ChartDataTable
+					caption={t("insights.charts.failure_taxonomy.title")}
+					columns={[t("insights.charts.failure_taxonomy.reason"), t("insights.charts.failure_taxonomy.series")]}
+					rows={rows.map((r) => [r.reason, r.count])}
+				/>
 			</CardContent>
 		</Card>
 	);

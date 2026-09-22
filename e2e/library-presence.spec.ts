@@ -2,22 +2,9 @@ import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
- * Administering the library's presence links — §V-11.1.
- *
- * A patron who reaches discovery from a search engine has no route back to opening hours,
- * branches or joining, and no way to say that the search itself is broken. Discovery holds
- * neither fact; this library does, and its footer renders both (§V-11.2). This is where
- * they are typed in.
- *
- * Two fields with two different thresholds, which is the part worth gating:
- *
- *  - `patronWebsite` has been on Library since 5.11.1, so it is selected unconditionally
- *    and needs no flag. It was already fetched and displayed; it was never editable.
- *  - `supportUrl` arrived in V9_0_008, after the 9.0.0 tag, so it is behind its own flag.
- *    legacy-service.spec.ts holds the other end of that: 8.71.0 is never asked for it.
- *
- * The document shape is gated in src/queries/schemaConformance.test.ts. What is only
- * provable here is that the fields render, are named, and refuse what dcb-service refuses.
+ * The library's presence links - V-11.1. Two fields with two different
+ * thresholds: patronWebsite is unconditional since 5.11.1, supportUrl arrived
+ * in V9_0_008 and is flagged. docs/service-compatibility.md.
  */
 
 const STATS = { patronRequests: { totalSize: 42 } };

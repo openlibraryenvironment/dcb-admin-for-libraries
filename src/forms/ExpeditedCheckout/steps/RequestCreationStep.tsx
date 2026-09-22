@@ -9,7 +9,6 @@ import {
 	Typography,
 } from "@mui/material";
 import { TFunction } from "i18next";
-import { isEmpty } from "lodash";
 import {
 	Control,
 	Controller,
@@ -56,59 +55,6 @@ export const RequestCreationStep = ({
 			<Typography>
 				{t("requesting.expedited_checkout.steps.request_creation_instruction")}
 			</Typography>
-			{/* Do a pre-selected entry for the item library */}
-			{/* <Controller
-				name="itemAgencyCode"
-				control={control}
-				render={({ field: { onChange, value } }) => (
-					<Autocomplete
-						value={
-							value
-								? itemLibraryOptions.find((option) => option.value === value) ||
-									null
-								: null
-						}
-						onChange={(_, newValue: PatronRequestAutocompleteOption | null) => {
-							onChange(newValue?.value || "");
-							// Set the Host LMS code ("localSystemCode") also - this now defaults only to the agency's Host LMS code.
-							setValue("itemLocalSystemCode", newValue?.hostLmsCode ?? "");
-						}}
-						options={itemLibraryOptions}
-						getOptionLabel={(option: PatronRequestAutocompleteOption) =>
-							option.label
-						}
-						renderInput={(params) => (
-							<TextField
-								{...params}
-								margin="normal"
-								required
-								fullWidth
-								id="itemAgencyCode"
-								label={t("requesting.staff_request.patron.item_library")}
-								error={!!errors.itemAgencyCode}
-								helperText={errors.itemAgencyCode?.message}
-								slotProps={{
-									input: {
-										...params.slotProps.input,
-										endAdornment: (
-											<>
-												{itemLibrariesLoading ? (
-													<CircularProgress color="inherit" size={20} />
-												) : null}
-												{params.slotProps.input.endAdornment}
-											</>
-										),
-									},
-								}}
-							/>
-						)}
-						isOptionEqualToValue={(option, value) =>
-							option.value === value.value
-						}
-						loading={itemLibrariesLoading}
-					/>
-				)}
-			/> */}
 			<Controller
 				name="pickupLocationId"
 				control={control}
@@ -160,7 +106,7 @@ export const RequestCreationStep = ({
 						getOptionLabel={(option: PatronRequestAutocompleteOption) =>
 							option.label
 						}
-						disabled={isEmpty(itemAgencyCode)}
+						disabled={!itemAgencyCode}
 						renderInput={(params) => (
 							<TextField
 								{...params}

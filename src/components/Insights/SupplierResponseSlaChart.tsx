@@ -1,3 +1,4 @@
+import ChartDataTable from "./ChartDataTable";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, Typography, Skeleton, Box } from "@mui/material";
@@ -33,7 +34,7 @@ export default function SupplierResponseSlaChart({
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				<Typography variant="h6" gutterBottom>
+				<Typography variant="h6" component="h2" gutterBottom>
 					{t("insights.charts.supplier_response.title")}
 				</Typography>
 				<Typography variant="body2" color="text.secondary" gutterBottom>
@@ -79,6 +80,11 @@ export default function SupplierResponseSlaChart({
 						margin={{ left: 140 }}
 					/>
 				)}
+				<ChartDataTable
+					caption={t("insights.charts.supplier_response.title")}
+					columns={[t("insights.charts.supplier_reliability.supplier"), t("insights.charts.supplier_response.axis_hours")]}
+					rows={rows.map((r) => [r.supplierCode, Math.round((r.medianResponseSeconds / 3600) * 10) / 10])}
+				/>
 			</CardContent>
 		</Card>
 	);

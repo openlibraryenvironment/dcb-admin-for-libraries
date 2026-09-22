@@ -9,26 +9,12 @@ import {
 import { isDiscoveryActive } from "@helpers/featureFlags";
 
 /**
- * Whether to offer the brand image upload control — R-17b.
+ * Whether to offer the brand image upload control - R-17b.
  *
- * A deployment with `dcb.branding.assets.store=none` has no upload route at all, so the
- * button could only ever 404. dcb-service publishes the fact on `/info` precisely so this
- * decision can be made before the administrator has picked a file.
- *
- * <h2>The default is available, not unavailable</h2>
- *
- * Every path that does not produce an explicit "none" — request in flight, request failed,
- * no API base configured, a service older than the branding block — resolves to true. That
- * is deliberate: hiding the control would remove a working feature whenever /info is
- * briefly unreachable, with nothing on screen to explain it, whereas showing it costs a
- * clear refusal at Save that dcb-service already writes. Hiding a button is UX here, not
- * authorisation — the role check on the upload route is the control.
- *
- * <h2>Two hours</h2>
- *
- * The asset store is deployment configuration; it changes when the service is redeployed
- * and not otherwise. Matching dcb-admin-ui's /info cadence rather than re-asking on every
- * mount of the library form.
+ * UNKNOWN IS AVAILABLE: anything short of an explicit "none" resolves to true,
+ * because hiding the control when /info is briefly unreachable removes a
+ * working feature with nothing on screen to explain it. Two hours, because the
+ * asset store changes only on redeploy. docs/branding.md.
  */
 const INFO_STALE_TIME = 2 * 60 * 60 * 1000;
 

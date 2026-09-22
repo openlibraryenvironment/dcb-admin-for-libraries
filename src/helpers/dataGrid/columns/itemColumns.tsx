@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import { formatDate } from "@helpers/formatters";
 import i18n from "@/i18n";
 import {
 	GridColDef,
@@ -86,7 +86,7 @@ export const itemColumns: GridColDef[] = [
 		sortable: true,
 		valueGetter: (value: any, row: { dueDate: string | null }) => {
 			const dateDue = row?.dueDate;
-			return dateDue ? dayjs(dateDue).format("YYYY-MM-DD") : "-";
+			return dateDue ? formatDate(dateDue) : "-";
 		},
 	},
 	{
@@ -99,7 +99,7 @@ export const itemColumns: GridColDef[] = [
 		sortable: true,
 		valueGetter: (value: any, row: { availabilityDate: string | null }) => {
 			const dateAvailable = row?.availabilityDate;
-			return dateAvailable ? dayjs(dateAvailable).format("YYYY-MM-DD") : "-";
+			return dateAvailable ? formatDate(dateAvailable) : "-";
 		},
 	},
 	{

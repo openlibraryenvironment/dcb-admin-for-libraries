@@ -1,3 +1,4 @@
+import { formatPercent } from "@helpers/formatters";
 import { ReactNode } from "react";
 import {
 	Card,
@@ -45,7 +46,14 @@ export default function KpiTile({
 	return (
 		<Card variant="outlined" sx={{ height: FIXED_HEIGHT }}>
 			<CardContent>
-				<Typography variant="subtitle2" color="text.secondary" gutterBottom>
+				{/* component, because MUI maps subtitle2 to h6 by default and this is a
+				    LABEL for the figure below it, not a section heading - it put an
+				    h6 straight after the page h1. */}
+				<Typography
+					variant="subtitle2"
+					component="p"
+					color="text.secondary"
+					gutterBottom>
 					{title}
 				</Typography>
 				{loading ? (
@@ -71,7 +79,7 @@ export default function KpiTile({
 									) : (
 										<ArrowDropDown fontSize="small" />
 									)}
-									{Math.abs(deltaPct as number).toFixed(1)}%
+									{formatPercent(Math.abs(deltaPct as number))}
 								</Typography>
 							)}
 							{subtitle && (

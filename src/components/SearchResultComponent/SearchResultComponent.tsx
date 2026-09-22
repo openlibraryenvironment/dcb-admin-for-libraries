@@ -1,3 +1,4 @@
+import { SearchInstance } from "@models/SearchTypes";
 import { useItemAvailability } from "@/hooks/useItemAvailability";
 import { CustomLink } from "@components/CustomLink";
 import { Button, CardActions, Link, Tooltip } from "@mui/material";
@@ -6,7 +7,6 @@ import Skeleton from "@mui/material/Skeleton";
 import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { GridRenderCellParams } from "@mui/x-data-grid-premium";
 import { useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -21,8 +21,8 @@ import {
 } from "@mui/icons-material";
 
 interface SearchResultProps {
-	params: GridRenderCellParams;
-	// indexCode: string;
+	/** One instance from the shared index. */
+	record: SearchInstance;
 }
 // Key information for this component to display - note that description might change
 // Title, Author, Format, Description, ISBN (or other identifier)
@@ -30,12 +30,9 @@ interface SearchResultProps {
 // Language, No. of available items, Publisher, Top Subjects, Publication Date,, Series etc ..
 // Note that a lot of the above belongs more on the individual record page. Which also needs a re-work and componentisation
 
-// Potential actions
-// One-click request button IF we can check live availability sensibly (to grey it out if no items are available)
-// export const SearchResult = ({ params, indexCode }: SearchResultProps) => {
-export const SearchResult = ({ params }: SearchResultProps) => {
+export const SearchResult = ({ record }: SearchResultProps) => {
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const recordId = params?.row?.id;
+	const recordId = record.id;
 	const { agencyCode: userAgencyCode } = useAgencyCodes();
 
 	const cardRef = useRef<HTMLDivElement | null>(null);
@@ -124,24 +121,7 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 
 	// May end up doing "Available at, X, Y Z", "Present at X, Y, Z"M- available at could have green tick
 
-	// const fetchItemAvailability = useCallback(async () => {
-	// 	const response = await axios.get(
-	// 		`${cfg.VITE_DCB_API_BASE}/items/availability`,
-	// 		{
-	// 			params: {
-	// 				clusteredBibId: recordId,
-	// 			},
-	// 		}
-	// 	);
-	// 	return response.data;
-	// }, [recordId, cfg.VITE_DCB_API_BASE]);
-	// May be best to say "Present at X locations and add tooltip"
-	// Then we can explain the difference
-	// Present at x, available to request at X 'at a glance'
-	// Then go into more detail
 	return (
-        // <Box width="100%" mb={2} p={0} m={0}>
-        // </Box>
         <>
             <Card
 				variant="outlined"
@@ -155,15 +135,19 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 					<Stack direction={"column"} spacing={0.5}>
 						<Typography
 							variant="h6"
+							component="h2"
 							sx={{
-                                color: "var(--mui-palette-primary-searchResultTitle)"
-                            }}>
+								color: "var(--mui-palette-primary-searchResultTitle)",
+							}}>
+							{/* color="inherit", or MUI Link paints this primary.main and
+							    the searchResultTitle token above never reaches the text -
+							    4.48:1 on the dark card. */}
 							<CustomLink
-								// to="/indexes/$indexCode/$recordId"
+								color="inherit"
 								to="/requesting/$recordId"
-								params={{ recordId: params.row.id }}>
-								{/* params={{ indexCode: indexCode, recordId: params.row.id }}> */}
-								{params.row.title}
+								params={{ recordId: record.id }}>
+								{/* params={{ indexCode: indexCode, recordId: record.id }}> */}
+								{record.title}
 							</CustomLink>
 						</Typography>
 						<Typography
@@ -174,7 +158,7 @@ export const SearchResult = ({ params }: SearchResultProps) => {
                                 mb: 2
                             }}>
 							{t("requesting.format", {
-								formats: params.row.sourceTypes?.join(","),
+								formats: record.sourceTypes?.join(","),
 							})}
 						</Typography>
 						<Typography
@@ -184,7 +168,7 @@ export const SearchResult = ({ params }: SearchResultProps) => {
                                 fontWeight: "bold"
                             }}>
 							{t("requesting.contributor", {
-								contributors: params.row.contributors
+								contributors: record.contributors
 									?.map((c: Contributor) => c.name)
 									.join(", "),
 							})}
@@ -196,9 +180,9 @@ export const SearchResult = ({ params }: SearchResultProps) => {
                                 fontWeight: "bold"
                             }}>
 							{t("requesting.publication_date", {
-								publicationDate: params?.row?.publicationDate
-									? params?.row?.publicationDate
-									: params.row.publication
+								publicationDate: record.publicationDate
+									? record.publicationDate
+									: record.publication
 											?.map(
 												(pub: {
 													publisher: string;
@@ -208,7 +192,7 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 											.join(", "),
 							})}
 						</Typography>
-						<Typography variant="body2">{params.row.description}</Typography>
+						<Typography variant="body2">{record.description}</Typography>
 						<Typography
                             variant="body2"
                             sx={{
@@ -216,12 +200,12 @@ export const SearchResult = ({ params }: SearchResultProps) => {
                                 fontWeight: "bold"
                             }}>
 							{t("requesting.isbn", {
-								isbn: params?.row?.isbns
-									? params?.row?.isbns?.map((isbn: string) => isbn).join(", ")
+								isbn: record.isbns
+									? record.isbns?.map((isbn: string) => isbn).join(", ")
 									: t("ui.common.none"),
 							})}
 						</Typography>
-						{params?.row?.issns ? (
+						{record.issns ? (
 							<Typography
                                 variant="body2"
                                 sx={{
@@ -229,8 +213,8 @@ export const SearchResult = ({ params }: SearchResultProps) => {
                                     fontWeight: "bold"
                                 }}>
 								{t("requesting.issn", {
-									issn: params?.row?.issns
-										? params?.row?.issns?.map((issn: string) => issn).join(", ")
+									issn: record.issns
+										? record.issns?.map((issn: string) => issn).join(", ")
 										: t("ui.common.none"),
 								})}
 							</Typography>
@@ -366,25 +350,32 @@ export const SearchResult = ({ params }: SearchResultProps) => {
 					<div style={{ flex: "1 0 0" }} />
 					{/** This needs to be pushed back to the right. Clicking should reveal combined modal */}
 					{/** Combined modal should provide options with explanations and radio buttons */}
-					<Tooltip
-						title={!canRequest ? t("requesting.cannot_request_no_items") : ""}>
-						<span>
-							<Button
-								variant="contained"
-								color="primary"
-								disabled={!canRequest}
-								onClick={() => setShowCombinedModal(true)}>
-								{t("ui.actions.place_request")}
-							</Button>
-						</span>
-					</Tooltip>
+					{/* The reason is TEXT, not a tooltip. A disabled button is not
+					    focusable, so a tooltip on it never reaches a keyboard user and
+					    never reaches a touch user at all - and MUI has to wrap a
+					    disabled child in a <span>, which it then puts aria-label on,
+					    where the attribute does nothing. */}
+					<Stack direction="column" spacing={0.5} sx={{ alignItems: "flex-end" }}>
+						<Button
+							variant="contained"
+							color="primary"
+							disabled={!canRequest}
+							onClick={() => setShowCombinedModal(true)}>
+							{t("ui.actions.place_request")}
+						</Button>
+						{!canRequest ? (
+							<Typography variant="body2" color="text.secondary">
+								{t("requesting.cannot_request_no_items")}
+							</Typography>
+						) : null}
+					</Stack>
 				</CardActions>
 			</Card>
             <CombinedRequestingModal
 				show={showCombinedModal}
 				onClose={() => setShowCombinedModal(false)}
-				bibClusterId={params.row.id}
-				title={params.row.title}
+				bibClusterId={record.id}
+				title={record.title}
 			/>
         </>
     );
