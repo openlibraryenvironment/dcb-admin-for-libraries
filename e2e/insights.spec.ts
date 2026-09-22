@@ -3,19 +3,10 @@ import { READ_ONLY_ROLES } from "./fixtures/auth";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
- * Library insights.
- *
- * Two properties matter here and neither is visible in a screenshot:
- *
- *  1. The page is gated on VITE_FEATURE_INSIGHTS, because it calls statistics
- *     endpoints that only exist in the upcoming dcb-service release. Hiding the
- *     tab is not enough - the URL is typeable.
- *  2. The library it reports on comes from the access token's agency claim, and
- *     from nowhere else. This app has no library picker and must never grow one.
- *     dcb-service's StatsScopeGuard now checks the requested code against the
- *     token rather than trusting it, so a mismatch is refused - but this app must
- *     still never ASK for a library it was not given, because the request it sends
- *     is what a reviewer reads to decide whether the client is honest.
+ * Library insights. Two properties neither of which is visible in a
+ * screenshot: the page is gated on VITE_FEATURE_INSIGHTS because the URL is
+ * typeable, and the library it reports on comes from the token's agency claim
+ * and nowhere else. docs/service-compatibility.md.
  */
 
 /**

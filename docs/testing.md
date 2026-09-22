@@ -69,6 +69,120 @@ application. `netstat` is the tell: nothing LISTENING, only `SYN_SENT`. Run
 **A failure count that changes between runs** is not a defect in the diff.
 Confirm with `--workers=1` before believing it.
 
+## The accessibility gate
+
+`e2e/accessibility.spec.ts` is where WCAG 2.2 AA is enforced rather than
+asserted: zero axe violations on every listed surface, in **both** colour
+schemes, because a palette that passes in light routinely fails in dark. It
+also asserts axe's *incomplete* results, minus a small documented set that axe
+cannot decide.
+
+Automated rules catch roughly a third of WCAG failures, so this is a floor and
+not a certificate — keyboard completeness, focus order and announcement still
+need a person. What it guarantees is that no change silently reintroduces a
+contrast, name, role or landmark failure.
+
+Adding a page means adding it to `PAGES`. That is the whole cost, deliberately,
+because a gate people route around is worse than no gate.
+
+### Revealing a page before scanning it
+
+Surfaces with content behind an `IntersectionObserver` are scrolled until a
+named locator exists, **polled rather than stepped a fixed number of times**.
+
+A fixed step count is open-loop, and the reveal runs the instant `page.goto`
+resolves: under parallel load the document at that moment is shorter than the
+viewport, so every step is spent against a page with nothing to scroll, the
+panels mount below the fold afterwards, and no observer ever fires. The gate
+then scanned the KPI header and the trend chart alone — eleven headings out of
+twenty-five — and reported no violations over the fifteen panels it exists to
+cover. Observed at ten concurrent workers; CI at `workers: 1` rendered fast
+enough to hide it.
+
+Polling costs nothing while the page is still empty and starts doing work the
+moment there is any. One viewport per pass, not a jump to the bottom: an
+observer whose sentinel never crosses the viewport never fires, and the
+interval is what gives each newly mounted panel a frame to paint and a fetch to
+land.
+
+The locator used is the **last** panel, and one that renders unconditionally —
+a panel that hides itself when empty could be satisfied vacuously.
+
+## The harness
+
+Every spec imports `test` and `expect` from `e2e/fixtures/test.ts` rather than
+from `@playwright/test`, so that:
+
+- runtime config is always injected, and no spec can accidentally reach a real
+  host or has to remember the boilerplate;
+- signing in, mocking and choosing a colour scheme are one call each, in the
+  order the app requires — all of them install init scripts, so they must run
+  before the first navigation;
+- the accessibility assertion is the same assertion everywhere, which is what
+  makes it a gate rather than a habit.
+
+Adding a spec should mean writing assertions, not wiring.
+
+### Mocking
+
+GraphQL dispatches on **`operationName`** — the name in the `gql` template, not
+the exported constant. Getting that wrong produces a handler that never matches
+and a page that never renders. The statistics API is REST and dispatches on the
+path segment after `insights/`, mirroring it.
+
+**An unmocked call is aborted, not continued.** The fake API host does not
+resolve, so continuing means a 30-second DNS wait per call; aborting fails the
+query immediately. The application's own handler turns a failed fetch into a
+redirect to `/networkError`, so a spec that misses an operation lands there
+rather than on the page it meant to test — that is the symptom to recognise.
+
+**The statistics defaults are populated rather than empty**, on purpose. An
+empty response renders the "no data" placeholder, which would let the
+accessibility gate pass without ever drawing a chart — and chart series
+contrast in dark mode is exactly the kind of failure the gate exists to catch.
+
+## Base-path specs
+
+The base belongs to exactly one owner: TanStack Router. It strips the base off
+`window.location` on the way in, so `useLocation().pathname` is `/requesting`,
+and adds it back on the way out, so `<Link to="/requesting">` renders
+`href="/dcb-admin-for-libraries/requesting"`.
+
+Any code that prefixes the base itself before handing a value to `to`, or that
+compares a base-prefixed string against `pathname`, counts the base twice. That
+produced a doubled segment and a "Not Found" on click, and a tab strip with no
+indicator because nothing ever matched.
+
+`e2e-base-path/navigation.spec.ts` asserts **literal deployed paths** for that
+reason: a helper that built the expected URL from the same base string would be
+capable of doubling it too, and would agree with the bug.
+
+## The translation-key gate
+
+i18next does not throw on a missing key — it renders the key itself, so
+`ui.data_grid.export_all_csv` appears on the export menu in front of a
+librarian. It type-checks, it lints, and it only shows up if someone happens to
+open that screen. `tests/translationKeys.test.ts` is the only thing that
+catches it.
+
+Its limits are deliberate: literal keys only, since `t(`a.${b}`)` cannot be
+checked statically; a call carrying an inline English default is satisfied,
+because it renders correct text and is a coverage question for
+`npm run i18n:missed` rather than a broken screen; and comments are stripped
+first, so a key inside commented-out code is not a finding.
+
+## The route error boundary
+
+`e2e/route-error.spec.ts` fails a route chunk on purpose. That is not a
+contrivance: `autoCodeSplitting` gives every route its own chunk, so a stale
+client left open across a deploy asks for a hashed filename the server no
+longer has, and the boundary is what stands between that and a white screen.
+
+It is also the only route-level throw this app can produce on demand. There are
+no route loaders outside insights, and every `validateSearch` schema uses
+`.catch()`, so a hand-typed URL cannot crash a route either. That is by design;
+it just means the chunk is the honest way in.
+
 ## Preview ports
 
 Every gate here runs against a `vite preview`, and Playwright's

@@ -9,18 +9,10 @@ import { useColorScheme, type ColorScheme } from "./color-scheme";
 import { analyse, formatViolations } from "./axe";
 
 /**
- * The app harness. Every spec imports `test` and `expect` from here rather than
- * from @playwright/test, so that:
- *
- *  - runtime config is always injected (no spec can accidentally hit a real
- *    host, and none has to remember the boilerplate);
- *  - signing in, mocking GraphQL and choosing a colour scheme are one call each,
- *    in the order the app requires (all of them install init scripts, so they
- *    must run before the first navigation);
- *  - the accessibility assertion is the same assertion everywhere, which is
- *    what makes it a gate rather than a habit.
- *
- * Adding a new spec should mean writing assertions, not wiring.
+ * The app harness. Every spec imports `test` and `expect` from here, so that
+ * runtime config is always injected and the accessibility assertion is the
+ * same assertion everywhere. Adding a spec should mean writing assertions,
+ * not wiring. docs/testing.md.
  */
 export interface AppFixture {
 	/** Seed an authenticated session. Call before goto. */

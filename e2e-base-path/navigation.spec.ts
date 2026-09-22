@@ -4,18 +4,9 @@ import library from "../e2e/fixtures-data/library.json" with { type: "json" };
 /**
  * Navigation with the app mounted under a path prefix.
  *
- * The base belongs to exactly one owner: TanStack Router. It strips the base off
- * window.location on the way in, so `useLocation().pathname` is "/requesting",
- * and it adds the base back on the way out, so `<Link to="/requesting">` renders
- * href="/dcb-admin-for-libraries/requesting". Any code that prefixes the base
- * itself before handing a value to `to`, or that compares a base-prefixed string
- * against `pathname`, is counting the base twice - which produced a doubled
- * segment and a "Not Found" on click, and a tab strip with no indicator because
- * nothing ever matched.
- *
- * These assertions are written against the literal deployed paths for that
- * reason: a helper that built the expected URL from the same base string would
- * be capable of doubling it too, and would agree with the bug.
+ * TanStack Router owns the base and adds it back itself, so these assert
+ * LITERAL deployed paths: a helper that built them from the same base string
+ * could double it too, and would agree with the bug. docs/testing.md.
  */
 const BASE = "/dcb-admin-for-libraries";
 

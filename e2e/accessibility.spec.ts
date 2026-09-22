@@ -8,18 +8,9 @@ import {
 } from "./fixtures/color-scheme";
 
 /**
- * The accessibility gate. WCAG 2.2 AA is the floor, and this is where it is
- * enforced rather than asserted: zero axe violations on every surface below, in
- * BOTH colour schemes, because a palette that passes in light routinely fails
- * in dark.
- *
- * Automated rules catch roughly a third of WCAG failures. This gate is a floor,
- * not a certificate - keyboard completeness, focus order and announcement still
- * need a human. What it does guarantee is that no change silently reintroduces
- * a contrast, name, role or landmark failure.
- *
- * Adding a page: add it to PAGES. That is the whole cost, and it is meant to be
- * that low, because a gate people route around is worse than no gate.
+ * The accessibility gate: zero axe violations on every surface in PAGES, in
+ * both colour schemes. Adding a page means adding it here, and that is meant
+ * to be the whole cost. What it does and does not prove: docs/testing.md.
  */
 
 /**
@@ -48,34 +39,19 @@ interface Surface {
 }
 
 /**
- * Step down the page until `locator` exists, so everything deferred behind an
- * IntersectionObserver has mounted before axe scans.
- *
- * Driven by the thing it is trying to reveal rather than by a step count. A fixed
- * number of steps is open-loop, and this reveal runs the instant `page.goto`
- * resolves: under parallel load the document at that moment is shorter than the
- * viewport, so every step is spent against a page with nothing to scroll, the
- * panels render below the fold afterwards, and no observer ever fires. The gate
- * then scanned the KPI header and the trend chart alone - eleven headings out of
- * twenty-five - and reported no violations over the fifteen panels it exists to
- * cover. Observed at ten concurrent workers; CI (workers: 1) rendered fast enough
- * to hide it.
- *
- * Polling fixes that because a pass costs nothing while the page is still empty
- * and starts doing work the moment there is any. One viewport per pass, not a
- * jump to the bottom: an observer whose sentinel never crosses the viewport never
- * fires, and the poll interval is what gives each newly mounted panel a frame to
- * paint and a fetch to land before the next step.
- */
-/**
- * The last panel on the insights page, and the only one whose presence proves the
- * deferred half actually mounted. RareGemPanel is unconditional, so unlike a
- * panel that hides itself when empty this cannot be satisfied vacuously, and its
- * title renders outside its own loading branch so it appears on mount rather than
- * on fetch.
+ * The last panel on the insights page, and unconditional - so unlike a panel
+ * that hides itself when empty, its presence cannot be satisfied vacuously.
+ * Its title renders outside its own loading branch, so it appears on mount
+ * rather than on fetch.
  */
 const RARE_GEM = "Unique collection value";
 
+/**
+ * Steps down the page until `locator` exists, so everything behind an
+ * IntersectionObserver has mounted before axe scans. POLLED rather than a
+ * fixed number of steps, and one viewport per pass: the failure both of those
+ * avoid is in docs/testing.md.
+ */
 async function scrollUntilPresent(
 	page: import("@playwright/test").Page,
 	locator: import("@playwright/test").Locator,
