@@ -1027,6 +1027,10 @@
 	"settings": {
 		"customisation": "Customisation",
 		"dark_mode": "Dark mode",
+		"language": {
+			"en": "English",
+			"es": "Spanish"
+		},
 		"library": "Library",
 		"light_mode": "Light mode",
 		"system_mode": "System mode",
