@@ -71,10 +71,38 @@ Confirm with `--workers=1` before believing it.
 
 ## Preview ports
 
-One port per repo per gate, `41<gate><repo>`, and always `--strictPort`.
-Playwright's `reuseExistingServer` is on whenever `CI` is not set, so a preview
-left running by a sibling repo will silently serve this one's test run. The
-allocation table is in `playwright.config.ts`.
+Every gate here runs against a `vite preview`, and Playwright's
+`reuseExistingServer` is on whenever `CI` is not set. That option does what it
+says: if something is already listening on the port, it does **not** start a
+server, it uses that one. Three front-end repos in this workspace all defaulting
+to 4173 and 4174 therefore meant a preview left running by one repo silently
+served another repo's test run.
 
-This repo uses 4174 (e2e), 4184 (bootloader), 4194 (Lighthouse) and 4204
-(base path).
+That is not hypothetical. It produced a `symposia-ui` suite running against
+`dcb-admin-for-libraries` and redirecting to that app's Keycloak client; a
+bootloader gate reporting 1 of 4 tests because it met a root-based build where
+it needed a prefixed one; and a Lighthouse run reporting 9753ms against 4147ms,
+which reads exactly like a performance regression. Each cost a false diagnosis
+first.
+
+So the number says which repo and which gate — `41<gate><repo>`:
+
+| | e2e | bootloader | Lighthouse | base-path |
+|---|---|---|---|---|
+| `dcb-admin-ui` | 4173 | 4183 | 4193 | — |
+| **this repo** | **4174** | **4184** | **4194** | **4204** |
+| `symposia-ui` | 4175 | 4185 | 4195 | — |
+
+The e2e column is the allocation: one memorable primary port per repo. The
+bands exist because a repo has more than one gate — this one uses all four — so
+one port per repo would have left a repo's gates colliding with *themselves*.
+That is the harder failure to spot, because it does not look like a collision:
+the second gate simply measures whatever the first one left running, and
+reports a number that is wrong rather than an error that is obvious.
+
+**Always `--strictPort`.** Without it vite does not fail when a port is taken,
+it quietly increments to the next free one — which is a neighbour's, and
+defeats the allocation entirely.
+
+Adding a gate means taking the next free band for this repo's digit and adding
+it to the table above *and* to `doctrine/fragments/workspace.md`.
