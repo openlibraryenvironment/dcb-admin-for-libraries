@@ -85,10 +85,6 @@ function RouteComponent() {
 		[auth.user?.access_token],
 	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-	// const [auditPaginationModel, setAuditPaginationModel] = useState({
-	// 	page: 0,
-	// 	pageSize: 25,
-	// });
 	const auditGridId = `audit-log-${id}`; // Unique ID for each request
 	const {
 		paginationModel: auditPaginationModel,

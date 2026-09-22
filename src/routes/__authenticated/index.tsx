@@ -81,7 +81,6 @@ function hasChanged(next: unknown, current: unknown): boolean {
 function HomeComponent() {
 	const auth = useAuth();
 	const { t } = useTranslation();
-	// console.log(auth);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
 
@@ -99,7 +98,6 @@ function HomeComponent() {
 	const firstEditableFieldRef = useRef<HTMLInputElement>(null);
 	const [changedFields, setChangedFields] = useState<Partial<Library>>({});
 	const saveButtonRef = useRef<HTMLButtonElement>(null);
-	// const FEEDBACK_LINK = "https://forms.gle/pc5yVDufGRdrGz6Y7";
 	const handleCancel = () => {
 		setEditMode(false);
 		setChangedFields({});
@@ -272,7 +270,6 @@ function HomeComponent() {
 			setChangedFields({});
 			setEditMode(false);
 			refetch();
-			// console.log(data);
 			setAlert({
 				open: true,
 				severity: "success",
@@ -492,20 +489,6 @@ function HomeComponent() {
 					})}
 				</Typography>
 			</Grid>
-            {/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography>
-					<Trans
-						i18nKey="welcome.background"
-						values={{
-							library: library?.fullName,
-							name: auth.user?.profile?.name,
-						}}
-						components={{
-							linkComponent: <Link href={FEEDBACK_LINK} />,
-						}}
-					/>
-				</Typography>
-			</Grid> */}
             {editingEnabled ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 					<>

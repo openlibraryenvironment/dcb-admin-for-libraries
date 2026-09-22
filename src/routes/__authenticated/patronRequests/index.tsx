@@ -61,7 +61,6 @@ export const Route = createFileRoute("/__authenticated/patronRequests/")({
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	// const navigate = useNavigate();
 	const auth = useAuth();
 	const apiRef = useGridApiRef();
 	const { cfg } = useRouter().options.context as { cfg: any };
@@ -94,12 +93,6 @@ function RouteComponent() {
 		columnVisibility: storedColumnVisibilityModel[gridId],
 	};
 
-	// const [alert, setAlert] = useState<AlertObject>({
-	// 	open: false,
-	// 	severity: "success",
-	// 	text: "",
-	// 	title: "",
-	// });
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
 			storedState.pagination ?? { page: 0, pageSize: 25 },
@@ -115,7 +108,6 @@ function RouteComponent() {
 		text: null,
 	});
 
-	// const [snackbarOpen, setSnackbarOpen] = useState(false);
 
 	const handleSnackbarClose = (
 		event?: React.SyntheticEvent | Event,

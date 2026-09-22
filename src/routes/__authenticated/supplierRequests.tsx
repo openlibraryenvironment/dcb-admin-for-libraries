@@ -107,12 +107,6 @@ function RouteComponent() {
 			(filterModel.quickFilterValues &&
 				filterModel.quickFilterValues.length > 0);
 
-		// const hasActiveDebounceFilters =
-		// 	debouncedFilterModel.items.some(
-		// 		(item) => item.value && item.value !== "" && item.value !== null
-		// 	) ||
-		// 	(debouncedFilterModel.quickFilterValues &&
-		// 		debouncedFilterModel.quickFilterValues.length > 0);
 
 		const isDifferent =
 			JSON.stringify(filterModel) !== JSON.stringify(debouncedFilterModel);

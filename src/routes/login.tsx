@@ -15,21 +15,9 @@ const Login = () => {
 	const auth = useAuth();
 	const { t } = useTranslation();
 
-	// If user is already authenticated, redirect to home page
 	// Retrieve the redirect path from the URL search parameters.
 	const { redirect } = Route.useSearch();
 
-	// If the user is already authenticated, redirect them to their intended page
-	// or the dashboard. This handles cases where a logged-in user navigates to /login.
-	// useEffect(() => {
-	// 	// console.log(redirect);
-	// 	console.log("Auth: ", auth);
-	// 	if (auth.isAuthenticated) {
-	// 		console.log(redirect);
-	// 		navigate({ to: redirect || "/" });
-	// 	}
-	// }, [auth.isAuthenticated, navigate, redirect]);
-	// Still need to handle this case but this should stop it causing problems.
 
 	const handleLogin = () => {
 		// Store current location. Namespaced: sibling apps on this origin share one

@@ -15,7 +15,6 @@ import { Contributor, Note } from "@models/ClusterDetailResponse";
 import { useTranslation } from "react-i18next";
 import Loading from "../../components/Loading/Loading";
 import Error from "../../components/Error/Error";
-// import { Route } from "@/routes/__authenticated/indexes/$indexCode/$recordId";
 import { Route } from "@/routes/__authenticated/requesting/$recordId";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import { useClusterDetail } from "@/hooks/useClusterDetail";

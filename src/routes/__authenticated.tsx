@@ -56,32 +56,7 @@ const AuthenticatedLayout = () => {
 		</Layout>
 	);
 };
-// role prohibition here
 export const Route = createFileRoute("/__authenticated")({
-	// beforeLoad: ({ context, location }) => {
-	// 	// We should be able to get the auth from router context
-	// 	// And then sub in roles
-	// 	// Then we can check for READ_ONLY
-	// 	const user = context?.auth?.user;
-	// 	console.log(context);
-	// 	console.log(user);
-	// 	const roles = user?.profile?.roles;
-	// 	console.log(context?.auth?.user);
-	// 	console.log(roles);
-	// 	const isReadOnly = roles?.includes("LIBRARY_READ_ONLY");
-
-	// 	// We need to work out the path the user is trying to access here.
-	// 	const isTryingToAccessAllowedPage =
-	// 		location.pathname.startsWith("/indexes/");
-
-	// 	// If the user is read-only AND is trying to go anywhere that is not requesting, redirect
-	// 	if (isReadOnly && !isTryingToAccessAllowedPage) {
-	// 		throw redirect({
-	// 			to: "/indexes/mobius",
-	// 			replace: true,
-	// 		});
-	// 	}
-	// },
 	component: withAuthenticationRequired(AuthenticatedLayout, {
 		onBeforeSignin: () => {
 			// Namespaced: sibling apps share one sessionStorage on this origin.

@@ -1,23 +1,9 @@
-// import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { pageTitle } from "@helpers/pageTitle";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import Typography from "@mui/material/Typography";
 export const Route = createFileRoute("/__authenticated/contacts")({
-	// beforeLoad: ({ context, location }) => {
-	// 	// If the user is not authenticated, redirect them to the login page.
-	// 	// We pass the current path as a 'redirect' search parameter.
-	// 	// WIP - commented out for testing purposes
-	// 	if (!context.auth.isAuthenticated) {
-	// 		throw redirect({
-	// 			to: "/login",
-	// 			search: {
-	// 				redirect: location.href,
-	// 			},
-	// 		});
-	// 	}
-	// },
 	head: () => ({ meta: [{ title: pageTitle("nav.contacts.title") }] }),
 	component: RouteComponent,
 });

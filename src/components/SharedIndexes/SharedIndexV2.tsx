@@ -4,7 +4,6 @@ import axios from "axios";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAuth } from "react-oidc-context";
 import Box from "@mui/material/Box";
-// import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import List from "@mui/material/List";
@@ -23,7 +22,6 @@ import {
 	MenuItem,
 } from "@mui/material";
 
-// import { Route } from "@/routes/__authenticated/requesting";
 import { AdvancedSearchFilter } from "./AdvancedSearchFilter";
 import {
 	SearchField,
@@ -65,7 +63,6 @@ const createDefaultFilter = (): SearchFilter => ({
 });
 
 export function SharedIndexV2() {
-	// const { indexCode } = Route.useParams();
 	const auth = useAuth();
 	const router = useRouter();
 	const { cfg } = router.options.context as { cfg: any };
@@ -94,7 +91,6 @@ export function SharedIndexV2() {
 	};
 
 	const handlePaginationModelChange = (newModel: GridPaginationModel) => {
-		// setPaginationModel(newModel);
 		router.navigate({
 			to: "/requesting",
 			// params: { indexCode: indexCode },
@@ -209,7 +205,6 @@ export function SharedIndexV2() {
 				return { instances: [], totalRecords: 0 };
 			}
 
-			// console.log("Generated Query:", query);
 			let url: string;
 			let params: Record<string, any>;
 
@@ -237,19 +232,6 @@ export function SharedIndexV2() {
 				params: params,
 			});
 
-			// const response = await axios.get(
-			// 	`${cfg.VITE_DCB_SEARCH_BASE}/public/search/instances`,
-			// 	{
-			// 		headers: {
-			// 			Authorization: `Bearer ${auth.user?.access_token}`,
-			// 		},
-			// 		params: {
-			// 			query: query, // The query is now directly from the URL
-			// 			offset: paginationModel.page * paginationModel.pageSize,
-			// 			limit: paginationModel.pageSize,
-			// 		},
-			// 	}
-			// );
 			if (isUUID && response.data) {
 				return {
 					instances: [response.data], // Wrap single object in an array
@@ -297,24 +279,6 @@ export function SharedIndexV2() {
 		announce(t("requesting.titles_found", { number: totalRecords }));
 	}, [totalRecords, announce, t]);
 
-	// // Reset pagination when the query changes ???????
-	// useEffect(() => {
-	// 	setPaginationModel((prev) => ({ ...prev, page: 0 }));
-	// }, [queryParam]);
-
-	// if (!indexCode) {
-	// 	return (
-	// 		<Box
-	// 			sx={{
-	// 				display: "flex",
-	// 				justifyContent: "center",
-	// 				alignItems: "center",
-	// 				height: "80vh",
-	// 			}}>
-	// 			<CircularProgress />
-	// 		</Box>
-	// 	);
-	// }
 	// The quick walk up is locked to consortia admin for testing, for now
 	return (
         <Box sx={{ width: "100%" }}>

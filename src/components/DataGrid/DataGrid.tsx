@@ -103,7 +103,6 @@ interface DataGridProps {
 	noResultsText: string;
 	onColumnVisibilityModelChange?: (model: GridColumnVisibilityModel) => void;
 	onFilterModelChange?: (model: GridFilterModel) => void;
-	// onPaginationModelChange: (model: GridPaginationModel) => void;
 	onPaginationModelChange?: any;
 	onRowModesModelChange?: (model: GridRowModesModel) => void;
 	onRowEditStop?: (params: any, event: any) => void;
@@ -119,7 +118,6 @@ interface DataGridProps {
 	rowModesModel: GridRowModesModel;
 	rows: GridRowsProp;
 	scrollbarVisible: boolean;
-	// sortModel: GridSortModel;
 	sortModel?: any;
 	sortingMode: GridFeatureMode;
 	toolbarVisible: boolean;

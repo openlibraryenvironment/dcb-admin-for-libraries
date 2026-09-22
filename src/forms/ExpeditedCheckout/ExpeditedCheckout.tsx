@@ -363,9 +363,6 @@ export default function ExpeditedCheckout({
 			}),
 		) || [];
 
-	// const selectedItem = itemOptions.find(
-	// 	(option) => option.value === itemLocalId,
-	// );
 
 	const rawSelectedItem = itemsData.find((item) => item.id === itemLocalId);
 

@@ -15,9 +15,6 @@ import { useTranslation } from "react-i18next";
 import { RefObject, useCallback, useEffect, useState } from "react";
 import RenderAttribute from "../RenderAttribute/RenderAttribute";
 import MasterDetailLayout from "./MasterDetailLayout";
-// import dayjs from "dayjs";
-// import { formatDuration } from "src/helpers/formatDuration";
-// import ChangesSummary from "@components/ChangesSummary/ChangesSummary";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import ChangesSummary from "../ChangesSummary/ChangesSummary";
 import dayjs from "dayjs";
@@ -48,7 +45,6 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 		);
 	}, [apiRef, handleViewportInnerSizeChange]);
 
-	// const { t } = useTranslation();
 
 	switch (type) {
 		case "cluster":

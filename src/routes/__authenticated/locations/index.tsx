@@ -43,7 +43,6 @@ export const Route = createFileRoute("/__authenticated/locations/")({
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	// const navigate = useNavigate();
 	const auth = useAuth();
 
 	const { cfg } = useRouter().options.context as { cfg: any };

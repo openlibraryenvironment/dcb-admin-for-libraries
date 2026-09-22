@@ -34,7 +34,6 @@ export default function ChangesSummary({
 		);
 	}
 	const parsedChanges = JSON.parse(changes);
-	// const { t } = useTranslation();
 
 	let fields: string[] = [];
 	const isUpdate = action === "UPDATE";

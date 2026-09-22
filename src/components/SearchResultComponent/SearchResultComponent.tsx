@@ -23,7 +23,6 @@ import {
 interface SearchResultProps {
 	/** One instance from the shared index. */
 	record: SearchInstance;
-	// indexCode: string;
 }
 // Key information for this component to display - note that description might change
 // Title, Author, Format, Description, ISBN (or other identifier)
@@ -31,9 +30,6 @@ interface SearchResultProps {
 // Language, No. of available items, Publisher, Top Subjects, Publication Date,, Series etc ..
 // Note that a lot of the above belongs more on the individual record page. Which also needs a re-work and componentisation
 
-// Potential actions
-// One-click request button IF we can check live availability sensibly (to grey it out if no items are available)
-// export const SearchResult = ({ params, indexCode }: SearchResultProps) => {
 export const SearchResult = ({ record }: SearchResultProps) => {
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const recordId = record.id;
@@ -125,24 +121,7 @@ export const SearchResult = ({ record }: SearchResultProps) => {
 
 	// May end up doing "Available at, X, Y Z", "Present at X, Y, Z"M- available at could have green tick
 
-	// const fetchItemAvailability = useCallback(async () => {
-	// 	const response = await axios.get(
-	// 		`${cfg.VITE_DCB_API_BASE}/items/availability`,
-	// 		{
-	// 			params: {
-	// 				clusteredBibId: recordId,
-	// 			},
-	// 		}
-	// 	);
-	// 	return response.data;
-	// }, [recordId, cfg.VITE_DCB_API_BASE]);
-	// May be best to say "Present at X locations and add tooltip"
-	// Then we can explain the difference
-	// Present at x, available to request at X 'at a glance'
-	// Then go into more detail
 	return (
-        // <Box width="100%" mb={2} p={0} m={0}>
-        // </Box>
         <>
             <Card
 				variant="outlined"
