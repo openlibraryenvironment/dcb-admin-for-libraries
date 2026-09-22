@@ -1,3 +1,4 @@
+import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -94,9 +95,7 @@ export default function ExpeditedCheckout({
 	const [patronData, setPatronData] = useState<PatronLookupResponse | null>(
 		null,
 	);
-	const [availabilityResults, setAvailabilityResults] = useState<any>({});
-	const [itemsLoading, setItemsLoading] = useState(false);
-	const [itemsError, setItemsError] = useState(false);
+
 	const [patronRequestId, setPatronRequestId] = useState<string | null>(null);
 	const [patronRequestWaiting, setPatronRequestWaiting] = useState(false);
 	const [checkoutCompleted, setCheckoutCompleted] = useState(false);
@@ -290,35 +289,33 @@ export default function ExpeditedCheckout({
 		}
 	}, [staffLibraryHostLmsCode, setValue]);
 
-	// Exactly one attempt, deliberately: a bare axios call does not retry, and a
-	// fan-out to every member LMS is not a request to repeat on a guess. Not a
-	// useQuery like the others because it is driven from an effect, which wants a
-	// test before it is untangled.
-	const fetchRecords = useCallback(async () => {
-		setItemsLoading(true);
-		setItemsError(false);
-		try {
-			const response = await axios.get<any[]>(
+	const {
+		data: availabilityResults,
+		isFetching: itemsLoading,
+		isError: itemsError,
+	} = useQuery({
+		queryKey: [
+			"availability",
+			bibClusterId,
+			headers,
+			cfg.VITE_DCB_API_BASE,
+		],
+		queryFn: async () => {
+			const response = await axios.get(
 				`${cfg.VITE_DCB_API_BASE}/items/availability`,
-				{
-					headers,
-					params: { clusteredBibId: bibClusterId },
-				},
+				{ headers, params: { clusteredBibId: bibClusterId } },
 			);
-			setAvailabilityResults(response.data);
-		} catch {
-			setItemsError(true);
-			setStepError(1);
-		} finally {
-			setItemsLoading(false);
-		}
-	}, [bibClusterId, headers, cfg.VITE_DCB_API_BASE]);
+			return response.data;
+		},
+		...AVAILABILITY_QUERY_POLICY,
+		enabled: (activeStep === 1 || checkoutCompleted) && !!bibClusterId,
+	});
 
+	// The step marker is local state, so a failed fetch still has to be told to
+	// it. Only the failure needs an effect; the fetch itself no longer does.
 	useEffect(() => {
-		if (activeStep === 1 || checkoutCompleted) {
-			fetchRecords();
-		}
-	}, [checkoutCompleted, activeStep, fetchRecords]);
+		if (itemsError) setStepError(1);
+	}, [itemsError]);
 
 	const itemsData: Item[] = availabilityResults?.itemList || [];
 	const filteredItems = itemsData.filter(

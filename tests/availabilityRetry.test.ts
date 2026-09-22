@@ -77,13 +77,8 @@ describe("the availability retry policy", () => {
 	});
 });
 
-/**
- * The policy is only worth having if nothing reaches the endpoint without it.
- * ExpeditedCheckout is excluded by name: it calls axios directly, which does
- * not retry, and its comment says so.
- */
+/** The policy is only worth having if nothing reaches the endpoint without it. */
 describe("every availability query carries the policy", () => {
-	const MANUAL = "src/forms/ExpeditedCheckout/ExpeditedCheckout.tsx";
 
 	const sources = (dir: string): string[] =>
 		readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -99,14 +94,12 @@ describe("every availability query carries the policy", () => {
 	);
 
 	it("finds the call sites, so it cannot pass vacuously", () => {
-		expect(callers.length).toBeGreaterThanOrEqual(4);
-		expect(callers).toContain(MANUAL);
+		expect(callers.length).toBeGreaterThanOrEqual(5);
 	});
 
 	it("spreads AVAILABILITY_QUERY_POLICY into each useQuery that hits it", () => {
 		const missing = callers.filter(
 			(file) =>
-				file !== MANUAL &&
 				!readFileSync(file, "utf8").includes("...AVAILABILITY_QUERY_POLICY"),
 		);
 		expect(missing).toEqual([]);
