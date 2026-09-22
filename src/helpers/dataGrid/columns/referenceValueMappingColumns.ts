@@ -1,8 +1,9 @@
+import { currentClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
 import i18n from "@/i18n";
 import { dateTimeRangeOperators } from "@constants/filters/dateTimeRangeOperators";
 import { standardFilters } from "@constants/filters/filters";
 import { GridColDef } from "@mui/x-data-grid-premium";
-import dayjs from "dayjs";
 
 export const standardRefValueMappingColumns: GridColDef[] = [
 	{
@@ -61,7 +62,7 @@ export const standardRefValueMappingColumns: GridColDef[] = [
 		sortable: true,
 		valueGetter: (value: string, row: { lastImported: string }) => {
 			const lastImported = row.lastImported;
-			const formattedDate = dayjs(lastImported).format("YYYY-MM-DD HH:mm");
+			const formattedDate = formatTimestamp(lastImported, currentClock());
 			if (formattedDate == "Invalid Date") {
 				return "";
 			} else {
@@ -142,7 +143,7 @@ export const refValueMappingColumnsNoCategoryFilter: GridColDef[] = [
 			return row.lastImported ? new Date(row.lastImported) : null;
 		},
 		valueFormatter: (value: Date) => {
-			return value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "";
+			return formatTimestamp(value, currentClock());
 		},
 	},
 	{

@@ -1,6 +1,7 @@
+import { currentClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
 import { CustomLink } from "@components/CustomLink";
 import { detailLinkCell } from "@helpers/dataGrid/detailLinkCell";
-import dayjs from "dayjs";
 import i18n from "@/i18n";
 import { GridColDef } from "@mui/x-data-grid-premium";
 import { equalsOnly, standardFilters } from "@constants/filters/filters";
@@ -70,7 +71,7 @@ export const standardBibColumns: GridColDef[] = [
 			return row.dateUpdated ? new Date(row.dateUpdated) : null;
 		},
 		valueFormatter: (value: Date) => {
-			return value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "";
+			return formatTimestamp(value, currentClock());
 		},
 	},
 	{

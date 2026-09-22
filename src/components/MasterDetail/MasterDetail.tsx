@@ -1,3 +1,5 @@
+import { useClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
 import { Attribute } from "@components/Attribute/Attribute";
 import {
 	Accordion,
@@ -17,7 +19,6 @@ import RenderAttribute from "../RenderAttribute/RenderAttribute";
 import MasterDetailLayout from "./MasterDetailLayout";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import ChangesSummary from "../ChangesSummary/ChangesSummary";
-import dayjs from "dayjs";
 
 interface MasterDetailType {
 	row: any;
@@ -27,6 +28,7 @@ interface MasterDetailType {
 export default function MasterDetail({ row, type }: MasterDetailType) {
 	const apiRef = useGridApiContext() as RefObject<GridApiPremium>;
 	const { t } = useTranslation();
+	const clock = useClock();
 
 	const [width, setWidth] = useState(() => {
 		const dimensions = apiRef.current.getRootDimensions();
@@ -194,9 +196,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("ui.info.correct_as_of")}>
 								<RenderAttribute
-									attribute={dayjs(row?.statusCorrectAsOf).format(
-										"YYYY-MM-DD HH:mm",
-									)}
+									attribute={formatTimestamp(row?.statusCorrectAsOf, clock)}
 								/>
 							</Attribute>
 						</Grid>

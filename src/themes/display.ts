@@ -6,10 +6,17 @@ import { DEFAULT_FONT, type FontName } from "./fonts";
 export const TEXT_SIZES = ["small", "normal", "large", "largest"] as const;
 export const DENSITIES = ["comfortable", "compact"] as const;
 export const MOTIONS = ["system", "full", "reduced"] as const;
+/**
+ * Which clock a recorded time is shown on. dcb-service records in UTC, so
+ * "service" is UTC - not a consortium timezone, which nothing exposes.
+ * docs/formatting.md.
+ */
+export const CLOCKS = ["device", "service"] as const;
 
 export type TextSize = (typeof TEXT_SIZES)[number];
 export type Density = (typeof DENSITIES)[number];
 export type Motion = (typeof MOTIONS)[number];
+export type Clock = (typeof CLOCKS)[number];
 
 /**
  * The preferences that reach the THEME.
@@ -27,6 +34,7 @@ export interface ThemeDisplay {
 /** Everything a user can choose about how the interface is drawn. */
 export interface DisplayPreferences extends ThemeDisplay {
 	motion: Motion;
+	clock: Clock;
 }
 
 /**
@@ -43,6 +51,9 @@ export const DEFAULT_DISPLAY: DisplayPreferences = {
 	// Defers to prefers-reduced-motion, which is the honest default: a device
 	// already configured for someone is a better answer than ours.
 	motion: "system",
+	// The reader's own clock, which is what every timestamp already showed -
+	// only now it says so.
+	clock: "device",
 };
 
 /**

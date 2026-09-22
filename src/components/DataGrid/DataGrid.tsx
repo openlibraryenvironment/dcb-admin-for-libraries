@@ -1,3 +1,4 @@
+import { useClock } from "@/hooks/useThemeStore";
 import { PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
 import {
 	DataGridPremium,
@@ -176,6 +177,7 @@ export default function DataGrid({
 	type,
 }: DataGridProps) {
 	const { t } = useTranslation();
+	const clock = useClock();
 	const navigate = useNavigate();
 	const expandedFilterPanel = expandedFilterPanelTypes.includes(type);
 	const getDetailPanelHeight = useCallback(() => "auto", []); // Only necessary because master detail is not applicable to all grids yet
@@ -205,10 +207,15 @@ export default function DataGrid({
 		navigate(target.navigate);
 	};
 
-	//identifier may not be needed
+	// Remounted when the clock preference changes, because a column's
+	// valueFormatter is a plain function whose output MUI X does not treat as
+	// part of a cell's identity - a re-render alone leaves the old text on
+	// screen. The cost is the grid's scroll position, on a setting nobody
+	// changes twice.
 	return (
 		<div style={{ display: "flex", flexDirection: "column" }}>
 			<DataGridPremium
+				key={clock}
 				aria-label={label}
 				apiRef={apiRef}
 				checkboxSelection={checkboxSelection}

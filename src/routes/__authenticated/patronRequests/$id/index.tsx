@@ -1,3 +1,5 @@
+import { currentClock, useClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
 import { Attribute } from "@components/Attribute/Attribute";
 import i18n from "@/i18n";
 import { pageTitle } from "@helpers/pageTitle";
@@ -69,6 +71,7 @@ function RouteComponent() {
 	const { id } = Route.useParams();
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const { t } = useTranslation();
+	const clock = useClock();
 
 	const auth = useAuth();
 	const [updateSuccessAlertVisibility, setUpdateSuccessAlertVisibility] =
@@ -635,27 +638,21 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.request_created")}>
 								<RenderAttribute
-									attribute={dayjs(patronRequest?.dateCreated).format(
-										"YYYY-MM-DD HH:mm",
-									)}
+									attribute={formatTimestamp(patronRequest?.dateCreated, clock)}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.request_updated")}>
 								<RenderAttribute
-									attribute={dayjs(patronRequest?.dateUpdated).format(
-										"YYYY-MM-DD HH:mm",
-									)}
+									attribute={formatTimestamp(patronRequest?.dateUpdated, clock)}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.next_poll")}>
 								<RenderAttribute
-									attribute={dayjs(patronRequest?.nextScheduledPoll).format(
-										"YYYY-MM-DD HH:mm",
-									)}
+									attribute={formatTimestamp(patronRequest?.nextScheduledPoll, clock)}
 								/>
 							</Attribute>
 							<Tooltip
@@ -1537,7 +1534,7 @@ function RouteComponent() {
 								sortable: true,
 								valueGetter: (value: string, row: { auditDate: string }) => {
 									const auditDate = row.auditDate;
-									return dayjs(auditDate).format("YYYY-MM-DD HH:mm:ss.SSS");
+									return formatTimestamp(auditDate, currentClock(), { precise: true });
 								},
 							},
 							{

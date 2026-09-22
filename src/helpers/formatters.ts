@@ -6,6 +6,8 @@
  * formatted this way: docs/formatting.md.
  */
 
+import type { Clock } from "@/themes/display";
+
 /**
  * Intl formatters are expensive to construct and are called once per grid cell,
  * so each distinct shape is built once and kept.
@@ -110,3 +112,59 @@ export const formatLongDateTime = (
 	dateFormat({ dateStyle: "full", timeStyle: "short" }, locale).format(
 		new Date(value),
 	);
+
+/** UTC is what dcb-service records; see docs/formatting.md. */
+const SERVICE_TIME_ZONE = "UTC";
+
+const timestampFormats = new Map<string, Intl.DateTimeFormat>();
+
+const timestampFormat = (
+	clock: Clock,
+	precise: boolean,
+): Intl.DateTimeFormat => {
+	const key = `${clock}|${precise}`;
+	let format = timestampFormats.get(key);
+	if (!format) {
+		format = new Intl.DateTimeFormat("en-GB", {
+			timeZone: clock === "service" ? SERVICE_TIME_ZONE : undefined,
+			year: "numeric",
+			month: "2-digit",
+			day: "2-digit",
+			hour: "2-digit",
+			minute: "2-digit",
+			...(precise ? { second: "2-digit", fractionalSecondDigits: 3 } : {}),
+			hour12: false,
+			timeZoneName: "short",
+		});
+		timestampFormats.set(key, format);
+	}
+	return format;
+};
+
+/**
+ * A recorded instant: `2026-09-22 14:30 UTC`.
+ *
+ * ISO ordering is kept and the locale is pinned to en-GB, because these are
+ * read beside dcb-service's own logs and sorted by eye. What is NOT fixed is
+ * the clock: the same instant is 14:30 UTC and 09:30 CDT, and until now the
+ * page showed one of those and named neither.
+ */
+export const formatTimestamp = (
+	value: string | number | Date | null | undefined,
+	clock: Clock,
+	{ precise = false }: { precise?: boolean } = {},
+): string => {
+	if (value === null || value === undefined || value === "") return "";
+	const instant = new Date(value);
+	if (Number.isNaN(instant.getTime())) return "";
+
+	const parts = Object.fromEntries(
+		timestampFormat(clock, precise)
+			.formatToParts(instant)
+			.map((part) => [part.type, part.value]),
+	);
+	const time = precise
+		? `${parts.hour}:${parts.minute}:${parts.second}.${parts.fractionalSecond}`
+		: `${parts.hour}:${parts.minute}`;
+	return `${parts.year}-${parts.month}-${parts.day} ${time} ${parts.timeZoneName}`;
+};

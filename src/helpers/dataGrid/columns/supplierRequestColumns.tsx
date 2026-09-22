@@ -1,3 +1,5 @@
+import { currentClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
 import i18n from "@/i18n";
 import { CustomLink } from "@components/CustomLink";
 import { detailLinkCell } from "@helpers/dataGrid/detailLinkCell";
@@ -14,7 +16,6 @@ import { dcbWorkflowOptions } from "@constants/workflows/DCBWorkflows";
 import { formatDuration } from "@helpers/formatDuration";
 import { PatronRequest } from "@models/PatronRequest";
 import { GridColDef } from "@mui/x-data-grid-premium";
-import dayjs from "dayjs";
 
 export const standardSupplierRequestColumns: GridColDef[] = [
 	{
@@ -35,7 +36,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 			return row.dateCreated ? new Date(row.dateCreated) : null;
 		},
 		valueFormatter: (value: Date) => {
-			return value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "";
+			return formatTimestamp(value, currentClock());
 		},
 	},
 	{
@@ -192,7 +193,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 			return row.dateUpdated ? new Date(row.dateUpdated) : null;
 		},
 		valueFormatter: (value: Date) => {
-			return value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "";
+			return formatTimestamp(value, currentClock());
 		},
 	},
 	{

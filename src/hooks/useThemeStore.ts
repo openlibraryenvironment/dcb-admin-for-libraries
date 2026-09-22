@@ -6,8 +6,10 @@ import {
 	DEFAULT_DISPLAY,
 	DENSITIES,
 	isDisplayValue,
+	CLOCKS,
 	MOTIONS,
 	TEXT_SIZES,
+	type Clock,
 	type Density,
 	type Motion,
 	type TextSize,
@@ -38,6 +40,12 @@ interface ThemePreferences {
 	fontName: FontName;
 	/** Whether to animate. `system` defers to prefers-reduced-motion. */
 	motion: Motion;
+	/**
+	 * Which clock a recorded time is shown on. Every timestamp was already on
+	 * the reader's, unlabelled; this makes the choice visible and the answer
+	 * say which it is. docs/formatting.md.
+	 */
+	clock: Clock;
 }
 
 interface ThemeActions {
@@ -46,6 +54,7 @@ interface ThemeActions {
 	setDensity: (density: Density) => void;
 	setFontName: (fontName: FontName) => void;
 	setMotion: (motion: Motion) => void;
+	setClock: (clock: Clock) => void;
 	/** Returns every display preference to its default. */
 	resetDisplay: () => void;
 }
@@ -84,6 +93,10 @@ export const useThemeStore = create<ThemePreferences & ThemeActions>()(
 						? motion
 						: DEFAULT_DISPLAY.motion,
 				}),
+			setClock: (clock) =>
+				set({
+					clock: isDisplayValue(CLOCKS, clock) ? clock : DEFAULT_DISPLAY.clock,
+				}),
 			// Deliberately does NOT clear `mode`: somebody who wanted their text size
 			// back should not also lose the colour scheme they chose.
 			resetDisplay: () => set({ ...DEFAULT_DISPLAY }),
@@ -115,8 +128,21 @@ export const useThemeStore = create<ThemePreferences & ThemeActions>()(
 					motion: isDisplayValue(MOTIONS, stored.motion)
 						? stored.motion
 						: DEFAULT_DISPLAY.motion,
+					clock: isDisplayValue(CLOCKS, stored.clock)
+						? stored.clock
+						: DEFAULT_DISPLAY.clock,
 				};
 			},
 		},
 	),
 );
+
+/**
+ * The clock, for code that is not a component. A grid's valueFormatter is a
+ * plain function called per cell, so it cannot use the hook - DataGrid.tsx
+ * subscribes and remounts on change so this is read fresh.
+ */
+export const currentClock = (): Clock => useThemeStore.getState().clock;
+
+/** The clock, for components. Atomic, so an unrelated preference does not re-render. */
+export const useClock = (): Clock => useThemeStore((state) => state.clock);

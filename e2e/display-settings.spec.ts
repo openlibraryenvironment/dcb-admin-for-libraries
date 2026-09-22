@@ -1,5 +1,6 @@
 import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
+import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 
 // The Settings page offered a light/dark/system radio group and nothing else,
 // against six controls in DCB Admin and Symposia. These walk the ones a user
@@ -29,6 +30,7 @@ test("offers every display preference", async ({ page }) => {
 		/typeface/i,
 		/spacing/i,
 		/animation/i,
+		/times and dates shown in/i,
 	]) {
 		await expect(page.getByRole("radiogroup", { name: group })).toBeVisible();
 	}
@@ -125,4 +127,33 @@ test("links to the accessibility statement, which says where it falls short", as
 	await expect(
 		page.getByRole("link", { name: /dcb@k-int\.com/i }),
 	).toBeVisible();
+});
+
+/**
+ * Every timestamp used to be rendered on the reader’s clock and labelled with
+ * nothing, so two colleagues in different zones read different numbers for one
+ * event and neither could tell.
+ */
+test("timestamps name their clock, and the reader can change it", async ({
+	app,
+	page,
+}) => {
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraries: library,
+		LoadPatronRequests: patronRequests,
+	});
+	await open(page);
+
+	const clocks = page.getByRole("radiogroup", {
+		name: /times and dates shown in/i,
+	});
+	await clocks.getByRole("radio", { name: /UTC/i }).check();
+
+	await page.goto("/patronRequests");
+	const grid = page.getByRole("grid", { name: /patron requests/i });
+	await expect(grid).toBeVisible();
+
+	// The fixture records 2026-09-01T09:15:00Z.
+	await expect(page.getByText("2026-09-01 09:15 UTC").first()).toBeVisible();
 });

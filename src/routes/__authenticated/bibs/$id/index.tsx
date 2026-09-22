@@ -1,3 +1,5 @@
+import { useClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
 import { Attribute } from "@components/Attribute/Attribute";
 import { pageTitle } from "@helpers/pageTitle";
 import Error from "@components/Error/Error";
@@ -12,7 +14,6 @@ import { getBibMainDetails } from "@queries/getBib";
 import { getBibSourceRecord } from "@queries/getBibSourceRecord";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import request from "graphql-request";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/__authenticated/bibs/$id/")({
 
 function RouteComponent() {
 	const { t } = useTranslation();
+	const clock = useClock();
 	const auth = useAuth();
 
 	const { id } = Route.useParams();
@@ -134,14 +136,14 @@ function RouteComponent() {
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("bibs.date_created")}>
 					<RenderAttribute
-						attribute={dayjs(bibRecord?.dateCreated).format("YYYY-MM-DD HH:mm")}
+						attribute={formatTimestamp(bibRecord?.dateCreated, clock)}
 					/>
 				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("bibs.date_updated")}>
 					<RenderAttribute
-						attribute={dayjs(bibRecord?.dateUpdated).format("YYYY-MM-DD HH:mm")}
+						attribute={formatTimestamp(bibRecord?.dateUpdated, clock)}
 					/>
 				</Attribute>
 			</Grid>
@@ -158,9 +160,7 @@ function RouteComponent() {
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("bibs.date_of_publication")}>
 					<RenderAttribute
-						attribute={dayjs(bibRecord?.dateOfPublication).format(
-							"YYYY-MM-DD HH:mm"
-						)}
+						attribute={formatTimestamp(bibRecord?.dateOfPublication, clock)}
 					/>
 				</Attribute>
 			</Grid>

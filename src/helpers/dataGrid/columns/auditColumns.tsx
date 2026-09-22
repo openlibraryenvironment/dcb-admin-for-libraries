@@ -1,7 +1,8 @@
+import { currentClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
 import { CustomLink } from "@components/CustomLink";
 import { detailLinkCell } from "@helpers/dataGrid/detailLinkCell";
 import { GridColDef } from "@mui/x-data-grid-premium";
-import dayjs from "dayjs";
 import i18n from "@/i18n";
 
 export const auditColumns: GridColDef[] = [
@@ -23,7 +24,7 @@ export const auditColumns: GridColDef[] = [
 		sortable: true,
 		valueGetter: (value: string, row: { auditDate: string }) => {
 			const auditDate = row.auditDate;
-			return dayjs(auditDate).format("YYYY-MM-DD HH:mm:ss.SSS");
+			return formatTimestamp(auditDate, currentClock(), { precise: true });
 		},
 	},
 	{

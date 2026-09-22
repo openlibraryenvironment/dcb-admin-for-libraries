@@ -1,3 +1,5 @@
+import { useClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
 import { Attribute } from "@components/Attribute/Attribute";
 import { pageTitle } from "@helpers/pageTitle";
 import { useQuery } from "@tanstack/react-query";
@@ -16,7 +18,6 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import request from "graphql-request";
-import dayjs from "dayjs";
 import { useAuth } from "react-oidc-context";
 import { useMemo } from "react";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
@@ -39,6 +40,7 @@ export const Route = createFileRoute(
 
 function AuditDetailsComponent() {
 	const { t } = useTranslation();
+	const clock = useClock();
 	const navigate = useNavigate();
 	const auth = useAuth();
 
@@ -209,9 +211,9 @@ function AuditDetailsComponent() {
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("audit.date")}>
 					<RenderAttribute
-						attribute={dayjs(audit?.auditDate).format(
-							"YYYY-MM-DD HH:mm:ss.SSS"
-						)}
+						attribute={formatTimestamp(audit?.auditDate, clock, {
+							precise: true,
+						})}
 					/>
 				</Attribute>
 			</Grid>

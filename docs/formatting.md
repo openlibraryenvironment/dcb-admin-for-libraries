@@ -40,23 +40,44 @@ Nothing sets the currency yet. Where a consortium's currency should come from �
 `dcb-service`, or a setting on this page — is an open product question, not an
 oversight to be quietly defaulted.
 
+## Timestamps: ISO ordering, a named clock, and the reader chooses it
+
+`formatTimestamp` renders `2026-09-01 09:15 UTC`. Three decisions in one line.
+
+**ISO ordering, locale pinned to en-GB.** These are administrative and
+diagnostic — created, updated, next scheduled poll, and the audit trail at
+millisecond precision. They are read beside `dcb-service`'s own logs and sorted
+by eye, so `09/01` meaning different dates to different readers would be worst
+in exactly the place where people compare notes. This is the deliberate
+exception to the browser-locale rule above.
+
+**The zone is always named.** It never was. Every timestamp was rendered on the
+reader's own clock and labelled with nothing, so a librarian in Sheffield and
+one in Missouri read different numbers for the same event and neither had any
+way to know.
+
+**Which clock is a display preference**, beside text size and typeface: "My
+device's time zone", or "UTC, as the service records it". It lives in
+`useThemeStore`, validated on write and on rehydrate like the rest.
+
+`service` means **UTC**, not a consortium time zone. `dcb-service` returns
+`2026-09-01T09:15:00Z`, and nothing in the capabilities payload or the runtime
+config names a zone. If one ever appears, that becomes a third option and this
+is the file that changes.
+
+### How a grid sees the preference
+
+A column's `valueFormatter` is a plain function called per cell, so it cannot
+use a hook. It reads `currentClock()` from the store, and `DataGrid.tsx`
+subscribes to the preference and **remounts** the grid on change: MUI X does
+not treat a formatter's output as part of a cell's identity, so a re-render
+alone leaves the old text on screen. The cost is the grid's scroll position, on
+a setting nobody changes twice.
+
+It is also what the CSV export writes, because `valueFormatter` produces both —
+so an export now says which clock its times are on.
+
 ## What stays as it is
-
-**`YYYY-MM-DD HH:mm` timestamps in the grids and on the detail pages.** These
-are administrative and diagnostic: "date created", "date updated", "next
-scheduled poll", and the audit trail at millisecond precision. They are read
-next to `dcb-service`'s own logs, and ISO 8601 is unambiguous, sortable and the
-same on both sides. Rewriting them regionally would make `09/22` and `22/09`
-depend on who is looking, in the one place where people compare notes.
-
-Two things about them are worth knowing rather than assuming:
-
-- They are rendered in the **reader's local timezone** and carry no timezone
-  marker. Two colleagues in different zones see different numbers for the same
-  event and cannot tell. That is a real gap and it is not fixed here; this
-  paragraph is the whole of its record.
-- They are what the CSV export writes, because the grid's `valueFormatter`
-  produces both.
 
 **`dayjs` stays.** MUI X's date pickers take it as their adapter, so it is not
 a dependency the formatters can retire — only one we stop using for display.

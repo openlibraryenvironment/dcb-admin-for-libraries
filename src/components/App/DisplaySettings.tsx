@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 
 import { useAnnounce } from "@/hooks/useAnnouncer";
 import { THEME_MODES, useThemeStore } from "@/hooks/useThemeStore";
-import { DENSITIES, MOTIONS, TEXT_SIZES } from "@/themes/display";
+import { CLOCKS, DENSITIES, MOTIONS, TEXT_SIZES } from "@/themes/display";
 import { FONTS, FONT_NAMES, type FontName } from "@/themes/fonts";
 
 /**
@@ -128,10 +128,12 @@ export const DisplaySettings = () => {
 	const textSize = useThemeStore((state) => state.textSize);
 	const density = useThemeStore((state) => state.density);
 	const motion = useThemeStore((state) => state.motion);
+	const clock = useThemeStore((state) => state.clock);
 	const setMode = useThemeStore((state) => state.setMode);
 	const setTextSize = useThemeStore((state) => state.setTextSize);
 	const setDensity = useThemeStore((state) => state.setDensity);
 	const setMotion = useThemeStore((state) => state.setMotion);
+	const setClock = useThemeStore((state) => state.setClock);
 	const resetDisplay = useThemeStore((state) => state.resetDisplay);
 
 	return (
@@ -162,6 +164,12 @@ export const DisplaySettings = () => {
 				options={MOTIONS}
 				value={motion}
 				onChange={setMotion}
+			/>
+			<Choice
+				name="clock"
+				options={CLOCKS}
+				value={clock}
+				onChange={setClock}
 			/>
 
 			{/*

@@ -1,8 +1,9 @@
+import { currentClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
 import i18n from "@/i18n";
 import { dateTimeRangeOperators } from "@constants/filters/dateTimeRangeOperators";
 import { equalsOnly, standardFilters } from "@constants/filters/filters";
 import { GridColDef } from "@mui/x-data-grid-premium";
-import dayjs from "dayjs";
 export const standardNumRangeMappingColumns: GridColDef[] = [
 	{
 		field: "domain",
@@ -58,7 +59,7 @@ export const standardNumRangeMappingColumns: GridColDef[] = [
 			return row.lastImported ? new Date(row.lastImported) : null;
 		},
 		valueFormatter: (value: Date) => {
-			return value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "";
+			return formatTimestamp(value, currentClock());
 		},
 	},
 ];
@@ -118,7 +119,7 @@ export const numRangeMappingColumnsNoCategoryFilter: GridColDef[] = [
 			return row.lastImported ? new Date(row.lastImported) : null;
 		},
 		valueFormatter: (value: Date) => {
-			return value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "";
+			return formatTimestamp(value, currentClock());
 		},
 	},
 ];
