@@ -290,6 +290,10 @@ export default function ExpeditedCheckout({
 		}
 	}, [staffLibraryHostLmsCode, setValue]);
 
+	// Exactly one attempt, deliberately: a bare axios call does not retry, and a
+	// fan-out to every member LMS is not a request to repeat on a guess. Not a
+	// useQuery like the others because it is driven from an effect, which wants a
+	// test before it is untangled.
 	const fetchRecords = useCallback(async () => {
 		setItemsLoading(true);
 		setItemsError(false);

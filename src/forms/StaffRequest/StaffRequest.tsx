@@ -1,3 +1,4 @@
+import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -212,6 +213,7 @@ export default function StaffRequest({
 				headers,
 				params: { clusteredBibId: bibClusterId },
 			}),
+		...AVAILABILITY_QUERY_POLICY,
 		enabled: false,
 		select: (response) => response.data,
 	});

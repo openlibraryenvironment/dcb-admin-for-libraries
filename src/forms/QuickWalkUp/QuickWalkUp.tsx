@@ -1,3 +1,4 @@
+import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -236,8 +237,8 @@ export default function QuickWalkUpRequest({
 			);
 			return response.data;
 		},
-		// Only run this query once the checkout has succeeded and we have the ID
-		// Bit of a hack to get the due date
+		...AVAILABILITY_QUERY_POLICY,
+		// Only once the checkout has succeeded and we have the id.
 		enabled: checkoutCompleted && !!resolvedBibClusterId,
 	});
 
