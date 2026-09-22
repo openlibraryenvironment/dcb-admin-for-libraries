@@ -1,3 +1,4 @@
+import { Attribute } from "@components/Attribute/Attribute";
 import {
 	Accordion,
 	AccordionDetails,
@@ -5,7 +6,6 @@ import {
 	List,
 	ListItem,
 	ListItemText,
-	Stack,
 	Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
@@ -52,10 +52,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 				<MasterDetailLayout width={width}>
 					<Grid container spacing={2} role="row">
 						<Grid size={4} role="gridcell">
-							<Stack direction="column">
-								<Typography variant="attributeTitle">
-									{t("requesting.bib_record_id")}
-								</Typography>
+							<Attribute label={t("requesting.bib_record_id")}>
 								<Typography variant="attributeText" component="div">
 									<CustomLink
 										to="/bibs/$id"
@@ -67,23 +64,17 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 										<RenderAttribute attribute={row?.id} />
 									</CustomLink>
 								</Typography>
-							</Stack>
+							</Attribute>
 						</Grid>
 						<Grid size={4} role="gridcell">
-							<Stack direction="column">
-								<Typography variant="attributeTitle">
-									{t("bibs.author")}
-								</Typography>
+							<Attribute label={t("bibs.author")}>
 								<Typography variant="attributeText">
 									<RenderAttribute attribute={row?.author} />
 								</Typography>
-							</Stack>
+							</Attribute>
 						</Grid>
 						<Grid size={8} role="gridcell">
-							<Stack direction="column">
-								<Typography variant="attributeTitle">
-									{t("requesting.identifiers")}
-								</Typography>
+							<Attribute label={t("requesting.identifiers")}>
 								<List sx={{ pl: 0, ml: 0 }} dense disablePadding>
 									{row.canonicalMetadata.identifiers.map(
 										(id: { namespace: string; value: string }) => (
@@ -98,7 +89,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 										),
 									)}
 								</List>
-							</Stack>
+							</Attribute>
 						</Grid>
 						<Grid size={8} role="gridcell">
 							<Accordion elevation={0}>
@@ -144,106 +135,70 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 			return (
 				<MasterDetailLayout width={width}>
 					<Grid size={4}>
-						<Stack direction={"column"}>
-							<Typography variant="attributeTitle">
-								{t("requesting.context")}
-							</Typography>
+						<Attribute label={t("requesting.context")}>
 							<RenderAttribute attribute={row?.owningContext} />
-						</Stack>
+						</Attribute>
 					</Grid>
 					<Grid size={4}>
-						<Stack direction={"column"}>
-							<Typography variant="attributeTitle">
-								{t("agency.code")}
-							</Typography>
+						<Attribute label={t("agency.code")}>
 							<RenderAttribute attribute={row?.agency?.code} />
-						</Stack>
+						</Attribute>
 					</Grid>
 					<Grid size={4}>
-						<Stack direction={"column"}>
-							<Typography variant="attributeTitle">
-								{t("agency.name")}
-							</Typography>
+						<Attribute label={t("agency.name")}>
 							<RenderAttribute attribute={row?.agency?.description} />
-						</Stack>
+						</Attribute>
 					</Grid>
 					<Grid size={4}>
-						<Stack direction={"column"}>
-							<Typography variant="attributeTitle">
-								{t("location.name")}
-							</Typography>
+						<Attribute label={t("location.name")}>
 							<RenderAttribute attribute={row?.location?.name} />
-						</Stack>
+						</Attribute>
 					</Grid>
 					<Grid size={4}>
-						<Stack direction={"column"}>
-							<Typography variant="attributeTitle">
-								{t("location.code")}
-							</Typography>
+						<Attribute label={t("location.code")}>
 							<RenderAttribute attribute={row?.location?.code} />
-						</Stack>
+						</Attribute>
 					</Grid>
 					<Grid size={4}>
-						<Stack direction={"column"}>
-							<Typography variant="attributeTitle">
-								{t("requesting.barcode")}
-							</Typography>
+						<Attribute label={t("requesting.barcode")}>
 							<RenderAttribute attribute={row?.barcode} />
-						</Stack>
+						</Attribute>
 					</Grid>
 					<Grid size={4}>
-						<Stack direction={"column"}>
-							<Typography variant="attributeTitle">
-								{t("requesting.call_no")}
-							</Typography>
+						<Attribute label={t("requesting.call_no")}>
 							<RenderAttribute attribute={row?.callNumber} />
-						</Stack>
+						</Attribute>
 					</Grid>
 					<Grid size={4}>
-						<Stack direction={"column"}>
-							<Typography variant="attributeTitle">
-								{t("requesting.local_item_type_code")}
-							</Typography>
+						<Attribute label={t("requesting.local_item_type_code")}>
 							<RenderAttribute attribute={row?.localItemTypeCode} />
-						</Stack>
+						</Attribute>
 					</Grid>
 					<Grid size={4}>
-						<Stack direction={"column"}>
-							<Typography variant="attributeTitle">
-								{t("requesting.local_item_type_name")}
-							</Typography>
+						<Attribute label={t("requesting.local_item_type_name")}>
 							<RenderAttribute attribute={row?.localItemType} />
-						</Stack>
+						</Attribute>
 					</Grid>
 					<Grid size={4}>
-						<Stack direction={"column"}>
-							<Typography variant="attributeTitle">
-								{t("requesting.supplier_type")}
-							</Typography>
+						<Attribute label={t("requesting.supplier_type")}>
 							<RenderAttribute attribute={row?.canonicalItemType} />
-						</Stack>
+						</Attribute>
 					</Grid>
 					<Grid size={4}>
-						<Stack direction={"column"}>
-							<Typography variant="attributeTitle">
-								{t("requesting.source_system_code")}
-							</Typography>
+						<Attribute label={t("requesting.source_system_code")}>
 							<RenderAttribute attribute={row?.sourceHostLmsCode} />{" "}
 							{/** This could include a link to the bib record, if we can establish source LMS */}
-						</Stack>
+						</Attribute>
 					</Grid>
 					{row?.statusCorrectAsOf ? (
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-							<Stack direction={"column"}>
-								<Typography variant="attributeTitle">
-									{t("ui.info.correct_as_of")}
-								</Typography>
+							<Attribute label={t("ui.info.correct_as_of")}>
 								<RenderAttribute
 									attribute={dayjs(row?.statusCorrectAsOf).format(
 										"YYYY-MM-DD HH:mm",
 									)}
 								/>
-							</Stack>
+							</Attribute>
 						</Grid>
 					) : null}
 				</MasterDetailLayout>

@@ -1,3 +1,4 @@
+import { Attribute } from "@components/Attribute/Attribute";
 import { pageTitle } from "@helpers/pageTitle";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -97,86 +98,64 @@ function RouteComponent() {
 				<Typography variant="h1">{location?.name}</Typography>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("location.name")}</Typography>
+				<Attribute label={t("location.name")}>
 					<RenderAttribute attribute={location?.name} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("location.code")}</Typography>
+				<Attribute label={t("location.code")}>
 					<RenderAttribute attribute={location?.code} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("location.type")}</Typography>
+				<Attribute label={t("location.type")}>
 					<RenderAttribute attribute={location?.type} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("location.latitude")}
-					</Typography>
+				<Attribute label={t("location.latitude")}>
 					<RenderAttribute attribute={location?.latitude} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("location.longitude")}
-					</Typography>
+				<Attribute label={t("location.longitude")}>
 					<RenderAttribute attribute={location?.longitude} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Stack direction={"column"}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("location.pickup_status")}
-						</Typography>
+					<Attribute label={t("location.pickup_status")}>
 						{location?.isPickup
 							? t("ui.feedback.enabled")
 							: location?.isPickup == false
 								? t("ui.feedback.disabled")
 								: t("ui.feedback.not_set")}
-					</Stack>
+					</Attribute>
 				</Stack>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("location.pickup_anywhere_status")}
-					</Typography>
+				<Attribute label={t("location.pickup_anywhere_status")}>
 					{location?.isPickupAnywhere
 						? t("ui.feedback.enabled")
 						: location?.isPickupAnywhere == false
 							? t("ui.feedback.disabled")
 							: t("ui.feedback.not_set")}
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t(getLocalId(ils))}</Typography>
+				<Attribute label={t(getLocalId(ils))}>
 					<RenderAttribute attribute={location?.localId} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("location.print_label")}
-					</Typography>
+				<Attribute label={t("location.print_label")}>
 					<RenderAttribute attribute={location?.printLabel} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("location.location_id")}
-					</Typography>
+				<Attribute label={t("location.location_id")}>
 					<RenderAttribute attribute={location?.id} />
-				</Stack>
+				</Attribute>
 			</Grid>
 		</Grid>
 	);

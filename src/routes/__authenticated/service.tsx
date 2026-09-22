@@ -1,3 +1,4 @@
+import { Attribute } from "@components/Attribute/Attribute";
 import { pageTitle } from "@helpers/pageTitle";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import Grid from "@mui/material/Grid";
@@ -12,7 +13,7 @@ import { HostLMS } from "@models/HostLMS";
 import { getILS } from "@helpers/getILS";
 import Typography from "@mui/material/Typography";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
-import { Divider, Stack } from "@mui/material";
+import { Divider } from "@mui/material";
 import FormatArrayAsList from "@components/FormatArrayAsList/FormatArrayAsList";
 import PrivateData from "@components/PrivateData/PrivateData";
 import { useMemo } from "react";
@@ -69,26 +70,17 @@ function ServiceComponent() {
 				<Typography variant="h1">{t("nav.library.service")}</Typography>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("library.service.systems.ils")}
-					</Typography>
+				<Attribute label={t("library.service.systems.ils")}>
 					<RenderAttribute attribute={ils} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("library.service.systems.discovery")}
-					</Typography>
+				<Attribute label={t("library.service.systems.discovery")}>
 					<RenderAttribute attribute={library?.discoverySystem} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("library.service.systems.patron_site")}
-					</Typography>
+				<Attribute label={t("library.service.systems.patron_site")}>
 					{library?.patronWebsite ? (
 						<RenderAttribute
 							attribute={library?.patronWebsite}
@@ -97,7 +89,7 @@ function ServiceComponent() {
 					) : (
 						<Typography variant="attributeText">-</Typography>
 					)}
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Typography variant="h3" sx={{
@@ -105,20 +97,14 @@ function ServiceComponent() {
                 }}>
 					{t("library.config.patronAuth.title")}
 				</Typography>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("library.config.patronAuth.auth_profile")}
-					</Typography>
+				<Attribute label={t("library.config.patronAuth.auth_profile")}>
 					<RenderAttribute attribute={library?.agency?.authProfile} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("hostlms.configuration")}
-					</Typography>
+				<Attribute label={t("hostlms.configuration")}>
 					<RenderAttribute attribute={library?.hostLmsConfiguration} />
-				</Stack>
+				</Attribute>
 			</Grid>
             {firstHostLms ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
@@ -137,89 +123,70 @@ function ServiceComponent() {
 				</Grid>
 			) : null}
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("hostlms.name")}</Typography>
+				<Attribute label={t("hostlms.name")}>
 					<RenderAttribute attribute={firstHostLms?.name} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("hostlms.code")}</Typography>
+				<Attribute label={t("hostlms.code")}>
 					<RenderAttribute attribute={firstHostLms?.code} />
-				</Stack>
+				</Attribute>
 			</Grid>
             {/* Handle multi-roles and separate them */}
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("hostlms.roles")}</Typography>
+				<Attribute label={t("hostlms.roles")}>
 					{<FormatArrayAsList roles={firstHostLms?.clientConfig?.["roles"]} />}
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("hostlms.id")}</Typography>
+				<Attribute label={t("hostlms.id")}>
 					<RenderAttribute attribute={firstHostLms?.id} />
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("hostlms.client_config.ingest")}
-					</Typography>
+				<Attribute label={t("hostlms.client_config.ingest")}>
 					<RenderAttribute
 						attribute={String(firstHostLms?.clientConfig?.ingest)}
 					/>
-				</Stack>
+				</Attribute>
 			</Grid>
             {/* Suppression rulesets */}
             {firstHostLms?.suppressionRulesetName != null && (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.bibSuppressionRulesetName")}
-						</Typography>
+					<Attribute label={t("hostlms.bibSuppressionRulesetName")}>
 						<Typography variant="attributeText">
 							<RenderAttribute
 								attribute={firstHostLms?.suppressionRulesetName}
 							/>
 						</Typography>
-					</Stack>
+					</Attribute>
 				</Grid>
 			)}
             {firstHostLms?.itemSuppressionRulesetName != null && (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.itemSuppressionRulesetName")}
-						</Typography>
+					<Attribute label={t("hostlms.itemSuppressionRulesetName")}>
 						<Typography variant="attributeText">
 							<RenderAttribute
 								attribute={firstHostLms?.itemSuppressionRulesetName}
 							/>
 						</Typography>
-					</Stack>
+					</Attribute>
 				</Grid>
 			)}
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("library.service.environments.api")}
-					</Typography>
+				<Attribute label={t("library.service.environments.api")}>
 					<RenderAttribute
 						attribute={firstHostLms?.clientConfig?.["base-url"]}
 						title={firstHostLms?.clientConfig?.["base-url"]}
 					/>
-				</Stack>
+				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("hostlms.client_config.context_hierarchy")}
-					</Typography>
+				<Attribute label={t("hostlms.client_config.context_hierarchy")}>
 					<FormatArrayAsList
 						roles={firstHostLms?.clientConfig?.contextHierarchy}
 					/>
-				</Stack>
+				</Attribute>
 			</Grid>
             {/* 'API Key' has many different guises on clientConfig: for FOLIO libraries it's simple*/}
             {firstHostLms?.clientConfig?.apikey ? (
@@ -262,64 +229,49 @@ function ServiceComponent() {
 			) : null}
             {firstHostLms?.clientConfig?.defaultAgency ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.default_agency")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.default_agency")}>
 						<RenderAttribute
 							attribute={firstHostLms?.clientConfig?.defaultAgency}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {/* Sierra specific values*/}
             {firstHostLms?.clientConfig?.holdPolicy ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.hold_policy")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.hold_policy")}>
 						<RenderAttribute
 							attribute={firstHostLms?.clientConfig?.holdPolicy}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {firstHostLms?.clientConfig?.["page-size"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.page_size")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.page_size")}>
 						<RenderAttribute
 							attribute={firstHostLms?.clientConfig?.["page-size"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {/* Polaris-specific values*/}
             {firstHostLms?.clientConfig?.["domain-id"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("library.service.environments.polaris_domain")}
-						</Typography>
+					<Attribute label={t("library.service.environments.polaris_domain")}>
 						<RenderAttribute
 							attribute={firstHostLms?.clientConfig?.["domain-id"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {firstHostLms?.clientConfig?.["domain-id"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("library.service.environments.polaris_username")}
-						</Typography>
+					<Attribute label={t("library.service.environments.polaris_username")}>
 						<RenderAttribute
 							attribute={firstHostLms?.clientConfig?.["staff-username"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {firstHostLms?.clientConfig?.["staff-password"] ? (
@@ -335,66 +287,51 @@ function ServiceComponent() {
 			) : null}
             {firstHostLms?.clientConfig?.services?.["organisation-id"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("library.service.environments.polaris_org_id")}
-						</Typography>
+					<Attribute label={t("library.service.environments.polaris_org_id")}>
 						<RenderAttribute
 							attribute={
 								firstHostLms?.clientConfig?.services?.["organisation-id"]
 							}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {/* FOLIO Specific values: folio-tenant, metadata-prefix, record_syntax, user-base-url*/}
             {firstHostLms?.clientConfig?.["folio-tenant"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.folio_tenant")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.folio_tenant")}>
 						<RenderAttribute
 							attribute={firstHostLms?.clientConfig?.["folio-tenant"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {firstHostLms?.clientConfig?.["metadata-prefix"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.metadata")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.metadata")}>
 						<RenderAttribute
 							attribute={firstHostLms?.clientConfig?.["metadata-prefix"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {firstHostLms?.clientConfig?.["record-syntax"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.record_syntax")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.record_syntax")}>
 						<RenderAttribute
 							attribute={firstHostLms?.clientConfig?.["record-syntax"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {firstHostLms?.clientConfig?.["user-base-url"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.user_base_url")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.user_base_url")}>
 						<RenderAttribute
 							attribute={firstHostLms?.clientConfig?.["user-base-url"]}
 							title={firstHostLms?.clientConfig?.["user-base-url"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {/* Second Host LMS section - if exists - conditionally render */}
@@ -416,79 +353,60 @@ function ServiceComponent() {
 			) : null}
             {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.name")}
-						</Typography>
+					<Attribute label={t("hostlms.name")}>
 						<RenderAttribute attribute={secondHostLms?.name} />
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.code")}
-						</Typography>
+					<Attribute label={t("hostlms.code")}>
 						<RenderAttribute attribute={secondHostLms?.code} />
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.roles")}
-						</Typography>
+					<Attribute label={t("hostlms.roles")}>
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.["roles"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">{t("hostlms.id")}</Typography>
+					<Attribute label={t("hostlms.id")}>
 						<RenderAttribute attribute={secondHostLms?.id} />
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.ingest")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.ingest")}>
 						<RenderAttribute
 							attribute={String(secondHostLms?.clientConfig?.ingest)}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("library.service.environments.api")}
-						</Typography>
+					<Attribute label={t("library.service.environments.api")}>
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.["base-url"]}
 							title={secondHostLms?.clientConfig?.["base-url"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.context_hierarchy")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.context_hierarchy")}>
 						<FormatArrayAsList
 							roles={secondHostLms?.clientConfig?.contextHierarchy}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {/* 'API Key' has many different guises on clientConfig: for FOLIO libraries it's simple*/}
@@ -533,26 +451,20 @@ function ServiceComponent() {
             {/* Polaris specific values - Second Host LMS */}
             {secondHostLms?.clientConfig?.["domain-id"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("library.service.environments.polaris_domain")}
-						</Typography>
+					<Attribute label={t("library.service.environments.polaris_domain")}>
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.["domain-id"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms?.clientConfig?.["staff-username"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("library.service.environments.polaris_username")}
-						</Typography>
+					<Attribute label={t("library.service.environments.polaris_username")}>
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.["staff-username"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms?.clientConfig?.["staff-password"] ? (
@@ -568,91 +480,70 @@ function ServiceComponent() {
 			) : null}
             {secondHostLms?.clientConfig?.services?.["organisation-id"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("library.service.environments.polaris_org_id")}
-						</Typography>
+					<Attribute label={t("library.service.environments.polaris_org_id")}>
 						<RenderAttribute
 							attribute={
 								secondHostLms?.clientConfig?.services?.["organisation-id"]
 							}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {/* FOLIO Specific values (Second Host LMS): folio-tenant, metadata-prefix, record_syntax, user-base-url*/}
             {secondHostLms?.clientConfig?.["folio-tenant"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.folio_tenant")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.folio_tenant")}>
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.["folio-tenant"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms?.clientConfig?.["metadata-prefix"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.metadata")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.metadata")}>
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.["metadata-prefix"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms?.clientConfig?.["record-syntax"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.record_syntax")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.record_syntax")}>
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.["record-syntax"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms?.clientConfig?.["user-base-url"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.user_base_url")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.user_base_url")}>
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.["user-base-url"]}
 							title={secondHostLms?.clientConfig?.["user-base-url"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {/* Sierra specific values*/}
             {secondHostLms?.clientConfig?.holdPolicy ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.hold_policy")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.hold_policy")}>
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.holdPolicy}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
             {secondHostLms?.clientConfig?.["page-size"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Stack direction={"column"}>
-						<Typography variant="attributeTitle">
-							{t("hostlms.client_config.page_size")}
-						</Typography>
+					<Attribute label={t("hostlms.client_config.page_size")}>
 						<RenderAttribute
 							attribute={secondHostLms?.clientConfig?.["page-size"]}
 						/>
-					</Stack>
+					</Attribute>
 				</Grid>
 			) : null}
         </Grid>

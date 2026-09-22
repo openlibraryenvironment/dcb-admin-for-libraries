@@ -1,3 +1,4 @@
+import { Attribute } from "@components/Attribute/Attribute";
 import { pageTitle } from "@helpers/pageTitle";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -6,7 +7,6 @@ import { BibsQueryData } from "@models/ReactQueryHelperTypes";
 import { ExpandMoreOutlined } from "@mui/icons-material";
 import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getBibMainDetails } from "@queries/getBib";
 import { getBibSourceRecord } from "@queries/getBibSourceRecord";
@@ -127,118 +127,82 @@ function RouteComponent() {
 				<Typography variant="h1">{bibRecord?.title}</Typography>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("bibs.author")}</Typography>
+				<Attribute label={t("bibs.author")}>
 					<RenderAttribute attribute={bibRecord?.author} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("bibs.date_created")}
-					</Typography>
+				<Attribute label={t("bibs.date_created")}>
 					<RenderAttribute
 						attribute={dayjs(bibRecord?.dateCreated).format("YYYY-MM-DD HH:mm")}
 					/>
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("bibs.date_updated")}
-					</Typography>
+				<Attribute label={t("bibs.date_updated")}>
 					<RenderAttribute
 						attribute={dayjs(bibRecord?.dateUpdated).format("YYYY-MM-DD HH:mm")}
 					/>
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("bibs.publisher")}
-					</Typography>
+				<Attribute label={t("bibs.publisher")}>
 					<RenderAttribute attribute={bibRecord?.publisher} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("bibs.place_of_publication")}
-					</Typography>
+				<Attribute label={t("bibs.place_of_publication")}>
 					<RenderAttribute attribute={bibRecord?.placeOfPublication} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("bibs.date_of_publication")}
-					</Typography>
+				<Attribute label={t("bibs.date_of_publication")}>
 					<RenderAttribute
 						attribute={dayjs(bibRecord?.dateOfPublication).format(
 							"YYYY-MM-DD HH:mm"
 						)}
 					/>
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("bibs.edition")}</Typography>
+				<Attribute label={t("bibs.edition")}>
 					<RenderAttribute attribute={bibRecord?.edition} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("bibs.large_print")}
-					</Typography>
+				<Attribute label={t("bibs.large_print")}>
 					<RenderAttribute attribute={bibRecord?.isLargePrint} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("bibs.source_system_id")}
-					</Typography>
+				<Attribute label={t("bibs.source_system_id")}>
 					<RenderAttribute attribute={bibRecord?.sourceSystemId} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("bibs.source_record_id")}
-					</Typography>
+				<Attribute label={t("bibs.source_record_id")}>
 					<RenderAttribute attribute={bibRecord?.sourceRecordId} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("bibs.process_version")}
-					</Typography>
+				<Attribute label={t("bibs.process_version")}>
 					<RenderAttribute attribute={bibRecord?.processVersion} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("bibs.metadata_score")}
-					</Typography>
+				<Attribute label={t("bibs.metadata_score")}>
 					<RenderAttribute attribute={bibRecord?.metadataScore} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">{t("bibs.id")}</Typography>
+				<Attribute label={t("bibs.id")}>
 					<RenderAttribute attribute={bibRecord?.id} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Stack direction={"column"}>
-					<Typography variant="attributeTitle">
-						{t("bibs.cluster_uuid")}
-					</Typography>
+				<Attribute label={t("bibs.cluster_uuid")}>
 					<RenderAttribute attribute={bibRecord?.contributesTo?.id} />
-				</Stack>
+				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Accordion

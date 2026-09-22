@@ -140,3 +140,41 @@ test.describe("a library with no coordinates", () => {
 		await expect(page.getByRole("button", { name: /^save$/i })).toBeDisabled();
 	});
 });
+
+/**
+ * The label and the value were two unrelated runs of text: a screen reader read
+ * "Full name" and then "E2E Test Library" with nothing saying they belonged
+ * together. WCAG 1.3.1, and invisible to axe.
+ */
+test.describe("field labels are attached to their values", () => {
+	const pairs = (page: import("@playwright/test").Page) =>
+		page.evaluate(() =>
+			Array.from(document.querySelectorAll("dl")).map((list) => ({
+				label: list.querySelector("dt")?.textContent?.trim() ?? "",
+				value: list.querySelector("dd")?.textContent?.trim() ?? "",
+			})),
+		);
+
+	test("each one is a term and its definition", async ({ app, page }) => {
+		await signedInOnProfile(app, page);
+
+		expect(await pairs(page)).toContainEqual({
+			label: "Full name",
+			value: "E2E Test Library",
+		});
+	});
+
+	test("and the label goes away in edit mode, where the control carries it", async ({
+		app,
+		page,
+	}) => {
+		await signedInOnProfile(app, page);
+		await page.getByRole("button", { name: /^edit$/i }).click();
+		await expect(
+			page.getByRole("textbox", { name: /full name/i }).first(),
+		).toBeVisible();
+
+		const labels = (await pairs(page)).map((pair) => pair.label);
+		expect(labels).not.toContain("Full name");
+	});
+});
