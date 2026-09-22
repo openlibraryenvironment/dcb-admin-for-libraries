@@ -33,6 +33,27 @@ CI never saw it, because `playwright.config.ts` sets `workers: 1` there. That is
 the shape of the whole problem: a flake only the person running it locally sees
 is the kind people learn to re-run rather than read.
 
+## Four workers, not sixteen
+
+`workers` is capped at 4 locally (1 in CI). Left unset, Playwright uses half the
+cores — sixteen on a 32-core machine — and each one is a Chromium mounting MUI X
+Premium against a route mock. Measured on one afternoon, on the same commit,
+with nothing changed but the number:
+
+| Workers | Result |
+|---|---|
+| 16 (the default) | 43–49 of 79, a different set each run |
+| 4 | 79 of 79, twice |
+| 1 | 79 of 79 |
+
+The failures are always `element(s) not found`, which reads as the application
+failing to render. It is not: it is the machine. The 43 was measured with the
+branch's own changes stashed, so it was not a regression in those either.
+
+Four is a balance, not a magic number — about three minutes against the
+default's one, on the runs where the default works at all. Raise it if your
+machine is idle.
+
 ## A green suite that is not green
 
 Two failure modes, both observed in this estate, and each looks nothing like its
