@@ -14,6 +14,20 @@ What the gates are, and the two ways each of them can lie to you.
 | Bundle | `node scripts/check-bundle-budget.mjs` | per-chunk gzipped budgets, after a build |
 | Lighthouse | `npx lhci autorun` | transfer, CLS and the category scores |
 
+### react-hooks/exhaustive-deps is an error, not a warning
+
+A missing dependency froze `editingEnabled` in the mappings grid's column
+memo, leaving libraries that *are* permitted to edit with a permanently
+disabled Edit action. It took an e2e test to find; it should have taken a
+lint run.
+
+The rest of `eslint-plugin-react-hooks` v7 — its `recommended-latest` set — is
+the React Compiler rule family, and it reports fourteen further findings here.
+Three of them are `react-hook-form`'s `watch()` being flagged as
+compiler-incompatible, which has no fix short of changing the form
+architecture. **A gate that can only be satisfied with suppressions is not a
+gate**, so that family stays off until it can be turned on and left green.
+
 ## Readiness is not the assertion
 
 Every axe surface declares a `ready` step, and those steps use a **longer

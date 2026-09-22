@@ -11,16 +11,9 @@ import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 /**
- * Which of the user's libraries they are looking at.
- *
- * Renders nothing at all unless the `code` claim names more than one. Most people
- * administer a single library and a picker with one entry is worse than no picker -
- * it implies a choice that does not exist, and invites the question of what the other
- * option would have been.
- *
- * The people this is for are shared-system administrators: someone running one Koha
- * on behalf of several of its member libraries, who is not a consortium administrator
- * and should not be made one to do the job.
+ * Which of the user's libraries they are looking at. Renders NOTHING unless
+ * the `code` claim names more than one: a picker with one entry implies a
+ * choice that does not exist. Who it is for: docs/insights.md.
  */
 export const LibrarySelector = () => {
 	const { t } = useTranslation();

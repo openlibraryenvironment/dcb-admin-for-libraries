@@ -40,3 +40,36 @@ was found.
 Hiding a tab is not security; `dcb-service` decides what a token may read. These
 guards are there so a read-only user is not shown a page of errors, and so the
 client does not ask for data it has no business asking for.
+
+## The base path
+
+`vite.config.ts` sets an **absolute** base, never a relative `./` one, and it
+is the single source of the router basepath — `main.tsx` reads it back as
+`import.meta.env.BASE_URL`, and it must never be re-supplied at runtime.
+
+A relative base resolves asset URLs against the *current page path*, and every
+SPA-fallback host serves `index.html` **at** the deep URL rather than at `/`.
+Refreshing `/dcb-admin-for-libraries/patronRequests/<id>` would therefore
+resolve `./assets/index-<hash>.js` against
+`/dcb-admin-for-libraries/patronRequests/` and 404 every asset.
+
+There is no `server.historyApiFallback`. That is a webpack-dev-server option
+which Vite has never had, so it was dead config that read like the thing
+keeping deep links alive. Vite's SPA fallback comes from the default
+`appType: "spa"` and is base-aware.
+
+The router owns the prefix from there on; what happens when something else
+tries to add it too is in `docs/testing.md`.
+
+## Not found
+
+TanStack's built-in `notFoundComponent` is the bare string "Not Found" — no
+heading, no address, and no way out of the dead end but the back button.
+
+That is what made a doubled base path hard to place: the app reported the
+symptom without reporting the address it had failed to match, so the doubled
+segment was only visible in devtools. `NotFound` shows the address.
+
+**The way out is home, not "go back".** The previous page is what produced the
+bad link, so returning to it re-offers the same dead end.
+

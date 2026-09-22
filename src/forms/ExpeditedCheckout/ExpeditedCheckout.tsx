@@ -608,29 +608,6 @@ export default function ExpeditedCheckout({
 
 	return (
         <>
-            {/* <Dialog
-				open={show}
-				onClose={handleClose}
-				aria-labelledby="patron-request-modal"
-				fullWidth
-				maxWidth="sm">
-				<DialogTitle id="form-dialog-title" variant="modalTitle">
-					{t("requesting.expedited_checkout.title_on_site")}
-				</DialogTitle>
-
-				{(!patronRequestWaiting || checkoutCompleted) && (
-					<IconButton
-						aria-label={t("ui.actions.close")}
-						onClick={handleClose}
-						sx={{
-							position: "absolute",
-							right: 8,
-							top: 8,
-							color: (theme) => (theme.vars || theme).palette.grey[500],
-						}}>
-						<Close />
-					</IconButton>
-				)} */}
             <DialogContent sx={{ overflow: "visible" }}>
 				<Stepper
 					activeStep={activeStep}
@@ -690,7 +667,6 @@ export default function ExpeditedCheckout({
 					{getStepContent(activeStep)}
 				</form>
 			</DialogContent>
-            {/* </Dialog> */}
             <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}

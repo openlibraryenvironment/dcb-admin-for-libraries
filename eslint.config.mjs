@@ -92,19 +92,11 @@ export default defineConfig(
 		files: ["src/**/*.{ts,tsx}"],
 		plugins: { "react-hooks": reactHooks },
 		rules: {
-			// exhaustive-deps as an error, not a warning: a missing dependency froze
-			// editingEnabled in the mappings grid's column memo, leaving libraries
-			// that ARE permitted to edit with a permanently disabled Edit action. It
-			// took an e2e test to find; it should have taken a lint run.
-			//
-			// The rest of eslint-plugin-react-hooks v7 - its "recommended-latest" set
-			// - is the React Compiler rule family (set-state-in-effect, purity, refs,
-			// immutability, incompatible-library). It reports 14 further findings
-			// here, three of them react-hook-form's watch() being flagged as
-			// compiler-incompatible, which has no fix short of changing the form
-			// architecture. A gate that can only be satisfied with suppressions is not
-			// a gate, so that family stays off until it can be turned on and left
-			// green.
+			// exhaustive-deps is an ERROR here: a missing dependency froze editingEnabled
+			// in the mappings grid and left permitted libraries unable to edit. The rest of
+			// react-hooks v7 - the React Compiler family - reports 14 findings that cannot
+			// be fixed without changing the form architecture, so it stays off until it can
+			// be left green. docs/testing.md.
 			"react-hooks/rules-of-hooks": "error",
 			"react-hooks/exhaustive-deps": "error",
 		},
