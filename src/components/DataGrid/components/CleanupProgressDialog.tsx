@@ -37,6 +37,8 @@ interface CleanupProgressDialogProps {
 	successRows: any[];
 	errorRows: any[];
 	skippedRows: any[];
+	/** Refused by dcb-service because the item is not back at the supplying library. */
+	refusedRows?: any[];
 	onClose: () => void;
 }
 
@@ -50,6 +52,7 @@ export const CleanupProgressDialog = ({
 	successRows,
 	errorRows,
 	skippedRows,
+	refusedRows = [],
 	onClose,
 }: CleanupProgressDialogProps) => {
 	const { t } = useTranslation();
@@ -79,7 +82,13 @@ export const CleanupProgressDialog = ({
 	const failedCleanupGridId = "cleanup-error-grid";
 
 	return (
-        <Dialog open={open} fullWidth maxWidth="sm">
+        <Dialog
+            open={open}
+            fullWidth
+            maxWidth="sm"
+            // The title already carried this id and nothing pointed at it, so the
+            // dialog had no accessible name at all (axe: aria-dialog-name).
+            aria-labelledby="progressOfCleanup">
             <DialogTitle id="progressOfCleanup" variant="modalTitle">
 				{isCleaning
 					? t("patron_request.cleanup_in_progress")
@@ -95,7 +104,9 @@ export const CleanupProgressDialog = ({
 								variant="determinate"
 								value={progress}
 								color={isCleaning ? "primary" : "success"}
-								aria-labelledby="progressOfCleanup"
+								// An aria-labelledby pointing at an id nothing renders leaves the bar
+								// with no accessible name (axe: aria-progressbar-name).
+								aria-label={t("patron_request.cleanup_in_progress")}
 								sx={{ flex: 1 }}
 								// sx={{ height: 10, borderRadius: 5 }}
 							/>
@@ -239,6 +250,16 @@ export const CleanupProgressDialog = ({
 									/>
 								</AccordionDetails>
 							</Accordion>
+						</Stack>
+					) : null}
+					{refusedRows?.length > 0 ? (
+						<Stack direction={"row"} spacing={1} sx={{ mt: 2 }}>
+							<WarningAmber color="warning" />
+							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+								{t("ui.data_grid.cleanup.refused_count", {
+									count: refusedRows.length,
+								})}
+							</Typography>
 						</Stack>
 					) : null}
 					{skippedRows?.length > 0 ? (

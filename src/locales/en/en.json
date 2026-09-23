@@ -694,7 +694,9 @@
 		"cleanup_disabled": "Clean up is only available for requests supplied by your library that are either in an ERROR state, or have not yet been shipped.",
 		"cleanup_failed": "Requests that could not be cleaned up",
 		"cleanup_in_progress": "Cleanup in progress",
-		"cleanup_info": "Bypass circulation; clean up and finalise request. This auto-finalises a request and can be used to return an unwanted item. ",
+		"cleanup_info": "Check this request for updates, then close it and delete its temporary records.",
+		"cleanup_not_supplier": "Only the supplying library can clean this request up.",
+		"cleanup_refused": "This request was not cleaned up. {{detail}}",
 		"cleanup_skipped": "Requests skipped",
 		"cleanup_succeeded": "Requests cleaned up",
 		"cleanup_successful": "The cleanup operation has been successful, and the patron request has been finalised.",
@@ -1087,6 +1089,7 @@
 			"active_filters": "{{number}} Active filters",
 			"cleanup": {
 				"error_count": "Error: {{count}}",
+				"refused_count": "Refused while the item is out: {{count}}",
 				"selected": "Cleanup selected requests ({{count}})",
 				"skipped_count": "Not eligible: {{count}}",
 				"success_count": "Successful: {{count}}"

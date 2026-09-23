@@ -99,6 +99,25 @@ contrast, name, role or landmark failure.
 Adding a page means adding it to `PAGES`. That is the whole cost, deliberately,
 because a gate people route around is worse than no gate.
 
+### Checks axe cannot decide
+
+axe reports an *incomplete* result separately from a violation, and the gate
+asserts both — a dangling `aria-labelledby` lands in `incomplete`, which is how
+five of them survived a green gate that read `violations` alone.
+
+A rule in `UNDECIDABLE` is filtered out of **incomplete only**. It still fails
+the gate when axe can decide it, so listing one is not switching it off. Each
+has to name the test that decides it instead:
+
+| Rule | Why axe cannot decide | What decides it |
+|---|---|---|
+| `color-contrast` | it cannot resolve a ground behind MUI's elevation gradient, so it fires on every Paper | `tests/themeContrast.test.ts`, which computes ratios from the tokens rather than sampling pixels |
+| `aria-hidden-focus` | with a Dialog open, MUI marks `#root` `aria-hidden` and **not** `inert`; axe asks whether those elements are "tabbable in the current state", which is a keyboard question | `e2e/cleanup.spec.ts` presses Tab ten times and asserts focus never leaves the dialog |
+
+Both were measured before being listed. For the second: twelve presses of Tab
+with the cleanup dialog open never reached the grid behind it, so the focus
+trap holds and the `aria-hidden` is honest.
+
 ### Revealing a page before scanning it
 
 Surfaces with content behind an `IntersectionObserver` are scrolled until a

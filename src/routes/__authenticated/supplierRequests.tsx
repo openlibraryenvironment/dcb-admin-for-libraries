@@ -169,7 +169,7 @@ function RouteComponent() {
 		});
 	};
 
-	const { agencyCode: code } = useAgencyCodes();
+	const { agencyCode: code, agencyCodes } = useAgencyCodes();
 
 	const presetQuery = "supplyingAgencyCode:" + code;
 
@@ -297,6 +297,7 @@ function RouteComponent() {
 			apiRef,
 			dcbApiBase,
 			headers,
+			agencyCodes,
 			onSuccess: () => {
 				refetch();
 			},
@@ -417,6 +418,7 @@ function RouteComponent() {
 				successRows={cleanupState.successRows}
 				errorRows={cleanupState.errorRows}
 				skippedRows={cleanupState.skippedRows}
+				refusedRows={cleanupState.refusedRows}
 				onClose={handleCloseCleanup}
 			/>
 
