@@ -1,3 +1,5 @@
+import { useClock } from "@/hooks/useThemeStore";
+import { PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
 import {
 	DataGridPremium,
 	GridApiPremium,
@@ -21,12 +23,9 @@ import { RefObject, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NoResultsOverlay } from "./components/NoResultsOverlay";
 import { useNavigate } from "@tanstack/react-router";
-import {
-	expandedFilterPanelTypes,
-	nonClickableTypes,
-	specialRedirectionTypes,
-} from "@constants/dataGrid/types";
-import { SxProps, Theme } from "@mui/material";
+import { appUrl } from "@helpers/appBase";
+import { expandedFilterPanelTypes } from "@constants/dataGrid/types";
+import { SxProps, Theme, Tooltip, TooltipProps } from "@mui/material";
 import ExportToolbar from "./components/ExportToolbar";
 
 declare module "@mui/x-data-grid-premium" {
@@ -38,6 +37,50 @@ declare module "@mui/x-data-grid-premium" {
 		selectionCount?: number;
 	}
 }
+
+/**
+ * Where a row in a given grid opens, or null when its rows open nothing.
+ *
+ * `href` duplicates `navigate` as a string only because window.open needs one:
+ * the router has no typed API for opening a tab.
+ */
+const detailTarget = (
+	type: string,
+	id: string,
+): { navigate: { to: string; params: Record<string, string> }; href: string } | null => {
+	switch (type) {
+		case "audits":
+			return {
+				navigate: { to: "/patronRequests/audits/$auditId", params: { auditId: id } },
+				href: `/patronRequests/audits/${id}`,
+			};
+		case "patronRequests":
+			return {
+				navigate: { to: "/patronRequests/$id", params: { id } },
+				href: `/patronRequests/${id}`,
+			};
+		case "bibs":
+			return { navigate: { to: "/bibs/$id", params: { id } }, href: `/bibs/${id}` };
+		case "locations":
+			return {
+				navigate: { to: "/locations/$id", params: { id } },
+				href: `/locations/${id}`,
+			};
+		default:
+			return null;
+	}
+};
+
+/**
+ * The grid's tooltips describe rather than name: MUI X's sort icon sits in a
+ * bare <span>, which Tooltip would otherwise put aria-label on, where the
+ * attribute is prohibited. The icon button inside already carries the name.
+ *
+ * Scoped to the grid - elsewhere a Tooltip IS an icon button's only name.
+ */
+const DescribingTooltip = (props: TooltipProps) => (
+	<Tooltip {...props} describeChild />
+);
 
 interface DataGridProps {
 	autoRowHeight?: boolean;
@@ -53,15 +96,18 @@ interface DataGridProps {
 	filterModel?: GridFilterModel;
 	getDetailPanelContent?: any; // Function for returning detail panel content, where applicable
 	identifier: string; // The specific type or identifier. Must be unique in the application, as it is used to retrieve data grid settings.
+	/** The grid's accessible name. Required: several grids share a page. */
+	label: string;
 	loading: boolean;
 	listViewEnabled: boolean;
 	noResultsText: string;
 	onColumnVisibilityModelChange?: (model: GridColumnVisibilityModel) => void;
 	onFilterModelChange?: (model: GridFilterModel) => void;
-	// onPaginationModelChange: (model: GridPaginationModel) => void;
 	onPaginationModelChange?: any;
 	onRowModesModelChange?: (model: GridRowModesModel) => void;
 	onRowEditStop?: (params: any, event: any) => void;
+	/** Told when an inline edit fails to save, with the message to show. */
+	onRowUpdateError?: (message: string) => void;
 	onSortModelChange?: (model: GridSortModel) => void;
 	pagination: boolean;
 	paginationMode: GridFeatureMode; // Determines client or server side pagination
@@ -72,7 +118,6 @@ interface DataGridProps {
 	rowModesModel: GridRowModesModel;
 	rows: GridRowsProp;
 	scrollbarVisible: boolean;
-	// sortModel: GridSortModel;
 	sortModel?: any;
 	sortingMode: GridFeatureMode;
 	toolbarVisible: boolean;
@@ -101,6 +146,7 @@ export default function DataGrid({
 	getDetailPanelContent,
 	isExporting = false,
 	loading,
+	label,
 	listViewEnabled,
 	noResultsText,
 	onCleanup,
@@ -110,6 +156,7 @@ export default function DataGrid({
 	onPaginationModelChange,
 	onRowModesModelChange,
 	onRowEditStop,
+	onRowUpdateError,
 	onSortModelChange,
 	pagination,
 	paginationMode,
@@ -129,14 +176,10 @@ export default function DataGrid({
 	type,
 }: DataGridProps) {
 	const { t } = useTranslation();
+	const clock = useClock();
 	const navigate = useNavigate();
 	const expandedFilterPanel = expandedFilterPanelTypes.includes(type);
 	const getDetailPanelHeight = useCallback(() => "auto", []); // Only necessary because master detail is not applicable to all grids yet
-	const [, setAlert] = useState<any>({
-		open: false,
-		severity: "success",
-		text: null,
-	}); // We do need to give feedback on editing s
 	const internalApiRef = useGridApiRef();
 	const apiRef = parentApiRef || internalApiRef;
 
@@ -145,56 +188,34 @@ export default function DataGrid({
 		ids: new Set(),
 	});
 	const handleRowClick: GridEventListener<"rowClick"> = (params, event) => {
-		//UseNavigateResult<string>
-
-		if (rowModesModel[params?.row?.id]?.mode !== GridRowModes.Edit) {
-			// Some grids, like the PRs on the library page, need special redirection
-			if (specialRedirectionTypes.includes(type)) {
-				if (event.ctrlKey || event.metaKey)
-					if (type == "audits") {
-						if (event.ctrlKey || event.metaKey) {
-							window.open(
-								`/patronRequests/audits/${params?.row?.id}`,
-								"_blank",
-							);
-						} else {
-							navigate({ to: `/patronRequests/audits/${params?.row?.id}` });
-						}
-					} else {
-						window.open(`/patronRequests/${params?.row?.id}`, "_blank");
-					}
-				if (!(event.ctrlKey || event.metaKey))
-					if (type == "audits") {
-						if (event.ctrlKey || event.metaKey) {
-							window.open(
-								`/patronRequests/audits/${params?.row?.id}`,
-								"_blank",
-							);
-						} else {
-							navigate({ to: `/patronRequests/audits/${params?.row?.id}` });
-						}
-					} else {
-						navigate({ to: `/patronRequests/${params?.row?.id}` });
-					}
-			} else if (
-				// Others we don't want users to be able to click through on
-				!nonClickableTypes.includes(type)
-			) {
-				if (event.ctrlKey || event.metaKey)
-					window.open(`/${type}/${params?.row?.id}`, "_blank");
-				if (!(event.ctrlKey || event.metaKey))
-					navigate({ to: `/${type}/${params?.row?.id}` });
-			}
-		} else {
-			// Don't let them navigate away if editing is present
+		// Don't let them navigate away if editing is present
+		if (rowModesModel[params?.row?.id]?.mode === GridRowModes.Edit) {
 			event.defaultMuiPrevented = true;
+			return;
 		}
+
+		const target = detailTarget(type, String(params?.row?.id));
+		if (!target) {
+			return;
+		}
+
+		if (event.ctrlKey || event.metaKey) {
+			window.open(appUrl(target.href), "_blank");
+			return;
+		}
+		navigate(target.navigate);
 	};
 
-	//identifier may not be needed
+	// Remounted when the clock preference changes, because a column's
+	// valueFormatter is a plain function whose output MUI X does not treat as
+	// part of a cell's identity - a re-render alone leaves the old text on
+	// screen. The cost is the grid's scroll position, on a setting nobody
+	// changes twice.
 	return (
 		<div style={{ display: "flex", flexDirection: "column" }}>
 			<DataGridPremium
+				key={clock}
+				aria-label={label}
 				apiRef={apiRef}
 				checkboxSelection={checkboxSelection}
 				columns={columns}
@@ -234,10 +255,8 @@ export default function DataGrid({
 				onPaginationModelChange={onPaginationModelChange}
 				onProcessRowUpdateError={(params: GridRowParams) => {
 					const name = params?.row?.name ?? params?.row?.fullName;
-					setAlert({
-						open: true,
-						severity: "error",
-						text: t("common.update_failure", {
+					onRowUpdateError?.(
+						t("common.update_failure", {
 							// entities.* are already lowercase singulars written for exactly
 							// this sentence, so no toLowerCase() is needed on them.
 							entity:
@@ -248,14 +267,14 @@ export default function DataGrid({
 										: type?.toLowerCase(),
 							name: name,
 						}),
-					});
+					);
 				}}
 				onSortModelChange={onSortModelChange}
 				onRowClick={handleRowClick}
 				onRowSelectionModelChange={(newSelection) => {
 					setSelectionModel(newSelection);
 				}}
-				pageSizeOptions={[5, 10, 20, 25, 30, 40, 50, 100, 200]}
+				pageSizeOptions={PAGE_SIZE_OPTIONS}
 				pagination={pagination}
 				paginationMode={paginationMode}
 				paginationModel={paginationModel}
@@ -271,6 +290,7 @@ export default function DataGrid({
 				sortingMode={sortingMode}
 				sortModel={sortModel}
 				slots={{
+					baseTooltip: DescribingTooltip,
 					detailPanelExpandIcon: GridExpandMoreIcon,
 					detailPanelCollapseIcon: GridExpandLessIcon,
 					noRowsOverlay: () => (

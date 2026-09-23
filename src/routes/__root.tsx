@@ -1,8 +1,13 @@
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import {
+	createRootRouteWithContext,
+	HeadContent,
+	Outlet,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { AuthContextProps, useAuth } from "react-oidc-context";
 import { QueryClient } from "@tanstack/react-query";
 import Loading from "@components/Loading/Loading";
+import { Announcer } from "@components/Layout/Announcer";
 import { useTranslation } from "react-i18next";
 
 // Define the context available to the router
@@ -22,7 +27,13 @@ function RootComponent() {
 	// Show a global loading spinner only during the initial auth check
 	if (auth.isLoading) {
 		return (
-			<Loading title={t("login.initialising")} subtitle={t("ui.info.wait")} />
+			<>
+				<HeadContent />
+				<Loading
+					title={t("login.initialising")}
+					subtitle={t("ui.info.wait")}
+				/>
+			</>
 		);
 	}
 
@@ -33,6 +44,10 @@ function RootComponent() {
 
 	return (
 		<>
+			{/* Renders each route's `head`. React 19 hoists a <title> to the
+			    document head from wherever it is rendered. */}
+			<HeadContent />
+			<Announcer />
 			<Outlet />
 			{process.env.NODE_ENV !== "production" && <TanStackRouterDevtools />}
 		</>

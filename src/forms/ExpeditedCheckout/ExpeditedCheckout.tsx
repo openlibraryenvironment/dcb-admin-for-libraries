@@ -1,9 +1,11 @@
+import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
+import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import * as Yup from "yup";
+import { expeditedCheckoutSchema } from "@/schemas/expeditedCheckout";
 import {
 	DialogContent,
 	Step,
@@ -93,9 +95,7 @@ export default function ExpeditedCheckout({
 	const [patronData, setPatronData] = useState<PatronLookupResponse | null>(
 		null,
 	);
-	const [availabilityResults, setAvailabilityResults] = useState<any>({});
-	const [itemsLoading, setItemsLoading] = useState(false);
-	const [itemsError, setItemsError] = useState(false);
+
 	const [patronRequestId, setPatronRequestId] = useState<string | null>(null);
 	const [patronRequestWaiting, setPatronRequestWaiting] = useState(false);
 	const [checkoutCompleted, setCheckoutCompleted] = useState(false);
@@ -141,7 +141,7 @@ export default function ExpeditedCheckout({
 					order: "fullName",
 					orderBy: "ASC",
 					pageno: 0,
-					pagesize: 1000,
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
 					query: "",
 				},
 				headers,
@@ -216,51 +216,13 @@ export default function ExpeditedCheckout({
 
 	const patronRequest = patronRequestData?.patronRequests?.content?.[0];
 
-	const validationSchema = Yup.object().shape({
-		patronBarcode: Yup.string()
-			.required(
-				t("ui.validation.required", {
-					field: t("requesting.staff_request.patron.barcode").toLowerCase(),
-				}),
-			)
-			.test(
-				"no-square-brackets",
-				t("requesting.staff_request.patron.error.no_brackets"),
-				(value) =>
-					value ? !value.includes("[") && !value.includes("]") : true,
-			),
-		agencyCode: Yup.string().required(
-			t("ui.validation.required", {
-				field: t("agency.code").toLowerCase(),
-			}),
-		),
-		pickupLocationId: Yup.string().required(
-			t("ui.validation.required", {
-				field: t(
-					"requesting.staff_request.patron.pickup_location",
-				).toLowerCase(),
-			}),
-		),
-		requesterNote: Yup.string(),
-		itemLocalId: Yup.string().required(
-			t("ui.validation.required", {
-				field: t("requesting.staff_request.patron.item_local_id").toLowerCase(),
-			}),
-		),
-		itemLocalSystemCode: Yup.string().required(),
-		itemAgencyCode: Yup.string().required(
-			t("ui.validation.required", {
-				field: t("requesting.staff_request.patron.item_library").toLowerCase(),
-			}),
-		),
-	});
+	const validationSchema = useMemo(() => expeditedCheckoutSchema(t), [t]);
 	const staffLibraryHostLmsCode = staffLibrary?.agency?.hostLms?.code;
 
 	const {
 		control,
 		handleSubmit,
 		reset,
-		watch,
 		setValue,
 		formState: { errors, isValid },
 	} = useForm<OnSiteBorrowingFormData>({
@@ -278,14 +240,25 @@ export default function ExpeditedCheckout({
 		mode: "onChange",
 	});
 
-	const formValues = watch();
-	const {
+	// Named rather than watch(): the bare call subscribes to EVERY field, so a
+	// keystroke in requesterNote re-rendered this whole form and both queries below
+	// re-read their inputs.
+	const [
 		patronBarcode,
 		agencyCode,
 		itemAgencyCode,
 		pickupLocationId,
 		itemLocalId,
-	} = formValues;
+	] = useWatch({
+		control,
+		name: [
+			"patronBarcode",
+			"agencyCode",
+			"itemAgencyCode",
+			"pickupLocationId",
+			"itemLocalId",
+		],
+	});
 
 	const locationQuery = `agency:${staffLibrary?.agency?.id}`; // Staff library is always the supplier.
 
@@ -300,7 +273,7 @@ export default function ExpeditedCheckout({
 						order: "name",
 						orderBy: "ASC",
 						pageno: 0,
-						pagesize: 1000,
+						pagesize: REFERENCE_LIST_PAGE_SIZE,
 						query: locationQuery,
 					},
 					headers,
@@ -316,31 +289,33 @@ export default function ExpeditedCheckout({
 		}
 	}, [staffLibraryHostLmsCode, setValue]);
 
-	const fetchRecords = useCallback(async () => {
-		setItemsLoading(true);
-		setItemsError(false);
-		try {
-			const response = await axios.get<any[]>(
+	const {
+		data: availabilityResults,
+		isFetching: itemsLoading,
+		isError: itemsError,
+	} = useQuery({
+		queryKey: [
+			"availability",
+			bibClusterId,
+			headers,
+			cfg.VITE_DCB_API_BASE,
+		],
+		queryFn: async () => {
+			const response = await axios.get(
 				`${cfg.VITE_DCB_API_BASE}/items/availability`,
-				{
-					headers,
-					params: { clusteredBibId: bibClusterId },
-				},
+				{ headers, params: { clusteredBibId: bibClusterId } },
 			);
-			setAvailabilityResults(response.data);
-		} catch {
-			setItemsError(true);
-			setStepError(1);
-		} finally {
-			setItemsLoading(false);
-		}
-	}, [bibClusterId, headers, cfg.VITE_DCB_API_BASE]);
+			return response.data;
+		},
+		...AVAILABILITY_QUERY_POLICY,
+		enabled: (activeStep === 1 || checkoutCompleted) && !!bibClusterId,
+	});
 
+	// The step marker is local state, so a failed fetch still has to be told to
+	// it. Only the failure needs an effect; the fetch itself no longer does.
 	useEffect(() => {
-		if (activeStep === 1 || checkoutCompleted) {
-			fetchRecords();
-		}
-	}, [checkoutCompleted, activeStep, fetchRecords]);
+		if (itemsError) setStepError(1);
+	}, [itemsError]);
 
 	const itemsData: Item[] = availabilityResults?.itemList || [];
 	const filteredItems = itemsData.filter(
@@ -389,9 +364,6 @@ export default function ExpeditedCheckout({
 			}),
 		) || [];
 
-	// const selectedItem = itemOptions.find(
-	// 	(option) => option.value === itemLocalId,
-	// );
 
 	const rawSelectedItem = itemsData.find((item) => item.id === itemLocalId);
 
@@ -633,29 +605,6 @@ export default function ExpeditedCheckout({
 
 	return (
         <>
-            {/* <Dialog
-				open={show}
-				onClose={handleClose}
-				aria-labelledby="patron-request-modal"
-				fullWidth
-				maxWidth="sm">
-				<DialogTitle id="form-dialog-title" variant="modalTitle">
-					{t("requesting.expedited_checkout.title_on_site")}
-				</DialogTitle>
-
-				{(!patronRequestWaiting || checkoutCompleted) && (
-					<IconButton
-						aria-label={t("ui.actions.close")}
-						onClick={handleClose}
-						sx={{
-							position: "absolute",
-							right: 8,
-							top: 8,
-							color: (theme) => (theme.vars || theme).palette.grey[500],
-						}}>
-						<Close />
-					</IconButton>
-				)} */}
             <DialogContent sx={{ overflow: "visible" }}>
 				<Stepper
 					activeStep={activeStep}
@@ -715,11 +664,9 @@ export default function ExpeditedCheckout({
 					{getStepContent(activeStep)}
 				</form>
 			</DialogContent>
-            {/* </Dialog> */}
             <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
-				autoHideDuration={6000}
 				onCloseFunc={handleAlertClose}
 				alertText={alert.text}
 				key="expedited-checkout-alert"

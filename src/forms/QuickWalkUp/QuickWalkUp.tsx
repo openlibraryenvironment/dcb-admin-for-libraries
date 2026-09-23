@@ -1,9 +1,11 @@
+import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
+import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import * as Yup from "yup";
+import { quickWalkUpSchema } from "@/schemas/quickWalkUp";
 import {
 	DialogContent,
 	Step,
@@ -89,16 +91,12 @@ export default function QuickWalkUpRequest({
 		t("requesting.expedited_checkout.steps.checkout"),
 	];
 
-	const schema = Yup.object().shape({
-		patronBarcode: Yup.string().required(t("ui.validation.required")),
-		agencyCode: Yup.string().required(t("ui.validation.required")),
-		itemBarcode: Yup.string().required(t("ui.validation.required")),
-		pickupLocationCode: Yup.string().required(t("ui.validation.required")),
-	});
+	const schema = useMemo(() => quickWalkUpSchema(t), [t]);
 
 	const {
 		control,
 		handleSubmit,
+		getValues,
 		watch,
 		setValue,
 		reset,
@@ -127,7 +125,7 @@ export default function QuickWalkUpRequest({
 					getLibraries,
 					{
 						pageno: 0,
-						pagesize: 1000,
+						pagesize: REFERENCE_LIST_PAGE_SIZE,
 						order: "fullName",
 						orderBy: "ASC",
 						query: "",
@@ -182,7 +180,7 @@ export default function QuickWalkUpRequest({
 					{
 						query: locationQuery,
 						pageno: 0,
-						pagesize: 1000,
+						pagesize: REFERENCE_LIST_PAGE_SIZE,
 						order: "name",
 						orderBy: "ASC",
 					},
@@ -239,8 +237,8 @@ export default function QuickWalkUpRequest({
 			);
 			return response.data;
 		},
-		// Only run this query once the checkout has succeeded and we have the ID
-		// Bit of a hack to get the due date
+		...AVAILABILITY_QUERY_POLICY,
+		// Only once the checkout has succeeded and we have the id.
 		enabled: checkoutCompleted && !!resolvedBibClusterId,
 	});
 
@@ -428,7 +426,7 @@ export default function QuickWalkUpRequest({
 					<QuickWalkUpRequestStep
 						control={control}
 						setValue={setValue}
-						watch={watch}
+						getValues={getValues}
 						errors={errors}
 						pickupLocationOptions={pickupLocationOptions}
 						pickupLocationsLoading={pickupLocationsLoading}
@@ -515,7 +513,6 @@ export default function QuickWalkUpRequest({
             <TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
-				autoHideDuration={6000}
 				onCloseFunc={handleAlertClose}
 				alertText={alert.text}
 				key="quick-walk-up-alert"

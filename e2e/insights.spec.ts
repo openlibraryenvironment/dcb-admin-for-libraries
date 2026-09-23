@@ -3,19 +3,10 @@ import { READ_ONLY_ROLES } from "./fixtures/auth";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
- * Library insights.
- *
- * Two properties matter here and neither is visible in a screenshot:
- *
- *  1. The page is gated on VITE_FEATURE_INSIGHTS, because it calls statistics
- *     endpoints that only exist in the upcoming dcb-service release. Hiding the
- *     tab is not enough - the URL is typeable.
- *  2. The library it reports on comes from the access token's agency claim, and
- *     from nowhere else. This app has no library picker and must never grow one.
- *     dcb-service's StatsScopeGuard now checks the requested code against the
- *     token rather than trusting it, so a mismatch is refused - but this app must
- *     still never ASK for a library it was not given, because the request it sends
- *     is what a reviewer reads to decide whether the client is honest.
+ * Library insights. Two properties neither of which is visible in a
+ * screenshot: the page is gated on VITE_FEATURE_INSIGHTS because the URL is
+ * typeable, and the library it reports on comes from the token's agency claim
+ * and nowhere else. docs/service-compatibility.md.
  */
 
 /**
@@ -211,4 +202,27 @@ test.describe("Library insights", () => {
 			expect(url.searchParams.get("libraryCode")).toBeNull();
 		}
 	});
+});
+
+/**
+ * A chart is an SVG of positioned marks: a screen reader gets the axis labels at
+ * best and nothing at worst, so the figures the panel exists to convey are
+ * absent. Each chart now carries the same numbers as a visually hidden table.
+ */
+test("charts carry their numbers as a table", async ({ app, page }) => {
+	await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+	await app.mockStats();
+
+	await page.goto("/insights");
+	await expect(
+		page.getByRole("heading", { level: 1, name: /insights/i }),
+	).toBeVisible();
+
+	// The trend chart is above the fold; the rest mount on scroll and are
+	// covered by the accessibility gate's own reveal.
+	const table = page.getByRole("table").first();
+	await expect(table).toBeAttached({ timeout: 15000 });
+	await expect(table.getByRole("columnheader").first()).toBeAttached();
 });

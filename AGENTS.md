@@ -14,22 +14,26 @@ Library-facing administration UI for DCB. React 19, TanStack Router + Query, Vit
 
 ## Versions
 
-Corrected 2026-08-30. This section previously said MUI 7 / MUI X 8 / Router 1.12x / TypeScript 5.8 and warned against copying from `dcb-admin-ui` for that reason. That is no longer true in either direction, and following it would have steered people away from APIs that are correct here.
+Corrected 2026-09-21, and the correction is the point: this table said MUI 9.3.1 here against 9.1.2 in `dcb-admin-ui`, and that both repos sat on MUI X 9.12.0 "in lockstep". `dcb-admin-ui` had moved to 9.4.0 / 9.13.0 and this one had not, so the table described a lockstep that had already broken and pointed the wrong way about which repo was ahead. Read it from the two `package.json` files before trusting it.
 
 | | this repo | `dcb-admin-ui` |
 |---|---|---|
-| MUI | **9.3.1** | 9.1.2 |
-| MUI X (grid, charts, pickers, license) | **9.12.0** | 9.12.0 |
+| MUI | **9.4.0** | 9.4.0 |
+| MUI X (grid, charts, pickers, license) | **9.13.0** | 9.13.0 |
 | TanStack Router | **1.170.31** | 1.170.17 |
 | TypeScript | **6.0.3** | 6.0.3 |
 | Vite | **8.2.1** | 8.1.3 |
 | React | **19.2.8** | 19 |
 
-The two admin apps are on the same generation, so an API that works in one usually works here. "Usually" is the operative word: the MUI minors differ, and MUI X 9 is where the two repos are pinned in lockstep on purpose — those packages share `x-license` and `x-internals`, and a mixed set is a runtime hazard rather than untidiness. Bump them together or not at all.
+The two admin apps are on the same generation, so an API that works in one usually works here. MUI X 9 is where the two repos are pinned in lockstep on purpose — those packages share `x-license` and `x-internals`, and a mixed set is a runtime hazard rather than untidiness. Bump them together or not at all - and bump to whatever `dcb-admin-ui` is on, not to whatever npm calls latest. `@mui/x-license` lags the other X packages (9.13.0 when the rest offered 9.14.0), so "latest" is itself a mixed set.
 
 **Read the installed types rather than writing an API from memory.** That is the durable rule here, and it is not about which repo is behind: this estate runs ahead of most models' training data, so a remembered API is a hallucination risk whichever version is installed.
 
 ## Things you will get wrong without being told
+
+**Delete commented-out code; git remembers it for you.** This was the worst repository in the estate for it — 172 sites on 2026-09-08, including a 142-line commented-out component in `ExportToolbar.tsx` and seven consecutive lines in `routes/login.tsx`. It is now at **0**, and the point of saying so is that it is cheap to keep there and expensive to recover: a reader cannot tell dead code from code that is about to matter, so it is read, considered, and left alone by everyone forever.
+
+**A comment earns its line only as** a constraint found by running the thing, a decision the next reader would otherwise undo, a bound the types cannot state, or one line pointing at the document that holds the argument. Design rationale — why this component exists, what shape was rejected — goes to `docs/`, an ADR or the commit message, where it is reviewed and updated when the approach changes. The 49 runs of 12+ lines that were here in September 2026 moved into `docs/`, which is where `theming.md`, `testing.md`, `routing.md`, `formatting.md`, `branding.md`, `insights.md`, `attributes.md` and `service-compatibility.md` came from. `doctrine/scripts/gate.mjs --report` now reads 0 for both counts; check it before quoting either number.
 
 **Releases run from the `release` branch, not `main`.** `semantic-release` is configured with `"branches": ["release"]`, publishes to GitLab, and commits `package.json`, `CHANGELOG.md` and `release-info.json` back with `[skip ci]`. Merging to `main` releases nothing; conventional-commit format is not optional, because commit messages *are* the release notes.
 

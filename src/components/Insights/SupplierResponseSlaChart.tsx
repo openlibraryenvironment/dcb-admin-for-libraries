@@ -11,6 +11,7 @@ import {
 } from "@helpers/statsApi";
 import { formatTurnaround } from "@helpers/insightsRange";
 
+import ChartDataTable from "./ChartDataTable";
 import PanelState from "./PanelState";
 
 import MetricInfo from "./MetricInfo";
@@ -59,28 +60,41 @@ export default function SupplierResponseSlaChart({
           height={CHART_HEIGHT}
         >
           {() => (
-            <BarChartPro
-              height={CHART_HEIGHT}
-              layout="horizontal"
-              yAxis={[
-                { scaleType: "band", data: rows.map((r) => r.supplierCode) },
-              ]}
-              xAxis={[
-                { label: t("insights.charts.supplier_response.axis_hours") },
-              ]}
-              series={[
-                {
-                  data: rows.map((r) => r.medianResponseSeconds / 3600),
-                  label: t("insights.charts.supplier_response.series"),
-                  color: categorical[1],
-                  valueFormatter: (v) =>
-                    v == null
-                      ? t("insights.duration.none")
-                      : formatTurnaround(v * 3600, t),
-                },
-              ]}
-              margin={{ left: 140 }}
-            />
+            <>
+              <BarChartPro
+                height={CHART_HEIGHT}
+                layout="horizontal"
+                yAxis={[
+                  { scaleType: "band", data: rows.map((r) => r.supplierCode) },
+                ]}
+                xAxis={[
+                  { label: t("insights.charts.supplier_response.axis_hours") },
+                ]}
+                series={[
+                  {
+                    data: rows.map((r) => r.medianResponseSeconds / 3600),
+                    label: t("insights.charts.supplier_response.series"),
+                    color: categorical[1],
+                    valueFormatter: (v) =>
+                      v == null
+                        ? t("insights.duration.none")
+                        : formatTurnaround(v * 3600, t),
+                  },
+                ]}
+                margin={{ left: 140 }}
+              />
+              <ChartDataTable
+                caption={t("insights.charts.supplier_response.title")}
+                columns={[
+                  t("insights.charts.supplier_reliability.supplier"),
+                  t("insights.charts.supplier_response.axis_hours"),
+                ]}
+                rows={rows.map((r) => [
+                  r.supplierCode,
+                  Math.round((r.medianResponseSeconds / 3600) * 10) / 10,
+                ])}
+              />
+            </>
           )}
         </PanelState>
       </CardContent>

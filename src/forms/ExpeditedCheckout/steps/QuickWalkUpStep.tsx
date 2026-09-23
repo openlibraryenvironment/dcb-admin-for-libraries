@@ -11,8 +11,8 @@ import {
 	Control,
 	Controller,
 	FieldErrors,
+	UseFormGetValues,
 	UseFormSetValue,
-	UseFormWatch,
 } from "react-hook-form";
 import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocompleteOption";
 import { useEffect } from "react";
@@ -21,7 +21,7 @@ import { QuickWalkUpFormData } from "@models/QuickWalkUpFormData";
 interface QuickWalkUpRequestStepProps {
 	control: Control<QuickWalkUpFormData>;
 	setValue: UseFormSetValue<QuickWalkUpFormData>;
-	watch: UseFormWatch<QuickWalkUpFormData>;
+	getValues: UseFormGetValues<QuickWalkUpFormData>;
 	errors: FieldErrors<QuickWalkUpFormData>;
 	pickupLocationOptions: PatronRequestAutocompleteOption[];
 	pickupLocationsLoading: boolean;
@@ -33,8 +33,8 @@ interface QuickWalkUpRequestStepProps {
 
 export const QuickWalkUpRequestStep = ({
 	control,
+	getValues,
 	setValue,
-	watch,
 	errors,
 	pickupLocationOptions,
 	pickupLocationsLoading,
@@ -45,12 +45,12 @@ export const QuickWalkUpRequestStep = ({
 }: QuickWalkUpRequestStepProps) => {
 	// Auto-select the first pickup location
 	useEffect(() => {
-		if (pickupLocationOptions.length > 0 && !watch("pickupLocationCode")) {
+		if (pickupLocationOptions.length > 0 && !getValues("pickupLocationCode")) {
 			setValue("pickupLocationCode", pickupLocationOptions[0].value, {
 				shouldValidate: true,
 			});
 		}
-	}, [pickupLocationOptions, setValue, watch]);
+	}, [getValues, pickupLocationOptions, setValue]);
 
 	return (
 		<>

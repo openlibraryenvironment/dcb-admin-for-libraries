@@ -1,3 +1,5 @@
+import { currentClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
 import {
 	GridFilterModel,
 	GridSortDirection,
@@ -5,7 +7,6 @@ import {
 } from "@mui/x-data-grid-premium";
 import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
 import i18n from "@/i18n";
-import dayjs from "dayjs";
 
 export const processGridFilterModel = (
 	model: GridFilterModel,
@@ -96,9 +97,9 @@ export const generateFilterDescription = (model?: GridFilterModel): string => {
 			const hasStart = start !== null && start !== undefined && start !== "";
 			const hasEnd = end !== null && end !== undefined && end !== "";
 			const formattedStart = hasStart
-				? dayjs(start).format("YYYY-MM-DD HH:mm")
+				? formatTimestamp(start, currentClock())
 				: "";
-			const formattedEnd = hasEnd ? dayjs(end).format("YYYY-MM-DD HH:mm") : "";
+			const formattedEnd = hasEnd ? formatTimestamp(end, currentClock()) : "";
 
 			if (hasStart && hasEnd) {
 				operator = i18n

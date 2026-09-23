@@ -86,6 +86,32 @@ verify_e2e:
       - playwright-report/
     expire_in: 1 week
 
+verify_performance:
+  stage: verify
+  # The Playwright image, because lighthouserc.cjs points CHROME_PATH at the
+  # Chrome that @playwright/test pins - one browser for both gates rather than a
+  # second download whose version nothing tracks.
+  image:
+    name: mcr.microsoft.com/playwright:v1.62.1-noble
+    pull_policy: if-not-present
+  script:
+    - export NPM_TOKEN="$NPMJS_TOKEN"
+    - npm ci
+    # Bytes first: it is deterministic, it covers every chunk including the ones
+    # behind sign-in, and it fails fast. VITE_PUBLIC_URL is pinned so the chunk
+    # names match the budget regardless of what .env says.
+    - VITE_PUBLIC_URL=/ npm run build
+    - npm run budget
+    # Lighthouse can only reach /login - every other route is behind Keycloak.
+    # It rebuilds through scripts/preview-for-lighthouse.mjs, which pins the base
+    # for the preview as well as the build.
+    - npm run lighthouse
+  artifacts:
+    when: always
+    paths:
+      - .lighthouseci/
+    expire_in: 1 week
+
 verify_base_path:
   stage: verify
   # The `build` job ships the app under VITE_PUBLIC_URL=/dcb-admin-for-libraries/
@@ -115,6 +141,28 @@ verify_ki_bootstrap:
     - export NPM_TOKEN="$NPMJS_TOKEN"
     - npm ci
     - npm run e2e:ki-bootstrap
+
+# Every secret this repository has ever committed stays readable in its history: deleting
+# the line does not un-leak it, only rotation does. This repository's history is clean, so there is no
+# baseline to carry: any finding at all is a new one.
+verify_secrets:
+  stage: verify
+  image:
+    name: zricethezav/gitleaks:v8.30.1
+    entrypoint: [""]
+  variables:
+    # GitLab clones 20 commits deep by default, so without this the scan would cover a
+    # sliding window and quietly report clean on a repository it never read.
+    GIT_DEPTH: "0"
+  script:
+    # --redact so a finding does not print the secret into a job log that is readable by
+    # everyone who can see the pipeline.
+    - gitleaks git --redact --exit-code 1 --config .gitleaks.toml --report-format sarif --report-path gitleaks.sarif .
+  artifacts:
+    when: always
+    paths:
+      - gitleaks.sarif
+    expire_in: 1 month
 
 release:
   stage: release

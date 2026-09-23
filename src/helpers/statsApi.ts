@@ -221,17 +221,10 @@ export type TimeSeriesInterval = "day" | "week" | "month";
 const STATS_BASE = "/insights";
 
 /**
- * The wire name for the library filter.
- *
- * dcb-service binds `requestedLibraryCode`, not `libraryCode` - deliberately, because
- * StatsScopeGuard treats it as a REQUEST rather than an instruction and checks it against the
- * caller's token. `StatsScopeArchitectureTests.noStatsEndpointStillBindsTheRawLibraryCodeParameter`
- * fails the build if an endpoint ever goes back to the trusted name.
- *
- * We keep `libraryCode` throughout this app because that is what it is to us, and rename once
- * here at the serialisation boundary. Sending the old name is silently wrong rather than an
- * error: the endpoint ignores it, and a consortium administrator asking for one library gets
- * consortium-wide figures rendered under that library's name.
+ * The wire name for the library filter. dcb-service binds
+ * `requestedLibraryCode`, and sending `libraryCode` is SILENTLY wrong - the
+ * endpoint ignores it and falls back to the token.
+ * docs/service-compatibility.md.
  */
 export const LIBRARY_CODE_PARAM = "requestedLibraryCode";
 
@@ -287,17 +280,9 @@ export interface Paged<T> {
 }
 
 /**
- * libraryCode is required by the endpoint - "who do we trade with" needs a "we" - so the
- * caller must supply it rather than relying on the consortium-wide default.
- *
- * Returns the PAGE rather than unwrapping to the first one, unlike the older summary
- * endpoints. The whole point of this endpoint over dashboard-metrics' fixed top ten is that
- * the tail is reachable, and a helper that quietly returns page zero would put it back out of
- * reach. totalSize counts partners, not requests, so it drives a page control directly.
- *
- * Sorting is optional: dcb-service applies total_count descending when none is given, so
- * "top partners" is the default without the client having to know the column name. Pass
- * `sort` to rank by one direction instead.
+ * Returns the PAGE rather than unwrapping to the first row: the reason for this
+ * endpoint over dashboard-metrics' fixed top ten is that the tail is reachable.
+ * `libraryCode` is required, and sorting is optional. docs/insights.md.
  */
 export function topPartnersQueryOptions(
 	client: AxiosInstance,

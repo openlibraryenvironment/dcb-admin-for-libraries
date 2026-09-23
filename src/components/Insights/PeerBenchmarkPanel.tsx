@@ -18,6 +18,7 @@ import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { outcomeTextColour } from "@helpers/outcomeTextColour";
 import { peerBenchmarksQueryOptions } from "@helpers/statsApi";
 
+import { formatNumber, formatPercent } from "@helpers/formatters";
 import PanelState from "./PanelState";
 
 import MetricInfo from "./MetricInfo";
@@ -75,7 +76,7 @@ export default function PeerBenchmarkPanel({
     return { rows: mapped, medianFill: mFill, medianCheckout: mCheckout };
   }, [data]);
 
-  const pct = (v: number | null) => (v == null ? "—" : `${v.toFixed(1)}%`);
+  const pct = (v: number | null) => (v == null ? "—" : formatPercent(v));
 
   return (
     <Card variant="outlined">
@@ -162,7 +163,7 @@ export default function PeerBenchmarkPanel({
                           ) : null}
                         </TableCell>
                         <TableCell align="right">
-                          {row.totalRequests.toLocaleString()}
+                          {formatNumber(row.totalRequests)}
                         </TableCell>
                         <TableCell align="right">
                           {pct(row.checkoutRate)}

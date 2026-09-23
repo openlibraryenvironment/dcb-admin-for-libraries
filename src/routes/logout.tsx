@@ -1,3 +1,4 @@
+import { pageTitle } from "@helpers/pageTitle";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
@@ -20,6 +21,7 @@ const logoutSearchSchema = z.object({
 
 export const Route = createFileRoute("/logout")({
 	validateSearch: logoutSearchSchema,
+	head: () => ({ meta: [{ title: pageTitle("nav.settings.title") }] }),
 	component: Logout,
 });
 

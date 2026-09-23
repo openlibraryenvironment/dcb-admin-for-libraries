@@ -1,46 +1,48 @@
+import { currentClock } from "@/hooks/useThemeStore";
+import { formatTimestamp } from "@helpers/formatters";
+import i18n from "@/i18n";
 import { dateTimeRangeOperators } from "@constants/filters/dateTimeRangeOperators";
 import { equalsOnly, standardFilters } from "@constants/filters/filters";
 import { GridColDef } from "@mui/x-data-grid-premium";
-import dayjs from "dayjs";
 export const standardNumRangeMappingColumns: GridColDef[] = [
 	{
 		field: "domain",
-		headerName: "Category",
+		headerName: i18n.t("grid.headers.category"),
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
 	},
 	{
 		field: "context",
-		headerName: "From context",
+		headerName: i18n.t("grid.headers.from_context"),
 		minWidth: 50,
 		flex: 0.5,
 		filterable: false,
 	},
 	{
 		field: "lowerBound",
-		headerName: "Lower bound",
+		headerName: i18n.t("grid.headers.lower_bound"),
 		minWidth: 50,
 		flex: 0.4,
 		filterOperators: equalsOnly,
 	},
 	{
 		field: "upperBound",
-		headerName: "Upper bound",
+		headerName: i18n.t("grid.headers.upper_bound"),
 		minWidth: 50,
 		flex: 0.4,
 		filterOperators: equalsOnly,
 	},
 	{
 		field: "targetContext",
-		headerName: "To context",
+		headerName: i18n.t("grid.headers.to_context"),
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
 	},
 	{
 		field: "mappedValue",
-		headerName: "Mapped value",
+		headerName: i18n.t("grid.headers.mapped_value"),
 		minWidth: 50,
 		flex: 0.5,
 		editable: true,
@@ -48,7 +50,7 @@ export const standardNumRangeMappingColumns: GridColDef[] = [
 	},
 	{
 		field: "lastImported",
-		headerName: "Last imported",
+		headerName: i18n.t("grid.headers.last_imported"),
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: dateTimeRangeOperators,
@@ -57,7 +59,7 @@ export const standardNumRangeMappingColumns: GridColDef[] = [
 			return row.lastImported ? new Date(row.lastImported) : null;
 		},
 		valueFormatter: (value: Date) => {
-			return value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "";
+			return formatTimestamp(value, currentClock());
 		},
 	},
 ];
@@ -65,42 +67,42 @@ export const standardNumRangeMappingColumns: GridColDef[] = [
 export const numRangeMappingColumnsNoCategoryFilter: GridColDef[] = [
 	{
 		field: "domain",
-		headerName: "Category",
+		headerName: i18n.t("grid.headers.category"),
 		minWidth: 50,
 		flex: 0.5,
 		filterable: false,
 	},
 	{
 		field: "context",
-		headerName: "From context",
+		headerName: i18n.t("grid.headers.from_context"),
 		minWidth: 50,
 		flex: 0.5,
 		filterable: false,
 	},
 	{
 		field: "lowerBound",
-		headerName: "Lower bound",
+		headerName: i18n.t("grid.headers.lower_bound"),
 		minWidth: 50,
 		flex: 0.4,
 		filterOperators: equalsOnly,
 	},
 	{
 		field: "upperBound",
-		headerName: "Upper bound",
+		headerName: i18n.t("grid.headers.upper_bound"),
 		minWidth: 50,
 		flex: 0.4,
 		filterOperators: equalsOnly,
 	},
 	{
 		field: "targetContext",
-		headerName: "To context",
+		headerName: i18n.t("grid.headers.to_context"),
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
 	},
 	{
 		field: "mappedValue",
-		headerName: "Mapped value",
+		headerName: i18n.t("grid.headers.mapped_value"),
 		minWidth: 50,
 		flex: 0.5,
 		filterOperators: standardFilters,
@@ -108,7 +110,7 @@ export const numRangeMappingColumnsNoCategoryFilter: GridColDef[] = [
 	},
 	{
 		field: "lastImported",
-		headerName: "Last imported",
+		headerName: i18n.t("grid.headers.last_imported"),
 		minWidth: 100,
 		flex: 0.5,
 		filterOperators: dateTimeRangeOperators,
@@ -117,7 +119,7 @@ export const numRangeMappingColumnsNoCategoryFilter: GridColDef[] = [
 			return row.lastImported ? new Date(row.lastImported) : null;
 		},
 		valueFormatter: (value: Date) => {
-			return value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "";
+			return formatTimestamp(value, currentClock());
 		},
 	},
 ];

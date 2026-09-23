@@ -7,6 +7,7 @@ import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
 import { failureTaxonomyQueryOptions, StatsParams } from "@helpers/statsApi";
 
+import ChartDataTable from "./ChartDataTable";
 import PanelState from "./PanelState";
 
 import MetricInfo from "./MetricInfo";
@@ -53,20 +54,30 @@ export default function FailureTaxonomyChart({
           height={CHART_HEIGHT}
         >
           {() => (
-            // Magnitude ranking -> one hue, horizontal for legible reason labels.
-            <BarChartPro
-              height={CHART_HEIGHT}
-              layout="horizontal"
-              yAxis={[{ scaleType: "band", data: rows.map((r) => r.reason) }]}
-              series={[
-                {
-                  data: rows.map((r) => r.count),
-                  label: t("insights.charts.failure_taxonomy.series"),
-                  color: categorical[0],
-                },
-              ]}
-              margin={{ left: 160 }}
-            />
+            <>
+              {/* Magnitude ranking -> one hue, horizontal for legible reason labels. */}
+              <BarChartPro
+                height={CHART_HEIGHT}
+                layout="horizontal"
+                yAxis={[{ scaleType: "band", data: rows.map((r) => r.reason) }]}
+                series={[
+                  {
+                    data: rows.map((r) => r.count),
+                    label: t("insights.charts.failure_taxonomy.series"),
+                    color: categorical[0],
+                  },
+                ]}
+                margin={{ left: 160 }}
+              />
+              <ChartDataTable
+                caption={t("insights.charts.failure_taxonomy.title")}
+                columns={[
+                  t("insights.charts.failure_taxonomy.reason"),
+                  t("insights.charts.failure_taxonomy.series"),
+                ]}
+                rows={rows.map((r) => [r.reason, r.count])}
+              />
+            </>
           )}
         </PanelState>
       </CardContent>

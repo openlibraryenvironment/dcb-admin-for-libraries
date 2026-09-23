@@ -4,22 +4,9 @@ import path from "node:path";
 import en from "../src/locales/en/en.json";
 
 /**
- * Every literal translation key in the source must exist in en.json.
- *
- * i18next does not throw on a missing key - it renders the key itself, so
- * "ui.data_grid.export_all_csv" appears on the export menu in front of a
- * librarian. Nothing else catches that: it type-checks, it lints, and it only
- * shows up if someone happens to open the affected screen.
- *
- * Scope and limits:
- *  - Literal keys only. `t(`a.${b}`)` and `t(variable)` cannot be checked here;
- *    they are checked by reading the code.
- *  - A call carrying an inline English default - either `defaultValue` or
- *    i18next's positional form, t("key", "Some text") - is satisfied. Those
- *    render correct text; they are a translation-coverage question, which
- *    `npm run i18n:missed` reports, not a broken screen.
- *  - Comments are stripped first, so a key inside commented-out code is not a
- *    finding.
+ * Every literal translation key in the source must exist in en.json: i18next
+ * renders a missing key as the key itself, in front of a librarian. What this
+ * deliberately does not cover: docs/testing.md.
  */
 
 const SRC = path.resolve(import.meta.dirname, "../src");

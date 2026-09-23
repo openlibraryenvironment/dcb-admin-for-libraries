@@ -11,7 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
-.env 
+# Every variant, not just `.env`: vite also reads `.env.<mode>`, and a per-stack
+# mode file (.env.localstack) is otherwise ignored by neither rule above.
+.env*
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -29,3 +31,4 @@ dist-ssr
 /blob-report/
 /playwright/.cache/
 user.json
+.lighthouseci

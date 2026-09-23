@@ -8,16 +8,10 @@ import {
 } from "@helpers/statsApi";
 
 /**
- * The library filter goes to dcb-service as `requestedLibraryCode`, never `libraryCode`.
- *
- * StatsScopeGuard treats it as a REQUEST checked against the caller's token rather than an
- * instruction, and dcb-service's own StatsScopeArchitectureTests fails the build if an endpoint
- * goes back to binding the trusted name. Sending the old name from here is silently wrong
- * rather than an error - the endpoint ignores it, and a consortium administrator asking for one
- * library gets consortium-wide figures rendered under that library's name.
- *
- * Nothing else would catch that: every library-scoped caller gets the right answer anyway,
- * because the guard falls back to their token.
+ * The library filter goes to dcb-service as `requestedLibraryCode`, never
+ * `libraryCode`. The old name is SILENTLY wrong - the endpoint ignores it and
+ * falls back to the token - so nothing else would catch it.
+ * docs/service-compatibility.md.
  */
 describe("statsApi query parameters", () => {
 	const clientReturning = (): { client: AxiosInstance; sent: () => unknown } => {

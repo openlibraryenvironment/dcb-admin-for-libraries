@@ -1,25 +1,24 @@
-import { test, expect, type AppFixture } from "./fixtures/test";
+import { test, expect as strictExpect, type AppFixture } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
+import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 import {
 	colorSchemeAttribute,
 	type ColorScheme,
 } from "./fixtures/color-scheme";
 
 /**
- * The accessibility gate. WCAG 2.2 AA is the floor, and this is where it is
- * enforced rather than asserted: zero axe violations on every surface below, in
- * BOTH colour schemes, because a palette that passes in light routinely fails
- * in dark.
- *
- * Automated rules catch roughly a third of WCAG failures. This gate is a floor,
- * not a certificate - keyboard completeness, focus order and announcement still
- * need a human. What it does guarantee is that no change silently reintroduces
- * a contrast, name, role or landmark failure.
- *
- * Adding a page: add it to PAGES. That is the whole cost, and it is meant to be
- * that low, because a gate people route around is worse than no gate.
+ * The accessibility gate: zero axe violations on every surface in PAGES, in
+ * both colour schemes. Adding a page means adding it here, and that is meant
+ * to be the whole cost. What it does and does not prove: docs/testing.md.
  */
+
+/**
+ * Readiness waits are not the thing under test, so they get a longer timeout
+ * than the axe assertion: under fullyParallel, MUI X's grid does not always
+ * paint inside 5s. docs/testing.md explains what that failure looks like.
+ */
+const expect = strictExpect.configure({ timeout: 20_000 });
 
 interface Surface {
 	name: string;
@@ -40,34 +39,19 @@ interface Surface {
 }
 
 /**
- * Step down the page until `locator` exists, so everything deferred behind an
- * IntersectionObserver has mounted before axe scans.
- *
- * Driven by the thing it is trying to reveal rather than by a step count. A fixed
- * number of steps is open-loop, and this reveal runs the instant `page.goto`
- * resolves: under parallel load the document at that moment is shorter than the
- * viewport, so every step is spent against a page with nothing to scroll, the
- * panels render below the fold afterwards, and no observer ever fires. The gate
- * then scanned the KPI header and the trend chart alone - eleven headings out of
- * twenty-five - and reported no violations over the fifteen panels it exists to
- * cover. Observed at ten concurrent workers; CI (workers: 1) rendered fast enough
- * to hide it.
- *
- * Polling fixes that because a pass costs nothing while the page is still empty
- * and starts doing work the moment there is any. One viewport per pass, not a
- * jump to the bottom: an observer whose sentinel never crosses the viewport never
- * fires, and the poll interval is what gives each newly mounted panel a frame to
- * paint and a fetch to land before the next step.
- */
-/**
- * The last panel on the insights page, and the only one whose presence proves the
- * deferred half actually mounted. RareGemPanel is unconditional, so unlike a
- * panel that hides itself when empty this cannot be satisfied vacuously, and its
- * title renders outside its own loading branch so it appears on mount rather than
- * on fetch.
+ * The last panel on the insights page, and unconditional - so unlike a panel
+ * that hides itself when empty, its presence cannot be satisfied vacuously.
+ * Its title renders outside its own loading branch, so it appears on mount
+ * rather than on fetch.
  */
 const RARE_GEM = "Unique collection value";
 
+/**
+ * Steps down the page until `locator` exists, so everything behind an
+ * IntersectionObserver has mounted before axe scans. POLLED rather than a
+ * fixed number of steps, and one viewport per pass: the failure both of those
+ * avoid is in docs/testing.md.
+ */
 async function scrollUntilPresent(
 	page: import("@playwright/test").Page,
 	locator: import("@playwright/test").Locator,
@@ -114,6 +98,7 @@ const PAGES: Surface[] = [
 		path: "/",
 		prepare: async (app) => {
 			await app.enableFeatures([
+				"VITE_DISCOVERY_ACTIVE",
 				"VITE_FEATURE_LIBRARY_BRANDING",
 				"VITE_FEATURE_LIBRARY_SUPPORT_URL",
 			]);
@@ -158,7 +143,14 @@ const PAGES: Surface[] = [
 			await app.mockGraphQL({ LoadLibrary: library });
 		},
 		ready: async (page) => {
-			await expect(page.getByRole("radiogroup")).toBeVisible();
+			// Four radiogroups now, so this names one. The high-contrast option is
+			// the reason this page is scanned at all.
+			await expect(
+				page.getByRole("radiogroup", { name: /colour scheme/i }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("radio", { name: /high contrast/i }),
+			).toBeVisible();
 		},
 	},
 	...INSIGHTS_SUBJECTS.map(
@@ -234,6 +226,95 @@ const PAGES: Surface[] = [
 		ready: async (page) => {
 			await expect(
 				page.getByRole("heading", { name: "How durations are moving" }),
+			).toBeVisible();
+		},
+	},
+	{
+		// The requesting page: the ONLY surface a read-only user has, and it was
+		// not scanned at all. Every Stepper and every requesting dialog lives
+		// behind it.
+		name: "requesting",
+		path: "/requesting?filters=keyword%3Amiddlemarch",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library });
+			await app.mockSearch();
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: /requesting/i }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("list", { name: /search results/i }),
+			).toBeVisible();
+		},
+	},
+	{
+		// A grid page with rows on it. The mappings scan covers a grid, but this
+		// one carries the row links and the detail-panel toggles.
+		name: "patron requests",
+		path: "/patronRequests",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraries: library,
+				LoadPatronRequests: patronRequests,
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("grid", { name: /patron requests/i }),
+			).toBeVisible();
+			await expect(page.getByRole("link", { name: /2026-09-01/ })).toBeVisible();
+		},
+	},
+	{
+		// The library profile IN EDIT MODE, with a validation error on screen.
+		// Neither state was ever scanned, and between them they carry every
+		// form control and every error message in the application - which is
+		// where error.main sat at 3.85:1 unnoticed.
+		name: "library profile, editing with an error",
+		path: "/",
+		prepare: async (app) => {
+			await app.enableFeatures([
+				"VITE_FEATURE_LIBRARY_BRANDING",
+				"VITE_FEATURE_LIBRARY_SUPPORT_URL",
+			]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraryBasics: library,
+				LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
+				LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
+			});
+		},
+		reveal: async (page) => {
+			await expect(page.getByText("E2E Test Library").first()).toBeVisible();
+			await page.getByRole("button", { name: /^edit$/i }).click();
+			const fullName = page
+				.getByRole("textbox", { name: /full name/i })
+				.first();
+			await expect(fullName).toBeVisible();
+			await fullName.fill("");
+			await fullName.blur();
+		},
+		ready: async (page) => {
+			await expect(page.getByText(/Enter the Full name/i)).toBeVisible();
+		},
+	},
+	{
+		// The statement about this application's accessibility, which would be a
+		// poor thing to have an accessibility defect on.
+		name: "accessibility statement",
+		path: "/accessibility",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library });
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: /accessibility/i }),
 			).toBeVisible();
 		},
 	},

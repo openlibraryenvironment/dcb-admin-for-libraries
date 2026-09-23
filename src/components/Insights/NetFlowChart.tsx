@@ -7,6 +7,7 @@ import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
 import { netFlowQueryOptions, StatsParams } from "@helpers/statsApi";
 
+import ChartDataTable from "./ChartDataTable";
 import PanelState from "./PanelState";
 
 import MetricInfo from "./MetricInfo";
@@ -56,24 +57,35 @@ export default function NetFlowChart({ params }: { params: StatsParams }) {
           height={CHART_HEIGHT}
         >
           {() => (
-            <BarChartPro
-              height={CHART_HEIGHT}
-              xAxis={[
-                { scaleType: "band", data: rows.map((r) => r.libraryCode) },
-              ]}
-              series={[
-                {
-                  data: rows.map((r) => r.borrowedCount),
-                  label: t("insights.charts.net_flow.borrowed"),
-                  color: categorical[0],
-                },
-                {
-                  data: rows.map((r) => r.suppliedCount),
-                  label: t("insights.charts.net_flow.supplied"),
-                  color: categorical[1],
-                },
-              ]}
-            />
+            <>
+              <BarChartPro
+                height={CHART_HEIGHT}
+                xAxis={[
+                  { scaleType: "band", data: rows.map((r) => r.libraryCode) },
+                ]}
+                series={[
+                  {
+                    data: rows.map((r) => r.borrowedCount),
+                    label: t("insights.charts.net_flow.borrowed"),
+                    color: categorical[0],
+                  },
+                  {
+                    data: rows.map((r) => r.suppliedCount),
+                    label: t("insights.charts.net_flow.supplied"),
+                    color: categorical[1],
+                  },
+                ]}
+              />
+              <ChartDataTable
+                caption={t("insights.charts.net_flow.title")}
+                columns={[
+                  t("insights.charts.net_flow.library"),
+                  t("insights.charts.net_flow.borrowed"),
+                  t("insights.charts.net_flow.supplied"),
+                ]}
+                rows={rows.map((r) => [r.libraryCode, r.borrowedCount, r.suppliedCount])}
+              />
+            </>
           )}
         </PanelState>
       </CardContent>

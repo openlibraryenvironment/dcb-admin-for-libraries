@@ -1,10 +1,14 @@
+import {
+	clampPageSize,
+	REFERENCE_LIST_PAGE_SIZE,
+} from "@constants/dataGrid/pagination";
+import { pageTitle } from "@helpers/pageTitle";
+import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePatronRequestExport } from "@/hooks/useExport";
-import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
 import DataGrid from "@components/DataGrid/DataGrid";
-import { CleanupProgressDialog } from "@components/DataGrid/components/CleanupProgressDialog";
 import { ExportProgressDialog } from "@components/DataGrid/components/ExportProgressDialog";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -49,12 +53,12 @@ import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/")({
+	head: () => ({ meta: [{ title: pageTitle("nav.patron_requests.title") }] }),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	// const navigate = useNavigate();
 	const auth = useAuth();
 	const apiRef = useGridApiRef();
 	const { cfg } = useRouter().options.context as { cfg: any };
@@ -87,12 +91,6 @@ function RouteComponent() {
 		columnVisibility: storedColumnVisibilityModel[gridId],
 	};
 
-	// const [alert, setAlert] = useState<AlertObject>({
-	// 	open: false,
-	// 	severity: "success",
-	// 	text: "",
-	// 	title: "",
-	// });
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
 			storedState.pagination ?? { page: 0, pageSize: 25 },
@@ -108,7 +106,6 @@ function RouteComponent() {
 		text: null,
 	});
 
-	// const [snackbarOpen, setSnackbarOpen] = useState(false);
 
 	const handleSnackbarClose = (
 		event?: React.SyntheticEvent | Event,
@@ -229,7 +226,7 @@ function RouteComponent() {
 				getLibraries,
 				{
 					query: "",
-					pagesize: 1000,
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
 					pageno: 0,
 					order: "fullName",
 					orderBy: "ASC",
@@ -312,7 +309,6 @@ function RouteComponent() {
 		isError: isPatronRequestError,
 		error,
 		isFetching,
-		refetch,
 	} = useQuery<PatronRequestQueryData>({
 		queryKey: [
 			"getPatronRequests",
@@ -424,7 +420,7 @@ function RouteComponent() {
 						"status",
 						"description",
 					]) ?? "",
-				pagesize: paginationModel.pageSize ?? 200,
+				pagesize: clampPageSize(paginationModel.pageSize),
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "dateCreated",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
@@ -463,15 +459,8 @@ function RouteComponent() {
 			}),
 	);
 
-	const { cleanupState, handleCleanup, handleCloseCleanup } =
-		usePatronRequestCleanup({
-			apiRef,
-			dcbApiBase,
-			headers,
-			onSuccess: () => {
-				refetch();
-			},
-		});
+	// No cleanup here: this grid lists what THIS library borrowed, and cleanup belongs to
+	// the library that supplied the request - see supplierRequests.tsx.
 	// The export must carry the same scope as the grid - it is the same data leaving
 	// the building in a file rather than on screen
 	const exportBaseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
@@ -531,6 +520,9 @@ function RouteComponent() {
 
 	return (
 		<>
+			<Typography variant="h1">
+				{t("nav.patron_requests.title")}
+			</Typography>
 			{
 				<DataGrid
 					parentApiRef={apiRef}
@@ -540,6 +532,7 @@ function RouteComponent() {
 					columnVisibilityModel={columnVisibilityModel}
 					onColumnVisibilityModelChange={handleColumnVisibilityChange}
 					type="patronRequests"
+					label={t("nav.patron_requests.title")}
 					identifier="patronRequestsMain"
 					checkboxSelection={true}
 					disableAggregation={true}
@@ -565,8 +558,6 @@ function RouteComponent() {
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
-					enableCleanup={true}
-					onCleanup={handleCleanup}
 					onExport={handleExport}
 					isExporting={exportProgress.isExporting}
 				/>
@@ -576,21 +567,6 @@ function RouteComponent() {
 				progress={exportProgress.progress}
 				totalRecords={exportProgress.totalRecords}
 			/>
-			<CleanupProgressDialog
-				open={cleanupState.open}
-				isCleaning={cleanupState.isCleaning}
-				progress={
-					cleanupState.total > 0
-						? (cleanupState.processed / cleanupState.total) * 100
-						: 0
-				}
-				total={cleanupState.total}
-				processed={cleanupState.processed}
-				successRows={cleanupState.successRows}
-				errorRows={cleanupState.errorRows}
-				skippedRows={cleanupState.skippedRows}
-				onClose={handleCloseCleanup}
-			/>
 
 			{
 				<TimedAlert
@@ -599,7 +575,6 @@ function RouteComponent() {
 					severityType={alert.severity}
 					// variant="filled"
 					// sx={{ width: "100%" }}
-					autoHideDuration={6000}
 					alertText={alert.text}></TimedAlert>
 			}
 		</>

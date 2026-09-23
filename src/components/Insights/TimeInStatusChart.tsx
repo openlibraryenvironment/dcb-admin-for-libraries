@@ -8,6 +8,7 @@ import { useChartPalette } from "@/hooks/useChartPalette";
 import { timeInStatusQueryOptions, StatsParams } from "@helpers/statsApi";
 import { formatTurnaround } from "@helpers/insightsRange";
 
+import ChartDataTable from "./ChartDataTable";
 import PanelState from "./PanelState";
 
 import MetricInfo from "./MetricInfo";
@@ -53,26 +54,39 @@ export default function TimeInStatusChart({ params }: { params: StatsParams }) {
           height={CHART_HEIGHT}
         >
           {() => (
-            <BarChartPro
-              height={CHART_HEIGHT}
-              layout="horizontal"
-              yAxis={[{ scaleType: "band", data: rows.map((r) => r.status) }]}
-              xAxis={[
-                { label: t("insights.charts.time_in_status.axis_hours") },
-              ]}
-              series={[
-                {
-                  data: rows.map((r) => r.medianDwellSeconds / 3600),
-                  label: t("insights.charts.time_in_status.series"),
-                  color: categorical[0],
-                  valueFormatter: (v) =>
-                    v == null
-                      ? t("insights.duration.none")
-                      : formatTurnaround(v * 3600, t),
-                },
-              ]}
-              margin={{ left: 180 }}
-            />
+            <>
+              <BarChartPro
+                height={CHART_HEIGHT}
+                layout="horizontal"
+                yAxis={[{ scaleType: "band", data: rows.map((r) => r.status) }]}
+                xAxis={[
+                  { label: t("insights.charts.time_in_status.axis_hours") },
+                ]}
+                series={[
+                  {
+                    data: rows.map((r) => r.medianDwellSeconds / 3600),
+                    label: t("insights.charts.time_in_status.series"),
+                    color: categorical[0],
+                    valueFormatter: (v) =>
+                      v == null
+                        ? t("insights.duration.none")
+                        : formatTurnaround(v * 3600, t),
+                  },
+                ]}
+                margin={{ left: 180 }}
+              />
+              <ChartDataTable
+                caption={t("insights.charts.time_in_status.title")}
+                columns={[
+                  t("insights.charts.time_in_status.status"),
+                  t("insights.charts.time_in_status.axis_hours"),
+                ]}
+                rows={rows.map((r) => [
+                  r.status,
+                  Math.round((r.medianDwellSeconds / 3600) * 10) / 10,
+                ])}
+              />
+            </>
           )}
         </PanelState>
       </CardContent>

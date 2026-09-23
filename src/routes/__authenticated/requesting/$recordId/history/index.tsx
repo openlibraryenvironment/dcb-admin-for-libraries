@@ -57,6 +57,7 @@ function HistoryPage() {
 			}
 			loading={query.isLoading || grid.isFiltering}
 			type="patronRequests"
+			label={t("requesting.history_label")}
 			identifier="patronRequestsHistory"
 			paginationMode="server"
 			filterMode="server"

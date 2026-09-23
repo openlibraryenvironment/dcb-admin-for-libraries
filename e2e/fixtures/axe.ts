@@ -1,12 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, type Page } from "@playwright/test";
-import axe, { type Result } from "axe-core";
+import type { Page } from "@playwright/test";
+import type { Result } from "axe-core";
 
 /**
  * WCAG 2.2 AA is the floor. These are the axe tag sets that map to it - the
- * 2.0, 2.1 and 2.2 A/AA rules. Anything outside them (best-practice,
- * experimental) is not the gate and is not asserted, so the gate cannot drift
- * into failing on opinion.
+ * 2.0, 2.1 and 2.2 A/AA rules.
  */
 export const WCAG_TAGS = [
 	"wcag2a",
@@ -14,6 +12,23 @@ export const WCAG_TAGS = [
 	"wcag21a",
 	"wcag21aa",
 	"wcag22aa",
+];
+
+/**
+ * Four rules axe files under `best-practice` that this application needs
+ * anyway, named one by one rather than by widening the tag set.
+ *
+ * The tag carries a great deal of opinion; these four carry none. Every page
+ * needs a main landmark, one h1, content inside a landmark, and headings that
+ * do not skip a level - and their absence is a real 1.3.1 and 2.4.1 failure
+ * however axe files it. Nine routes had no h1 and the layout had no landmarks
+ * at all while this gate was green, which is what excluding them cost.
+ */
+export const EXTRA_RULES = [
+	"region",
+	"landmark-one-main",
+	"page-has-heading-one",
+	"heading-order",
 ];
 
 /**
@@ -29,66 +44,57 @@ export const WCAG_TAGS = [
 const VENDOR_EXCLUSIONS = ['[style*="z-index: 100000"]'];
 
 /**
- * Rules outside the WCAG tag sets that we assert anyway, each because it caught something
- * real here. Named one at a time rather than by turning on best-practice wholesale, so the
- * gate still cannot fail on opinion.
- *
- * heading-order: the Insights panels rendered as <h6> under an <h1>, skipping four levels,
- * because MUI's h6 variant is an h6 element unless you say otherwise. A screen-reader user
- * navigating by heading met a page whose outline said every panel was nested four deep
- * inside nothing. The WCAG tags do not cover it; this does.
+ * Rules whose INCOMPLETE result axe cannot decide. Filtered from `incomplete`
+ * only - each still fails the gate as a violation - and each has a test that
+ * decides it instead: docs/testing.md.
  */
-const EXTRA_RULES = ["heading-order"];
+const UNDECIDABLE = new Set(["color-contrast", "aria-hidden-focus"]);
 
-/**
- * The tag sets AND the extra rules, as one list of rule ids.
- *
- * NOT `.withTags(...).withRules(...)`. Both of those set `runOnly`, so chaining them does
- * not combine - the second silently REPLACES the first, and this gate spent its life
- * asserting `heading-order` alone while reporting green on the whole WCAG ladder. It was
- * found because Lighthouse failed an aria-hidden-focus rule that is tagged wcag2a and
- * that this scan was therefore not running.
- */
-const RULES = [
-	...new Set([
-		...axe.getRules(WCAG_TAGS).map((rule) => rule.ruleId),
-		...EXTRA_RULES,
-	]),
-];
+export interface AxeFindings {
+	violations: Result[];
+	/**
+	 * Checks axe could not decide, which it reports SEPARATELY from violations.
+	 * A dangling aria-labelledby lands here, which is how five of them survived
+	 * a green gate: the assertion read `violations` alone.
+	 */
+	incomplete: Result[];
+}
 
-export async function analyse(page: Page): Promise<Result[]> {
-	// Guards the gate: a rule list that has lost the tag sets is exactly what this file
-	// looked like before, and it looked green.
-	expect(RULES).toContain("color-contrast");
-	expect(RULES).toContain("heading-order");
-	expect(RULES.length).toBeGreaterThan(50);
-
-	let builder = new AxeBuilder({ page }).withRules(RULES);
+export async function analyse(page: Page): Promise<AxeFindings> {
+	let builder = new AxeBuilder({ page })
+		.withTags(WCAG_TAGS)
+		// `withRules` REPLACES the tag selection rather than adding to it, so the
+		// extra rules are requested through options instead.
+		.options({
+			rules: Object.fromEntries(
+				EXTRA_RULES.map((rule) => [rule, { enabled: true }]),
+			),
+		});
 	for (const selector of VENDOR_EXCLUSIONS) {
 		builder = builder.exclude(selector);
 	}
-	const { violations } = await builder.analyze();
-	return violations;
+	const { violations, incomplete } = await builder.analyze();
+	return {
+		violations,
+		incomplete: incomplete.filter((result) => !UNDECIDABLE.has(result.id)),
+	};
 }
 
 /**
  * axe's raw output is unreadable in a CI log. This prints one block per
- * violation with the rule, its impact, the help URL and the offending DOM
+ * result with the rule, its impact, the help URL and the offending DOM
  * nodes, so a failure is actionable from the log alone.
  */
-export function formatViolations(violations: Result[]): string {
-	return violations
-		.map((violation) => {
-			const nodes = violation.nodes
+export function formatViolations(results: Result[]): string {
+	return results
+		.map((result) => {
+			const nodes = result.nodes
 				.map(
 					(node) =>
-						// The markup as well as the selector: a React `useId` selector like
-						// "#_r_8_" names nothing a reader can search the source for, and a
-						// log that cannot be acted on sends somebody back to reproduce it.
-						`      - ${node.target.join(" ")}\n        ${node.html}\n        ${node.failureSummary?.replace(/\n/g, "\n        ")}`,
+						`      - ${node.target.join(" ")}\n        ${node.failureSummary?.replace(/\n/g, "\n        ")}`,
 				)
 				.join("\n");
-			return `  [${violation.impact ?? "unknown"}] ${violation.id}: ${violation.help}\n    ${violation.helpUrl}\n${nodes}`;
+			return `  [${result.impact ?? "unknown"}] ${result.id}: ${result.help}\n    ${result.helpUrl}\n${nodes}`;
 		})
 		.join("\n\n");
 }

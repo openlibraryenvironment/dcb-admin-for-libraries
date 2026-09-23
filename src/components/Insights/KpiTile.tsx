@@ -12,6 +12,7 @@ import { ArrowDropUp, ArrowDropDown } from "@mui/icons-material";
 import { outcomeTextColour } from "@helpers/outcomeTextColour";
 
 import { MetricId } from "@helpers/insightsMetrics";
+import { formatPercent } from "@helpers/formatters";
 import MetricInfo from "./MetricInfo";
 
 interface KpiTileProps {
@@ -55,6 +56,9 @@ export default function KpiTile({
     <Card variant="outlined" sx={{ height: FIXED_HEIGHT }}>
       <CardContent>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
+          {/* component, because MUI maps subtitle2 to h6 by default and this is a
+              LABEL for the figure below it, not a section heading - it put an h6
+              straight after the page h1. */}
           <Typography variant="subtitle2" component="p" color="text.secondary">
             {title}
           </Typography>
@@ -89,7 +93,7 @@ export default function KpiTile({
                   ) : (
                     <ArrowDropDown fontSize="small" />
                   )}
-                  {Math.abs(deltaPct as number).toFixed(1)}%
+                  {formatPercent(Math.abs(deltaPct as number))}
                 </Typography>
               )}
               {subtitle && (

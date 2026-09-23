@@ -163,8 +163,11 @@ export const AdvancedSearchFilter = ({
 						{/* Only show boolean operator in advanced mode for subsequent filters */}
 						{isAdvancedMode && index > 0 && (
 							<FormControl size="small" sx={{ minWidth: 80 }}>
-								<InputLabel>{t("ui.common.operator")}</InputLabel>
+								<InputLabel id={`operator-label-${filter.id}`}>
+									{t("ui.common.operator")}
+								</InputLabel>
 								<Select
+									labelId={`operator-label-${filter.id}`}
 									value={filter.operator || BooleanOperator.AND}
 									onChange={(e) =>
 										updateFilter(filter.id, {
@@ -182,8 +185,11 @@ export const AdvancedSearchFilter = ({
 						)}
 
 						<FormControl size="small" sx={{ minWidth: 150 }}>
-							<InputLabel>{t("ui.common.field")}</InputLabel>
+							<InputLabel id={`field-label-${filter.id}`}>
+								{t("ui.common.field")}
+							</InputLabel>
 							<Select
+								labelId={`field-label-${filter.id}`}
 								value={filter.field}
 								onChange={(e) =>
 									updateFilter(filter.id, {

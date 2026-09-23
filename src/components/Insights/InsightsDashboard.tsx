@@ -1,4 +1,6 @@
 import { useMemo, type ReactNode } from "react";
+
+import { formatNumber, formatPercent } from "@helpers/formatters";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -315,11 +317,11 @@ export default function InsightsDashboard({
             <KpiTile
               title={t("insights.kpi.resolved.title")}
               metric="requests_fulfilled"
-              value={resolved.toLocaleString()}
+              value={formatNumber(resolved)}
               subtitle={
                 currentRate != null
                   ? t("insights.headline.filled", {
-                      rate: currentRate.toFixed(1),
+                      rate: formatPercent(currentRate),
                     })
                   : t("insights.kpi.resolved.subtitle")
               }
@@ -339,7 +341,7 @@ export default function InsightsDashboard({
             <KpiTile
               title={t("insights.headline.supplied")}
               metric="items_supplied"
-              value={totalLends.toLocaleString()}
+              value={formatNumber(totalLends)}
               subtitle={t("insights.kpi.total_lends.subtitle")}
               loading={loading}
             />
@@ -359,7 +361,7 @@ export default function InsightsDashboard({
               value={
                 netBalance == null
                   ? "—"
-                  : `${netBalance > 0 ? "+" : ""}${netBalance.toLocaleString()}`
+                  : formatNumber(netBalance, { signDisplay: "exceptZero" })
               }
               subtitle={
                 netBalance == null
@@ -400,7 +402,7 @@ export default function InsightsDashboard({
                   metric="error_rate"
                   value={
                     currentErrRate != null
-                      ? `${currentErrRate.toFixed(1)}%`
+                      ? formatPercent(currentErrRate)
                       : "—"
                   }
                   deltaPct={errDelta}
@@ -412,7 +414,7 @@ export default function InsightsDashboard({
                   title={t("insights.kpi.checkout_rate.title")}
                   metric="checkout_rate"
                   value={
-                    checkoutRate != null ? `${checkoutRate.toFixed(1)}%` : "—"
+                    checkoutRate != null ? formatPercent(checkoutRate) : "—"
                   }
                   subtitle={
                     d
@@ -426,21 +428,21 @@ export default function InsightsDashboard({
                 />
                 <KpiTile
                   title={t("insights.kpi.total_borrows.title")}
-                  value={totalBorrows.toLocaleString()}
+                  value={formatNumber(totalBorrows)}
                   subtitle={t("insights.kpi.total_borrows.subtitle")}
                   loading={loading}
                 />
                 <KpiTile
                   title={t("insights.kpi.rescued.title")}
-                  value={(d?.savedByReResolution ?? 0).toLocaleString()}
+                  value={formatNumber(d?.savedByReResolution ?? 0)}
                   subtitle={t("insights.kpi.rescued.subtitle")}
                   loading={loading}
                 />
                 <KpiTile
                   title={t("insights.kpi.unique_titles.title")}
-                  value={(
-                    d?.collectionSummary.uniqueTitlesRequested ?? 0
-                  ).toLocaleString()}
+                  value={formatNumber(
+                    d?.collectionSummary.uniqueTitlesRequested ?? 0,
+                  )}
                   subtitle={t("insights.kpi.unique_titles.subtitle", {
                     total: d?.collectionSummary.totalRequests ?? 0,
                   })}

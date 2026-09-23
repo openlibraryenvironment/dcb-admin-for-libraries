@@ -1,25 +1,31 @@
 {
+	"a11y": {
+		"empty": "This field is empty",
+		"main_content": "Main content",
+		"navigation": "Main navigation",
+		"skip_to_content": "Skip to main content"
+	},
 	"agency": {
 		"code": "Agency code",
 		"name": "Agency name"
 	},
+	"app": {
+		"name": "DCB Admin for Libraries"
+	},
 	"audit": {
-		"no_results": "No audits found",
 		"audit": "Audit data",
 		"audit_entry": "Audit entry",
 		"data": "Audit data (JSON)",
 		"date": "Audit date",
 		"description": "Brief description",
 		"from_status": "fromStatus",
-		"uuid": "Audit UUID",
 		"log": "Audit log",
 		"no_data": "No audit log entries found.",
+		"no_results": "No audits found",
 		"no_rows": "Try changing your filters or search terms.",
-		"to_status": "toStatus"
-	},
-	"a11y": {
-		"empty": "This field is empty",
-		"navigation": "Main navigation"
+		"title": "Audit entry",
+		"to_status": "toStatus",
+		"uuid": "Audit UUID"
 	},
 	"bibs": {
 		"author": "Author",
@@ -58,7 +64,13 @@
 		"success": "Success",
 		"updated": "Updated",
 		"update_success": "The {{entity}} {{name}} was updated successfully",
-		"update_failure": "An error occurred while updating {{entity}} {{name}}"
+		"update_failure": "An error occurred while updating {{entity}} {{name}}",
+		"severity": {
+			"error": "Error",
+			"info": "Information",
+			"success": "Success",
+			"warning": "Warning"
+		}
 	},
 	"data_change_log": {
 		"action": "Action",
@@ -104,6 +116,65 @@
 		"timestamp": "Timestamp",
 		"user": "User"
 	},
+	"display": {
+		"clock": {
+			"label": "Times and dates shown in",
+			"device": "My device’s time zone",
+			"service": "UTC, as the service records it"
+		},
+		"density": {
+			"label": "Spacing",
+			"comfortable": "Comfortable",
+			"compact": "Compact"
+		},
+		"description": "These settings are yours and are remembered on this device.",
+		"heading": "Display",
+		"mode": {
+			"label": "Colour scheme",
+			"system": "Match my device",
+			"light": "Light",
+			"dark": "Dark",
+			"highContrast": "High contrast"
+		},
+		"motion": {
+			"label": "Animation",
+			"system": "Match my device",
+			"full": "Full",
+			"reduced": "Reduced"
+		},
+		"reset": "Reset display settings",
+		"reset_done": "Display settings reset",
+		"textSize": {
+			"label": "Text size",
+			"small": "Small",
+			"normal": "Normal",
+			"large": "Large",
+			"largest": "Largest"
+		},
+		"typeface": {
+			"label": "Typeface",
+			"roboto": {
+				"name": "Roboto",
+				"description": "The default"
+			},
+			"system": {
+				"name": "Your device's font",
+				"description": "Loads nothing extra"
+			},
+			"atkinsonHyperlegible": {
+				"name": "Atkinson Hyperlegible",
+				"description": "Designed for low vision"
+			},
+			"inter": {
+				"name": "Inter",
+				"description": "Even and open at small sizes"
+			},
+			"lexend": {
+				"name": "Lexend",
+				"description": "Designed for reading ease"
+			}
+		}
+	},
 	"entities": {
 		"contact": "contact",
 		"functional_setting": "functional setting",
@@ -111,6 +182,60 @@
 		"library": "library",
 		"numeric_range_mapping": "numeric range mapping",
 		"reference_value_mapping": "reference value mapping"
+	},
+	"grid": {
+		"headers": {
+			"active_workflow": "Active workflow",
+			"audit_date": "Audit date",
+			"category": "Category",
+			"dcb_canonical_item_type": "DCB canonical item type",
+			"dcb_canonical_patron_type": "DCB canonical patron type",
+			"description": "Description",
+			"error_message": "Error message",
+			"from_context": "From context",
+			"from_value": "From value",
+			"fromstatus": "fromStatus",
+			"host_lms_name": "Host LMS name",
+			"item_barcode": "Item barcode",
+			"last_imported": "Last imported",
+			"local_item_id": "Local item ID",
+			"local_item_status": "Local item status",
+			"local_item_type": "Local item type",
+			"local_request_id": "Local request ID",
+			"local_request_status": "Local request status",
+			"location_code": "Location code",
+			"location_name": "Location name",
+			"location_uuid": "Location UUID",
+			"lower_bound": "Lower bound",
+			"manually_selected": "Manually selected?",
+			"mapped_value": "Mapped value",
+			"next_status": "Next status",
+			"out_of_sequence": "Out of sequence",
+			"patron_barcode": "Patron barcode",
+			"patron_library": "Patron library",
+			"pickup_request_status": "Pickup request status",
+			"pickup_request_uuid": "Pickup request UUID",
+			"polling_count": "Polling count",
+			"previous_status": "Previous status",
+			"print_label": "Print label",
+			"raw_local_item_status": "Raw local item status",
+			"raw_local_request_status": "Raw local request status",
+			"renewal_count": "Renewal count",
+			"request_created": "Request created",
+			"request_updated": "Request updated",
+			"request_uuid": "Request UUID",
+			"requester_note": "Requester note",
+			"status": "Status",
+			"supplying_library": "Supplying library",
+			"time_in_state_days": "Time in state (days)",
+			"title": "Title",
+			"to_category": "To category",
+			"to_context": "To context",
+			"to_value": "To value",
+			"tostatus": "toStatus",
+			"upper_bound": "Upper bound",
+			"walk_up_request": "Walk-up request?"
+		}
 	},
 	"header": {
 		"title": "DCB Admin for {{library}}",
@@ -179,6 +304,408 @@
 			"staff_password": "Staff password",
 			"staff_username": "Staff username",
 			"user_base_url": "User base URL"
+		}
+	},
+	"insights": {
+		"title": "Library insights",
+		"subtitle": "Requesting activity, fulfilment and value for {{library}}.",
+		"loading": "Loading insights",
+		"no_host_lms": "This library has no associated Host LMS, so insights cannot be shown.",
+		"no_data": "No data for the selected period.",
+		"duration": {
+			"days": "{{value}} days",
+			"hours": "{{value}} hrs",
+			"minutes": "{{value}} min",
+			"none": "—"
+		},
+		"range": {
+			"label": "Time range",
+			"7d": "7 days",
+			"30d": "30 days",
+			"90d": "90 days",
+			"365d": "1 year",
+			"from": "From",
+			"to": "To"
+		},
+		"kpi": {
+			"vs_prior": "vs previous period",
+			"fill_rate": {
+				"title": "Fill rate"
+			},
+			"error_rate": {
+				"title": "Error rate"
+			},
+			"time_to_loan": {
+				"title": "Median time to loan",
+				"subtitle": "p50 · p95 {{p95}}"
+			},
+			"resolved": {
+				"title": "Requests resolved",
+				"subtitle": "completed or failed"
+			},
+			"cost_avoidance": {
+				"title": "Estimated cost avoided",
+				"basis": "Based on {{count}} successful fulfilments",
+				"input_label": "Cost per ILL",
+				"input_help": "Your own average interlibrary loan cost"
+			},
+			"checkout_rate": {
+				"title": "Checkout rate",
+				"subtitle": "{{reached}} of {{total}} reached the shelf"
+			},
+			"total_borrows": {
+				"title": "Total borrows",
+				"subtitle": "requests placed as borrower"
+			},
+			"total_lends": {
+				"title": "Total lends",
+				"subtitle": "items supplied to the network"
+			},
+			"rescued": {
+				"title": "Requests rescued",
+				"subtitle": "fulfilled after re-resolution"
+			},
+			"unique_titles": {
+				"title": "Unique titles requested",
+				"subtitle": "across {{total}} requests"
+			}
+		},
+		"charts": {
+			"acquisition_opportunities": {
+				"title": "Acquisition opportunities",
+				"subtitle": "Highly requested titles across the network that you do not hold.",
+				"col_supplied": "Supplied"
+			},
+			"collection_dimension": {
+				"title": "Collection analysis",
+				"subtitle": "Requesting demand sliced by a bibliographic dimension.",
+				"select_label": "Dimension",
+				"series": "Requests",
+				"dim_format": "Format",
+				"dim_language": "Language",
+				"dim_subject": "Subject",
+				"dim_decade": "Publication decade"
+			},
+			"consortial_lifeline": {
+				"title": "Consortial lifeline",
+				"subtitle": "Titles you uniquely keep flowing to the network.",
+				"col_supplied": "Supplied"
+			},
+			"demand_by_format": {
+				"title": "Demand by format",
+				"subtitle": "Requesting volume by material format.",
+				"series": "Requests"
+			},
+			"demand_by_patron_group": {
+				"title": "Demand by patron group",
+				"subtitle": "Which patron categories drive requesting.",
+				"series": "Requests"
+			},
+			"demand_by_pickup": {
+				"title": "Demand by pickup location",
+				"subtitle": "Where patrons collect their requests.",
+				"series": "Requests"
+			},
+			"demand_heatmap": {
+				"title": "When requests arrive",
+				"subtitle": "Request volume by day of week and hour of day (server time zone)."
+			},
+			"failure_taxonomy": {
+				"reason": "Reason",
+				"series": "Failed requests",
+				"subtitle": "Failed requests broken down by reason.",
+				"title": "Why requests fail"
+			},
+			"net_flow": {
+				"borrowed": "Borrowed",
+				"library": "Library",
+				"subtitle": "Reciprocity across the network — net givers and takers.",
+				"supplied": "Supplied",
+				"title": "Borrowing vs supplying"
+			},
+			"new_acquisitions": {
+				"title": "New acquisitions performance",
+				"subtitle": "How your recently-added titles perform in the network.",
+				"acquired_since": "Acquired since",
+				"col_supplied": "Supplied"
+			},
+			"peer_benchmark": {
+				"title": "Peer benchmarking",
+				"subtitle": "Each library vs the consortium median (fill {{fill}}, checkout {{checkout}}).",
+				"col_library": "Library",
+				"col_requests": "Requests",
+				"col_checkout": "Checkout rate",
+				"col_fill": "Fill rate",
+				"your_library": "(your library)"
+			},
+			"rare_gem": {
+				"title": "Unique collection value",
+				"subtitle": "Requested titles that only this library supplies to the network.",
+				"col_title": "Title",
+				"col_author": "Author",
+				"col_requests": "Requests"
+			},
+			"status_flow": {
+				"bucket": "Date",
+				"picker_label": "Choose which statuses to plot",
+				"subtitle": "Requests entering each status per period. Pick the statuses to plot.",
+				"title": "Requesting activity over time"
+			},
+			"supplier_reliability": {
+				"failed": "Failed",
+				"fulfilled": "Fulfilled",
+				"subtitle": "Fulfilled versus failed requests per supplying library.",
+				"supplier": "Supplier",
+				"title": "Supplier reliability"
+			},
+			"supplier_response": {
+				"title": "Supplier responsiveness",
+				"subtitle": "Median time from request placed to supplier confirmation, per lender.",
+				"series": "Median response",
+				"axis_hours": "Hours"
+			},
+			"time_in_status": {
+				"axis_hours": "Hours",
+				"series": "Median dwell",
+				"status": "Status",
+				"subtitle": "Median time spent in each status — the biggest bottleneck first.",
+				"title": "Where requests stall"
+			},
+			"top_titles": {
+				"title": "Most requested titles",
+				"subtitle": "The titles the network asks for most.",
+				"col_title": "Title",
+				"col_requests": "Requests"
+			},
+			"unmet_local": {
+				"title": "Unmet local demand",
+				"subtitle": "Titles your own patrons requested but you do not hold.",
+				"col_supplied": "Supplied"
+			}
+		},
+		"export": {
+			"csv": "Download {{panel}} as CSV",
+			"this_library": "This library"
+		},
+		"trends": {
+			"strip": {
+				"title": "Is it getting better or worse?",
+				"subtitle": "The direction of the last third of the window against the third before it."
+			},
+			"volume": {
+				"title": "Requests submitted"
+			},
+			"fill_rate": {
+				"title": "Fill rate"
+			},
+			"error_rate": {
+				"title": "Error rate"
+			},
+			"up": "Up {{change}} on the preceding period",
+			"down": "Down {{change}} on the preceding period",
+			"flat": "No clear change",
+			"too_short": "Too short a window to call a direction",
+			"over_time": "{{label}} over time",
+			"buckets_counted_one": "{{count}} completed period",
+			"buckets_counted_other": "{{count}} completed periods",
+			"durations": {
+				"title": "How durations are moving",
+				"subtitle": "Median and 95th percentile per period, for the requests that finished in it.",
+				"metric_label": "Duration",
+				"turnaround": "Time to loan",
+				"supplier_response": "Supplier response",
+				"transit": "Time in transit",
+				"p50": "Median",
+				"p95": "95th percentile"
+			}
+		},
+		"sections": {
+			"overview": "Overview",
+			"trends": "Trends",
+			"performance": "Service performance",
+			"demand": "Demand",
+			"partners": "Trading partners",
+			"gaps": "Collection gaps and supply value"
+		},
+		"subjects": {
+			"label": "Insights subjects",
+			"trends": "Trends",
+			"service": "Service",
+			"demand": "Demand",
+			"partners": "Partners",
+			"gaps": "Gaps"
+		},
+		"panel": {
+			"retry": "Retry",
+			"failed": "This panel could not be loaded."
+		},
+		"announce": {
+			"view": "Showing {{range}}."
+		},
+		"durations": {
+			"title": "How long things take",
+			"subtitle": "Median and 95th percentile, for the legs this deployment reports.",
+			"to_loan": "Time to loan",
+			"to_finalise": "Time to finalise",
+			"supplier_response": "My response time",
+			"transit_out": "Transit, outbound",
+			"transit_back": "Transit, return",
+			"pair": "p50 {{p50}} · p95 {{p95}}",
+			"median": "median {{value}}",
+			"sample": "· {{count}} observations",
+			"not_reported": "Not reported by this system"
+		},
+		"headline": {
+			"filled": "{{rate}} filled",
+			"patron_waited": "My patron waited",
+			"supplied": "Items I supplied",
+			"my_response": "My response time",
+			"my_response_sub": "Placed at me, to confirmed by me",
+			"net_flow": "Net flow",
+			"net_lender": "Net lender",
+			"net_borrower": "Net borrower",
+			"more": "More measures"
+		},
+		"method": {
+			"request_volume": {
+				"what": "How many requests entered DCB in each period of the window.",
+				"how": "Transitions into SUBMITTED_TO_DCB per bucket, from the audit trail. The bucket is a day, a week or a month depending on the length of the window.",
+				"not": "It counts requests that ARRIVED, not requests that were filled. A period can be busy and unsuccessful. The most recent bucket is left out of the line entirely until it closes, because a partial period always looks like a fall."
+			},
+			"trend_direction": {
+				"what": "Whether a measure is moving, and whether the movement is the good one.",
+				"how": "The mean of the most recent third of buckets against the mean of the third before it. A change smaller than the noise floor - one percentage point for a rate, five per cent for a count - is reported as no clear change rather than as a direction. Fewer than nine closed buckets is reported as too short a window.",
+				"not": "It is not a forecast and not a significance test. It says the recent period differs from the one before it, nothing about why, and a single extraordinary week inside the recent third will move it."
+			},
+			"turnaround_trend": {
+				"what": "Whether the wait between a request arriving and the item being loaned is getting longer.",
+				"how": "The median and 95th percentile of that duration, per bucket, for the requests that REACHED the loan in that bucket.",
+				"not": "A bucket holds the requests that finished in it, not the ones that started in it, so a spell of very slow requests appears when they complete rather than when they arrived. A bucket with no completions is absent from the line rather than drawn as zero."
+			},
+			"supplier_response_trend": {
+				"what": "Whether suppliers are taking longer to confirm the requests placed with them.",
+				"how": "Placed at the supplier to confirmed by it, as a median and a 95th percentile per bucket, scoped on your library as the supplier.",
+				"not": "It measures the supplier, not DCB: the time DCB spent choosing that supplier is deliberately outside it. Requests never confirmed are not in the figure, so a supplier that ignores everything can look fast."
+			},
+			"transit_dwell_trend": {
+				"what": "Whether items are spending longer in transit between libraries.",
+				"how": "Median and 95th percentile dwell in the chosen transit status, per bucket, for the items that left it in that bucket.",
+				"not": "It measures the status, not the courier: an item scanned late at the receiving end is indistinguishable from one that travelled slowly. A system that does not report the return leg contributes nothing to it rather than contributing a zero."
+			},
+			"trigger": "How {{label}} is calculated",
+			"title": "How {{label}} is calculated",
+			"part": {
+				"what": "What it counts",
+				"how": "How it is computed",
+				"not": "What it does not include",
+				"data": "How much data"
+			},
+			"sample": "{{count}} observations in this window.",
+			"sample_low": "Only {{count}} observations in this window - a single outlier moves this figure.",
+			"sample_unknown": "This endpoint reports percentiles without a count, so how many requests are behind this figure is not known here.",
+			"requests_fulfilled": {
+				"what": "Requests that reached a settled outcome in the window, whether they were filled or not.",
+				"how": "The successful and failed counts from the borrower fulfilment query, added together. Successful means the request reached loaned, completed or finalised.",
+				"not": "Requests still in flight when the window closed are in neither count, so a busy week looks smaller until its requests settle."
+			},
+			"fill_rate": {
+				"what": "The share of settled requests that reached the patron.",
+				"how": "Successful divided by successful plus failed, over the same window. The delta compares it with the equal-length window immediately before.",
+				"not": "It says nothing about how long the fill took, and nothing about requests still open. A service that fills everything slowly scores the same as one that fills everything quickly."
+			},
+			"error_rate": {
+				"what": "The share of settled requests that did not reach the patron.",
+				"how": "The exact complement of the fill rate: one minus successful over successful plus failed.",
+				"not": "It does not separate a cancellation from a breakdown. The failure taxonomy panel answers why; this only answers how often."
+			},
+			"libraries_active": {
+				"what": "Members that borrowed or supplied at least once in the window.",
+				"how": "One row per Host LMS from the net flow query, counting those whose borrowed and supplied counts do not both sit at zero.",
+				"not": "It counts Host LMS systems, not libraries. Where several libraries share one system they cannot be told apart here, so a shared system counts once however many members sit behind it."
+			},
+			"net_flow": {
+				"what": "Whether this library gave the network more than it took.",
+				"how": "Items supplied to other members minus items borrowed from them, over the window. Errored requests are excluded from both sides.",
+				"not": "It is a count of requests, not of value or of effort, and it says nothing about which titles moved."
+			},
+			"items_supplied": {
+				"what": "Requests this library filled for another member's patron.",
+				"how": "Requests whose supplying Host LMS is this library, excluding errored ones.",
+				"not": "Local fulfilment is excluded: an item this library supplied to its own patron is not network traffic."
+			},
+			"turnaround_to_loan": {
+				"what": "How long a patron waits between asking for an item and being issued it.",
+				"how": "Median and 95th percentile of the interval from request creation to the first audit entry reaching loaned. A status re-entered during tracking counts once.",
+				"not": "Requests that never reached loaned are absent, and so are those still open. A rising median can therefore mean faster failures as well as slower loans."
+			},
+			"turnaround_to_finalise": {
+				"what": "The full administrative cycle, from request to the point where nothing is left to do.",
+				"how": "Median and 95th percentile from request creation to the first audit entry reaching finalised.",
+				"not": "Finalisation trails the patron's experience by a long way - the item has usually been back on the shelf for some time - so this is an operations figure, not a service one."
+			},
+			"supplier_response": {
+				"what": "How quickly a supplying library answers a request placed with it.",
+				"how": "Median from the request being placed at the supplying agency to that supplier confirming it, using the earliest audit entry for each so a tracking repeat cannot double-count.",
+				"not": "It deliberately does not start at request creation, which would fold DCB's own resolution time into a supplier's score. Across several libraries it is one figure per supplier, so no single number is shown."
+			},
+			"transit_dwell": {
+				"what": "How long an item spends in transit on one leg of its journey.",
+				"how": "Median time between the request entering the transit status and leaving it, taken from the audit trail.",
+				"not": "It depends on the host LMS reporting the status at all. A system that never sets it produces no observation, which is shown as not reported rather than as a fast leg. A journey that began before the window opened is excluded."
+			},
+			"failure_taxonomy": {
+				"what": "Why requests failed, grouped by the reason rather than counted together.",
+				"how": "Requests that ended in error or cancellation, or whose previous status was that no item was selectable at any agency, bucketed by that reason.",
+				"not": "A request that failed and was then re-resolved successfully is not here: it succeeded. The rescued count in the header is where those appear."
+			},
+			"supplier_reliability": {
+				"what": "How often each supplying library delivered what it was asked for.",
+				"how": "Per supplier, requests that reached loaned, completed or finalised against those that errored, were cancelled, or found no selectable item.",
+				"not": "A supplier that is asked rarely can look perfect or terrible on a handful of requests, so read it with the count beside it."
+			},
+			"trading_partners": {
+				"what": "Which members this library exchanges most traffic with, in each direction.",
+				"how": "Requests grouped by the partner at the other end, excluding errored requests and local fulfilment, because a failed request is not traffic and a local loan is not a partnership.",
+				"not": "A partner is never one of the caller's own libraries. Consortium-wide there is no own set to exclude, so the lists rank every supplier and every borrower."
+			},
+			"unfillable_demand": {
+				"what": "Titles patrons asked for that nothing in the network could satisfy.",
+				"how": "Requests whose previous status was that no item was selectable at any agency, grouped by title.",
+				"not": "It is demand nobody could meet, not demand that failed for another reason - a request that errored during transit is in the failure taxonomy instead."
+			},
+			"peer_benchmarks": {
+				"what": "This library's volume and outcomes beside every other member's.",
+				"how": "One row per borrowing library, with its request count, checkouts, successes and failures over the window.",
+				"not": "It is deliberately not pseudonymised: members are named, because a benchmark nobody can act on is decoration."
+			},
+			"checkout_rate": {
+				"what": "How often an item that arrived was actually collected.",
+				"how": "Requests that reached loaned as a share of those that got far enough to be collectable.",
+				"not": "An item a patron never came for is a cost the fill rate cannot see, which is why this sits beside it rather than inside it."
+			},
+			"cost_avoidance": {
+				"what": "What these fulfilments would have cost through traditional interlibrary loan.",
+				"how": "Successful fulfilments in the window multiplied by a unit cost you supply. No cost is shipped with the product.",
+				"not": "It is an assumption multiplied by a count, not a measurement. The count is ours; the unit cost is yours, and the figure is only as defensible as that number."
+			}
+		}
+	},
+	"legal": {
+		"accessibility": {
+			"title": "Accessibility",
+			"scope_heading": "What this covers",
+			"scope_body": "This statement applies to DCB Admin for Libraries, the staff interface for OpenRS resource sharing. It does not cover the discovery interface patrons use, or your library management system.",
+			"standard_heading": "The standard we aim for",
+			"standard_body": "WCAG 2.2 level AA on every screen. The high-contrast setting aims higher, at level AAA for text contrast.",
+			"tested_heading": "How that is checked",
+			"tested_body": "Automated checks run on every change and block a release if they fail: an axe scan of ten screens in light and dark, arithmetic over every colour pair in each of the three schemes, and a check that every field label is still attached to its value. Automated testing finds roughly a third of accessibility problems, so it is a floor rather than a guarantee.",
+			"limits_heading": "Where we know we fall short",
+			"limits_body": "Data grids are wide, and reading one on a narrow screen still means scrolling sideways. Some charts convey trends by shape; each carries its figures as a table for screen readers, but the shape itself is not described in words. We have not yet had this interface tested by an external auditor.",
+			"settings_heading": "Settings you can change",
+			"settings_body": "Under Settings you can choose a colour scheme including high contrast, a text size, a typeface including Atkinson Hyperlegible, how tightly the interface is spaced, whether it animates, and whether times are shown on your clock or on the service's. These are stored on your own device and are not shared with colleagues.",
+			"report_heading": "Telling us about a problem",
+			"report_body": "If something here stops you doing your job, tell us and we will treat it as a defect. Email dcb@k-int.com, and say which screen and what you were trying to do.",
+			"report_email": "dcb@k-int.com"
 		}
 	},
 	"library": {
@@ -350,6 +877,7 @@
 	"patron_request": {
 		"active": "isActive",
 		"active_workflow": "Active workflow",
+		"audit_log": "Audit log",
 		"borrowing": "Borrowing",
 		"borrowing_patron_barcode": "Local patron barcode",
 		"borrowing_patron_id": "Local patron ID",
@@ -370,8 +898,13 @@
 		"cleanup": "Force clean up",
 		"cleanup_complete": "Cleanup complete",
 		"cleanup_disabled": "Clean up is only available for requests supplied by your library that are either in an ERROR state, or have not yet been shipped.",
-		"cleanup_info": "Bypass circulation; clean up and finalise request. This auto-finalises a request and can be used to return an unwanted item. ",
+		"cleanup_failed": "Requests that could not be cleaned up",
 		"cleanup_in_progress": "Cleanup in progress",
+		"cleanup_info": "Check this request for updates, then close it and delete its temporary records.",
+		"cleanup_not_supplier": "Only the supplying library can clean this request up.",
+		"cleanup_refused": "This request was not cleaned up. {{detail}}",
+		"cleanup_skipped": "Requests skipped",
+		"cleanup_succeeded": "Requests cleaned up",
 		"cleanup_successful": "The cleanup operation has been successful, and the patron request has been finalised.",
 		"cleanup_unsuccessful": "The clean up operation has failed, and the patron request remains in an ERROR state. Please try again later.",
 		"cluster_record_uuid": "Cluster record UUID",
@@ -393,11 +926,11 @@
 		"local_id": "Local ID",
 		"local_item_barcode": "Local item barcode",
 		"local_item_id": "Local item ID",
-		"local_item_uuid": "Local item UUID",
 		"local_item_loc": "Local item location code",
 		"local_item_status": "Local item status",
 		"local_item_status_raw": "Raw local item status",
 		"local_item_type": "Local item type",
+		"local_item_uuid": "Local item UUID",
 		"local_request_status": "Local request status",
 		"local_request_status_raw": "Raw local request status",
 		"local_supplier_id": "Supplier request ID",
@@ -406,47 +939,48 @@
 		"no_requests": "No patron requests to display",
 		"out_of_sequence": "Out of sequence",
 		"patron": "Patron",
+		"patron_canonical_ptype": "Canonical patron type",
 		"patron_home_id": "Home identity",
 		"patron_hostlms": "Patron host LMS",
-		"patron_uuid": "Patron UUID",
-		"patron_local_names": "Local names",
 		"patron_library": "Patron library",
-		"patron_canonical_ptype": "Canonical patron type",
+		"patron_local_names": "Local names",
 		"patron_local_ptype": "Local patron type",
 		"patron_request": "Patron request data",
 		"patron_request_uuid": "Patron request UUID",
 		"patron_type_dcb": "DCB patron type",
-		"polling_checks_in_status": "Polling checks in status",
-		"previous_status": "Previous status",
+		"patron_uuid": "Patron UUID",
 		"pickup": "Pickup",
-		"pickup_code_uuid": "Pickup location code UUID",
+		"pickup_agency_code": "Pickup agency code",
 		"pickup_bib_id": "Pickup bib ID",
+		"pickup_code_uuid": "Pickup location code UUID",
+		"pickup_hostlms_code": "Pickup host LMS",
 		"pickup_item_id": "Pickup item ID",
 		"pickup_item_status": "Pickup item status",
 		"pickup_item_status_raw": "Raw pickup item status",
 		"pickup_item_type": "Pickup item type",
+		"pickup_library": "Pickup library",
 		"pickup_location_name": "Pickup location name",
 		"pickup_patron_id": "Pickup patron ID",
 		"pickup_request_id": "Pickup request ID",
 		"pickup_request_status": "Pickup request status",
 		"pickup_request_status_raw": "Raw pickup request status",
-		"pickup_agency_code": "Pickup agency code",
-		"pickup_library": "Pickup library",
-		"pickup_hostlms_code": "Pickup host LMS",
+		"polling_checks_in_status": "Polling checks in status",
+		"previous_status": "Previous status",
 		"renewal_count": "Renewal count",
 		"renewal_count_borrower": "Borrower renewal count",
 		"renewal_count_supplier": "Supplier renewal count",
 		"renewal_status": "Renewal status",
 		"request_created": "Request created",
-		"request_uuid": "Request UUID",
-		"requestor_uuid": "Patron UUID at requesting agency",
-		"requestor_note": "Requestor note",
 		"request_tooltip": "This is a {{ils}} library. The primary contact(s) are {{contact}}",
 		"request_updated": "Request updated",
+		"request_uuid": "Request UUID",
+		"requestor_note": "Requestor note",
+		"requestor_uuid": "Patron UUID at requesting agency",
 		"resolution_count": "Resolution count",
 		"return": "Return to patron request",
-		"status": "Current status",
 		"source_record_not_found": "Source record not found",
+		"status": "Current status",
+		"status_changed": "Status changed",
 		"statuses": {
 			"SUBMITTED_TO_DCB": "Submitted to DCB",
 			"PATRON_VERIFIED": "Patron verified",
@@ -469,90 +1003,42 @@
 			"ERROR": "Error",
 			"ARCHIVED": "Archived"
 		},
-		"status_changed": "Status changed",
 		"supplier": "Supplier",
-		"supplier_library": "Supplier library",
-		"supplier_uuid": "Supplier UUID",
 		"supplier_ctype": "Canonical item type",
+		"supplier_library": "Supplier library",
 		"supplier_request": "Supplier request data",
+		"supplier_uuid": "Supplier UUID",
 		"supplying": "Supplying",
 		"supplying_agency_code": "Supplying agency code",
 		"time_in_status": "Time in status",
+		"title": "Patron request",
 		"view": "View",
 		"virtual_item": "Virtual item",
-		"virtual_patron": "Virtual patron",
-		"title": "Patron request"
+		"virtual_patron": "Virtual patron"
 	},
 	"requesting": {
 		"available_at": "Items present at {{total}} institution(s)",
-		"available_for_walk_up": "Available for walk-up requesting",
-		"available_for_walk_up_description": "Available for walk-up requesting: at least one item for this record is available in your library.",
 		"available_for_staff_request": "Available for staff requesting",
 		"available_for_staff_request_description": "Available for staff requesting: at least one item for this record is available in your consortium.",
+		"available_for_walk_up": "Available for walk-up requesting",
+		"available_for_walk_up_description": "Available for walk-up requesting: at least one item for this record is available in your library.",
 		"available_to_request": "{{number}} available items at {{total}} institution(s)",
 		"barcode": "Barcode",
 		"bib_record": "Bib record",
 		"bib_record_id": "Bib record UUID",
 		"call_no": "Call number",
 		"cannot_request_no_items": "There are no items available to request for this record.",
-		"context": "Context",
-		"contributors": "Contributors",
 		"cluster": "Cluster record",
+		"cluster_deleted": "Is cluster deleted?",
+		"cluster_id": "Cluster UUID",
 		"cluster_title": "Cluster details for {{record}}",
 		"cluster_tooltip": "View cluster record",
-		"cluster_id": "Cluster UUID",
-		"cluster_deleted": "Is cluster deleted?",
+		"context": "Context",
 		"contributor": "Contributor(s): {{contributors}}",
+		"contributors": "Contributors",
 		"date_available": "Date available",
 		"date_due": "Date due",
 		"description": "Description",
-		"format": "Format: {{formats}}",
-		"format_title": "Format(s)",
-		"history": "Requesting history",
-		"hold_count": "Hold count",
-		"identifiers": "Identifiers",
-		"isbn_title": "ISBN identifiers",
-		"isbn": "ISBN identifier(s): {{isbn}}",
-		"issn": "ISSN identifier(s): {{issn}}",
-		"items": "Items",
-		"items_error_title": "We could not load the associated items",
-		"item_id": "Item ID",
-		"items_not_found": "No items found",
-		"items_search": "Search items",
-		"items_title": "Items available for cluster {{cluster}}",
-		"languages": "Language(s)",
-		"live_availability_no_items": "No items found for this record",
-		"live_availability_unavailable": "Item availability information unavailable",
-		"local_item_type_code": "Local item type code",
-		"local_item_type_name": "Local item type name",
-		"no_data": "No data available. Please enter a search term, or change your current search.",
-		"no_history": "Your patrons haven't placed any OpenRS requests for this record.",
-		"not_available_for_staff_request": "Not available for staff requesting",
-		"not_available_for_staff_request_description": "Not available for staff requesting: there is currently no available item for this record in your consortium.",
-		"not_available_for_walk_up": "Not available for walk up requesting",
-		"not_available_for_walk_up_description": "Not available for walk up requesting: there is currently no available item for this record at your library.",
-		"notes": "Notes",
-		"options": "Request options",
-		"physical_descriptions": "Physical descriptions",
-		"publication_date": "Publication date: {{publicationDate}} ",
-		"publication_year": "Publication year",
-		"publisher": "Publisher",
-		"place_description": "You have chosen to place a request for {{title}}. Please select a requesting option below.",
-		"place_title": "Place a request",
-		"record_created": "Record created",
-		"record_information": "Record information",
-		"record_updated": "Record updated",
-		"requestable": "Requestable",
-		"series": "Series",
-		"shared_index_unavailable_title": "Shared index is not configured on this system",
-		"shared_index_unavailable_message": "Please set a valid DCB_SEARCH_BASE environment variable for this deployment.",
-		"source_system_code": "Source system code",
-		"subjects": "Subjects",
-		"supplier_type": "Supplier type",
-		"suppressed": "Suppressed",
-		"titles_found": "{{number}} titles found",
-		"volume_parsed": "Parsed volume statement",
-		"volume_raw": "Raw volume statement",
 		"expedited_checkout": {
 			"actions": {
 				"place": "Place a walk-up request."
@@ -564,7 +1050,7 @@
 				"current_status": "Current status: {{status}}",
 				"in_progress": "Your walk-up request has been successfully placed and DCB is now attempting to check it out.",
 				"in_progress_explanation": "Your walk-up request has been successfully placed and DCB is now attempting to check it out.",
-				"success": "Your walk-up request has been checked out successfully and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
+				"success": "Your walk-up request has been checked out successfully and can be tracked in DCB Admin for Libraries <linkComponent> here </linkComponent>.",
 				"success_requesting_only": "Your walk-up request has been checked out successfully.",
 				"time_elapsed": "Time elapsed: {{time}}"
 			},
@@ -590,12 +1076,57 @@
 			"title_on_site": "Walk-up request",
 			"view_request": "View request"
 		},
+		"format": "Format: {{formats}}",
+		"format_title": "Format(s)",
+		"history": "Requesting history",
+		"history_label": "Request history",
+		"hold_count": "Hold count",
+		"identifiers": "Identifiers",
+		"isbn": "ISBN identifier(s): {{isbn}}",
+		"isbn_title": "ISBN identifiers",
+		"issn": "ISSN identifier(s): {{issn}}",
+		"item_id": "Item ID",
+		"items": "Items",
+		"items_error_title": "We could not load the associated items",
+		"items_label": "Items",
+		"items_not_found": "No items found",
+		"items_not_shown_label": "Items not shown",
+		"items_search": "Search items",
+		"items_title": "Items available for cluster {{cluster}}",
+		"languages": "Language(s)",
+		"live_availability_no_items": "No items found for this record",
+		"live_availability_unavailable": "Item availability information unavailable",
+		"local_item_type_code": "Local item type code",
+		"local_item_type_name": "Local item type name",
+		"no_data": "No data available. Please enter a search term, or change your current search.",
+		"no_history": "Your patrons haven't placed any OpenRS requests for this record.",
+		"no_results": "No results found",
+		"not_available_for_staff_request": "Not available for staff requesting",
+		"not_available_for_staff_request_description": "Not available for staff requesting: there is currently no available item for this record in your consortium.",
+		"not_available_for_walk_up": "Not available for walk up requesting",
+		"not_available_for_walk_up_description": "Not available for walk up requesting: there is currently no available item for this record at your library.",
+		"notes": "Notes",
+		"options": "Request options",
+		"physical_descriptions": "Physical descriptions",
+		"place_description": "You have chosen to place a request for {{title}}. Please select a requesting option below.",
+		"place_title": "Place a request",
+		"publication_date": "Publication date: {{publicationDate}} ",
+		"publication_year": "Publication year",
+		"publisher": "Publisher",
+		"record_created": "Record created",
+		"record_information": "Record information",
+		"record_updated": "Record updated",
+		"requestable": "Requestable",
+		"results_label": "Search results",
+		"results_per_page": "Results per page",
+		"search_prompt": "Select an option and type in your search.",
 		"search_types": {
 			"cql": "CQL",
 			"default": "Default",
 			"query_builder": "Query builder",
 			"locate": "Locate"
 		},
+		"series": "Series",
 		"shared_index": {
 			"cluster": "Cluster",
 			"cluster_details": "Cluster details",
@@ -651,6 +1182,9 @@
 			"title": "Shared index",
 			"title_details": "Title details for {{title}}"
 		},
+		"shared_index_unavailable_message": "Please set a valid DCB_SEARCH_BASE environment variable for this deployment.",
+		"shared_index_unavailable_title": "Shared index is not configured on this system",
+		"source_system_code": "Source system code",
 		"staff_request": {
 			"actions": {
 				"place": "Place a staff request"
@@ -688,22 +1222,24 @@
 				},
 				"success": {
 					"lookup": "The patron {{barcode}} has been successfully validated for {{library}}.",
-					"request": "Your staff request has been successfully placed and can be tracked in DCB Admin <linkComponent> here </linkComponent>.",
+					"request": "Your staff request has been successfully placed and can be tracked in DCB Admin for Libraries <linkComponent> here </linkComponent>.",
 					"request_requesting_only": "Your staff request has been successfully placed."
 				},
 				"validate": "Validate patron",
 				"validating": "Validating patron"
 			},
 			"select_pickup": "We have succesfully validated the patron provided. Please choose a pickup location and click 'Submit' to finish placing this staff request."
-		}
+		},
+		"subjects": "Subjects",
+		"supplier_type": "Supplier type",
+		"suppressed": "Suppressed",
+		"titles_found": "{{number}} titles found",
+		"volume_parsed": "Parsed volume statement",
+		"volume_raw": "Raw volume statement"
 	},
 	"settings": {
 		"customisation": "Customisation",
 		"dark_mode": "Dark mode",
-		"language": {
-			"en": "English",
-			"es": "Spanish"
-		},
 		"library": "Library",
 		"light_mode": "Light mode",
 		"system_mode": "System mode",
@@ -759,10 +1295,17 @@
 			"active_filters": "{{number}} Active filters",
 			"cleanup": {
 				"error_count": "Error: {{count}}",
+				"refused_count": "Refused while the item is out: {{count}}",
 				"selected": "Cleanup selected requests ({{count}})",
 				"skipped_count": "Not eligible: {{count}}",
 				"success_count": "Successful: {{count}}"
 			},
+			"columns": "Columns",
+			"delete_body": "This {{entity}} will be permanently deleted.",
+			"delete_body_library": "The library details and all its contacts and group memberships will be permanently deleted.",
+			"delete_header": "Delete {{entity}} {{name}}",
+			"edit_summary": "Edit {{entity}}",
+			"edit_url": "Enter a valid URL",
 			"export": {
 				"all": "Export all",
 				"all_csv": "Export all as CSV",
@@ -777,9 +1320,6 @@
 				"records": "Exporting {{count}} records from the data grid."
 			},
 			"filters": {
-				"trigger": "Show filters",
-				"trigger_applied_one": "Show filters, {{count}} applied",
-				"trigger_applied_other": "Show filters, {{count}} applied",
 				"active_description": "{{length}} filter(s) active: {{description}}",
 				"between": "Between",
 				"days_from": "Days from",
@@ -795,18 +1335,19 @@
 				"not_equal": "Does not equal",
 				"on_or_after": "On or after",
 				"on_or_before": "On or before",
-				"to": "To"
+				"to": "To",
+				"trigger": "Show filters",
+				"trigger_applied_one": "Show filters, {{count}} applied",
+				"trigger_applied_other": "Show filters, {{count}} applied"
 			},
-			"edit_summary": "Edit {{entity}}",
 			"find_column": "Find column",
-			"columns": "Columns",
-			"delete_body": "This {{entity}} will be permanently deleted.",
-			"delete_body_library": "The library details and all its contacts and group memberships will be permanently deleted.",
-			"delete_header": "Delete {{entity}} {{name}}",
-			"edit_url": "Enter a valid URL",
-			"open": "Open",
 			"master_detail": "Master detail",
-			"no_data": "No data available"
+			"no_data": "No data available",
+			"open": "Open",
+			"search_audits": "Search by audit",
+			"search_locations": "Search by location",
+			"search_mappings": "Search by mappings",
+			"search_supplier_requests": "Search supplier patron requests"
 		},
 		"feedback": {
 			"complete": "{{percentage}} complete",
@@ -899,378 +1440,5 @@
 		"RET-EXP": "Walk-up",
 		"RET-PUA": "Pickup anywhere",
 		"RET-LOCAL": "Local"
-	},
-	"insights": {
-		"export": {
-			"csv": "Download {{panel}} as CSV",
-			"this_library": "This library"
-		},
-		"trends": {
-			"strip": {
-				"title": "Is it getting better or worse?",
-				"subtitle": "The direction of the last third of the window against the third before it."
-			},
-			"volume": { "title": "Requests submitted" },
-			"fill_rate": { "title": "Fill rate" },
-			"error_rate": { "title": "Error rate" },
-			"up": "Up {{change}} on the preceding period",
-			"down": "Down {{change}} on the preceding period",
-			"flat": "No clear change",
-			"too_short": "Too short a window to call a direction",
-			"over_time": "{{label}} over time",
-			"buckets_counted_one": "{{count}} completed period",
-			"buckets_counted_other": "{{count}} completed periods",
-			"durations": {
-				"title": "How durations are moving",
-				"subtitle": "Median and 95th percentile per period, for the requests that finished in it.",
-				"metric_label": "Duration",
-				"turnaround": "Time to loan",
-				"supplier_response": "Supplier response",
-				"transit": "Time in transit",
-				"p50": "Median",
-				"p95": "95th percentile"
-			}
-		},
-		"sections": {
-			"overview": "Overview",
-			"trends": "Trends",
-			"performance": "Service performance",
-			"demand": "Demand",
-			"partners": "Trading partners",
-			"gaps": "Collection gaps and supply value"
-		},
-		"subjects": {
-			"label": "Insights subjects",
-			"trends": "Trends",
-			"service": "Service",
-			"demand": "Demand",
-			"partners": "Partners",
-			"gaps": "Gaps"
-		},
-		"title": "Library insights",
-		"subtitle": "Requesting activity, fulfilment and value for {{library}}.",
-		"loading": "Loading insights",
-		"no_host_lms": "This library has no associated Host LMS, so insights cannot be shown.",
-		"no_data": "No data for the selected period.",
-		"duration": {
-			"days": "{{value}} days",
-			"hours": "{{value}} hrs",
-			"minutes": "{{value}} min",
-			"none": "—"
-		},
-		"range": {
-			"label": "Time range",
-			"7d": "7 days",
-			"30d": "30 days",
-			"90d": "90 days",
-			"365d": "1 year",
-			"from": "From",
-			"to": "To"
-		},
-		"kpi": {
-			"vs_prior": "vs previous period",
-			"fill_rate": {
-				"title": "Fill rate"
-			},
-			"error_rate": {
-				"title": "Error rate"
-			},
-			"time_to_loan": {
-				"title": "Median time to loan",
-				"subtitle": "p50 · p95 {{p95}}"
-			},
-			"resolved": {
-				"title": "Requests resolved",
-				"subtitle": "completed or failed"
-			},
-			"cost_avoidance": {
-				"title": "Estimated cost avoided",
-				"basis": "Based on {{count}} successful fulfilments",
-				"input_label": "Cost per ILL",
-				"input_help": "Your own average interlibrary loan cost"
-			},
-			"checkout_rate": {
-				"title": "Checkout rate",
-				"subtitle": "{{reached}} of {{total}} reached the shelf"
-			},
-			"total_borrows": {
-				"title": "Total borrows",
-				"subtitle": "requests placed as borrower"
-			},
-			"total_lends": {
-				"title": "Total lends",
-				"subtitle": "items supplied to the network"
-			},
-			"rescued": {
-				"title": "Requests rescued",
-				"subtitle": "fulfilled after re-resolution"
-			},
-			"unique_titles": {
-				"title": "Unique titles requested",
-				"subtitle": "across {{total}} requests"
-			}
-		},
-		"charts": {
-			"status_flow": {
-				"title": "Requesting activity over time",
-				"subtitle": "Requests entering each status per period. Pick the statuses to plot.",
-				"picker_label": "Choose which statuses to plot"
-			},
-			"failure_taxonomy": {
-				"title": "Why requests fail",
-				"subtitle": "Failed requests broken down by reason.",
-				"series": "Failed requests"
-			},
-			"supplier_reliability": {
-				"title": "Supplier reliability",
-				"subtitle": "Fulfilled versus failed requests per supplying library.",
-				"fulfilled": "Fulfilled",
-				"failed": "Failed"
-			},
-			"net_flow": {
-				"title": "Borrowing vs supplying",
-				"subtitle": "Reciprocity across the network — net givers and takers.",
-				"borrowed": "Borrowed",
-				"supplied": "Supplied"
-			},
-			"rare_gem": {
-				"title": "Unique collection value",
-				"subtitle": "Requested titles that only this library supplies to the network.",
-				"col_title": "Title",
-				"col_author": "Author",
-				"col_requests": "Requests"
-			},
-			"time_in_status": {
-				"title": "Where requests stall",
-				"subtitle": "Median time spent in each status — the biggest bottleneck first.",
-				"series": "Median dwell",
-				"axis_hours": "Hours"
-			},
-			"supplier_response": {
-				"title": "Supplier responsiveness",
-				"subtitle": "Median time from request placed to supplier confirmation, per lender.",
-				"series": "Median response",
-				"axis_hours": "Hours"
-			},
-			"demand_heatmap": {
-				"title": "When requests arrive",
-				"subtitle": "Request volume by day of week and hour of day (server time zone)."
-			},
-			"demand_by_format": {
-				"title": "Demand by format",
-				"subtitle": "Requesting volume by material format.",
-				"series": "Requests"
-			},
-			"top_titles": {
-				"title": "Most requested titles",
-				"subtitle": "The titles the network asks for most.",
-				"col_title": "Title",
-				"col_requests": "Requests"
-			},
-			"demand_by_pickup": {
-				"title": "Demand by pickup location",
-				"subtitle": "Where patrons collect their requests.",
-				"series": "Requests"
-			},
-			"demand_by_patron_group": {
-				"title": "Demand by patron group",
-				"subtitle": "Which patron categories drive requesting.",
-				"series": "Requests"
-			},
-			"unmet_local": {
-				"title": "Unmet local demand",
-				"subtitle": "Titles your own patrons requested but you do not hold.",
-				"col_supplied": "Supplied"
-			},
-			"acquisition_opportunities": {
-				"title": "Acquisition opportunities",
-				"subtitle": "Highly requested titles across the network that you do not hold.",
-				"col_supplied": "Supplied"
-			},
-			"consortial_lifeline": {
-				"title": "Consortial lifeline",
-				"subtitle": "Titles you uniquely keep flowing to the network.",
-				"col_supplied": "Supplied"
-			},
-			"peer_benchmark": {
-				"title": "Peer benchmarking",
-				"subtitle": "Each library vs the consortium median (fill {{fill}}, checkout {{checkout}}).",
-				"col_library": "Library",
-				"col_requests": "Requests",
-				"col_checkout": "Checkout rate",
-				"col_fill": "Fill rate",
-				"your_library": "(your library)"
-			},
-			"collection_dimension": {
-				"title": "Collection analysis",
-				"subtitle": "Requesting demand sliced by a bibliographic dimension.",
-				"select_label": "Dimension",
-				"series": "Requests",
-				"dim_format": "Format",
-				"dim_language": "Language",
-				"dim_subject": "Subject",
-				"dim_decade": "Publication decade"
-			},
-			"new_acquisitions": {
-				"title": "New acquisitions performance",
-				"subtitle": "How your recently-added titles perform in the network.",
-				"acquired_since": "Acquired since",
-				"col_supplied": "Supplied"
-			}
-		},
-		"panel": {
-			"retry": "Retry",
-			"failed": "This panel could not be loaded."
-		},
-		"announce": {
-			"view": "Showing {{range}}."
-		},
-		"durations": {
-			"title": "How long things take",
-			"subtitle": "Median and 95th percentile, for the legs this deployment reports.",
-			"to_loan": "Time to loan",
-			"to_finalise": "Time to finalise",
-			"supplier_response": "My response time",
-			"transit_out": "Transit, outbound",
-			"transit_back": "Transit, return",
-			"pair": "p50 {{p50}} · p95 {{p95}}",
-			"median": "median {{value}}",
-			"sample": "· {{count}} observations",
-			"not_reported": "Not reported by this system"
-		},
-		"headline": {
-			"filled": "{{rate}}% filled",
-			"patron_waited": "My patron waited",
-			"supplied": "Items I supplied",
-			"my_response": "My response time",
-			"my_response_sub": "Placed at me, to confirmed by me",
-			"net_flow": "Net flow",
-			"net_lender": "Net lender",
-			"net_borrower": "Net borrower",
-			"more": "More measures"
-		},
-		"method": {
-			"request_volume": {
-				"what": "How many requests entered DCB in each period of the window.",
-				"how": "Transitions into SUBMITTED_TO_DCB per bucket, from the audit trail. The bucket is a day, a week or a month depending on the length of the window.",
-				"not": "It counts requests that ARRIVED, not requests that were filled. A period can be busy and unsuccessful. The most recent bucket is left out of the line entirely until it closes, because a partial period always looks like a fall."
-			},
-			"trend_direction": {
-				"what": "Whether a measure is moving, and whether the movement is the good one.",
-				"how": "The mean of the most recent third of buckets against the mean of the third before it. A change smaller than the noise floor - one percentage point for a rate, five per cent for a count - is reported as no clear change rather than as a direction. Fewer than nine closed buckets is reported as too short a window.",
-				"not": "It is not a forecast and not a significance test. It says the recent period differs from the one before it, nothing about why, and a single extraordinary week inside the recent third will move it."
-			},
-			"turnaround_trend": {
-				"what": "Whether the wait between a request arriving and the item being loaned is getting longer.",
-				"how": "The median and 95th percentile of that duration, per bucket, for the requests that REACHED the loan in that bucket.",
-				"not": "A bucket holds the requests that finished in it, not the ones that started in it, so a spell of very slow requests appears when they complete rather than when they arrived. A bucket with no completions is absent from the line rather than drawn as zero."
-			},
-			"supplier_response_trend": {
-				"what": "Whether suppliers are taking longer to confirm the requests placed with them.",
-				"how": "Placed at the supplier to confirmed by it, as a median and a 95th percentile per bucket, scoped on your library as the supplier.",
-				"not": "It measures the supplier, not DCB: the time DCB spent choosing that supplier is deliberately outside it. Requests never confirmed are not in the figure, so a supplier that ignores everything can look fast."
-			},
-			"transit_dwell_trend": {
-				"what": "Whether items are spending longer in transit between libraries.",
-				"how": "Median and 95th percentile dwell in the chosen transit status, per bucket, for the items that left it in that bucket.",
-				"not": "It measures the status, not the courier: an item scanned late at the receiving end is indistinguishable from one that travelled slowly. A system that does not report the return leg contributes nothing to it rather than contributing a zero."
-			},
-			"trigger": "How {{label}} is calculated",
-			"title": "How {{label}} is calculated",
-			"part": {
-				"what": "What it counts",
-				"how": "How it is computed",
-				"not": "What it does not include",
-				"data": "How much data"
-			},
-			"sample": "{{count}} observations in this window.",
-			"sample_low": "Only {{count}} observations in this window - a single outlier moves this figure.",
-			"sample_unknown": "This endpoint reports percentiles without a count, so how many requests are behind this figure is not known here.",
-			"requests_fulfilled": {
-				"what": "Requests that reached a settled outcome in the window, whether they were filled or not.",
-				"how": "The successful and failed counts from the borrower fulfilment query, added together. Successful means the request reached loaned, completed or finalised.",
-				"not": "Requests still in flight when the window closed are in neither count, so a busy week looks smaller until its requests settle."
-			},
-			"fill_rate": {
-				"what": "The share of settled requests that reached the patron.",
-				"how": "Successful divided by successful plus failed, over the same window. The delta compares it with the equal-length window immediately before.",
-				"not": "It says nothing about how long the fill took, and nothing about requests still open. A service that fills everything slowly scores the same as one that fills everything quickly."
-			},
-			"error_rate": {
-				"what": "The share of settled requests that did not reach the patron.",
-				"how": "The exact complement of the fill rate: one minus successful over successful plus failed.",
-				"not": "It does not separate a cancellation from a breakdown. The failure taxonomy panel answers why; this only answers how often."
-			},
-			"libraries_active": {
-				"what": "Members that borrowed or supplied at least once in the window.",
-				"how": "One row per Host LMS from the net flow query, counting those whose borrowed and supplied counts do not both sit at zero.",
-				"not": "It counts Host LMS systems, not libraries. Where several libraries share one system they cannot be told apart here, so a shared system counts once however many members sit behind it."
-			},
-			"net_flow": {
-				"what": "Whether this library gave the network more than it took.",
-				"how": "Items supplied to other members minus items borrowed from them, over the window. Errored requests are excluded from both sides.",
-				"not": "It is a count of requests, not of value or of effort, and it says nothing about which titles moved."
-			},
-			"items_supplied": {
-				"what": "Requests this library filled for another member's patron.",
-				"how": "Requests whose supplying Host LMS is this library, excluding errored ones.",
-				"not": "Local fulfilment is excluded: an item this library supplied to its own patron is not network traffic."
-			},
-			"turnaround_to_loan": {
-				"what": "How long a patron waits between asking for an item and being issued it.",
-				"how": "Median and 95th percentile of the interval from request creation to the first audit entry reaching loaned. A status re-entered during tracking counts once.",
-				"not": "Requests that never reached loaned are absent, and so are those still open. A rising median can therefore mean faster failures as well as slower loans."
-			},
-			"turnaround_to_finalise": {
-				"what": "The full administrative cycle, from request to the point where nothing is left to do.",
-				"how": "Median and 95th percentile from request creation to the first audit entry reaching finalised.",
-				"not": "Finalisation trails the patron's experience by a long way - the item has usually been back on the shelf for some time - so this is an operations figure, not a service one."
-			},
-			"supplier_response": {
-				"what": "How quickly a supplying library answers a request placed with it.",
-				"how": "Median from the request being placed at the supplying agency to that supplier confirming it, using the earliest audit entry for each so a tracking repeat cannot double-count.",
-				"not": "It deliberately does not start at request creation, which would fold DCB's own resolution time into a supplier's score. Across several libraries it is one figure per supplier, so no single number is shown."
-			},
-			"transit_dwell": {
-				"what": "How long an item spends in transit on one leg of its journey.",
-				"how": "Median time between the request entering the transit status and leaving it, taken from the audit trail.",
-				"not": "It depends on the host LMS reporting the status at all. A system that never sets it produces no observation, which is shown as not reported rather than as a fast leg. A journey that began before the window opened is excluded."
-			},
-			"failure_taxonomy": {
-				"what": "Why requests failed, grouped by the reason rather than counted together.",
-				"how": "Requests that ended in error or cancellation, or whose previous status was that no item was selectable at any agency, bucketed by that reason.",
-				"not": "A request that failed and was then re-resolved successfully is not here: it succeeded. The rescued count in the header is where those appear."
-			},
-			"supplier_reliability": {
-				"what": "How often each supplying library delivered what it was asked for.",
-				"how": "Per supplier, requests that reached loaned, completed or finalised against those that errored, were cancelled, or found no selectable item.",
-				"not": "A supplier that is asked rarely can look perfect or terrible on a handful of requests, so read it with the count beside it."
-			},
-			"trading_partners": {
-				"what": "Which members this library exchanges most traffic with, in each direction.",
-				"how": "Requests grouped by the partner at the other end, excluding errored requests and local fulfilment, because a failed request is not traffic and a local loan is not a partnership.",
-				"not": "A partner is never one of the caller's own libraries. Consortium-wide there is no own set to exclude, so the lists rank every supplier and every borrower."
-			},
-			"unfillable_demand": {
-				"what": "Titles patrons asked for that nothing in the network could satisfy.",
-				"how": "Requests whose previous status was that no item was selectable at any agency, grouped by title.",
-				"not": "It is demand nobody could meet, not demand that failed for another reason - a request that errored during transit is in the failure taxonomy instead."
-			},
-			"peer_benchmarks": {
-				"what": "This library's volume and outcomes beside every other member's.",
-				"how": "One row per borrowing library, with its request count, checkouts, successes and failures over the window.",
-				"not": "It is deliberately not pseudonymised: members are named, because a benchmark nobody can act on is decoration."
-			},
-			"checkout_rate": {
-				"what": "How often an item that arrived was actually collected.",
-				"how": "Requests that reached loaned as a share of those that got far enough to be collectable.",
-				"not": "An item a patron never came for is a cost the fill rate cannot see, which is why this sits beside it rather than inside it."
-			},
-			"cost_avoidance": {
-				"what": "What these fulfilments would have cost through traditional interlibrary loan.",
-				"how": "Successful fulfilments in the window multiplied by a unit cost you supply. No cost is shipped with the product.",
-				"not": "It is an assumption multiplied by a count, not a measurement. The count is ours; the unit cost is yours, and the figure is only as defensible as that number."
-			}
-		}
 	}
 }

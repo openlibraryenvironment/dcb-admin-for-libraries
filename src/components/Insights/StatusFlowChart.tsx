@@ -7,6 +7,7 @@ import { LineChartPro } from "@mui/x-charts-pro";
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette, inkOn } from "@/hooks/useChartPalette";
 
+import ChartDataTable from "./ChartDataTable";
 import PanelState from "./PanelState";
 import { MAX_PLOT_SERIES } from "@helpers/insightsSearch";
 import type { InsightsView } from "@/hooks/useInsightsView";
@@ -130,17 +131,30 @@ export default function StatusFlowChart({
           height={CHART_HEIGHT}
         >
           {() => (
-            <LineChartPro
-              height={CHART_HEIGHT}
-              xAxis={[
-                {
-                  data: xAxisData,
-                  scaleType: "time",
-                  zoom: true,
-                },
-              ]}
-              series={series}
-            />
+            <>
+              <LineChartPro
+                height={CHART_HEIGHT}
+                xAxis={[
+                  {
+                    data: xAxisData,
+                    scaleType: "time",
+                    zoom: true,
+                  },
+                ]}
+                series={series}
+              />
+              <ChartDataTable
+                caption={t("insights.charts.status_flow.title")}
+                columns={[
+                  t("insights.charts.status_flow.bucket"),
+                  ...series.map((s) => String(s.label)),
+                ]}
+                rows={xAxisData.map((bucket, index) => [
+                  bucket.toISOString().slice(0, 10),
+                  ...series.map((s) => s.data[index] ?? 0),
+                ])}
+              />
+            </>
           )}
         </PanelState>
       </CardContent>

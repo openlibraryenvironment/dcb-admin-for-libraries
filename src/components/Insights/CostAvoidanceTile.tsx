@@ -10,6 +10,7 @@ import {
   Box,
 } from "@mui/material";
 
+import { currencySymbol, formatCurrency } from "@helpers/formatters";
 import { useInsightsCostStore } from "@/hooks/insightsCostStore";
 
 // Value tile. The successful-fulfilment count comes from the combined dashboard call
@@ -33,7 +34,7 @@ export default function CostAvoidanceTile({
   // carries, because this is the figure most likely to end up in a board pack and a link
   // that shows the recipient a different number is worse than no link.
   const storedCost = useInsightsCostStore((s) => s.illUnitCost);
-  const currencySymbol = useInsightsCostStore((s) => s.currencySymbol);
+  const currency = useInsightsCostStore((s) => s.currency);
   const setStoredCost = useInsightsCostStore((s) => s.setIllUnitCost);
 
   const illUnitCost = unitCost ?? storedCost;
@@ -47,9 +48,7 @@ export default function CostAvoidanceTile({
 
   const formatted =
     avoidance != null
-      ? `${currencySymbol}${avoidance.toLocaleString(undefined, {
-          maximumFractionDigits: 0,
-        })}`
+      ? formatCurrency(avoidance, currency, { maximumFractionDigits: 0 })
       : "—";
 
   return (
@@ -92,7 +91,7 @@ export default function CostAvoidanceTile({
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      {currencySymbol}
+                      {currencySymbol(currency)}
                     </InputAdornment>
                   ),
                 },

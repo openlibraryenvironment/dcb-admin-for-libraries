@@ -1,3 +1,4 @@
+import { formatNumber } from "@helpers/formatters";
 import { CustomLink } from "../CustomLink";
 import Typography from "@mui/material/Typography";
 import { useTranslation } from "react-i18next";
@@ -78,7 +79,10 @@ export default function RenderAttribute({
 	) {
 		return (
 			<Typography variant="attributeText" title={title ?? attribute}>
-				{Number(attribute).toFixed(5)}
+				{formatNumber(Number(attribute), {
+					minimumFractionDigits: 5,
+					maximumFractionDigits: 5,
+				})}
 			</Typography>
 		);
 	}

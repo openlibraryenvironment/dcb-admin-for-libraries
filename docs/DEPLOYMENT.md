@@ -30,17 +30,20 @@ Log into your Keycloak dashboard, select the `dcb-hub` realm, and complete these
 
 The application requires the following environment variables to function properly. How you apply them depends on your chosen deployment method (see Section 3).
 
-| Variable                 | Required | Description                                                                                                                                                                                                                                                                         |
-| ------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VITE_KEYCLOAK_URL`      | **Yes**  | The URL of the Keycloak server being used for your OpenRS system.                                                                                                                                                                                                                   |
-| `VITE_KEYCLOAK_ID`       | **Yes**  | The name of the Keycloak client (e.g., `dcb-admin-libraries`).                                                                                                                                                                                                                      |
-| `VITE_DCB_API_BASE`      | **Yes**  | The URL of the dcb-service instance.                                                                                                                                                                                                                                                |
-| `VITE_DCB_SEARCH_BASE`   | **Yes**  | The URL of the dcb-locate instance.                                                                                                                                                                                                                                                 |
-| `VITE_MUI_X_LICENSE_KEY` | **Yes**  | Provided by the Hosting Provider. Unlocks MUI X Premium features. It is OK for this to be exposed in the bundle: it is not OK for this to be publicly broadcast (i.e. committed to a repository). See [MUI X docs](https://mui.com/x/introduction/licensing/#license-key-security)! |
+| Variable                 | Required | Description                                                                                                                                                                                                                                                                                                   |
+| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_KEYCLOAK_URL`      | **Yes**  | The URL of the Keycloak server being used for your OpenRS system.                                                                                                                                                                                                                                             |
+| `VITE_KEYCLOAK_ID`       | **Yes**  | The name of the Keycloak client (e.g., `dcb-admin-libraries`).                                                                                                                                                                                                                                                |
+| `VITE_DCB_API_BASE`      | **Yes**  | The URL of the dcb-service instance.                                                                                                                                                                                                                                                                          |
+| `VITE_DCB_SEARCH_BASE`   | **Yes**  | The URL of the dcb-locate instance.                                                                                                                                                                                                                                                                           |
+| `VITE_MUI_X_LICENSE_KEY` | **Yes**  | Provided by the Hosting Provider. Unlocks MUI X Premium features. It is OK for this to be exposed in the bundle: it is not OK for this to be publicly broadcast (i.e. committed to a repository). See [MUI X docs](https://mui.com/x/introduction/licensing/#license-key-security)!                           |
 | `VITE_PUBLIC_URL`        | No       | Standalone base path. Defaults to `/`. Must include leading and trailing slashes (e.g. `/dcb-admin-for-libraries/`). **Build-time only.** The standalone entry uses it for assets, routing, public assets and storage. The bootloader entry always routes at `/` and resolves assets from its own bundle URL. |
 
 > [!NOTE]
 > `VITE_PUBLIC_URL` is not runtime tenant configuration. Set it only at build time for standalone/subpath deployments. Host-specific backend, search, Keycloak and licence values should be supplied by `inject_env.json` in standalone runtime-config deployments or by the KI bootloader host configuration.
+
+> [!IMPORTANT]
+> Under a subpath, only the router adds the base. A root-relative `href` or `window.open("/patronRequests/…")` resolves against the origin root, outside this app — on a shared origin such as Mobius, into whatever else is mounted there. Navigate with `to` on a router link (`CustomLink`), and pass `appUrl(path)` to `window.open`. ESLint fails both patterns when the path is a literal; it cannot see a path held in a variable.
 
 ---
 
@@ -61,6 +64,43 @@ does not show the feature.
 | --- | --- | --- |
 | `VITE_FEATURE_LIBRARY_BRANDING` | **9.0.0** or later | The "How your library appears to patrons" block on the library profile: logo, logo description and discovery theme |
 | `VITE_FEATURE_INSIGHTS` | **9.0.0** or later | The Insights page, and the top-titles / top-requesters panels on the library profile (all of them call `/insights/**`) |
+| `VITE_FEATURE_LIBRARY_SUPPORT_URL` | **after 9.0.0** (`V9_0_008`, on main) | The "Report a problem URL" field in the "Links for patrons" block |
+| `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | **9.0.0** or later | Scoping the request grids by agency code rather than by Host LMS code, and the library column that needs it |
+
+**On the kihosting.net hosts you do not set these.** Those deployments are served by the
+shared Cloudflare worker that also serves DCB Admin, which derives the whole flag block
+from the dcb-service version named for that host. The worker and its host table live in
+`dcb-admin-ui`, in `dcb-hub-admin-ui/docs/`, as `worker.js` and `deployment.md` Option A. A
+flag added here has to be added to that worker's `APP_FEATURES` in the same change, or it
+is undefined in every one of those environments — nothing in this repository can catch
+that.
+
+**`VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is the one flag that is not cosmetic when off.**
+It switches the request filter from `patronHostlmsCode` to `patronAgencyCode`. Left off on
+a 9.0.0 deployment, libraries sharing a Host LMS see one another's requests, so it goes on
+with the upgrade rather than after it.
+
+## 2b. Is there a discovery front end? `VITE_DISCOVERY_ACTIVE`
+
+This one is **not** about which dcb-service you run, which is why it is not a
+`VITE_FEATURE_*` and is listed separately.
+
+| Variable | Set it when | What it turns on |
+| --- | --- | --- |
+| `VITE_DISCOVERY_ACTIVE` | Symposia (or another OpenRS discovery front end) is deployed for this consortium | The two blocks on the library profile that configure discovery and nothing else: "How your library appears to patrons" (logo, logo description, theme) and "Links for patrons" (library website, report-a-problem URL) |
+
+A consortium using DCB with its own discovery layer has nowhere for a patron logo, a theme
+name or a footer link to appear. Leaving this unset hides them rather than offering an
+administrator settings nothing will ever read.
+
+**It composes with the flags above, it does not replace them.** The brand block needs both
+a discovery app to render it *and* a dcb-service that can store it, so
+`VITE_DISCOVERY_ACTIVE` and `VITE_FEATURE_LIBRARY_BRANDING` must both be `true`.
+
+**Switching it off is safe and reversible.** Unlike every flag in 2a it changes only what
+is rendered: the GraphQL documents are untouched, and the library mutation sends changed
+fields only - so a brand already stored stays stored, and turning the flag back on shows it
+again. `e2e/discovery-inactive.spec.ts` asserts both halves.
 
 ### Getting it wrong in each direction
 
@@ -111,7 +151,6 @@ flow remain unchanged.
 **Architecture:** This uses a "Build Once, Deploy Anywhere" approach. You deploy the exact same static build to every environment, and a small Cloudflare Pages Function dynamically supplies the environment-specific configuration to the app at runtime via `/inject_env.json`.
 
 **Deployment Steps:**
-
 
 1. Create a Cloudflare Pages project pointing at your repository.
 2. Set the build command to `npm run build` and the output directory to `dist`.
@@ -173,6 +212,7 @@ docker run -p 8080:80 \
   -e VITE_DCB_API_BASE="https://api..." \
   -e VITE_DCB_SEARCH_BASE="https://search..." \
   -e VITE_PUBLIC_URL="/libraries-admin/" \
+  -e VITE_DISCOVERY_ACTIVE="true" \
   -e VITE_FEATURE_LIBRARY_BRANDING="true" \
   -e VITE_FEATURE_INSIGHTS="true" \
   dcb-admin-libraries

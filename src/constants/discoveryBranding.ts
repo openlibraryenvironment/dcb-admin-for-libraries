@@ -28,16 +28,11 @@ export const BRAND_LIMITS = {
 export const BRAND_ASSET_PATH_PREFIX = "/discovery/brand-assets/";
 
 /**
- * What the file picker offers, and what dcb-service will actually accept — R-17c.
+ * What the file picker offers - R-17c. PNG and JPEG; SVG and WebP are refused
+ * for reasons in docs/branding.md.
  *
- * PNG and JPEG only. SVG is refused because it is a script-capable document and one
- * served from our own origin would be stored XSS in the chrome of every patron page,
- * including the sign-in page. WebP is refused because the server cannot re-encode it, and
- * an image it cannot decode is one it will not store.
- *
- * This attribute is a CONVENIENCE, never a control: a file picker filter is a hint to the
- * operating system and says nothing about the bytes. dcb-service sniffs magic bytes and
- * ignores both the filename and the declared content type.
+ * A CONVENIENCE, never a control: a picker filter is a hint to the operating
+ * system and says nothing about the bytes. dcb-service sniffs magic bytes.
  */
 export const BRAND_IMAGE_ACCEPT = "image/png,image/jpeg";
 
@@ -60,18 +55,11 @@ export function brandAssetStoreFrom(info: unknown): string | null {
 }
 
 /**
- * Whether this deployment accepts brand image uploads — R-17b.
+ * Whether this deployment accepts brand image uploads - R-17b. With
+ * `assets.store=none` dcb-service does not register the controller at all, so
+ * POST /brand-assets is a 404.
  *
- * With `dcb.branding.assets.store=none` dcb-service's upload controller is not registered
- * at all (`@Requires(beans = BrandAssetStore.class)`), so POST /brand-assets is a 404 and
- * an upload button there can only ever fail.
- *
- * UNKNOWN IS AVAILABLE, deliberately. A null store means /info has not been read yet, or
- * the request failed, or the payload predates the branding block — none of which is
- * evidence that uploads are off. Hiding the control on unknown would remove a working
- * feature whenever /info is briefly unreachable, and leave no way to explain why. Showing
- * it costs a clear refusal at Save, which is the message dcb-service already writes. This
- * is UX, not authorisation: the control on uploading is the role check on the route.
+ * UNKNOWN IS AVAILABLE, deliberately: docs/branding.md.
  */
 export function areBrandUploadsAvailable(assetStore: string | null): boolean {
 	return assetStore !== "none";

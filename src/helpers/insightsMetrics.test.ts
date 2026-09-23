@@ -40,6 +40,7 @@ const usedMetrics = [
  * not expected to explain one.
  */
 const NOT_FIGURES = new Set([
+  "ChartDataTable",
   "CollectionAnalysisSection",
   "CollectionPanel",
   "KpiTile",
