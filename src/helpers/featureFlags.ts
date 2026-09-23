@@ -89,7 +89,7 @@ export const isCapabilityEnabled = (flag: string): boolean => readFlag(flag);
  * server that is simply older.
  */
 export const isInsightsTrendsEnabled = (): boolean =>
-  readFlag("VITE_FEATURE_INSIGHTS_TRENDS");
+	readFlag("VITE_FEATURE_INSIGHTS_TRENDS");
 
 /**
  * Whether a discovery front end is deployed beside us — docs/DEPLOYMENT.md §2b.

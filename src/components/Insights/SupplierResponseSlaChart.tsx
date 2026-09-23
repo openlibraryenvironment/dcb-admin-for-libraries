@@ -6,8 +6,8 @@ import { BarChartPro } from "@mui/x-charts-pro";
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
 import {
-  supplierResponseSlaQueryOptions,
-  StatsParams,
+	supplierResponseSlaQueryOptions,
+	StatsParams,
 } from "@helpers/statsApi";
 import { formatTurnaround } from "@helpers/insightsRange";
 
@@ -21,83 +21,83 @@ const CHART_HEIGHT = 340;
 // Median time from request-placed to supplier-confirmed, per supplier - the
 // lender-side responsiveness SLA. Slowest responders first.
 export default function SupplierResponseSlaChart({
-  params,
+	params,
 }: {
-  params: StatsParams;
+	params: StatsParams;
 }) {
-  const { t } = useTranslation();
-  const client = useDcbRestClient();
-  const { categorical } = useChartPalette();
+	const { t } = useTranslation();
+	const client = useDcbRestClient();
+	const { categorical } = useChartPalette();
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery(
-    supplierResponseSlaQueryOptions(client, params),
-  );
+	const { data, isLoading, isError, refetch, isFetching } = useQuery(
+		supplierResponseSlaQueryOptions(client, params),
+	);
 
-  const rows = data ?? [];
+	const rows = data ?? [];
 
-  return (
-    <Card variant="outlined">
-      <CardContent>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <Typography variant="h6" component="h3">
-            {t("insights.charts.supplier_response.title")}
-          </Typography>
-          <MetricInfo
-            metric="supplier_response"
-            label={t("insights.charts.supplier_response.title")}
-          />
-        </Box>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          {t("insights.charts.supplier_response.subtitle")}
-        </Typography>
+	return (
+		<Card variant="outlined">
+			<CardContent>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+					<Typography variant="h6" component="h3">
+						{t("insights.charts.supplier_response.title")}
+					</Typography>
+					<MetricInfo
+						metric="supplier_response"
+						label={t("insights.charts.supplier_response.title")}
+					/>
+				</Box>
+				<Typography variant="body2" color="text.secondary" gutterBottom>
+					{t("insights.charts.supplier_response.subtitle")}
+				</Typography>
 
-        <PanelState
-          isLoading={isLoading}
-          isError={isError}
-          isEmpty={rows.length === 0}
-          onRetry={refetch}
-          isRetrying={isFetching}
-          height={CHART_HEIGHT}
-        >
-          {() => (
-            <>
-              <BarChartPro
-                height={CHART_HEIGHT}
-                layout="horizontal"
-                yAxis={[
-                  { scaleType: "band", data: rows.map((r) => r.supplierCode) },
-                ]}
-                xAxis={[
-                  { label: t("insights.charts.supplier_response.axis_hours") },
-                ]}
-                series={[
-                  {
-                    data: rows.map((r) => r.medianResponseSeconds / 3600),
-                    label: t("insights.charts.supplier_response.series"),
-                    color: categorical[1],
-                    valueFormatter: (v) =>
-                      v == null
-                        ? t("insights.duration.none")
-                        : formatTurnaround(v * 3600, t),
-                  },
-                ]}
-                margin={{ left: 140 }}
-              />
-              <ChartDataTable
-                caption={t("insights.charts.supplier_response.title")}
-                columns={[
-                  t("insights.charts.supplier_reliability.supplier"),
-                  t("insights.charts.supplier_response.axis_hours"),
-                ]}
-                rows={rows.map((r) => [
-                  r.supplierCode,
-                  Math.round((r.medianResponseSeconds / 3600) * 10) / 10,
-                ])}
-              />
-            </>
-          )}
-        </PanelState>
-      </CardContent>
-    </Card>
-  );
+				<PanelState
+					isLoading={isLoading}
+					isError={isError}
+					isEmpty={rows.length === 0}
+					onRetry={refetch}
+					isRetrying={isFetching}
+					height={CHART_HEIGHT}
+				>
+					{() => (
+						<>
+							<BarChartPro
+								height={CHART_HEIGHT}
+								layout="horizontal"
+								yAxis={[
+									{ scaleType: "band", data: rows.map((r) => r.supplierCode) },
+								]}
+								xAxis={[
+									{ label: t("insights.charts.supplier_response.axis_hours") },
+								]}
+								series={[
+									{
+										data: rows.map((r) => r.medianResponseSeconds / 3600),
+										label: t("insights.charts.supplier_response.series"),
+										color: categorical[1],
+										valueFormatter: (v) =>
+											v == null
+												? t("insights.duration.none")
+												: formatTurnaround(v * 3600, t),
+									},
+								]}
+								margin={{ left: 140 }}
+							/>
+							<ChartDataTable
+								caption={t("insights.charts.supplier_response.title")}
+								columns={[
+									t("insights.charts.supplier_reliability.supplier"),
+									t("insights.charts.supplier_response.axis_hours"),
+								]}
+								rows={rows.map((r) => [
+									r.supplierCode,
+									Math.round((r.medianResponseSeconds / 3600) * 10) / 10,
+								])}
+							/>
+						</>
+					)}
+				</PanelState>
+			</CardContent>
+		</Card>
+	);
 }

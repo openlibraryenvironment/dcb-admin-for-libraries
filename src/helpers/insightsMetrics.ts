@@ -11,40 +11,40 @@
  */
 
 export const METRIC_IDS = [
-  // --- the headline five ------------------------------------------------------------
-  "requests_fulfilled",
-  "fill_rate",
-  "error_rate",
-  "net_flow",
-  "items_supplied",
-  // --- durations --------------------------------------------------------------------
-  "turnaround_to_loan",
-  "turnaround_to_finalise",
-  "supplier_response",
-  "transit_dwell",
-  // --- panels whose queries have been read ------------------------------------------
-  "failure_taxonomy",
-  "supplier_reliability",
-  "trading_partners",
-  "unfillable_demand",
-  "peer_benchmarks",
-  "checkout_rate",
-  "cost_avoidance",
-  // --- trends -----------------------------------------------------------------------
-  "request_volume",
-  "trend_direction",
-  "turnaround_trend",
-  "supplier_response_trend",
-  "transit_dwell_trend",
+	// --- the headline five ------------------------------------------------------------
+	"requests_fulfilled",
+	"fill_rate",
+	"error_rate",
+	"net_flow",
+	"items_supplied",
+	// --- durations --------------------------------------------------------------------
+	"turnaround_to_loan",
+	"turnaround_to_finalise",
+	"supplier_response",
+	"transit_dwell",
+	// --- panels whose queries have been read ------------------------------------------
+	"failure_taxonomy",
+	"supplier_reliability",
+	"trading_partners",
+	"unfillable_demand",
+	"peer_benchmarks",
+	"checkout_rate",
+	"cost_avoidance",
+	// --- trends -----------------------------------------------------------------------
+	"request_volume",
+	"trend_direction",
+	"turnaround_trend",
+	"supplier_response_trend",
+	"transit_dwell_trend",
 ] as const;
 
 export type MetricId = (typeof METRIC_IDS)[number];
 
 /** The three static parts. The fourth - how much data - is passed in, because it moves. */
 export const methodKeys = (metric: MetricId) => ({
-  what: `insights.method.${metric}.what`,
-  how: `insights.method.${metric}.how`,
-  not: `insights.method.${metric}.not`,
+	what: `insights.method.${metric}.what`,
+	how: `insights.method.${metric}.how`,
+	not: `insights.method.${metric}.not`,
 });
 
 /**

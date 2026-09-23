@@ -5,126 +5,126 @@ import { useQuery } from "@tanstack/react-query";
 import PanelState from "./PanelState";
 import PanelExport from "./PanelExport";
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+	Box,
+	Card,
+	CardContent,
+	Typography,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
 } from "@mui/material";
 
 const PANEL_MIN_HEIGHT = 280;
 
 export interface StatColumn<T> {
-  headerKey: string;
-  align?: "left" | "right";
-  cell: (row: T) => ReactNode;
-  /**
-   * The same value as plain text, for the CSV.
-   *
-   * Separate from `cell` because a cell is a ReactNode and a file cannot hold one. Where it
-   * is omitted the column is left out of the export rather than guessed at: a column of
-   * "[object Object]" is worse than a column that is not there.
-   */
-  text?: (row: T) => string | number | null | undefined;
+	headerKey: string;
+	align?: "left" | "right";
+	cell: (row: T) => ReactNode;
+	/**
+	 * The same value as plain text, for the CSV.
+	 *
+	 * Separate from `cell` because a cell is a ReactNode and a file cannot hold one. Where it
+	 * is omitted the column is left out of the export rather than guessed at: a column of
+	 * "[object Object]" is worse than a column that is not there.
+	 */
+	text?: (row: T) => string | number | null | undefined;
 }
 
 interface TableStatPanelProps<T> {
-  titleKey: string;
-  subtitleKey: string;
-  queryOptions: {
-    queryKey: readonly unknown[];
-    queryFn: () => Promise<T[]>;
-  };
-  columns: StatColumn<T>[];
-  getRowKey: (row: T) => string;
-  limit?: number;
+	titleKey: string;
+	subtitleKey: string;
+	queryOptions: {
+		queryKey: readonly unknown[];
+		queryFn: () => Promise<T[]>;
+	};
+	columns: StatColumn<T>[];
+	getRowKey: (row: T) => string;
+	limit?: number;
 }
 
 // Generic ranked-table panel - the right form when identity of the rows matters more
 // than a magnitude comparison (titles, gaps). Reused across every "top N list" stat.
 export default function TableStatPanel<T>({
-  titleKey,
-  subtitleKey,
-  queryOptions,
-  columns,
-  getRowKey,
-  limit = 20,
+	titleKey,
+	subtitleKey,
+	queryOptions,
+	columns,
+	getRowKey,
+	limit = 20,
 }: TableStatPanelProps<T>) {
-  const { t } = useTranslation();
-  const { data, isLoading, isError, refetch, isFetching } =
-    useQuery(queryOptions);
+	const { t } = useTranslation();
+	const { data, isLoading, isError, refetch, isFetching } =
+		useQuery(queryOptions);
 
-  const rows = (data ?? []).slice(0, limit);
+	const rows = (data ?? []).slice(0, limit);
 
-  return (
-    <Card variant="outlined">
-      <CardContent>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <Typography variant="h6" component="h3" gutterBottom>
-            {t(titleKey)}
-          </Typography>
-          <PanelExport
-            rows={rows}
-            panel={t(titleKey)}
-            columns={columns
-              .filter((col) => col.text)
-              .map((col) => ({
-                header: t(col.headerKey),
-                value: col.text!,
-              }))}
-          />
-        </Box>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          {t(subtitleKey)}
-        </Typography>
+	return (
+		<Card variant="outlined">
+			<CardContent>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+					<Typography variant="h6" component="h3" gutterBottom>
+						{t(titleKey)}
+					</Typography>
+					<PanelExport
+						rows={rows}
+						panel={t(titleKey)}
+						columns={columns
+							.filter((col) => col.text)
+							.map((col) => ({
+								header: t(col.headerKey),
+								value: col.text!,
+							}))}
+					/>
+				</Box>
+				<Typography variant="body2" color="text.secondary" gutterBottom>
+					{t(subtitleKey)}
+				</Typography>
 
-        <PanelState
-          isLoading={isLoading}
-          isError={isError}
-          isEmpty={rows.length === 0}
-          onRetry={refetch}
-          isRetrying={isFetching}
-          height={PANEL_MIN_HEIGHT}
-        >
-          {() => (
-            <TableContainer sx={{ maxHeight: 420 }}>
-              <Table size="small" stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    {columns.map((col) => (
-                      <TableCell
-                        key={col.headerKey}
-                        align={col.align ?? "left"}
-                      >
-                        {t(col.headerKey)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rows.map((row) => (
-                    <TableRow key={getRowKey(row)} hover>
-                      {columns.map((col) => (
-                        <TableCell
-                          key={col.headerKey}
-                          align={col.align ?? "left"}
-                        >
-                          {col.cell(row)}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </PanelState>
-      </CardContent>
-    </Card>
-  );
+				<PanelState
+					isLoading={isLoading}
+					isError={isError}
+					isEmpty={rows.length === 0}
+					onRetry={refetch}
+					isRetrying={isFetching}
+					height={PANEL_MIN_HEIGHT}
+				>
+					{() => (
+						<TableContainer sx={{ maxHeight: 420 }}>
+							<Table size="small" stickyHeader>
+								<TableHead>
+									<TableRow>
+										{columns.map((col) => (
+											<TableCell
+												key={col.headerKey}
+												align={col.align ?? "left"}
+											>
+												{t(col.headerKey)}
+											</TableCell>
+										))}
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{rows.map((row) => (
+										<TableRow key={getRowKey(row)} hover>
+											{columns.map((col) => (
+												<TableCell
+													key={col.headerKey}
+													align={col.align ?? "left"}
+												>
+													{col.cell(row)}
+												</TableCell>
+											))}
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					)}
+				</PanelState>
+			</CardContent>
+		</Card>
+	);
 }

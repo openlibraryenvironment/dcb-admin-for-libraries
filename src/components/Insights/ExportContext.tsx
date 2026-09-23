@@ -7,13 +7,13 @@ import { ExportContext, ExportContextValue } from "@helpers/insightsExport";
  * and the announcement cannot disagree about what is on screen.
  */
 export function InsightsExportProvider({
-  value,
-  children,
+	value,
+	children,
 }: {
-  value: ExportContextValue;
-  children: ReactNode;
+	value: ExportContextValue;
+	children: ReactNode;
 }) {
-  return (
-    <ExportContext.Provider value={value}>{children}</ExportContext.Provider>
-  );
+	return (
+		<ExportContext.Provider value={value}>{children}</ExportContext.Provider>
+	);
 }

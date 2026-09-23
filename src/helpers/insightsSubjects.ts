@@ -10,11 +10,11 @@
  */
 
 export const SUBJECTS = [
-  "trends",
-  "service",
-  "demand",
-  "partners",
-  "gaps",
+	"trends",
+	"service",
+	"demand",
+	"partners",
+	"gaps",
 ] as const;
 
 export type Subject = (typeof SUBJECTS)[number];
@@ -27,4 +27,4 @@ export const DEFAULT_SUBJECT: Subject = "trends";
  * fixed by the token, so every subject that exists can always be shown.
  */
 export const resolveSubject = (requested: Subject | undefined): Subject =>
-  requested && SUBJECTS.includes(requested) ? requested : DEFAULT_SUBJECT;
+	requested && SUBJECTS.includes(requested) ? requested : DEFAULT_SUBJECT;

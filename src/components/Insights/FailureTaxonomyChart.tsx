@@ -15,72 +15,72 @@ import MetricInfo from "./MetricInfo";
 const CHART_HEIGHT = 320;
 
 export default function FailureTaxonomyChart({
-  params,
+	params,
 }: {
-  params: StatsParams;
+	params: StatsParams;
 }) {
-  const { t } = useTranslation();
-  const client = useDcbRestClient();
-  const { categorical } = useChartPalette();
+	const { t } = useTranslation();
+	const client = useDcbRestClient();
+	const { categorical } = useChartPalette();
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery(
-    failureTaxonomyQueryOptions(client, params),
-  );
+	const { data, isLoading, isError, refetch, isFetching } = useQuery(
+		failureTaxonomyQueryOptions(client, params),
+	);
 
-  const rows = data ?? [];
+	const rows = data ?? [];
 
-  return (
-    <Card variant="outlined">
-      <CardContent>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <Typography variant="h6" component="h3">
-            {t("insights.charts.failure_taxonomy.title")}
-          </Typography>
-          <MetricInfo
-            metric="failure_taxonomy"
-            label={t("insights.charts.failure_taxonomy.title")}
-          />
-        </Box>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          {t("insights.charts.failure_taxonomy.subtitle")}
-        </Typography>
+	return (
+		<Card variant="outlined">
+			<CardContent>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+					<Typography variant="h6" component="h3">
+						{t("insights.charts.failure_taxonomy.title")}
+					</Typography>
+					<MetricInfo
+						metric="failure_taxonomy"
+						label={t("insights.charts.failure_taxonomy.title")}
+					/>
+				</Box>
+				<Typography variant="body2" color="text.secondary" gutterBottom>
+					{t("insights.charts.failure_taxonomy.subtitle")}
+				</Typography>
 
-        <PanelState
-          isLoading={isLoading}
-          isError={isError}
-          isEmpty={rows.length === 0}
-          onRetry={refetch}
-          isRetrying={isFetching}
-          height={CHART_HEIGHT}
-        >
-          {() => (
-            <>
-              {/* Magnitude ranking -> one hue, horizontal for legible reason labels. */}
-              <BarChartPro
-                height={CHART_HEIGHT}
-                layout="horizontal"
-                yAxis={[{ scaleType: "band", data: rows.map((r) => r.reason) }]}
-                series={[
-                  {
-                    data: rows.map((r) => r.count),
-                    label: t("insights.charts.failure_taxonomy.series"),
-                    color: categorical[0],
-                  },
-                ]}
-                margin={{ left: 160 }}
-              />
-              <ChartDataTable
-                caption={t("insights.charts.failure_taxonomy.title")}
-                columns={[
-                  t("insights.charts.failure_taxonomy.reason"),
-                  t("insights.charts.failure_taxonomy.series"),
-                ]}
-                rows={rows.map((r) => [r.reason, r.count])}
-              />
-            </>
-          )}
-        </PanelState>
-      </CardContent>
-    </Card>
-  );
+				<PanelState
+					isLoading={isLoading}
+					isError={isError}
+					isEmpty={rows.length === 0}
+					onRetry={refetch}
+					isRetrying={isFetching}
+					height={CHART_HEIGHT}
+				>
+					{() => (
+						<>
+							{/* Magnitude ranking -> one hue, horizontal for legible reason labels. */}
+							<BarChartPro
+								height={CHART_HEIGHT}
+								layout="horizontal"
+								yAxis={[{ scaleType: "band", data: rows.map((r) => r.reason) }]}
+								series={[
+									{
+										data: rows.map((r) => r.count),
+										label: t("insights.charts.failure_taxonomy.series"),
+										color: categorical[0],
+									},
+								]}
+								margin={{ left: 160 }}
+							/>
+							<ChartDataTable
+								caption={t("insights.charts.failure_taxonomy.title")}
+								columns={[
+									t("insights.charts.failure_taxonomy.reason"),
+									t("insights.charts.failure_taxonomy.series"),
+								]}
+								rows={rows.map((r) => [r.reason, r.count])}
+							/>
+						</>
+					)}
+				</PanelState>
+			</CardContent>
+		</Card>
+	);
 }

@@ -3,10 +3,10 @@ import { IconButton, Tooltip } from "@mui/material";
 import { FileDownloadOutlined } from "@mui/icons-material";
 
 import {
-  CsvColumn,
-  csvFileName,
-  downloadCsv,
-  panelCsv,
+	CsvColumn,
+	csvFileName,
+	downloadCsv,
+	panelCsv,
 } from "@helpers/panelCsv";
 import { useExportContext } from "@helpers/insightsExport";
 
@@ -19,50 +19,50 @@ import { useExportContext } from "@helpers/insightsExport";
  * pages a whole result set - see docs/large-exports.md.
  */
 export default function PanelExport<T>({
-  rows,
-  columns,
-  panel,
-  method,
+	rows,
+	columns,
+	panel,
+	method,
 }: {
-  rows: T[];
-  columns: CsvColumn<T>[];
-  panel: string;
-  /** The registry's "how", so the file says what the figures are. */
-  method?: string;
+	rows: T[];
+	columns: CsvColumn<T>[];
+	panel: string;
+	/** The registry's "how", so the file says what the figures are. */
+	method?: string;
 }) {
-  const { t } = useTranslation();
-  const context = useExportContext();
+	const { t } = useTranslation();
+	const context = useExportContext();
 
-  // Nothing to export, or no statement of what it would cover - a file that named a
-  // scope nobody set would be worse than no file.
-  if (rows.length === 0 || !context) return null;
+	// Nothing to export, or no statement of what it would cover - a file that named a
+	// scope nobody set would be worse than no file.
+	if (rows.length === 0 || !context) return null;
 
-  const label = t("insights.export.csv", { panel });
+	const label = t("insights.export.csv", { panel });
 
-  return (
-    <Tooltip title={label}>
-      <IconButton
-        size="small"
-        // Named for the panel, not "Download": a reader listing this page's
-        // controls would otherwise hear the same word beside every figure.
-        aria-label={label}
-        onClick={() => {
-          const generated = new Date();
+	return (
+		<Tooltip title={label}>
+			<IconButton
+				size="small"
+				// Named for the panel, not "Download": a reader listing this page's
+				// controls would otherwise hear the same word beside every figure.
+				aria-label={label}
+				onClick={() => {
+					const generated = new Date();
 
-          downloadCsv(
-            csvFileName(panel, generated),
-            panelCsv(rows, columns, {
-              panel,
-              scope: context.scope,
-              window: context.window,
-              method,
-              generated,
-            }),
-          );
-        }}
-      >
-        <FileDownloadOutlined fontSize="small" />
-      </IconButton>
-    </Tooltip>
-  );
+					downloadCsv(
+						csvFileName(panel, generated),
+						panelCsv(rows, columns, {
+							panel,
+							scope: context.scope,
+							window: context.window,
+							method,
+							generated,
+						}),
+					);
+				}}
+			>
+				<FileDownloadOutlined fontSize="small" />
+			</IconButton>
+		</Tooltip>
+	);
 }

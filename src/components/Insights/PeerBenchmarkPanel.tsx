@@ -2,16 +2,16 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Box,
-  Card,
-  CardContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
+	Box,
+	Card,
+	CardContent,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+	Typography,
 } from "@mui/material";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
@@ -26,168 +26,168 @@ import MetricInfo from "./MetricInfo";
 const PANEL_MIN_HEIGHT = 300;
 
 function median(values: number[]): number | null {
-  const s = values.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
-  if (s.length === 0) return null;
-  const mid = Math.floor(s.length / 2);
-  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+	const s = values.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+	if (s.length === 0) return null;
+	const mid = Math.floor(s.length / 2);
+	return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
 
 // Ranks every library's borrower-side performance and marks the current library, with
 // the consortium median as the benchmark line. The competitive gap vs LibraryIQ.
 export default function PeerBenchmarkPanel({
-  params,
-  libraryCode,
+	params,
+	libraryCode,
 }: {
-  params: { startDate?: string; endDate?: string };
-  libraryCode?: string;
+	params: { startDate?: string; endDate?: string };
+	libraryCode?: string;
 }) {
-  const { t } = useTranslation();
-  const client = useDcbRestClient();
+	const { t } = useTranslation();
+	const client = useDcbRestClient();
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery(
-    peerBenchmarksQueryOptions(client, params),
-  );
+	const { data, isLoading, isError, refetch, isFetching } = useQuery(
+		peerBenchmarksQueryOptions(client, params),
+	);
 
-  const { rows, medianFill, medianCheckout } = useMemo(() => {
-    const mapped = (data ?? []).map((r) => {
-      const resolved = r.successCount + r.failedCount;
-      return {
-        libraryCode: r.libraryCode,
-        // A Host LMS code means nothing to most librarians, so lead with the
-        // name. Fall back to the code rather than an empty cell when a system
-        // has requests but is not onboarded as a library.
-        libraryName: r.libraryName ?? r.libraryCode,
-        hasName: r.libraryName != null,
-        totalRequests: r.totalRequests,
-        fillRate: resolved > 0 ? (r.successCount / resolved) * 100 : null,
-        checkoutRate:
-          r.totalRequests > 0
-            ? (r.checkoutCount / r.totalRequests) * 100
-            : null,
-      };
-    });
-    const mFill = median(
-      mapped.map((r) => r.fillRate).filter((v): v is number => v != null),
-    );
-    const mCheckout = median(
-      mapped.map((r) => r.checkoutRate).filter((v): v is number => v != null),
-    );
-    mapped.sort((a, b) => (b.fillRate ?? -1) - (a.fillRate ?? -1));
-    return { rows: mapped, medianFill: mFill, medianCheckout: mCheckout };
-  }, [data]);
+	const { rows, medianFill, medianCheckout } = useMemo(() => {
+		const mapped = (data ?? []).map((r) => {
+			const resolved = r.successCount + r.failedCount;
+			return {
+				libraryCode: r.libraryCode,
+				// A Host LMS code means nothing to most librarians, so lead with the
+				// name. Fall back to the code rather than an empty cell when a system
+				// has requests but is not onboarded as a library.
+				libraryName: r.libraryName ?? r.libraryCode,
+				hasName: r.libraryName != null,
+				totalRequests: r.totalRequests,
+				fillRate: resolved > 0 ? (r.successCount / resolved) * 100 : null,
+				checkoutRate:
+					r.totalRequests > 0
+						? (r.checkoutCount / r.totalRequests) * 100
+						: null,
+			};
+		});
+		const mFill = median(
+			mapped.map((r) => r.fillRate).filter((v): v is number => v != null),
+		);
+		const mCheckout = median(
+			mapped.map((r) => r.checkoutRate).filter((v): v is number => v != null),
+		);
+		mapped.sort((a, b) => (b.fillRate ?? -1) - (a.fillRate ?? -1));
+		return { rows: mapped, medianFill: mFill, medianCheckout: mCheckout };
+	}, [data]);
 
-  const pct = (v: number | null) => (v == null ? "—" : formatPercent(v));
+	const pct = (v: number | null) => (v == null ? "—" : formatPercent(v));
 
-  return (
-    <Card variant="outlined">
-      <CardContent>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <Typography variant="h6" component="h3">
-            {t("insights.charts.peer_benchmark.title")}
-          </Typography>
-          <MetricInfo
-            metric="peer_benchmarks"
-            label={t("insights.charts.peer_benchmark.title")}
-          />
-        </Box>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          {t("insights.charts.peer_benchmark.subtitle", {
-            fill: pct(medianFill),
-            checkout: pct(medianCheckout),
-          })}
-        </Typography>
+	return (
+		<Card variant="outlined">
+			<CardContent>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+					<Typography variant="h6" component="h3">
+						{t("insights.charts.peer_benchmark.title")}
+					</Typography>
+					<MetricInfo
+						metric="peer_benchmarks"
+						label={t("insights.charts.peer_benchmark.title")}
+					/>
+				</Box>
+				<Typography variant="body2" color="text.secondary" gutterBottom>
+					{t("insights.charts.peer_benchmark.subtitle", {
+						fill: pct(medianFill),
+						checkout: pct(medianCheckout),
+					})}
+				</Typography>
 
-        <PanelState
-          isLoading={isLoading}
-          isError={isError}
-          isEmpty={rows.length === 0}
-          onRetry={refetch}
-          isRetrying={isFetching}
-          height={PANEL_MIN_HEIGHT}
-        >
-          {() => (
-            <TableContainer sx={{ maxHeight: 440 }}>
-              <Table size="small" stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>
-                      {t("insights.charts.peer_benchmark.col_library")}
-                    </TableCell>
-                    <TableCell align="right">
-                      {t("insights.charts.peer_benchmark.col_requests")}
-                    </TableCell>
-                    <TableCell align="right">
-                      {t("insights.charts.peer_benchmark.col_checkout")}
-                    </TableCell>
-                    <TableCell align="right">
-                      {t("insights.charts.peer_benchmark.col_fill")}
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rows.map((row) => {
-                    const isCurrent = row.libraryCode === libraryCode;
-                    const aboveMedian =
-                      medianFill != null &&
-                      row.fillRate != null &&
-                      row.fillRate >= medianFill;
-                    return (
-                      <TableRow
-                        key={row.libraryCode}
-                        hover
-                        selected={isCurrent}
-                        sx={isCurrent ? { fontWeight: "bold" } : undefined}
-                      >
-                        <TableCell
-                          sx={isCurrent ? { fontWeight: 700 } : undefined}
-                        >
-                          {row.libraryName}
-                          {row.hasName ? (
-                            <Typography
-                              variant="caption"
-                              component="span"
-                              color="text.secondary"
-                              sx={{ ml: 1 }}
-                            >
-                              {row.libraryCode}
-                            </Typography>
-                          ) : null}
-                          {isCurrent ? (
-                            <Typography
-                              variant="caption"
-                              component="span"
-                              sx={{ ml: 1 }}
-                            >
-                              {t("insights.charts.peer_benchmark.your_library")}
-                            </Typography>
-                          ) : null}
-                        </TableCell>
-                        <TableCell align="right">
-                          {formatNumber(row.totalRequests)}
-                        </TableCell>
-                        <TableCell align="right">
-                          {pct(row.checkoutRate)}
-                        </TableCell>
-                        <TableCell
-                          align="right"
-                          sx={{
-                            color:
-                              row.fillRate == null
-                                ? "text.secondary"
-                                : outcomeTextColour(aboveMedian),
-                          }}
-                        >
-                          {pct(row.fillRate)}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </PanelState>
-      </CardContent>
-    </Card>
-  );
+				<PanelState
+					isLoading={isLoading}
+					isError={isError}
+					isEmpty={rows.length === 0}
+					onRetry={refetch}
+					isRetrying={isFetching}
+					height={PANEL_MIN_HEIGHT}
+				>
+					{() => (
+						<TableContainer sx={{ maxHeight: 440 }}>
+							<Table size="small" stickyHeader>
+								<TableHead>
+									<TableRow>
+										<TableCell>
+											{t("insights.charts.peer_benchmark.col_library")}
+										</TableCell>
+										<TableCell align="right">
+											{t("insights.charts.peer_benchmark.col_requests")}
+										</TableCell>
+										<TableCell align="right">
+											{t("insights.charts.peer_benchmark.col_checkout")}
+										</TableCell>
+										<TableCell align="right">
+											{t("insights.charts.peer_benchmark.col_fill")}
+										</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{rows.map((row) => {
+										const isCurrent = row.libraryCode === libraryCode;
+										const aboveMedian =
+											medianFill != null &&
+											row.fillRate != null &&
+											row.fillRate >= medianFill;
+										return (
+											<TableRow
+												key={row.libraryCode}
+												hover
+												selected={isCurrent}
+												sx={isCurrent ? { fontWeight: "bold" } : undefined}
+											>
+												<TableCell
+													sx={isCurrent ? { fontWeight: 700 } : undefined}
+												>
+													{row.libraryName}
+													{row.hasName ? (
+														<Typography
+															variant="caption"
+															component="span"
+															color="text.secondary"
+															sx={{ ml: 1 }}
+														>
+															{row.libraryCode}
+														</Typography>
+													) : null}
+													{isCurrent ? (
+														<Typography
+															variant="caption"
+															component="span"
+															sx={{ ml: 1 }}
+														>
+															{t("insights.charts.peer_benchmark.your_library")}
+														</Typography>
+													) : null}
+												</TableCell>
+												<TableCell align="right">
+													{formatNumber(row.totalRequests)}
+												</TableCell>
+												<TableCell align="right">
+													{pct(row.checkoutRate)}
+												</TableCell>
+												<TableCell
+													align="right"
+													sx={{
+														color:
+															row.fillRate == null
+																? "text.secondary"
+																: outcomeTextColour(aboveMedian),
+													}}
+												>
+													{pct(row.fillRate)}
+												</TableCell>
+											</TableRow>
+										);
+									})}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					)}
+				</PanelState>
+			</CardContent>
+		</Card>
+	);
 }

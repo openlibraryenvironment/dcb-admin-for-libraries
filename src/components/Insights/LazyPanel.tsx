@@ -7,36 +7,36 @@ import { Skeleton } from "@mui/material";
 // once the admin scrolls to them. rootMargin starts the fetch slightly ahead of view so
 // there's no visible pop-in.
 export default function LazyPanel({
-  children,
-  minHeight = 360,
+	children,
+	minHeight = 360,
 }: {
-  children: ReactNode;
-  minHeight?: number;
+	children: ReactNode;
+	minHeight?: number;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+	const ref = useRef<HTMLDivElement>(null);
+	const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
-    if (visible) return;
-    const el = ref.current;
-    if (!el) return;
+	useEffect(() => {
+		if (visible) return;
+		const el = ref.current;
+		if (!el) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "250px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [visible]);
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries.some((e) => e.isIntersecting)) {
+					setVisible(true);
+					observer.disconnect();
+				}
+			},
+			{ rootMargin: "250px" },
+		);
+		observer.observe(el);
+		return () => observer.disconnect();
+	}, [visible]);
 
-  return (
-    <div ref={ref}>
-      {visible ? children : <Skeleton variant="rounded" height={minHeight} />}
-    </div>
-  );
+	return (
+		<div ref={ref}>
+			{visible ? children : <Skeleton variant="rounded" height={minHeight} />}
+		</div>
+	);
 }

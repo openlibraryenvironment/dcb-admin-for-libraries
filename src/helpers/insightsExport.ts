@@ -13,10 +13,10 @@ import { createContext, useContext } from "react";
  */
 
 export interface ExportContextValue {
-  /** Which libraries the figures cover, in the reader's words. */
-  scope: string;
-  /** The window, in the reader's words. */
-  window: string;
+	/** Which libraries the figures cover, in the reader's words. */
+	scope: string;
+	/** The window, in the reader's words. */
+	window: string;
 }
 
 export const ExportContext = createContext<ExportContextValue | null>(null);
