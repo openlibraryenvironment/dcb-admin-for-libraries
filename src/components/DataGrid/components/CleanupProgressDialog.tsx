@@ -82,7 +82,13 @@ export const CleanupProgressDialog = ({
 	const failedCleanupGridId = "cleanup-error-grid";
 
 	return (
-        <Dialog open={open} fullWidth maxWidth="sm">
+        <Dialog
+            open={open}
+            fullWidth
+            maxWidth="sm"
+            // The title already carried this id and nothing pointed at it, so the
+            // dialog had no accessible name at all (axe: aria-dialog-name).
+            aria-labelledby="progressOfCleanup">
             <DialogTitle id="progressOfCleanup" variant="modalTitle">
 				{isCleaning
 					? t("patron_request.cleanup_in_progress")

@@ -108,6 +108,28 @@ test.describe("Supplier requests clean up", () => {
 		]);
 	});
 
+	/**
+	 * The other half of the update-first rule. ERROR is in untrackedStatuses, so
+	 * dcb-service will never poll it again and asking it to would be a call that
+	 * cannot change the answer. cleanupPatronRequest.test.ts asserts the helper
+	 * skips it; this asserts the grid does, which is where the flag is read.
+	 */
+	test("does not check for updates on a status the service stopped tracking", async ({
+		app,
+		page,
+	}) => {
+		await app.enableFeatures(["VITE_FEATURE_GUARDED_CLEANUP"]);
+
+		const calls: string[] = [];
+		await recordCleanupCalls(page, calls);
+
+		await page.goto("/supplierRequests");
+		await selectRow(page, ALPHA);
+		await runCleanup(page);
+
+		await expect(page.getByRole("dialog").getByText(/Successful/)).toBeVisible();
+		expect(calls).toEqual([expect.stringMatching(/\/transition\/cleanup$/)]);
+	});
 	test("reports a refusal, and offers no override", async ({ app, page }) => {
 		await app.enableFeatures(["VITE_FEATURE_GUARDED_CLEANUP"]);
 
@@ -129,6 +151,19 @@ test.describe("Supplier requests clean up", () => {
 
 		// The result dialog is a surface a user reads and acts on, so it meets the floor.
 		await app.expectNoAccessibilityViolations();
+
+		// The keyboard half of that scan. MUI marks #root aria-hidden without
+		// inert while a Dialog is open, so axe reports aria-hidden-focus as a
+		// check it could not DECIDE - it asks whether those elements are tabbable,
+		// which only a keyboard can answer. Tab stays inside the dialog, so the
+		// grid behind it is unreachable and the aria-hidden is honest.
+		for (let press = 0; press < 10; press++) {
+			await page.keyboard.press("Tab");
+			expect(
+				await dialog.evaluate((node) => node.contains(document.activeElement)),
+				`focus left the dialog after ${press + 1} tabs`,
+			).toBe(true);
+		}
 	});
 
 	test("hides an item-out request against a service that cannot refuse it", async ({

@@ -44,13 +44,11 @@ export const EXTRA_RULES = [
 const VENDOR_EXCLUSIONS = ['[style*="z-index: 100000"]'];
 
 /**
- * Rules whose "incomplete" is undecidable rather than a hidden defect.
- *
- * color-contrast cannot resolve a ground behind MUI's elevation gradient, so
- * asserting it would fire on every Paper. Those pairs are measured instead by
- * themeContrast.test.ts, which does not depend on what a browser can sample.
+ * Rules whose INCOMPLETE result axe cannot decide. Filtered from `incomplete`
+ * only - each still fails the gate as a violation - and each has a test that
+ * decides it instead: docs/testing.md.
  */
-const UNDECIDABLE = new Set(["color-contrast"]);
+const UNDECIDABLE = new Set(["color-contrast", "aria-hidden-focus"]);
 
 export interface AxeFindings {
 	violations: Result[];
