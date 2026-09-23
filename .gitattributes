@@ -4,6 +4,12 @@
 # the other. Pinning the working tree to LF makes the two agree.
 * text=auto eol=lf
 
+# Shell scripts, named even though `*` already covers them: this is the case where a
+# CRLF is a runtime failure rather than a noisy diff. A shebang ending in a carriage
+# return makes a container report `bad interpreter`, and 40-inject-env.sh sat at
+# w/crlf on a Windows clone while the repo held lf.
+*.sh text eol=lf
+
 # Windows launchers must keep CRLF or cmd.exe cannot run them.
 *.bat text eol=crlf
 *.cmd text eol=crlf
