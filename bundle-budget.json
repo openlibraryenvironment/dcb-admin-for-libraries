@@ -5,7 +5,7 @@
 	"chunks": {
 		"exceljs.min.js": 281900,
 		"DataGrid.js": 201000,
-		"insights.js": 128500,
+		"insights.js": 134300,
 		"application.js": 91300,
 		"useMobileRangePicker.js": 55800,
 		"Typography.js": 33000,
@@ -15,7 +15,7 @@
 		"react.js": 19400,
 		"axios.js": 18100,
 		"TextField.js": 17800,
-		"schemas.js": 16300,
+		"schemas.js": 17600,
 		"CombinedRequestingModal.js": 15800,
 		"i18n.js": 18600
 	},
@@ -25,6 +25,8 @@
 		"totalBytes": "1199 KB measured on MUI 9.4.0 / MUI X 9.13.0, after lodash left: a 25,990-byte gzipped drop for five call sites, and the budget is RATCHETED DOWN to match rather than left with the slack in it. The previous baseline was 1211 KB on 9.3.1 / 9.12.0 - the bump cost 5 KB gzipped, and these numbers were re-derived as part of it rather than raised later under pressure. symposia-ui holds 900 KB, which is the number to aim at rather than to declare: this app ships MUI X Premium's grid, charts and pickers where Symposia ships one grid.",
 		"application.js": "Grew 4.2 KB gzipped for the display preferences: the store, the theme provider, the settings controls and the typeface registry. A deliberate addition, re-derived here rather than raised later under pressure.",
 		"useThemeStore.css": "The application's stylesheet, INCLUDING the @font-face rules for all five typefaces - which cost 317 bytes gzipped between them, because a variable font's @font-face is small and the 892 KB of woff2 beside it is only fetched when a family is actually painted. The name is rolldown's, derived from whichever module anchors the chunk; it changed from application.css when the entry graph did. A rename shows up here as one chunk unbudgeted and another no longer built, which is noisy but not wrong.",
-		"i18n.js": "The translation catalogue, which this branch's Insights strings pushed past the 15000 split threshold into a chunk of its own. It was inside application.js on main, and application.js is 497 bytes smaller here, so the initial load did not grow - the catalogue simply became a parallel request."
+		"i18n.js": "The translation catalogue, which this branch's Insights strings pushed past the 15000 split threshold into a chunk of its own. It was inside application.js on main, and application.js is 497 bytes smaller here, so the initial load did not grow - the catalogue simply became a parallel request.",
+		"insights.js": "Raised from 128500 to 134300 on 2026-09-23, re-derived from 131663 measured: +5598 gzipped against main for what feat/insights-ia adds to this one route - five subjects behind a sticky bar with the whole view in the URL, the trend strip and the duration trends, loading/failed/empty/retry as four states rather than two, the metric registry that makes every figure state where it came from, and CSV export. The alternative considered and NOT taken was React.lazy on the eleven chart panels, which would move @mui/x-charts-pro out of this chunk: this repository has no lazy component anywhere yet, so that is a pattern to introduce deliberately rather than under budget pressure, and it defers bytes rather than removing any. The total still has 10575 bytes to spare.",
+		"schemas.js": "Raised from 16300 to 17600 on 2026-09-23, re-derived from 17254 measured. Nothing under src/schemas/ changed: this chunk is zod's runtime, named after whichever module anchors it. insightsSearch.ts reads the Insights view out of the URL with .enum, .catch, .date, .coerce.number and .transform, and those retain more of zod than anything in the app used before. It is what validateSearch costs, and what it buys is a link that opens on the sender's view rather than the recipient's default."
 	}
 }
