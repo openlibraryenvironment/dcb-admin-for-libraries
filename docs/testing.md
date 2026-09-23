@@ -253,3 +253,34 @@ defeats the allocation entirely.
 
 Adding a gate means taking the next free band for this repo's digit and adding
 it to the table above *and* to `doctrine/fragments/workspace.md`.
+
+## The Lighthouse toolchain is pinned by hand
+
+`package.json` carries an `overrides` block that exists for one reason:
+`@lhci/cli@0.15.1` is the latest release, its last commit to `main` was
+2025-06-26, and every advisory `npm audit` reported here came through it. It
+pins `lighthouse: 12.6.1` exactly, so there is no version of it to upgrade to.
+
+| Override | Replaces | Why |
+|---|---|---|
+| `tmp: ^0.2.7` | `0.1.0` under lhci, `0.0.33` under `external-editor` | blanket, because the nested copy is what the path-traversal advisory names; overriding it dedupes both onto one `0.2.7` |
+| `@lhci/cli > uuid: ^11.1.1` | `8.3.2` | scoped, because `uuid` is also a direct dependency at `14.0.2` and a blanket override is `EOVERRIDE` |
+| `@lhci/cli > @puppeteer/browsers: ^3.2.3` | `2.13.2` | 3.x replaced `extract-zip` with `modern-tar`. `extract-zip@2.0.1` is both the latest release and the vulnerable one, so this is the only way to clear those two advisories |
+
+Upstream already accepts all three — PRs
+[#1139](https://github.com/GoogleChrome/lighthouse-ci/pull/1139),
+[#1140](https://github.com/GoogleChrome/lighthouse-ci/pull/1140) and
+[#1141](https://github.com/GoogleChrome/lighthouse-ci/pull/1141), open since
+April 2026 with nobody merging them. **Delete this block the day an `@lhci/cli`
+ships with them in**, and re-check
+[#1136](https://github.com/GoogleChrome/lighthouse-ci/issues/1136) (Lighthouse
+13 support) while you are there.
+
+The `@puppeteer/browsers` line is a major bump of a dependency
+`puppeteer-core@24` never declared compatibility with, so it is the one to
+re-verify after any change here. `npm run lighthouse` is that check:
+`lighthouserc.cjs` points `CHROME_PATH` at Playwright's Chrome, which is why
+puppeteer's own browser-resolution path is barely exercised and the bump is
+survivable at all. Green means zero `error`-level assertions in
+`.lighthouseci/assertion-results.json` — the two `warn` ones are warnings by
+design.
