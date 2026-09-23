@@ -83,10 +83,11 @@ export const isCapabilityEnabled = (flag: string): boolean => readFlag(flag);
  * Whether a discovery front end is deployed beside us — docs/DEPLOYMENT.md §2b.
  *
  * NOT a `VITE_FEATURE_*` and not a SERVICE_CAPABILITIES row: those say whether this
- * environment's dcb-service is new enough, and no dcb-service release can say whether
- * Symposia is deployed. So this one is a pure render switch, which the flags above
- * deliberately are not — it makes no claim about the schema, leaves every document
- * unchanged, and is composed WITH a capability flag rather than replacing it. `VITE_`-
- * prefixed because the dev fallback reads `import.meta.env`, which needs that prefix.
+ * environment's dcb-service is new enough, and no dcb-service release can say
+ * whether a discovery front end is deployed. So this one is a pure render switch,
+ * which the flags above deliberately are not — it makes no claim about the schema,
+ * leaves every document unchanged, and is composed WITH a capability flag rather
+ * than replacing it. `VITE_`-prefixed because the dev fallback reads
+ * `import.meta.env`, which needs that prefix.
  */
 export const isDiscoveryActive = (): boolean => readFlag("VITE_DISCOVERY_ACTIVE");

@@ -225,7 +225,7 @@ server, it uses that one. Three front-end repos in this workspace all defaulting
 to 4173 and 4174 therefore meant a preview left running by one repo silently
 served another repo's test run.
 
-That is not hypothetical. It produced a `symposia-ui` suite running against
+That is not hypothetical. It produced the discovery UI's suite running against
 `dcb-admin-for-libraries` and redirecting to that app's Keycloak client; a
 bootloader gate reporting 1 of 4 tests because it met a root-based build where
 it needed a prefixed one; and a Lighthouse run reporting 9753ms against 4147ms,
@@ -238,7 +238,7 @@ So the number says which repo and which gate — `41<gate><repo>`:
 |---|---|---|---|---|
 | `dcb-admin-ui` | 4173 | 4183 | 4193 | — |
 | **this repo** | **4174** | **4184** | **4194** | **4204** |
-| `symposia-ui` | 4175 | 4185 | 4195 | — |
+| discovery UI | 4175 | 4185 | 4195 | — |
 
 The e2e column is the allocation: one memorable primary port per repo. The
 bands exist because a repo has more than one gate — this one uses all four — so

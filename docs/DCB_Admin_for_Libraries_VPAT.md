@@ -29,7 +29,7 @@ DCB Admin for Libraries is open-source software. It utilises the Material UI ope
 
 Unlike DCB Admin, DCB Admin for Libraries is restricted to a library-specific view for the user’s library only. Fewer operations are available and navigation uses tabs, instead of the sidebar \+ tabs approach of DCB Admin.
 
-**Display preferences.** Settings offers a colour scheme (light, dark or high contrast), four text sizes, two spacing densities, five self-hosted typefaces including Atkinson Hyperlegible Next, an animation choice, and which time zone recorded times are shown in. Each is per user, stored on their own device, and reachable by keyboard. The same options are offered in DCB Admin and Symposia.
+**Display preferences.** Settings offers a colour scheme (light, dark or high contrast), four text sizes, two spacing densities, five self-hosted typefaces including Atkinson Hyperlegible Next, an animation choice, and which time zone recorded times are shown in. Each is per user, stored on their own device, and reachable by keyboard. The same options are offered in DCB Admin and the OpenRS discovery UI.
 
 **Accessibility statement.** The application carries one at `/accessibility`, linked from Settings. It names the standard, how it is checked, and where we know we fall short — the section below repeats that last part, because a conformance report without it is a sales document.
 
