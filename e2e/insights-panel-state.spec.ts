@@ -4,6 +4,14 @@ import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
+ * The application's one live region - src/components/Layout/Announcer.tsx. MUI X gives
+ * every chart surface an EMPTY `role="status"` of its own, so a bare selector on
+ * aria-live matches six elements on this page; the region actually speaking is the one
+ * carrying text.
+ */
+const announcer = (page: Page) => page.getByRole("status").filter({ hasText: /\S/ });
+
+/**
  * A panel that fails has to say so.
  *
  * Fourteen panels branched on the loading flag and then on the data, so a 500 rendered the
@@ -167,7 +175,7 @@ test.describe("Insights panel states", () => {
 		// because the range and the plotted series lived in a store.
 		await page.goto("/insights?range=90d&series=LOANED&unitCost=17.5");
 
-		const live = page.locator('[aria-live="polite"]');
+		const live = announcer(page);
 		await expect(live).toHaveText("Showing 90 days.");
 
 		await page.reload();
@@ -183,7 +191,7 @@ test.describe("Insights panel states", () => {
 	}) => {
 		await page.goto("/insights?range=forever&from=last%20tuesday&series=%3C%3E");
 
-		await expect(page.locator('[aria-live="polite"]')).toHaveText(
+		await expect(announcer(page)).toHaveText(
 			"Showing 30 days.",
 		);
 		await expect(
@@ -194,7 +202,7 @@ test.describe("Insights panel states", () => {
 	test("the range change is announced", async ({ page }) => {
 		await page.goto("/insights");
 
-		const live = page.locator('[aria-live="polite"]');
+		const live = announcer(page);
 		await expect(live).toHaveCount(1);
 		await expect(live).toHaveText("Showing 30 days.");
 

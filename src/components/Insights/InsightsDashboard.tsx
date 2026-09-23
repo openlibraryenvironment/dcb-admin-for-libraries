@@ -1,6 +1,7 @@
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 
 import { formatNumber, formatPercent } from "@helpers/formatters";
+import { useAnnounce } from "@/hooks/useAnnouncer";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -66,7 +67,6 @@ import { InsightsExportProvider } from "./ExportContext";
 import TrendStrip from "./TrendStrip";
 import DurationTrendPanel from "./DurationTrendPanel";
 
-import { visuallyHidden } from "@mui/utils";
 
 import { ExpandMore } from "@mui/icons-material";
 
@@ -130,6 +130,7 @@ export default function InsightsDashboard({
 	view: InsightsView;
 }) {
 	const { t } = useTranslation();
+	const announce = useAnnounce();
 	const client = useDcbRestClient();
 	const { categorical } = useChartPalette();
 
@@ -171,7 +172,13 @@ export default function InsightsDashboard({
 			).format("D MMM YYYY")}`
 		: t(`insights.range.${rangePreset}`);
 
+	// Changing the range rewrites every panel below it, and a screen-reader user was
+	// told none of that - WCAG 2.2 SC 4.1.3. Announced on the settled view: the control
+	// only emits when the choice is complete, so there is nothing to debounce.
 	const announcement = t("insights.announce.view", { range: window });
+	useEffect(() => {
+		announce(announcement);
+	}, [announcement, announce]);
 
 	// What every exported file says about itself, from the same words the live region uses -
 	// so a file and the announcement cannot disagree about what is on screen. The scope is
@@ -278,18 +285,6 @@ export default function InsightsDashboard({
 					</LocalizationProvider>
 				</Stack>
 
-				{/* Changing the range rewrites every panel below it, and a screen-reader user
-			    was told none of that - WCAG 2.2 SC 4.1.3. One announcement for the settled
-			    view: the control only emits when the choice is complete, so there is
-			    nothing to debounce. Keyed on the text so the region speaks again. */}
-				<Box
-					key={announcement}
-					aria-live="polite"
-					aria-atomic="true"
-					sx={visuallyHidden}
-				>
-					{announcement}
-				</Box>
 
 				<SubjectBar current={subject} />
 
