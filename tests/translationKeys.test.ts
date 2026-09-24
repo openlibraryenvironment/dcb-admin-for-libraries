@@ -125,18 +125,29 @@ function hasInlineDefault(args: string): boolean {
 	return opener === "'" || opener === '"' || opener === "`";
 }
 
+const lookup = (key: string): unknown =>
+	key
+		.split(".")
+		.reduce<unknown>(
+			(node, part) =>
+				node && typeof node === "object"
+					? (node as Record<string, unknown>)[part]
+					: undefined,
+			en,
+		);
+
+/**
+ * i18next's plural suffixes. A pluralised key is written `t("a.b", { count })` and stored
+ * as `a.b_one` / `a.b_other`, so the base key is legitimately absent - without this the
+ * gate reports every pluralised key in the app as missing, which is how a gate teaches
+ * people to route around it.
+ */
+const PLURAL_SUFFIXES = ["_one", "_other", "_zero", "_two", "_few", "_many"];
+
 function resolves(key: string): boolean {
-	return (
-		key
-			.split(".")
-			.reduce<unknown>(
-				(node, part) =>
-					node && typeof node === "object"
-						? (node as Record<string, unknown>)[part]
-						: undefined,
-				en,
-			) !== undefined
-	);
+	if (lookup(key) !== undefined) return true;
+
+	return PLURAL_SUFFIXES.some((suffix) => lookup(`${key}${suffix}`) !== undefined);
 }
 
 interface Finding {
@@ -226,5 +237,7 @@ ${report}`
 		expect(hasInlineDefault(`"a.key", { count: 2 }`)).toBe(false);
 		expect(resolves("ui.actions.save")).toBe(true);
 		expect(resolves("definitely.not.a.key")).toBe(false);
+		// Stored as insights.trends.buckets_counted_one / _other, never under the base.
+		expect(resolves("insights.trends.buckets_counted")).toBe(true);
 	});
 });

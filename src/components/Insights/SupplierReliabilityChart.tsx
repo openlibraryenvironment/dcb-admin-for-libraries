@@ -1,11 +1,15 @@
-import ChartDataTable from "./ChartDataTable";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, Typography, Skeleton, Box } from "@mui/material";
+import { Box, Card, CardContent, Typography } from "@mui/material";
 import { BarChartPro } from "@mui/x-charts-pro";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
+
+import ChartDataTable from "./ChartDataTable";
+import PanelState from "./PanelState";
+
+import MetricInfo from "./MetricInfo";
 import {
 	supplierReliabilityQueryOptions,
 	StatsParams,
@@ -22,7 +26,7 @@ export default function SupplierReliabilityChart({
 	const client = useDcbRestClient();
 	const { status } = useChartPalette();
 
-	const { data, isLoading } = useQuery(
+	const { data, isLoading, isError, refetch, isFetching } = useQuery(
 		supplierReliabilityQueryOptions(client, params),
 	);
 
@@ -35,56 +39,62 @@ export default function SupplierReliabilityChart({
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				<Typography variant="h6" component="h2" gutterBottom>
-					{t("insights.charts.supplier_reliability.title")}
-				</Typography>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+					<Typography variant="h6" component="h3">
+						{t("insights.charts.supplier_reliability.title")}
+					</Typography>
+					<MetricInfo
+						metric="supplier_reliability"
+						label={t("insights.charts.supplier_reliability.title")}
+					/>
+				</Box>
 				<Typography variant="body2" color="text.secondary" gutterBottom>
 					{t("insights.charts.supplier_reliability.subtitle")}
 				</Typography>
 
-				{isLoading ? (
-					<Skeleton variant="rounded" height={CHART_HEIGHT} />
-				) : rows.length === 0 ? (
-					<Box
-						sx={{
-							height: CHART_HEIGHT,
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-						}}
-					>
-						<Typography color="text.secondary">
-							{t("insights.no_data")}
-						</Typography>
-					</Box>
-				) : (
-					// Status encoding (good/critical) - labelled via the legend, never colour alone.
-					<BarChartPro
-						height={CHART_HEIGHT}
-						xAxis={[
-							{ scaleType: "band", data: rows.map((r) => r.supplierCode) },
-						]}
-						series={[
-							{
-								data: rows.map((r) => r.fulfilledCount),
-								label: t("insights.charts.supplier_reliability.fulfilled"),
-								color: status.good,
-								stack: "total",
-							},
-							{
-								data: rows.map((r) => r.failedCount),
-								label: t("insights.charts.supplier_reliability.failed"),
-								color: status.critical,
-								stack: "total",
-							},
-						]}
-					/>
-				)}
-				<ChartDataTable
-					caption={t("insights.charts.supplier_reliability.title")}
-					columns={[t("insights.charts.supplier_reliability.supplier"), t("insights.charts.supplier_reliability.fulfilled"), t("insights.charts.supplier_reliability.failed")]}
-					rows={rows.map((r) => [r.supplierCode, r.fulfilledCount, r.failedCount])}
-				/>
+				<PanelState
+					isLoading={isLoading}
+					isError={isError}
+					isEmpty={rows.length === 0}
+					onRetry={refetch}
+					isRetrying={isFetching}
+					height={CHART_HEIGHT}
+				>
+					{() => (
+						<>
+							{/* Status encoding (good/critical) - labelled via the legend, never colour alone. */}
+							<BarChartPro
+								height={CHART_HEIGHT}
+								xAxis={[
+									{ scaleType: "band", data: rows.map((r) => r.supplierCode) },
+								]}
+								series={[
+									{
+										data: rows.map((r) => r.fulfilledCount),
+										label: t("insights.charts.supplier_reliability.fulfilled"),
+										color: status.good,
+										stack: "total",
+									},
+									{
+										data: rows.map((r) => r.failedCount),
+										label: t("insights.charts.supplier_reliability.failed"),
+										color: status.critical,
+										stack: "total",
+									},
+								]}
+							/>
+							<ChartDataTable
+								caption={t("insights.charts.supplier_reliability.title")}
+								columns={[
+									t("insights.charts.supplier_reliability.supplier"),
+									t("insights.charts.supplier_reliability.fulfilled"),
+									t("insights.charts.supplier_reliability.failed"),
+								]}
+								rows={rows.map((r) => [r.supplierCode, r.fulfilledCount, r.failedCount])}
+							/>
+						</>
+					)}
+				</PanelState>
 			</CardContent>
 		</Card>
 	);

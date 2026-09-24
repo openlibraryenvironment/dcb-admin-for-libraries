@@ -1,0 +1,268 @@
+import type { Page } from "@playwright/test";
+
+import { test, expect } from "./fixtures/test";
+import library from "./fixtures-data/library.json" with { type: "json" };
+
+/**
+ * The application's one live region - src/components/Layout/Announcer.tsx. MUI X gives
+ * every chart surface an EMPTY `role="status"` of its own, so a bare selector on
+ * aria-live matches six elements on this page; the region actually speaking is the one
+ * carrying text.
+ */
+const announcer = (page: Page) => page.getByRole("status").filter({ hasText: /\S/ });
+
+/**
+ * A panel that fails has to say so.
+ *
+ * Fourteen panels branched on the loading flag and then on the data, so a 500 rendered the
+ * "no data" copy. That matters more here than in DCB Admin: this reader has one view of
+ * one library and nothing to cross-check it against, so an endpoint that is down and a
+ * month with no traffic were the same screen.
+ *
+ * The assertions are on what the reader sees, not on a role or a class name.
+ */
+
+const mocks = { LoadLibrary: library, LoadLibraryBasics: library };
+
+const FAILING_PANEL = "**/insights/failure-taxonomy**";
+
+/**
+ * The card a heading belongs to.
+ *
+ * MuiCard-root, not an ancestor-with-a-heading walk: once a heading is wrapped alongside
+ * its info button, the nearest ancestor holding it is that wrapper rather than the panel,
+ * and the locator silently starts matching two elements instead of the card. This is one
+ * of MUI's DOCUMENTED class names, which is the distinction the doctrine draws - a css-
+ * hash is not.
+ */
+const cardFor = (page: Page, heading: string) =>
+	page
+		.getByRole("heading", { level: 3, name: heading })
+		.locator("xpath=ancestor::div[contains(@class,'MuiCard-root')][1]");
+
+/**
+ * Wheel down until the panel mounts. Below-the-fold panels render a placeholder until an
+ * IntersectionObserver fires, so the heading does not exist to be scrolled to.
+ */
+async function reveal(page: Page, heading: string) {
+	const target = page.getByRole("heading", { level: 3, name: heading });
+
+	for (let i = 0; i < 14 && !(await target.isVisible()); i++) {
+		await page.mouse.wheel(0, 1200);
+		await expect(page.locator("body")).toBeVisible();
+	}
+
+	await expect(target).toBeVisible();
+}
+
+test.describe("Insights panel states", () => {
+	test.beforeEach(async ({ app }) => {
+		await app.signIn();
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+	});
+
+	test("a failed panel says it failed, and offers a retry that works", async ({
+		page,
+	}) => {
+		// Registered after mockStats, so this one wins for its path only.
+		let failNext = true;
+		await page.route(FAILING_PANEL, async (route) => {
+			if (failNext) {
+				await route.fulfill({ status: 500, json: { message: "boom" } });
+				return;
+			}
+			await route.fulfill({
+				json: [{ reason: "NO_ITEMS_SELECTABLE", count: 148 }],
+			});
+		});
+
+		await page.goto("/insights?tab=service");
+		await reveal(page, "Why requests fail");
+
+		const panel = cardFor(page, "Why requests fail");
+
+		// The message, not the role: this is what the reader is told, and the query client
+		// retries once, so the error state arrives after two round trips rather than one.
+		await expect(panel).toContainText("This panel could not be loaded.", {
+			timeout: 15_000,
+		});
+		await expect(panel).not.toContainText("No data for the selected period.");
+
+		failNext = false;
+		await panel.getByRole("button", { name: "Retry" }).click();
+
+		await expect(panel).not.toContainText("This panel could not be loaded.");
+		await expect(panel.locator("svg").first()).toBeVisible();
+	});
+
+	test("an empty panel still reads as empty, not as broken", async ({
+		page,
+	}) => {
+		await page.route(FAILING_PANEL, async (route) => {
+			await route.fulfill({ json: [] });
+		});
+
+		await page.goto("/insights?tab=service");
+		await reveal(page, "Why requests fail");
+
+		const panel = cardFor(page, "Why requests fail");
+
+		await expect(panel).toContainText("No data for the selected period.");
+		await expect(panel).not.toContainText("This panel could not be loaded.");
+	});
+
+	test("the header is five figures, and the rest are a disclosure away", async ({
+		page,
+	}) => {
+		await page.goto("/insights");
+
+		await expect(page.getByText("Net flow")).toBeVisible();
+		await expect(page.getByText("Estimated cost avoided")).toBeHidden();
+
+		await page.getByRole("button", { name: "More measures" }).click();
+		await expect(page.getByText("Estimated cost avoided")).toBeVisible();
+	});
+
+	test("the durations panel names both transit legs, and says when one is unreported", async ({
+		page,
+	}) => {
+		await page.goto("/insights?tab=service");
+		await reveal(page, "How long things take");
+
+		const panel = cardFor(page, "How long things take");
+
+		await expect(panel).toContainText("Transit, outbound");
+		await expect(panel).toContainText("502 observations");
+		await expect(panel).toContainText("Transit, return");
+		await expect(panel).toContainText("Not reported by this system");
+	});
+
+	test("a figure explains where it came from, by keyboard alone", async ({
+		page,
+	}) => {
+		await page.goto("/insights");
+
+		// Named for its metric, not "info": a screen-reader user listing the buttons on this
+		// page would otherwise hear the same word a dozen times.
+		const trigger = page.getByRole("button", {
+			name: "How Net flow is calculated",
+		});
+		await expect(trigger).toBeVisible();
+
+		// Click, not hover. Four paragraphs behind a tooltip meets none of the dismissable,
+		// hoverable, persistent requirements of WCAG 2.2 SC 1.4.13.
+		await trigger.focus();
+		await page.keyboard.press("Enter");
+
+		const popover = page.getByRole("dialog", {
+			name: "How Net flow is calculated",
+		});
+		await expect(popover).toBeVisible();
+		await expect(popover).toContainText("What it counts");
+		await expect(popover).toContainText("What it does not include");
+
+		await page.keyboard.press("Escape");
+		await expect(popover).toBeHidden();
+		await expect(trigger).toBeFocused();
+	});
+
+	test("a link carries the whole view, and survives a reload", async ({
+		page,
+	}) => {
+		// The thing that did not work before: this URL opened on somebody else's default,
+		// because the range and the plotted series lived in a store.
+		await page.goto("/insights?range=90d&series=LOANED&unitCost=17.5");
+
+		const live = announcer(page);
+		await expect(live).toHaveText("Showing 90 days.");
+
+		await page.reload();
+		await expect(live).toHaveText("Showing 90 days.");
+
+		await page.getByRole("button", { name: "7 days" }).click();
+		await expect(page).toHaveURL(/range=7d/);
+		await expect(live).toHaveText("Showing 7 days.");
+	});
+
+	test("a junk URL degrades to a view rather than an error", async ({
+		page,
+	}) => {
+		await page.goto("/insights?range=forever&from=last%20tuesday&series=%3C%3E");
+
+		await expect(announcer(page)).toHaveText(
+			"Showing 30 days.",
+		);
+		await expect(
+			page.getByRole("heading", { level: 1, name: /insights/i }),
+		).toBeVisible();
+	});
+
+	test("the range change is announced", async ({ page }) => {
+		await page.goto("/insights");
+
+		const live = announcer(page);
+		await expect(live).toHaveCount(1);
+		await expect(live).toHaveText("Showing 30 days.");
+
+		await page.getByRole("button", { name: "7 days" }).click();
+		await expect(live).toHaveText("Showing 7 days.");
+	});
+});
+
+test.describe("Insights subjects", () => {
+	test.beforeEach(async ({ app }) => {
+		await app.signIn();
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+	});
+
+	test("is one h1, then the open subject's sections, then its panels", async ({
+		page,
+	}) => {
+		await page.goto("/insights?tab=partners");
+
+		// A screen-reader user navigates this page by heading. The open subject's sections
+		// are the outline; the ones that are not open must not be in it, or the outline
+		// promises content that is not on the page.
+		await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+
+		expect(await page.getByRole("heading", { level: 2 }).allTextContents()).toEqual([
+			"Overview",
+			"More measures",
+			"Trading partners",
+		]);
+	});
+
+	test("the subjects are links, and the open one says so", async ({ page }) => {
+		await page.goto("/insights?tab=demand");
+
+		const nav = page.getByRole("navigation", { name: "Insights subjects" });
+
+		// Links, not tabs: the layout already owns the application's tab strip, and a
+		// second tablist inside the panel of the first gives a keyboard user two sets of
+		// arrow keys with no way to tell which has focus.
+		await expect(nav.getByRole("link")).toHaveCount(5);
+		await expect(nav.getByRole("link", { name: "Demand" })).toHaveAttribute(
+			"aria-current",
+			"page",
+		);
+
+		// The sixth subject belongs to DCB Admin: the collection-analysis endpoints
+		// describe the consortium's catalogue, and this app has no panels for them.
+		await expect(nav.getByRole("link", { name: "Collection" })).toHaveCount(0);
+	});
+
+	test("a subject this app does not offer falls back rather than blanking", async ({
+		page,
+	}) => {
+		// A link copied from DCB Admin, which has a sixth subject.
+		await page.goto("/insights?tab=collection");
+
+		await expect(
+			page.getByRole("heading", { level: 2, name: "Trends" }),
+		).toBeVisible();
+	});
+});

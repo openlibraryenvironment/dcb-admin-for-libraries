@@ -1,13 +1,17 @@
-import ChartDataTable from "./ChartDataTable";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, Typography, Skeleton, Box } from "@mui/material";
+import { Box, Card, CardContent, Typography } from "@mui/material";
 import { BarChartPro } from "@mui/x-charts-pro";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
 import { timeInStatusQueryOptions, StatsParams } from "@helpers/statsApi";
 import { formatTurnaround } from "@helpers/insightsRange";
+
+import ChartDataTable from "./ChartDataTable";
+import PanelState from "./PanelState";
+
+import MetricInfo from "./MetricInfo";
 
 const CHART_HEIGHT = 340;
 
@@ -19,7 +23,7 @@ export default function TimeInStatusChart({ params }: { params: StatsParams }) {
 	const client = useDcbRestClient();
 	const { categorical } = useChartPalette();
 
-	const { data, isLoading } = useQuery(
+	const { data, isLoading, isError, refetch, isFetching } = useQuery(
 		timeInStatusQueryOptions(client, params),
 	);
 
@@ -28,53 +32,63 @@ export default function TimeInStatusChart({ params }: { params: StatsParams }) {
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				<Typography variant="h6" component="h2" gutterBottom>
-					{t("insights.charts.time_in_status.title")}
-				</Typography>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+					<Typography variant="h6" component="h3">
+						{t("insights.charts.time_in_status.title")}
+					</Typography>
+					<MetricInfo
+						metric="transit_dwell"
+						label={t("insights.charts.time_in_status.title")}
+					/>
+				</Box>
 				<Typography variant="body2" color="text.secondary" gutterBottom>
 					{t("insights.charts.time_in_status.subtitle")}
 				</Typography>
 
-				{isLoading ? (
-					<Skeleton variant="rounded" height={CHART_HEIGHT} />
-				) : rows.length === 0 ? (
-					<Box
-						sx={{
-							height: CHART_HEIGHT,
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-						}}
-					>
-						<Typography color="text.secondary">
-							{t("insights.no_data")}
-						</Typography>
-					</Box>
-				) : (
-					<BarChartPro
-						height={CHART_HEIGHT}
-						layout="horizontal"
-						yAxis={[{ scaleType: "band", data: rows.map((r) => r.status) }]}
-						xAxis={[{ label: t("insights.charts.time_in_status.axis_hours") }]}
-						series={[
-							{
-								data: rows.map((r) => r.medianDwellSeconds / 3600),
-								label: t("insights.charts.time_in_status.series"),
-								color: categorical[0],
-								valueFormatter: (v) =>
-									v == null
-										? t("insights.duration.none")
-										: formatTurnaround(v * 3600, t),
-							},
-						]}
-						margin={{ left: 180 }}
-					/>
-				)}
-				<ChartDataTable
-					caption={t("insights.charts.time_in_status.title")}
-					columns={[t("insights.charts.time_in_status.status"), t("insights.charts.time_in_status.axis_hours")]}
-					rows={rows.map((r) => [r.status, Math.round((r.medianDwellSeconds / 3600) * 10) / 10])}
-				/>
+				<PanelState
+					isLoading={isLoading}
+					isError={isError}
+					isEmpty={rows.length === 0}
+					onRetry={refetch}
+					isRetrying={isFetching}
+					height={CHART_HEIGHT}
+				>
+					{() => (
+						<>
+							<BarChartPro
+								height={CHART_HEIGHT}
+								layout="horizontal"
+								yAxis={[{ scaleType: "band", data: rows.map((r) => r.status) }]}
+								xAxis={[
+									{ label: t("insights.charts.time_in_status.axis_hours") },
+								]}
+								series={[
+									{
+										data: rows.map((r) => r.medianDwellSeconds / 3600),
+										label: t("insights.charts.time_in_status.series"),
+										color: categorical[0],
+										valueFormatter: (v) =>
+											v == null
+												? t("insights.duration.none")
+												: formatTurnaround(v * 3600, t),
+									},
+								]}
+								margin={{ left: 180 }}
+							/>
+							<ChartDataTable
+								caption={t("insights.charts.time_in_status.title")}
+								columns={[
+									t("insights.charts.time_in_status.status"),
+									t("insights.charts.time_in_status.axis_hours"),
+								]}
+								rows={rows.map((r) => [
+									r.status,
+									Math.round((r.medianDwellSeconds / 3600) * 10) / 10,
+								])}
+							/>
+						</>
+					)}
+				</PanelState>
 			</CardContent>
 		</Card>
 	);

@@ -18,6 +18,9 @@ import {
 	libraryOf,
 } from "@helpers/ownLibrary";
 import { rangeToParams, intervalForRange } from "@helpers/insightsRange";
+
+import { insightsSearchSchema } from "@helpers/insightsSearch";
+import { useInsightsView } from "@/hooks/useInsightsView";
 import {
 	dashboardQueryOptions,
 	timeSeriesQueryOptions,
@@ -43,6 +46,10 @@ function mayViewInsights(auth: {
 }
 
 export const Route = createFileRoute("/__authenticated/insights")({
+	// The library is fixed by the token, but the window, the plotted series and the cost
+	// assumption are the reader's - and a link that carries them is the difference between
+	// sending a colleague a figure and sending them a dashboard.
+	validateSearch: insightsSearchSchema,
 	// The tab is hidden while the flag is off, but the URL is still typeable - and
 	// the page would call statistics endpoints this environment's dcb-service does
 	// not serve yet. Guarded here rather than in a useEffect so the protected page
@@ -115,6 +122,7 @@ function InsightsPending() {
 }
 
 function LibraryInsights() {
+	const view = useInsightsView(Route.useSearch(), "/insights");
 	const { t } = useTranslation();
 	const auth = useAuth();
 	const { cfg } = useRouter().options.context as { cfg: any };
@@ -177,7 +185,7 @@ function LibraryInsights() {
 					{t("insights.subtitle", { library: library.fullName })}
 				</Typography>
 			</Stack>
-			<InsightsDashboard libraryCode={libraryCode} />
+			<InsightsDashboard libraryCode={libraryCode} view={view} />
 		</Stack>
 	);
 }

@@ -1,23 +1,16 @@
-import ChartDataTable from "./ChartDataTable";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import {
-	Card,
-	CardContent,
-	Typography,
-	Chip,
-	Skeleton,
-	Box,
-} from "@mui/material";
+import { Card, CardContent, Typography, Chip, Box } from "@mui/material";
 import { LineChartPro } from "@mui/x-charts-pro";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette, inkOn } from "@/hooks/useChartPalette";
-import {
-	useInsightsPlotStore,
-	MAX_PLOT_SERIES,
-} from "@/hooks/insightsPlotStore";
+
+import ChartDataTable from "./ChartDataTable";
+import PanelState from "./PanelState";
+import { MAX_PLOT_SERIES } from "@helpers/insightsSearch";
+import type { InsightsView } from "@/hooks/useInsightsView";
 import {
 	timeSeriesQueryOptions,
 	StatsParams,
@@ -27,6 +20,8 @@ import {
 interface StatusFlowChartProps {
 	params: StatsParams;
 	interval: TimeSeriesInterval;
+	/** Which series are plotted is part of the view, so it travels in the URL. */
+	view: InsightsView;
 }
 
 const CHART_HEIGHT = 360;
@@ -34,16 +29,17 @@ const CHART_HEIGHT = 360;
 export default function StatusFlowChart({
 	params,
 	interval,
+	view,
 }: StatusFlowChartProps) {
 	const { t } = useTranslation();
 	const client = useDcbRestClient();
 	const { colorForStatus } = useChartPalette();
 
 	// Atomic selectors - never destructure the whole store.
-	const selectedStatuses = useInsightsPlotStore((s) => s.selectedStatuses);
-	const toggleStatus = useInsightsPlotStore((s) => s.toggleStatus);
+	const selectedStatuses = view.series;
+	const toggleStatus = view.toggleSeries;
 
-	const { data, isLoading } = useQuery(
+	const { data, isLoading, isError, refetch, isFetching } = useQuery(
 		timeSeriesQueryOptions(client, params, interval),
 	);
 
@@ -88,7 +84,7 @@ export default function StatusFlowChart({
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				<Typography variant="h6" component="h2" gutterBottom>
+				<Typography variant="h6" component="h3" gutterBottom>
 					{t("insights.charts.status_flow.title")}
 				</Typography>
 				<Typography variant="body2" color="text.secondary" gutterBottom>
@@ -126,45 +122,41 @@ export default function StatusFlowChart({
 					})}
 				</Box>
 
-				{isLoading ? (
-					<Skeleton variant="rounded" height={CHART_HEIGHT} />
-				) : xAxisData.length === 0 || series.length === 0 ? (
-					<Box
-						sx={{
-							height: CHART_HEIGHT,
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-						}}
-					>
-						<Typography color="text.secondary">
-							{t("insights.no_data")}
-						</Typography>
-					</Box>
-				) : (
-					<LineChartPro
-						height={CHART_HEIGHT}
-						xAxis={[
-							{
-								data: xAxisData,
-								scaleType: "time",
-								zoom: true,
-							},
-						]}
-						series={series}
-					/>
-				)}
-				<ChartDataTable
-					caption={t("insights.charts.status_flow.title")}
-					columns={[
-						t("insights.charts.status_flow.bucket"),
-						...series.map((s) => String(s.label)),
-					]}
-					rows={xAxisData.map((bucket, index) => [
-						bucket.toISOString().slice(0, 10),
-						...series.map((s) => s.data[index] ?? 0),
-					])}
-				/>
+				<PanelState
+					isLoading={isLoading}
+					isError={isError}
+					isEmpty={xAxisData.length === 0 || series.length === 0}
+					onRetry={refetch}
+					isRetrying={isFetching}
+					height={CHART_HEIGHT}
+				>
+					{() => (
+						<>
+							<LineChartPro
+								height={CHART_HEIGHT}
+								xAxis={[
+									{
+										data: xAxisData,
+										scaleType: "time",
+										zoom: true,
+									},
+								]}
+								series={series}
+							/>
+							<ChartDataTable
+								caption={t("insights.charts.status_flow.title")}
+								columns={[
+									t("insights.charts.status_flow.bucket"),
+									...series.map((s) => String(s.label)),
+								]}
+								rows={xAxisData.map((bucket, index) => [
+									bucket.toISOString().slice(0, 10),
+									...series.map((s) => s.data[index] ?? 0),
+								])}
+							/>
+						</>
+					)}
+				</PanelState>
 			</CardContent>
 		</Card>
 	);

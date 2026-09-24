@@ -18,6 +18,7 @@ import {
 } from "./display";
 import { DEFAULT_FONT, fontStack, isFontName } from "./fonts";
 import { motionStyles } from "./motion";
+import { SCROLL_PADDING_TOP } from "@helpers/stickyOffsets";
 import { openRSDark, openRSHighContrast, openRSLight } from "./tokens";
 import { typography } from "./typography";
 
@@ -57,6 +58,16 @@ const buildTheme = (display: ThemeDisplay): Theme =>
 							// The text-size preference. Every size in `typography` that is
 							// in `rem` moves with this one declaration; a px size does not.
 							fontSize: rootFontSize(display.textSize),
+							// WCAG 2.2 2.4.11 Focus Not Obscured. The browser scrolls a
+							// focused element to the top of the scrollport knowing nothing
+							// about what is painted over it, which on Insights is a sticky
+							// subject bar. One number, shared with the bar that has to sit
+							// at the same offset - see helpers/stickyOffsets. Set globally
+							// rather than per page: a page without the bar scrolls 49px
+							// further than it needs to, which nobody notices, and the
+							// alternative is a value that is right on one route and wrong
+							// on the rest.
+							scrollPaddingTop: `${SCROLL_PADDING_TOP}px`,
 						},
 						...motionStyles,
 					},

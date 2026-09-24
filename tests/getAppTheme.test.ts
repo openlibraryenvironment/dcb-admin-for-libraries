@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { getAppTheme } from "@/themes";
 import { DEFAULT_DISPLAY } from "@/themes/display";
+import { SCROLL_PADDING_TOP, SUBJECT_BAR_TOP } from "@helpers/stickyOffsets";
 
 /**
  * Under cssVariables, `theme.spacing(n)` returns a calc() against --mui-spacing
@@ -91,5 +92,23 @@ describe("getAppTheme", () => {
 			(definition) => JSON.stringify(definition)?.includes("forced-colors"),
 		);
 		expect(touched.length).toBeGreaterThan(10);
+	});
+
+	/**
+	 * SC 2.4.11, Focus Not Obscured. The Insights subject bar is sticky, so a
+	 * focused element scrolled to the top of the scrollport lands underneath it
+	 * unless `scroll-padding-top` clears the bar. Nothing throws when those two
+	 * numbers disagree - the focus ring is simply somewhere the reader cannot
+	 * see - so the agreement is asserted rather than left to a comment.
+	 */
+	it("clears everything sticky above the content", () => {
+		const html = (
+			getAppTheme().components?.MuiCssBaseline?.styleOverrides as {
+				html?: { scrollPaddingTop?: string };
+			}
+		)?.html;
+
+		expect(html?.scrollPaddingTop).toBe(`${SCROLL_PADDING_TOP}px`);
+		expect(SCROLL_PADDING_TOP).toBeGreaterThan(SUBJECT_BAR_TOP);
 	});
 });

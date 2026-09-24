@@ -1,4 +1,3 @@
-import { currencySymbol, formatCurrency } from "@helpers/formatters";
 import { useTranslation } from "react-i18next";
 import {
 	Card,
@@ -11,6 +10,7 @@ import {
 	Box,
 } from "@mui/material";
 
+import { currencySymbol, formatCurrency } from "@helpers/formatters";
 import { useInsightsCostStore } from "@/hooks/insightsCostStore";
 
 // Value tile. The successful-fulfilment count comes from the combined dashboard call
@@ -18,17 +18,30 @@ import { useInsightsCostStore } from "@/hooks/insightsCostStore";
 // the backend never ships a "traditional ILL cost".
 export default function CostAvoidanceTile({
 	fulfilled,
+	unitCost,
+	onUnitCostChange,
 	loading = false,
 }: {
 	fulfilled: number;
+	unitCost: number | null;
+	onUnitCostChange: (cost: number | null) => void;
 	loading?: boolean;
 }) {
 	const { t } = useTranslation();
 
 	// Atomic selectors.
-	const illUnitCost = useInsightsCostStore((s) => s.illUnitCost);
+	// The store is the per-user default for a fresh visit; the URL is what a shared link
+	// carries, because this is the figure most likely to end up in a board pack and a link
+	// that shows the recipient a different number is worse than no link.
+	const storedCost = useInsightsCostStore((s) => s.illUnitCost);
 	const currency = useInsightsCostStore((s) => s.currency);
-	const setIllUnitCost = useInsightsCostStore((s) => s.setIllUnitCost);
+	const setStoredCost = useInsightsCostStore((s) => s.setIllUnitCost);
+
+	const illUnitCost = unitCost ?? storedCost;
+	const setIllUnitCost = (cost: number | null) => {
+		setStoredCost(cost);
+		onUnitCostChange(cost);
+	};
 
 	const avoidance =
 		illUnitCost != null && illUnitCost >= 0 ? fulfilled * illUnitCost : null;
@@ -41,14 +54,12 @@ export default function CostAvoidanceTile({
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				{/* component, because MUI maps subtitle2 to h6 by default and this is a
-				    LABEL for the figure below it, not a section heading - it put an
-				    h6 straight after the page h1. */}
 				<Typography
 					variant="subtitle2"
 					component="p"
 					color="text.secondary"
-					gutterBottom>
+					gutterBottom
+				>
 					{t("insights.kpi.cost_avoidance.title")}
 				</Typography>
 

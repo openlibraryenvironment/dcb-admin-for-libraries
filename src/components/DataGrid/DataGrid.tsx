@@ -17,7 +17,6 @@ import {
 	GridRowSelectionModel,
 	GridRowsProp,
 	GridSortModel,
-	GridToolbar,
 	useGridApiRef,
 } from "@mui/x-data-grid-premium";
 import { RefObject, useCallback, useState } from "react";
@@ -300,7 +299,13 @@ export default function DataGrid({
 					noResultsOverlay: () => (
 						<NoResultsOverlay noResultsMessage={noResultsText} />
 					),
-					toolbar: type === "patronRequests" ? ExportToolbar : GridToolbar, // rely on this for now. develop our own 'standard custom' toolbar by v9
+					// EVERY grid, not just patron requests. MUI's stock GridToolbar paints a
+					// filter button whose visible text is "Filters" and whose accessible
+					// name is "Show filters", with an always-rendered "0" badge inside it -
+					// WCAG 2.5.3 Label in Name, caught once the axe gate was actually
+					// running the WCAG tag sets. Our own toolbar already branches on
+					// `type` for its export items, so it was written for this.
+					toolbar: ExportToolbar,
 				}}
 				slotProps={{
 					toolbar: {

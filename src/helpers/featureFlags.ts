@@ -80,6 +80,18 @@ export const isAgencyScopedRequestsEnabled = (): boolean =>
 export const isCapabilityEnabled = (flag: string): boolean => readFlag(flag);
 
 /**
+ * Percentile trends - `/insights/trend`, on dcb-service branch `insights-improvements`
+ * and in NO release, not 8.71.0 and not the 9.0.0 tag.
+ *
+ * Separate from VITE_FEATURE_INSIGHTS because the thresholds differ: a deployment on
+ * 9.0.0 has the Insights surface and answers 404 to this one endpoint, and a 404 through
+ * the panel contract reads as "this panel could not be loaded" - a fault report for a
+ * server that is simply older.
+ */
+export const isInsightsTrendsEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_INSIGHTS_TRENDS");
+
+/**
  * Whether a discovery front end is deployed beside us — docs/DEPLOYMENT.md §2b.
  *
  * NOT a `VITE_FEATURE_*` and not a SERVICE_CAPABILITIES row: those say whether this

@@ -1,18 +1,13 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import {
-	Card,
-	CardContent,
-	Typography,
-	Skeleton,
-	Box,
-	useTheme,
-} from "@mui/material";
+import { Card, CardContent, Typography, Box, useTheme } from "@mui/material";
 import { Heatmap } from "@mui/x-charts-pro";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { demandHeatmapQueryOptions, StatsParams } from "@helpers/statsApi";
+
+import PanelState from "./PanelState";
 
 const CHART_HEIGHT = 300;
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
@@ -40,7 +35,7 @@ export default function DemandHeatmapChart({
 	const client = useDcbRestClient();
 	const isDark = useTheme().palette.mode === "dark";
 
-	const { data, isLoading } = useQuery(
+	const { data, isLoading, isError, refetch, isFetching } = useQuery(
 		demandHeatmapQueryOptions(client, params),
 	);
 
@@ -63,53 +58,47 @@ export default function DemandHeatmapChart({
 	return (
 		<Card variant="outlined">
 			<CardContent>
-				<Typography variant="h6" component="h2" gutterBottom>
+				<Typography variant="h6" component="h3" gutterBottom>
 					{t("insights.charts.demand_heatmap.title")}
 				</Typography>
 				<Typography variant="body2" color="text.secondary" gutterBottom>
 					{t("insights.charts.demand_heatmap.subtitle")}
 				</Typography>
 
-				{isLoading ? (
-					<Skeleton variant="rounded" height={CHART_HEIGHT} />
-				) : maxCount === 0 ? (
-					<Box
-						sx={{
-							height: CHART_HEIGHT,
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-						}}
-					>
-						<Typography color="text.secondary">
-							{t("insights.no_data")}
-						</Typography>
-					</Box>
-				) : (
-					// The 24-hour axis is wide; allow horizontal scroll on narrow screens.
-					<Box sx={{ overflowX: "auto" }}>
-						<Box sx={{ minWidth: 640 }}>
-							<Heatmap
-								height={CHART_HEIGHT}
-								xAxis={[{ data: HOURS }]}
-								yAxis={[{ data: days }]}
-								zAxis={[
-									{
-										min: 0,
-										max: maxCount,
-										colorMap: {
-											type: "continuous",
+				<PanelState
+					isLoading={isLoading}
+					isError={isError}
+					isEmpty={maxCount === 0}
+					onRetry={refetch}
+					isRetrying={isFetching}
+					height={CHART_HEIGHT}
+				>
+					{() => (
+						// The 24-hour axis is wide; allow horizontal scroll on narrow screens.
+						<Box sx={{ overflowX: "auto" }}>
+							<Box sx={{ minWidth: 640 }}>
+								<Heatmap
+									height={CHART_HEIGHT}
+									xAxis={[{ data: HOURS }]}
+									yAxis={[{ data: days }]}
+									zAxis={[
+										{
 											min: 0,
 											max: maxCount,
-											color: heatRamp(isDark),
+											colorMap: {
+												type: "continuous",
+												min: 0,
+												max: maxCount,
+												color: heatRamp(isDark),
+											},
 										},
-									},
-								]}
-								series={series}
-							/>
+									]}
+									series={series}
+								/>
+							</Box>
 						</Box>
-					</Box>
-				)}
+					)}
+				</PanelState>
 			</CardContent>
 		</Card>
 	);
