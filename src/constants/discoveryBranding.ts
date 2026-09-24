@@ -11,7 +11,7 @@ export const DISCOVERY_THEME_NAMES = ["openRS", "kInt"] as const;
 
 /** Column widths in dcb-service. */
 export const BRAND_LIMITS = {
-	/** V-11.1. library.patron_website and library.support_url are both varchar(200). */
+	/** library.patron_website and library.support_url are both varchar(200). */
 	linkUrl: 200,
 	logoUrl: 400,
 	logoAlt: 255,
@@ -117,7 +117,7 @@ export function isValidLogoUrl(value?: string | null): boolean {
 }
 
 /**
- * Mirrors dcb-service's `BrandingValidator.linkUrl` — V-11.1.
+ * Mirrors dcb-service's `BrandingValidator.linkUrl`.
  *
  * STRICTER than {@link isValidLogoUrl}, and deliberately: absolute http(s) with a host,
  * and no asset-prefix form. That prefix names an image dcb-service stored, and a "report a

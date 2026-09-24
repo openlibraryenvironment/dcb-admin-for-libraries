@@ -3,8 +3,8 @@ import library from "./fixtures-data/library.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 
 // The Settings page offered a light/dark/system radio group and nothing else,
-// against six controls in DCB Admin and Symposia. These walk the ones a user
-// can actually feel.
+// against six controls in DCB Admin and the discovery UI. These walk the ones
+// a user can actually feel.
 
 test.beforeEach(async ({ app }) => {
 	await app.signIn();

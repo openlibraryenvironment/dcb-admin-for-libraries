@@ -87,7 +87,7 @@ This one is **not** about which dcb-service you run, which is why it is not a
 
 | Variable | Set it when | What it turns on |
 | --- | --- | --- |
-| `VITE_DISCOVERY_ACTIVE` | Symposia (or another OpenRS discovery front end) is deployed for this consortium | The two blocks on the library profile that configure discovery and nothing else: "How your library appears to patrons" (logo, logo description, theme) and "Links for patrons" (library website, report-a-problem URL) |
+| `VITE_DISCOVERY_ACTIVE` | An OpenRS discovery front end is deployed for this consortium | The two blocks on the library profile that configure discovery and nothing else: "How your library appears to patrons" (logo, logo description, theme) and "Links for patrons" (library website, report-a-problem URL) |
 
 A consortium using DCB with its own discovery layer has nowhere for a patron logo, a theme
 name or a footer link to appear. Leaving this unset hides them rather than offering an

@@ -13,7 +13,7 @@ export interface UpdateLibraryFormData {
 	brandLogoUrl?: string | null;
 	brandLogoAlt?: string | null;
 	defaultThemeName?: string | null;
-	// V-11.1. Patron-facing like the brand fields above: discovery's footer renders both,
+	// Patron-facing like the brand fields above: discovery's footer renders both,
 	// and nothing in this application links to either.
 	patronWebsite?: string | null;
 	supportUrl?: string | null;

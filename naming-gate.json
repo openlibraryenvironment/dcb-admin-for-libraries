@@ -1,0 +1,60 @@
+{
+	"_why": "Names that mean nothing to a reader outside this workspace, and must not reach a repository the public can read. Checked by scripts/check-naming.mjs on every pipeline. A rule is data, not code: add one here rather than editing the script. Each rule declares a scope - \"files\", \"messages\", or both; omitted means both. Three ways out, narrowest first: naming-gate:allow <rule-id> - <reason> on a single line; a rule’s own `exclude` for a class of file it cannot speak to; and exemptPaths below for a file that is ABOUT the rules and would otherwise have to fight them on every edit.",
+	"rules": [
+		{
+			"id": "product-codename",
+			"pattern": "symposia",
+			"ignoreCase": true,
+			"message": "An unannounced product name. Say what the thing is: \"an OpenRS discovery front end\", \"the discovery UI\" - which is what the code already calls it in VITE_DISCOVERY_ACTIVE and isDiscoveryActive.",
+			"exclude": [],
+			"scope": [
+				"files",
+				"messages"
+			]
+		},
+		{
+			"id": "plan-reference",
+			"pattern": "(§\\s*)?\\b[VN]-[0-9]+(\\.[0-9]+)*\\b",
+			"ignoreCase": false,
+			"message": "A section number from a planning document that lives in the workspace and ships to nobody. Say what it means - in every case measured here, the sentence around it already did.",
+			"exclude": [
+				"*.graphqls"
+			],
+			"_exclude_why": "The .graphqls files are copied from dcb-service and re-taken whenever that contract moves. Editing their comments here is drift that the next copy silently reverts; the fix belongs upstream.",
+			"scope": [
+				"files"
+			],
+			"_scope_why": "Files only. The doctrine names the commit message as one of the three places a plan’s section numbers are allowed to live, so failing on one there would contradict the rule this gate enforces."
+		},
+		{
+			"id": "plan-document",
+			"pattern": "[A-Z][A-Z_]+_(PLAN|REVIEW|REPORT)\\.md",
+			"ignoreCase": false,
+			"message": "A workspace planning document. It is not in this repository and never will be, so a reader cannot follow the pointer. Put the argument in docs/ or the commit message.",
+			"exclude": [],
+			"_measured": "Zero matches when this rule was added on 2026-09-24. It is here because the workspace plans are where the other two rules’ names come from, so this is the path by which the next one arrives.",
+			"scope": [
+				"files"
+			],
+			"_scope_why": "Files only, for the same reason as plan-reference."
+		}
+	],
+	"exemptPaths": [
+		{
+			"path": "naming-gate.json",
+			"why": "The rules themselves. Every pattern is a literal example of what it forbids."
+		},
+		{
+			"path": "scripts/check-naming.mjs",
+			"why": "The checker. It holds no names today - they are all data - but it is where one would land next."
+		},
+		{
+			"path": "docs/testing.md",
+			"why": "The documentation of these rules, which cannot explain what they catch without quoting it."
+		},
+		{
+			"path": "package-lock.json",
+			"why": "Generated, and not prose any reader reads."
+		}
+	]
+}

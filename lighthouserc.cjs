@@ -1,5 +1,5 @@
 // .cjs, not .js: this package is "type": "module", so a .js config is ESM and
-// lhci's require() of it fails with "require is not defined". symposia-ui's
+// lhci's require() of it fails with "require is not defined". The discovery UI's
 // equivalent is .js because that package is CommonJS.
 //
 // Audit in the Chrome Playwright pins, so this and the e2e suite share one browser.

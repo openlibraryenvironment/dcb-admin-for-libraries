@@ -1,0 +1,165 @@
+// Names that mean nothing to a reader outside this workspace, over every tracked file.
+// The rules are data in naming-gate.json, not code here. Why it exists and what it has
+// caught: docs/testing.md, "Names that only mean something here".
+//
+// Usage: node scripts/check-naming.mjs [--messages <git-range>]
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+
+const CONFIG = JSON.parse(readFileSync("naming-gate.json", "utf8"));
+
+/**
+ * `*.graphqls`, `docs/**` - the two shapes the config uses, rather than a dependency for
+ * them. A `*` stops at a path separator; a `**` does not.
+ */
+function toMatcher(glob) {
+	const escaped = glob.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+	// Split on the wider pattern first, so the narrower one cannot eat half of it.
+	const body = escaped
+		.split("**")
+		.map((part) => part.split("*").join("[^/]*"))
+		.join(".*");
+	return new RegExp(`^${body}$`);
+}
+
+const excluded = (path, globs) => globs.some((glob) => toMatcher(glob).test(path));
+
+/**
+ * Paths no rule is asked about - the config, this script, and the documentation of both.
+ * A file that is ABOUT the rules cannot avoid quoting them, and making it fight the gate on
+ * every edit is how an exemption ends up spelled `--no-verify` instead.
+ */
+const exemptPaths = (CONFIG.exemptPaths ?? []).map((entry) => entry.path);
+const rules = CONFIG.rules.map((rule) => ({
+	...rule,
+	matcher: new RegExp(rule.pattern, rule.ignoreCase ? "gi" : "g"),
+	excludes: rule.exclude ?? [],
+	// A rule says where it applies. plan-reference is files-only because the doctrine names
+	// the commit message as one of the three places a plan's section numbers may live, and a
+	// gate that fails on one there contradicts the rule it exists to enforce.
+	scope: rule.scope ?? ["files", "messages"],
+}));
+
+const applies = (rule, where) => rule.scope.includes(where);
+
+/**
+ * A line saying what it is doing and why is the escape hatch every gate here has. It names
+ * the rule, so switching one off does not switch the others off with it.
+ */
+const allowed = (line, ruleId) => line.includes(`naming-gate:allow ${ruleId}`);
+
+const findings = [];
+const allowances = [];
+
+function scan(label, text, rule, lineOffset = 0) {
+	text.split("\n").forEach((line, index) => {
+		rule.matcher.lastIndex = 0;
+		const hit = rule.matcher.exec(line);
+		// Tested for a match FIRST, so the count below is uses of the hatch and not lines
+		// that happen to carry a stale marker.
+		if (!hit) return;
+		if (allowed(line, rule.id)) {
+			allowances.push({ rule: rule.id, where: `${label}:${index + 1 + lineOffset}` });
+			return;
+		}
+		findings.push({
+			rule: rule.id,
+			where: `${label}:${index + 1 + lineOffset}`,
+			excerpt: line.trim().slice(0, 100),
+			match: hit[0],
+		});
+	});
+}
+
+const files = execFileSync("git", ["ls-files", "-z"], { maxBuffer: 1 << 28 })
+	.toString()
+	.split("\0")
+	.filter(Boolean);
+
+for (const file of files) {
+	if (excluded(file, exemptPaths)) continue;
+
+	const buffer = readFileSync(file);
+	// A NUL byte means this is not text, and a byte sequence that happens to spell a rule
+	// is not a mention of it.
+	if (buffer.includes(0)) continue;
+	const text = buffer.toString("utf8");
+
+	for (const rule of rules) {
+		if (!applies(rule, "files")) continue;
+		if (excluded(file, rule.excludes)) continue;
+		scan(file, text, rule);
+	}
+}
+
+// Commit messages reach a public remote exactly as code does - the leak this gate was
+// written for was in one. The range is passed by CI, where origin/main resolves; where it
+// does not, this half does not run rather than failing on nothing.
+const rangeFlag = process.argv.indexOf("--messages");
+if (rangeFlag !== -1 && process.argv[rangeFlag + 1]) {
+	const range = process.argv[rangeFlag + 1];
+	let log = "";
+	try {
+		log = execFileSync("git", ["log", "--format=%H%n%B%x00", range], {
+			maxBuffer: 1 << 28,
+			stdio: ["ignore", "pipe", "ignore"],
+		}).toString();
+	} catch {
+		console.log(`  (commit messages not scanned: ${range} does not resolve here)`);
+	}
+
+	for (const commit of log.split("\0").map((c) => c.trim()).filter(Boolean)) {
+		const newline = commit.indexOf("\n");
+		const sha = commit.slice(0, newline === -1 ? undefined : newline).trim();
+		const body = newline === -1 ? "" : commit.slice(newline + 1);
+		const label = `commit ${sha.slice(0, 9)} message`;
+
+		for (const rule of rules) {
+			if (!applies(rule, "messages")) continue;
+			// Per COMMIT, not per line. A marker cannot be appended to a line of prose
+			// without mangling the sentence, and a message cannot be corrected after it is
+			// pushed without rewriting published history - so a gate that only took a
+			// per-line marker here would leave a force push as its one remedy.
+			if (allowed(body, rule.id)) {
+				allowances.push({ rule: rule.id, where: label });
+				continue;
+			}
+			scan(label, body, rule);
+		}
+	}
+}
+
+// Every way out, printed on every run. An exemption nobody sees is one nobody reviews,
+// and this list getting longer is the signal that a rule is wrong rather than the code.
+for (const entry of CONFIG.exemptPaths ?? []) {
+	console.log(`  exempt path   ${entry.path}  - ${entry.why}`);
+}
+for (const rule of rules) {
+	for (const glob of rule.excludes) {
+		console.log(`  exempt from ${rule.id}   ${glob}`);
+	}
+}
+for (const allowance of allowances) {
+	console.log(`  allowed       ${allowance.where}  (${allowance.rule})`);
+}
+
+if (findings.length === 0) {
+	console.log("\nNaming gate: green.");
+	process.exit(0);
+}
+
+console.error(`\nNaming gate: ${findings.length} problem(s)\n`);
+for (const rule of rules) {
+	const mine = findings.filter((finding) => finding.rule === rule.id);
+	if (mine.length === 0) continue;
+	console.error(`  [${rule.id}] ${rule.message}`);
+	for (const finding of mine) {
+		console.error(`      ${finding.where}  (${finding.match})`);
+		console.error(`        ${finding.excerpt}`);
+	}
+	console.error("");
+}
+console.error(
+	"  Deliberate? Put  naming-gate:allow <rule-id> - <reason>  on the line.\n",
+);
+process.exit(1);

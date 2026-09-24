@@ -13,6 +13,9 @@ What the gates are, and the two ways each of them can lie to you.
 | Accessibility | `npx playwright test e2e/accessibility.spec.ts` | zero axe violations on every surface, both schemes |
 | Bundle | `node scripts/check-bundle-budget.mjs` | per-chunk gzipped budgets, after a build |
 | Lighthouse | `npx lhci autorun` | transfer, CLS and the category scores |
+| Naming | `npm run naming` | no name that only means something inside this workspace |
+| Secrets | `npm run gates -- --only secrets` | gitleaks over the whole history; needs a binary or Docker |
+| **Everything** | **`npm run gates`** | **all seven CI gates, in about eight minutes** |
 
 ### react-hooks/exhaustive-deps is an error, not a warning
 
@@ -225,7 +228,7 @@ server, it uses that one. Three front-end repos in this workspace all defaulting
 to 4173 and 4174 therefore meant a preview left running by one repo silently
 served another repo's test run.
 
-That is not hypothetical. It produced a `symposia-ui` suite running against
+That is not hypothetical. It produced the discovery UI's suite running against
 `dcb-admin-for-libraries` and redirecting to that app's Keycloak client; a
 bootloader gate reporting 1 of 4 tests because it met a root-based build where
 it needed a prefixed one; and a Lighthouse run reporting 9753ms against 4147ms,
@@ -238,7 +241,7 @@ So the number says which repo and which gate — `41<gate><repo>`:
 |---|---|---|---|---|
 | `dcb-admin-ui` | 4173 | 4183 | 4193 | — |
 | **this repo** | **4174** | **4184** | **4194** | **4204** |
-| `symposia-ui` | 4175 | 4185 | 4195 | — |
+| discovery UI | 4175 | 4185 | 4195 | — |
 
 The e2e column is the allocation: one memorable primary port per repo. The
 bands exist because a repo has more than one gate — this one uses all four — so
@@ -284,3 +287,92 @@ puppeteer's own browser-resolution path is barely exercised and the bump is
 survivable at all. Green means zero `error`-level assertions in
 `.lighthouseci/assertion-results.json` — the two `warn` ones are warnings by
 design.
+
+## Names that only mean something here
+
+`npm run naming` reads `naming-gate.json` and fails on a name a reader outside this
+workspace cannot resolve. It runs in CI as `verify_naming`, over the tracked tree and,
+where `origin/main` resolves, the commit messages on the branch.
+
+It exists because this repository is **mirrored to a public GitHub remote**, and the
+shared doctrine used to say to name the components in prose and comments. That rule put
+an unannounced product name into nine lines across eight files, and would have put it
+into a merge commit subject as well.
+
+Three rules ship. `product-codename` is at zero and stays there. `plan-reference` was
+the interesting one: thirteen occurrences of `§V-11.1` and its siblings, section numbers
+from a planning document that lives in the workspace and ships to nobody. None needed a
+replacement - every one sat beside prose that already said what it meant, so the
+reference told a reader who could resolve it something they already had, and everyone
+else nothing. `plan-document` catches a `*_PLAN.md` pointer and has never fired; it is
+here because the workspace plans are where the other two rules’ names come from.
+
+**The `.graphqls` files are excluded from `plan-reference` and hold thirteen more.** They
+are copied from dcb-service and re-taken whenever that contract moves, so editing their
+comments here is drift that the next copy silently reverts. That fix belongs upstream.
+
+**Each rule says where it applies**, and the first CI run is what forced that. The gate
+failed on the commit message that introduced it, because that message quotes the
+references the rule catches - and more importantly because the shared doctrine sends a
+plan’s section numbers to "`docs/`, an ADR, or **the commit message**". A gate failing
+on the third would contradict the rule it exists to enforce. So `plan-reference` and
+`plan-document` are `"scope": ["files"]`, and `product-codename` keeps both: a product
+name in a commit message reaches the mirror exactly as code does, and that is where the
+leak this gate was written for actually was.
+
+**Three ways out, narrowest first.** Use the narrowest that fits:
+
+1. `naming-gate:allow <rule-id> - <reason>` on a single line, in a file that is otherwise
+   checked. Names the rule, so switching one off leaves the others on. **In a commit
+   message it applies to the whole commit**, as a trailer: a line of prose cannot carry a
+   marker without mangling the sentence, and a message that is already pushed cannot be
+   corrected without rewriting published history. A gate whose only remedy is a force
+   push is one people turn off.
+2. A rule’s own `exclude`, for a class of file it cannot speak to - `*.graphqls` is
+   excluded from `plan-reference` because those files are copied from dcb-service.
+3. `exemptPaths`, for a file that is *about* the rules: this document, the config, the
+   checker. They cannot explain or implement a rule without containing what it forbids,
+   and making them fight the gate on every edit is how an exemption ends up spelled
+   `--no-verify` instead.
+
+**Every one of them prints on every run**, green or red. An exemption nobody sees is one
+nobody reviews, and this list getting longer is the signal that a rule is wrong rather
+than the code.
+
+## Running the gates locally
+
+`npm run gates` runs every `verify_*` job the pipeline runs, with the same commands,
+and prints a summary. `--only naming,static` and `--skip e2e,performance` narrow it;
+`--list` shows the names. It continues past a failure so one run tells you everything
+that is broken, and exits non-zero if any gate failed.
+
+```
+  PASS  naming           0s  (verify_naming)
+  PASS  static          64s  (verify_static)
+  PASS  secrets         30s  (verify_secrets)
+  PASS  performance    230s  (verify_performance)
+  PASS  e2e             93s  (verify_e2e)
+  PASS  base-path       45s  (verify_base_path)
+  PASS  ki-bootstrap    35s  (verify_ki_bootstrap)
+```
+
+**Two gaps closed when this was written, and both had already cost a red pipeline.**
+`npm run naming` ran without `--messages`, so the commit-message half - the half that
+failed in CI twice - never ran locally at all. It now carries the same range CI uses.
+And `verify_secrets` had no local path of any kind, because gitleaks is not an npm
+package: the runner uses a `gitleaks` binary if there is one, Docker if the daemon is
+up, and otherwise reports **SKIP** rather than counting a gate it did not run.
+
+Three things differ from CI, deliberately:
+
+- **Order.** CI runs these in parallel; this runs them fastest first, so a failure
+  surfaces in seconds rather than after the browser gates. Nothing depends on anything
+  else, so the order is a convenience.
+- **No `npm ci`.** Every CI job starts with one. Locally that would delete and rebuild
+  `node_modules` before every run; if the lockfile has moved, run it yourself.
+- **No SARIF report.** CI writes `gitleaks.sarif` as a job artifact. Locally that is a
+  file nobody wants to find in `git status`, so the report flags are left off.
+
+On Windows, `npm` and `npx` are `.cmd` shims and need a shell; `node`, `docker` and
+`gitleaks` must not have one, because a shell re-joins the arguments and this
+repository’s path contains a space. That broke the Docker volume mount on the first run.

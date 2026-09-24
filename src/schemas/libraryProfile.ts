@@ -62,7 +62,7 @@ export const libraryProfileSchema = (t: TFunction) =>
 		),
 		brandLogoAlt: boundedText(t, BRAND_LIMITS.logoAlt),
 		defaultThemeName: boundedText(t, BRAND_LIMITS.themeName),
-		// V-11.1. Both become an href in the discovery app's footer, and
+		// Both become an href in the discovery app's footer, and
 		// dcb-service refuses anything that is not an absolute http(s) URL on
 		// write - so the rule is checked under the box rather than reported as a
 		// 400 with no field attached.

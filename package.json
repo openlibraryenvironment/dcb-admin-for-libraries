@@ -23,7 +23,9 @@
 		"semantic-release": "semantic-release",
 		"test": "vitest",
 		"lighthouse": "lhci autorun",
-		"budget": "node scripts/check-bundle-budget.mjs"
+		"budget": "node scripts/check-bundle-budget.mjs",
+		"naming": "node scripts/check-naming.mjs --messages origin/main..HEAD",
+		"gates": "node scripts/run-gates.mjs"
 	},
 	"dependencies": {
 		"@emotion/react": "11.14.0",

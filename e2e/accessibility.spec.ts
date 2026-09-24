@@ -90,8 +90,8 @@ const INSIGHTS_SUBJECTS = [
 const PAGES: Surface[] = [
 	{
 		// The library profile: the biggest FORM in the app and the only surface where an
-		// administrator types. It was not scanned at all, which meant the fields §V-11.1
-		// adds would have gone in unaudited — and a form is where name, label and error
+		// administrator types. It was not scanned at all, which meant the presence
+		// fields would have gone in unaudited — and a form is where name, label and error
 		// association actually fail. Every backend-gated block is switched on, so the
 		// scan covers the widest shape the page can render rather than the narrowest.
 		name: "library profile",

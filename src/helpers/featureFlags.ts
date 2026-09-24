@@ -43,7 +43,7 @@ export const isLibraryBrandingEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_LIBRARY_BRANDING");
 
 /**
- * The library's patron support link - dcb-service AFTER 9.0.0, V-11.1.
+ * The library's patron support link - dcb-service AFTER 9.0.0.
  *
  * `library.support_url` arrived in V9_0_008, which is on main and in no release, so this
  * is a SEPARATE flag from the branding one above rather than a fourth field on it.
@@ -95,10 +95,11 @@ export const isInsightsTrendsEnabled = (): boolean =>
  * Whether a discovery front end is deployed beside us — docs/DEPLOYMENT.md §2b.
  *
  * NOT a `VITE_FEATURE_*` and not a SERVICE_CAPABILITIES row: those say whether this
- * environment's dcb-service is new enough, and no dcb-service release can say whether
- * Symposia is deployed. So this one is a pure render switch, which the flags above
- * deliberately are not — it makes no claim about the schema, leaves every document
- * unchanged, and is composed WITH a capability flag rather than replacing it. `VITE_`-
- * prefixed because the dev fallback reads `import.meta.env`, which needs that prefix.
+ * environment's dcb-service is new enough, and no dcb-service release can say
+ * whether a discovery front end is deployed. So this one is a pure render switch,
+ * which the flags above deliberately are not — it makes no claim about the schema,
+ * leaves every document unchanged, and is composed WITH a capability flag rather
+ * than replacing it. `VITE_`-prefixed because the dev fallback reads
+ * `import.meta.env`, which needs that prefix.
  */
 export const isDiscoveryActive = (): boolean => readFlag("VITE_DISCOVERY_ACTIVE");
