@@ -29,7 +29,13 @@ const rules = CONFIG.rules.map((rule) => ({
 	...rule,
 	matcher: new RegExp(rule.pattern, rule.ignoreCase ? "gi" : "g"),
 	excludes: rule.exclude ?? [],
+	// A rule says where it applies. plan-reference is files-only because the doctrine names
+	// the commit message as one of the three places a plan's section numbers may live, and a
+	// gate that fails on one there contradicts the rule it exists to enforce.
+	scope: rule.scope ?? ["files", "messages"],
 }));
+
+const applies = (rule, where) => rule.scope.includes(where);
 
 /**
  * A line saying what it is doing and why is the escape hatch every gate here has. It names
@@ -69,6 +75,7 @@ for (const file of files) {
 	const text = buffer.toString("utf8");
 
 	for (const rule of rules) {
+		if (!applies(rule, "files")) continue;
 		if (excluded(file, rule.excludes)) continue;
 		scan(file, text, rule);
 	}
@@ -90,6 +97,7 @@ if (rangeFlag !== -1 && process.argv[rangeFlag + 1]) {
 		console.log(`  (commit messages not scanned: ${range} does not resolve here)`);
 	}
 	for (const rule of rules) {
+		if (!applies(rule, "messages")) continue;
 		scan(`commit message in ${range}`, log, rule);
 	}
 }

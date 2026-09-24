@@ -309,4 +309,13 @@ here because the workspace plans are where the other two rules’ names come fro
 are copied from dcb-service and re-taken whenever that contract moves, so editing their
 comments here is drift that the next copy silently reverts. That fix belongs upstream.
 
+**Each rule says where it applies**, and the first CI run is what forced that. The gate
+failed on the commit message that introduced it, because that message quotes the
+references the rule catches - and more importantly because the shared doctrine sends a
+plan’s section numbers to "`docs/`, an ADR, or **the commit message**". A gate failing
+on the third would contradict the rule it exists to enforce. So `plan-reference` and
+`plan-document` are `"scope": ["files"]`, and `product-codename` keeps both: a product
+name in a commit message reaches the mirror exactly as code does, and that is where the
+leak this gate was written for actually was.
+
 Deliberate? `naming-gate:allow <rule-id> - <reason>` on the line.
