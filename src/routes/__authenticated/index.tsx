@@ -819,7 +819,7 @@ function HomeComponent() {
   			</Grid>
               </>
             )}
-            {/* Presence — V-11.1. A patron who arrives at discovery from a search
+            {/* Presence. A patron who arrives at discovery from a search
                 engine has no route back to opening hours, branches or joining, and no
                 way to say the search itself is broken. Discovery holds neither fact;
                 this library does, and its footer renders both.

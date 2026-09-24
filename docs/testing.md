@@ -13,6 +13,7 @@ What the gates are, and the two ways each of them can lie to you.
 | Accessibility | `npx playwright test e2e/accessibility.spec.ts` | zero axe violations on every surface, both schemes |
 | Bundle | `node scripts/check-bundle-budget.mjs` | per-chunk gzipped budgets, after a build |
 | Lighthouse | `npx lhci autorun` | transfer, CLS and the category scores |
+| Naming | `npm run naming` | no name that only means something inside this workspace |
 
 ### react-hooks/exhaustive-deps is an error, not a warning
 
@@ -284,3 +285,28 @@ puppeteer's own browser-resolution path is barely exercised and the bump is
 survivable at all. Green means zero `error`-level assertions in
 `.lighthouseci/assertion-results.json` — the two `warn` ones are warnings by
 design.
+
+## Names that only mean something here
+
+`npm run naming` reads `naming-gate.json` and fails on a name a reader outside this
+workspace cannot resolve. It runs in CI as `verify_naming`, over the tracked tree and,
+where `origin/main` resolves, the commit messages on the branch.
+
+It exists because this repository is **mirrored to a public GitHub remote**, and the
+shared doctrine used to say to name the components in prose and comments. That rule put
+an unannounced product name into nine lines across eight files, and would have put it
+into a merge commit subject as well.
+
+Three rules ship. `product-codename` is at zero and stays there. `plan-reference` was
+the interesting one: thirteen occurrences of `§V-11.1` and its siblings, section numbers <!-- naming-gate:allow plan-reference - documenting a rule means showing what it catches -->
+from a planning document that lives in the workspace and ships to nobody. None needed a
+replacement - every one sat beside prose that already said what it meant, so the
+reference told a reader who could resolve it something they already had, and everyone
+else nothing. `plan-document` catches a `*_PLAN.md` pointer and has never fired; it is
+here because the workspace plans are where the other two rules’ names come from.
+
+**The `.graphqls` files are excluded from `plan-reference` and hold thirteen more.** They
+are copied from dcb-service and re-taken whenever that contract moves, so editing their
+comments here is drift that the next copy silently reverts. That fix belongs upstream.
+
+Deliberate? `naming-gate:allow <rule-id> - <reason>` on the line.

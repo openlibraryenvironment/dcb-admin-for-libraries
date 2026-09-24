@@ -2,7 +2,7 @@ import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
- * The library's presence links - V-11.1. Two fields with two different
+ * The library's presence links. Two fields with two different
  * thresholds: patronWebsite is unconditional since 5.11.1, supportUrl arrived
  * in V9_0_008 and is flagged. docs/service-compatibility.md.
  */

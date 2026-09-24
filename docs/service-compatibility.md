@@ -106,7 +106,7 @@ that has never heard of them.
 
 ## Two fields, two thresholds
 
-`e2e/library-presence.spec.ts` covers §V-11.1, the library's presence links, and
+`e2e/library-presence.spec.ts` covers the library's presence links, and
 exists because the two fields are gated differently:
 
 - **`patronWebsite`** has been on `Library` since 5.11.1, so it is selected
@@ -119,7 +119,7 @@ exists because the two fields are gated differently:
 Why the fields matter at all: a patron who reaches discovery from a search
 engine has no route back to opening hours, branches or joining, and no way to
 say the search itself is broken. Discovery holds neither fact. The library does,
-and its footer renders both (§V-11.2).
+and its footer renders both.
 
 ## Statistics are scoped by the token, not by the URL
 

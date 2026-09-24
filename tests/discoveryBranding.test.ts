@@ -208,7 +208,7 @@ describe("areBrandUploadsAvailable", () => {
 
 describe("isValidLinkUrl", () => {
 	/**
-	 * V-11.1. patronWebsite and supportUrl become the href of an anchor in the discovery
+	 * patronWebsite and supportUrl become the href of an anchor in the discovery
 	 * app's footer, and dcb-service now refuses anything else on write — so without this
 	 * the administrator meets a 400 with no field attached instead of a message under the
 	 * box they typed in.

@@ -43,7 +43,7 @@ export const isLibraryBrandingEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_LIBRARY_BRANDING");
 
 /**
- * The library's patron support link - dcb-service AFTER 9.0.0, V-11.1.
+ * The library's patron support link - dcb-service AFTER 9.0.0.
  *
  * `library.support_url` arrived in V9_0_008, which is on main and in no release, so this
  * is a SEPARATE flag from the branding one above rather than a fourth field on it.

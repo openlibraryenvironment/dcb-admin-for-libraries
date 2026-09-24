@@ -1,0 +1,34 @@
+{
+	"_why": "Names that mean nothing to a reader outside this workspace, and must not reach a repository the public can read. Checked by scripts/check-naming.mjs on every pipeline. A rule is data, not code: add one here rather than editing the script. Escape hatch, per line: naming-gate:allow <rule-id> - <reason>.",
+	"exclude": [
+		"naming-gate.json",
+		"package-lock.json"
+	],
+	"rules": [
+		{
+			"id": "product-codename",
+			"pattern": "symposia",
+			"ignoreCase": true,
+			"message": "An unannounced product name. Say what the thing is: \"an OpenRS discovery front end\", \"the discovery UI\" - which is what the code already calls it in VITE_DISCOVERY_ACTIVE and isDiscoveryActive.",
+			"exclude": []
+		},
+		{
+			"id": "plan-reference",
+			"pattern": "(§\\s*)?\\b[VN]-[0-9]+(\\.[0-9]+)*\\b",
+			"ignoreCase": false,
+			"message": "A section number from a planning document that lives in the workspace and ships to nobody. Say what it means - in every case measured here, the sentence around it already did.",
+			"exclude": [
+				"*.graphqls"
+			],
+			"_exclude_why": "The .graphqls files are copied from dcb-service and re-taken whenever that contract moves. Editing their comments here is drift that the next copy silently reverts; the fix belongs upstream."
+		},
+		{
+			"id": "plan-document",
+			"pattern": "[A-Z][A-Z_]+_(PLAN|REVIEW|REPORT)\\.md",
+			"ignoreCase": false,
+			"message": "A workspace planning document. It is not in this repository and never will be, so a reader cannot follow the pointer. Put the argument in docs/ or the commit message.",
+			"exclude": [],
+			"_measured": "Zero matches when this rule was added on 2026-09-24. It is here because the workspace plans are where the other two rules’ names come from, so this is the path by which the next one arrives."
+		}
+	]
+}
