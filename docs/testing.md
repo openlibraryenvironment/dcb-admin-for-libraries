@@ -14,6 +14,8 @@ What the gates are, and the two ways each of them can lie to you.
 | Bundle | `node scripts/check-bundle-budget.mjs` | per-chunk gzipped budgets, after a build |
 | Lighthouse | `npx lhci autorun` | transfer, CLS and the category scores |
 | Naming | `npm run naming` | no name that only means something inside this workspace |
+| Secrets | `npm run gates -- --only secrets` | gitleaks over the whole history; needs a binary or Docker |
+| **Everything** | **`npm run gates`** | **all seven CI gates, in about eight minutes** |
 
 ### react-hooks/exhaustive-deps is an error, not a warning
 
@@ -336,3 +338,41 @@ leak this gate was written for actually was.
 **Every one of them prints on every run**, green or red. An exemption nobody sees is one
 nobody reviews, and this list getting longer is the signal that a rule is wrong rather
 than the code.
+
+## Running the gates locally
+
+`npm run gates` runs every `verify_*` job the pipeline runs, with the same commands,
+and prints a summary. `--only naming,static` and `--skip e2e,performance` narrow it;
+`--list` shows the names. It continues past a failure so one run tells you everything
+that is broken, and exits non-zero if any gate failed.
+
+```
+  PASS  naming           0s  (verify_naming)
+  PASS  static          64s  (verify_static)
+  PASS  secrets         30s  (verify_secrets)
+  PASS  performance    230s  (verify_performance)
+  PASS  e2e             93s  (verify_e2e)
+  PASS  base-path       45s  (verify_base_path)
+  PASS  ki-bootstrap    35s  (verify_ki_bootstrap)
+```
+
+**Two gaps closed when this was written, and both had already cost a red pipeline.**
+`npm run naming` ran without `--messages`, so the commit-message half - the half that
+failed in CI twice - never ran locally at all. It now carries the same range CI uses.
+And `verify_secrets` had no local path of any kind, because gitleaks is not an npm
+package: the runner uses a `gitleaks` binary if there is one, Docker if the daemon is
+up, and otherwise reports **SKIP** rather than counting a gate it did not run.
+
+Three things differ from CI, deliberately:
+
+- **Order.** CI runs these in parallel; this runs them fastest first, so a failure
+  surfaces in seconds rather than after the browser gates. Nothing depends on anything
+  else, so the order is a convenience.
+- **No `npm ci`.** Every CI job starts with one. Locally that would delete and rebuild
+  `node_modules` before every run; if the lockfile has moved, run it yourself.
+- **No SARIF report.** CI writes `gitleaks.sarif` as a job artifact. Locally that is a
+  file nobody wants to find in `git status`, so the report flags are left off.
+
+On Windows, `npm` and `npx` are `.cmd` shims and need a shell; `node`, `docker` and
+`gitleaks` must not have one, because a shell re-joins the arguments and this
+repository’s path contains a space. That broke the Docker volume mount on the first run.
