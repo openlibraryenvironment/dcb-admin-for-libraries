@@ -298,7 +298,7 @@ an unannounced product name into nine lines across eight files, and would have p
 into a merge commit subject as well.
 
 Three rules ship. `product-codename` is at zero and stays there. `plan-reference` was
-the interesting one: thirteen occurrences of `§V-11.1` and its siblings, section numbers <!-- naming-gate:allow plan-reference - documenting a rule means showing what it catches -->
+the interesting one: thirteen occurrences of `§V-11.1` and its siblings, section numbers
 from a planning document that lives in the workspace and ships to nobody. None needed a
 replacement - every one sat beside prose that already said what it meant, so the
 reference told a reader who could resolve it something they already had, and everyone
@@ -318,4 +318,17 @@ on the third would contradict the rule it exists to enforce. So `plan-reference`
 name in a commit message reaches the mirror exactly as code does, and that is where the
 leak this gate was written for actually was.
 
-Deliberate? `naming-gate:allow <rule-id> - <reason>` on the line.
+**Three ways out, narrowest first.** Use the narrowest that fits:
+
+1. `naming-gate:allow <rule-id> - <reason>` on a single line, in a file that is otherwise
+   checked. Names the rule, so switching one off leaves the others on.
+2. A rule’s own `exclude`, for a class of file it cannot speak to - `*.graphqls` is
+   excluded from `plan-reference` because those files are copied from dcb-service.
+3. `exemptPaths`, for a file that is *about* the rules: this document, the config, the
+   checker. They cannot explain or implement a rule without containing what it forbids,
+   and making them fight the gate on every edit is how an exemption ends up spelled
+   `--no-verify` instead.
+
+**Every one of them prints on every run**, green or red. An exemption nobody sees is one
+nobody reviews, and this list getting longer is the signal that a rule is wrong rather
+than the code.

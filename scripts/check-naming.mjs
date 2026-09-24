@@ -24,7 +24,12 @@ function toMatcher(glob) {
 
 const excluded = (path, globs) => globs.some((glob) => toMatcher(glob).test(path));
 
-const globalExcludes = CONFIG.exclude ?? [];
+/**
+ * Paths no rule is asked about - the config, this script, and the documentation of both.
+ * A file that is ABOUT the rules cannot avoid quoting them, and making it fight the gate on
+ * every edit is how an exemption ends up spelled `--no-verify` instead.
+ */
+const exemptPaths = (CONFIG.exemptPaths ?? []).map((entry) => entry.path);
 const rules = CONFIG.rules.map((rule) => ({
 	...rule,
 	matcher: new RegExp(rule.pattern, rule.ignoreCase ? "gi" : "g"),
@@ -44,13 +49,19 @@ const applies = (rule, where) => rule.scope.includes(where);
 const allowed = (line, ruleId) => line.includes(`naming-gate:allow ${ruleId}`);
 
 const findings = [];
+const allowances = [];
 
 function scan(label, text, rule, lineOffset = 0) {
 	text.split("\n").forEach((line, index) => {
-		if (allowed(line, rule.id)) return;
 		rule.matcher.lastIndex = 0;
 		const hit = rule.matcher.exec(line);
+		// Tested for a match FIRST, so the count below is uses of the hatch and not lines
+		// that happen to carry a stale marker.
 		if (!hit) return;
+		if (allowed(line, rule.id)) {
+			allowances.push({ rule: rule.id, where: `${label}:${index + 1 + lineOffset}` });
+			return;
+		}
 		findings.push({
 			rule: rule.id,
 			where: `${label}:${index + 1 + lineOffset}`,
@@ -66,7 +77,7 @@ const files = execFileSync("git", ["ls-files", "-z"], { maxBuffer: 1 << 28 })
 	.filter(Boolean);
 
 for (const file of files) {
-	if (excluded(file, globalExcludes)) continue;
+	if (excluded(file, exemptPaths)) continue;
 
 	const buffer = readFileSync(file);
 	// A NUL byte means this is not text, and a byte sequence that happens to spell a rule
@@ -102,8 +113,22 @@ if (rangeFlag !== -1 && process.argv[rangeFlag + 1]) {
 	}
 }
 
+// Every way out, printed on every run. An exemption nobody sees is one nobody reviews,
+// and this list getting longer is the signal that a rule is wrong rather than the code.
+for (const entry of CONFIG.exemptPaths ?? []) {
+	console.log(`  exempt path   ${entry.path}  - ${entry.why}`);
+}
+for (const rule of rules) {
+	for (const glob of rule.excludes) {
+		console.log(`  exempt from ${rule.id}   ${glob}`);
+	}
+}
+for (const allowance of allowances) {
+	console.log(`  allowed       ${allowance.where}  (${allowance.rule})`);
+}
+
 if (findings.length === 0) {
-	console.log("Naming gate: green.");
+	console.log("\nNaming gate: green.");
 	process.exit(0);
 }
 
