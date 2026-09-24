@@ -100,16 +100,32 @@ if (rangeFlag !== -1 && process.argv[rangeFlag + 1]) {
 	const range = process.argv[rangeFlag + 1];
 	let log = "";
 	try {
-		log = execFileSync("git", ["log", "--format=%H%n%B%n--", range], {
+		log = execFileSync("git", ["log", "--format=%H%n%B%x00", range], {
 			maxBuffer: 1 << 28,
 			stdio: ["ignore", "pipe", "ignore"],
 		}).toString();
 	} catch {
 		console.log(`  (commit messages not scanned: ${range} does not resolve here)`);
 	}
-	for (const rule of rules) {
-		if (!applies(rule, "messages")) continue;
-		scan(`commit message in ${range}`, log, rule);
+
+	for (const commit of log.split("\0").map((c) => c.trim()).filter(Boolean)) {
+		const newline = commit.indexOf("\n");
+		const sha = commit.slice(0, newline === -1 ? undefined : newline).trim();
+		const body = newline === -1 ? "" : commit.slice(newline + 1);
+		const label = `commit ${sha.slice(0, 9)} message`;
+
+		for (const rule of rules) {
+			if (!applies(rule, "messages")) continue;
+			// Per COMMIT, not per line. A marker cannot be appended to a line of prose
+			// without mangling the sentence, and a message cannot be corrected after it is
+			// pushed without rewriting published history - so a gate that only took a
+			// per-line marker here would leave a force push as its one remedy.
+			if (allowed(body, rule.id)) {
+				allowances.push({ rule: rule.id, where: label });
+				continue;
+			}
+			scan(label, body, rule);
+		}
 	}
 }
 

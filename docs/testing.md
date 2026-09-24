@@ -321,7 +321,11 @@ leak this gate was written for actually was.
 **Three ways out, narrowest first.** Use the narrowest that fits:
 
 1. `naming-gate:allow <rule-id> - <reason>` on a single line, in a file that is otherwise
-   checked. Names the rule, so switching one off leaves the others on.
+   checked. Names the rule, so switching one off leaves the others on. **In a commit
+   message it applies to the whole commit**, as a trailer: a line of prose cannot carry a
+   marker without mangling the sentence, and a message that is already pushed cannot be
+   corrected without rewriting published history. A gate whose only remedy is a force
+   push is one people turn off.
 2. A rule’s own `exclude`, for a class of file it cannot speak to - `*.graphqls` is
    excluded from `plan-reference` because those files are copied from dcb-service.
 3. `exemptPaths`, for a file that is *about* the rules: this document, the config, the
