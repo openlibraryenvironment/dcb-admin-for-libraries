@@ -300,8 +300,7 @@ export default function InsightsDashboard({
 					{/* THE FIVE a library director asks: were my patrons served, and am I carrying
 					my share. Ten equal tiles was an index, not a summary - and error rate is the
 					complement of the fill rate now shown beside the request count, so it moves
-					below with the rest rather than saying the same thing twice.
-					INSIGHTS_IA_AND_UX_PLAN.md section 3.3. */}
+					below with the rest rather than saying the same thing twice. */}
 					<Box
 						sx={{
 							display: "grid",

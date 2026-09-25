@@ -6,8 +6,8 @@ import { SUBJECTS } from "@helpers/insightsSubjects";
  * The whole Insights view, in the URL.
  *
  * Every field `.catch()`es to its default, so a truncated or hand-edited link degrades to a
- * view rather than throwing a route error at somebody who mistyped a date. What belongs in
- * the link and why, including the scope encoding: INSIGHTS_IA_AND_UX_PLAN.md section 2.
+ * view rather than throwing a route error at somebody who mistyped a date. What each field
+ * is for is stated beside it.
  */
 
 export const RANGE_PRESETS = ["7d", "30d", "90d", "365d"] as const;

@@ -5,8 +5,8 @@ import type { TimeSeriesPoint } from "@helpers/statsApi";
  *
  * The three rate trends are derived from the flow series the page already fetches, so they
  * cost no request. The direction rule below is shared with the percentile trends, which do
- * have their own endpoint. Method, caveats and the bucket contract: INSIGHTS_IA_AND_UX_PLAN.md
- * section 6, and dcb-service docs/insights.md 3.9.
+ * have their own endpoint. Method, caveats and the bucket contract: dcb-service
+ * docs/insights.md 3.9.
  */
 
 /** The status a request enters when DCB accepts it: the denominator of both rates. */

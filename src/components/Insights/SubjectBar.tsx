@@ -10,7 +10,7 @@ import { SUBJECT_BAR_HEIGHT, SUBJECT_BAR_TOP } from "@helpers/stickyOffsets";
  * tab strip, and a second tablist inside the panel of the first gives a keyboard user two
  * sets of arrow keys with no way to tell which has focus.
  *
- * Why subjects at all, and which panels each holds: INSIGHTS_IA_AND_UX_PLAN.md section 1.3.
+ * Which panels each subject holds: helpers/insightsSubjects.ts.
  */
 export default function SubjectBar({ current }: { current: Subject }) {
 	const { t } = useTranslation();

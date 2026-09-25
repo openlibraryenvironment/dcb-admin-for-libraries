@@ -2,8 +2,7 @@
  * A panel's own numbers, as a CSV.
  *
  * NOT a second export engine: the rows are already in the query cache and bounded by the
- * query's own limit. Why the header rows carry the scope, window and method, and what is
- * deliberately not built: INSIGHTS_IA_AND_UX_PLAN.md section 9.
+ * query's own limit.
  */
 
 export interface CsvColumn<T> {

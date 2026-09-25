@@ -2,7 +2,7 @@
  * The five subjects, and which panels belong to each.
  *
  * The order is the reading order: what is happening, how well it went, what was asked for,
- * who with, what we are missing. Rationale: INSIGHTS_IA_AND_UX_PLAN.md section 1.3.
+ * who with, what we are missing.
  *
  * "Collection" is absent, unlike dcb-admin-ui: the collection-analysis endpoints describe
  * the consortium's catalogue rather than one library's traffic, and this app has no panels

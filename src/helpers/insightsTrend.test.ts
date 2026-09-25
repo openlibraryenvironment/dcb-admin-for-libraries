@@ -5,8 +5,7 @@ import type { TimeSeriesPoint } from "@helpers/statsApi";
 
 /**
  * A trend arrow that moves on noise is worse than no arrow: it is a fact the reader will
- * act on, and it is not one. These tests are the rule from INSIGHTS_IA_AND_UX_PLAN.md
- * section 6.3, stated as behaviour.
+ * act on, and it is not one. These tests are that rule, stated as behaviour.
  */
 
 const bucket = (n: number) =>
