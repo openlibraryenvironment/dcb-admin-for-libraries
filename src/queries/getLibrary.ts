@@ -34,7 +34,7 @@ export const getLibrary = () => gql`
 				# 5.11.1.
 				${capabilitySelection("library_support_url", "Library")}
 				discoverySystem
-				# Patron-facing brand (N-1B), rendered by the discovery app. patronWebsite
+				# Patron-facing brand, rendered by the discovery app. patronWebsite
 				# above is the mark's link target, so there is no second URL here.
 				#
 				# New in dcb-service 9.0.0. Library carried no brand at all before it, so

@@ -702,7 +702,7 @@ function HomeComponent() {
                 tidy. See @constants/serviceCapabilities. */}
             {discoveryActive && isLibraryBrandingEnabled() && (
               <>
-              {/* Patron-facing brand — N-1B. Its own labelled block because everything
+              {/* Patron-facing brand. Its own labelled block because everything
   			    above configures this library's participation in DCB and these three
   			    configure what a patron sees in the discovery app. The library's mark
   			    leads the lockup there and the consortium's follows it, smaller: the
