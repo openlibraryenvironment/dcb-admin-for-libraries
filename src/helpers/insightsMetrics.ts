@@ -3,8 +3,7 @@
  *
  * Read off the SQL in dcb-service's PatronRequestRepository, never inferred from the panel
  * that renders it: a methodology that is nearly right is the text a library quotes back
- * when it disputes a figure. Why one registry rather than three copies, and what the four
- * parts are for: INSIGHTS_IA_AND_UX_PLAN.md section 5.
+ * when it disputes a figure.
  *
  * Keys are derived from the id, and insightsMetrics.test.ts fails on a missing part, so
  * the convention cannot rot quietly.

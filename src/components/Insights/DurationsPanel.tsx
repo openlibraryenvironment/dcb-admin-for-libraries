@@ -23,8 +23,7 @@ const PANEL_HEIGHT = 300;
  *
  * Five durations were already measured and two were named. The two transit legs fell out
  * of the time-in-status query as raw status codes in a list of eighteen, so the question
- * "is the courier slipping" had an answer on the page that nobody could find. Semantics:
- * INSIGHTS_IA_AND_UX_PLAN.md section 4.
+ * "is the courier slipping" had an answer on the page that nobody could find.
  */
 export default function DurationsPanel({
 	params,
