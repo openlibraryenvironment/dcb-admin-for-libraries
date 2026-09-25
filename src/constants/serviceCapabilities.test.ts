@@ -10,18 +10,9 @@ import {
 } from "@constants/serviceCapabilities";
 
 /**
- * The registry has to be TRUE, not merely tidy — R-19.
- *
- * A row saying `since: "9.0.0"` is a claim about a dcb-service release. If it is wrong,
- * nothing else catches it: the flag would be switched on at the upgrade and the feature
- * would fail in an environment, which is the expensive place to find out. So the claim is
- * checked here against the schemas of the releases themselves, committed next to this
- * application.
- *
- * That is what makes the mechanism extendable rather than a one-off. To gate the next
- * feature - the local-holds work landing in a dcb-service after 9.0.0, say - you add a
- * row, commit that release's schema as `schema.v<version>.graphqls`, and these tests
- * either agree with you or fail.
+ * A row saying `since: "9.0.0"` is a claim about a dcb-service release,
+ * checked here against that release's own committed schema. A wrong row is
+ * otherwise found at the upgrade. docs/service-compatibility.md.
  */
 
 const repoRoot = process.cwd();

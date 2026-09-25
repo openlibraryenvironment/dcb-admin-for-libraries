@@ -1,0 +1,7 @@
+# gitleaks configuration.
+#
+# The default rule set is kept in full; this file only adds allowlists. Disabling a rule
+# to silence one finding is how a scanner stops finding the next one.
+
+[extend]
+useDefault = true

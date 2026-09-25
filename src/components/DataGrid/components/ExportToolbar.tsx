@@ -82,9 +82,24 @@ export default function ExportToolbar({
 			<Tooltip title={filterTooltipText}>
 				<FilterPanelTrigger
 					render={(props, state) => (
-						<ToolbarButton {...props} color="default">
-							<Badge badgeContent={state.filterCount} color="primary">
-								{/* // variant="dot"> */}
+						<ToolbarButton
+							{...props}
+							color="default"
+							// The count is PAINTED on this button, so it has to be in the
+							// button's name: a reader who cannot see the badge was told
+							// "Show filters" whether two filters were applied or none.
+							// WCAG 2.5.3 Label in Name.
+							aria-label={
+								state.filterCount
+									? t("ui.data_grid.filters.trigger_applied", {
+											count: state.filterCount,
+										})
+									: t("ui.data_grid.filters.trigger")
+							}
+						>
+							{/* null rather than 0, so an unfiltered grid paints no digit at
+							    all and there is no visible text to match. */}
+							<Badge badgeContent={state.filterCount || null} color="primary">
 								<GridFilterListIcon fontSize="small" />
 							</Badge>
 						</ToolbarButton>
@@ -188,147 +203,4 @@ export default function ExportToolbar({
 			)}
 		</Toolbar>
 	);
-
-	// )
-	// return (
-	// 	<Box
-	// 		sx={{
-	// 			p: 0.5,
-	// 			pb: 0,
-	// 		}}>
-	// 		<Toolbar>
-	// 			<Tooltip title="Columns">
-	// 				<ColumnsPanelTrigger render={<ToolbarButton />}>
-	// 					<GridViewColumnIcon fontSize="small" />
-	// 				</ColumnsPanelTrigger>
-	// 			</Tooltip>
-	// 			<Tooltip title="Filters">
-	// 				<FilterPanelTrigger
-	// 					render={(props, state) => (
-	// 						<ToolbarButton {...props} color="default">
-	// 							<Badge
-	// 								badgeContent={state.filterCount}
-	// 								color="primary"
-	// 								variant="dot">
-	// 								<GridFilterListIcon fontSize="small" />
-	// 							</Badge>
-	// 						</ToolbarButton>
-	// 					)}
-	// 				/>
-	// 			</Tooltip>
-	// 			{/* <GridToolbarDensitySelector /> */}
-	// 			<GridToolbarExportContainer>
-	// 				{type != "patronRequests" ? (
-	// 					<MenuItem
-	// 						onClick={() => handleExport("csv", "default")}
-	// 						disabled={allDataLoading}>
-	// 						<ListItemIcon>
-	// 							{allDataLoading ? (
-	// 								<CircularProgress />
-	// 							) : (
-	// 								<FileDownloadOutlined />
-	// 							)}
-	// 						</ListItemIcon>
-	// 						<ListItemText>{t("ui.data_grid.export.all_csv")}</ListItemText>
-	// 					</MenuItem>
-	// 				) : null}
-	// 				{type != "patronRequests" ? (
-	// 					<MenuItem
-	// 						onClick={() => handleExport("tsv", "default")}
-	// 						disabled={allDataLoading}>
-	// 						<ListItemIcon>
-	// 							<FileDownloadOutlined />
-	// 						</ListItemIcon>
-	// 						<ListItemText>{t("ui.data_grid.export.all_tsv")}</ListItemText>
-	// 					</MenuItem>
-	// 				) : null}
-	// 				{type == "patronRequests" ? (
-	// 					<MenuItem
-	// 						onClick={() => handleExport("csv", "all")}
-	// 						disabled={allDataLoading}>
-	// 						<ListItemIcon>
-	// 							<FileDownloadOutlined />
-	// 						</ListItemIcon>
-	// 						<ListItemText>{t("ui.data_grid.export_all")}</ListItemText>
-	// 					</MenuItem>
-	// 				) : null}
-	// 				{type == "patronRequests" ? (
-	// 					<MenuItem
-	// 						onClick={() => handleExport("csv", "filtered")}
-	// 						disabled={allDataLoading}>
-	// 						<ListItemIcon>
-	// 							<FileDownloadOutlined />
-	// 						</ListItemIcon>
-	// 						<ListItemText>{t("ui.data_grid.export_filtered")}</ListItemText>
-	// 					</MenuItem>
-	// 				) : null}
-	// 				{type == "patronRequests" ? (
-	// 					<MenuItem
-	// 						onClick={() => handleExport("csv", "current")}
-	// 						disabled={allDataLoading}>
-	// 						<ListItemIcon>
-	// 							<FileDownloadOutlined />
-	// 						</ListItemIcon>
-	// 						<ListItemText>{t("ui.data_grid.export_current")}</ListItemText>
-	// 					</MenuItem>
-	// 				) : null}
-	// 				<MenuItem
-	// 					onClick={() => handleExport("csv", "print")}
-	// 					disabled={allDataLoading}>
-	// 					<ListItemIcon>
-	// 						<PrintOutlined />
-	// 					</ListItemIcon>
-	// 					<ListItemText>{t("ui.data_grid.print_current_page")}</ListItemText>
-	// 				</MenuItem>
-	// 			</GridToolbarExportContainer>
-	// 			{type == "patronRequests" && (
-	// 				<>
-	// 					{/* <Divider orientation="vertical" flexItem sx={{ mx: 1 }} /> */}
-	// 					<Button
-	// 						id="actions-button"
-	// 						aria-controls={open ? "actions-menu" : undefined}
-	// 						aria-haspopup="true"
-	// 						aria-expanded={open ? "true" : undefined}
-	// 						variant="text"
-	// 						size="small"
-	// 						onClick={handleMenuClick}
-	// 						startIcon={<ChecklistRounded />}>
-	// 						{t("ui.data_grid.actions", "Actions")}
-	// 						{selectionCount > 0 && ` (${selectionCount})`}
-	// 					</Button>
-	// 					<Menu
-	// 						id="actions-menu"
-	// 						anchorEl={anchorEl}
-	// 						open={open}
-	// 						onClose={handleMenuClose}
-	// 						slotProps={{ list: { "aria-labelledby": "actions-button" } }}>
-	// 						<MenuItem onClick={handleCleanupClick}>
-	// 							<ListItemIcon>
-	// 								<CleaningServicesRounded fontSize="small" />
-	// 							</ListItemIcon>
-	// 							<ListItemText>
-	// 								{t("ui.data_grid.cleanup_selected", {
-	// 									count: selectionCount,
-	// 									defaultValue: "Cleanup Selected",
-	// 								})}
-	// 							</ListItemText>
-	// 						</MenuItem>
-	// 					</Menu>
-	// 				</>
-	// 			)}
-	// 		</Toolbar>
-	// 		{/* <QuickFilter
-	// 			debounceMs={100}
-	// 			quickFilterParser={(searchInput: string) =>
-	// 				searchInput
-	// 					.split(",")
-	// 					.map((value) => value.trim())
-	// 					.filter((value) => value !== "")
-	// 			}>
-	// 			<QuickFilterTrigger />
-	// 			<QuickFilterControl />
-	// 			<QuickFilterClear />
-	// 		</QuickFilter> */}
-	// 	</Box>
-	// );
 }

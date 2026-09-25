@@ -29,3 +29,21 @@ export interface SearchFilter {
 export interface FilterState {
 	filters: SearchFilter[];
 }
+
+/**
+ * One instance as the shared index returns it.
+ *
+ * Loosely typed on purpose: the index serves whatever the source records carry,
+ * and every field below is absent for some record somewhere.
+ */
+export interface SearchInstance {
+	id: string;
+	title?: string;
+	description?: string;
+	publicationDate?: string;
+	sourceTypes?: string[];
+	contributors?: { name: string }[];
+	publication?: { publisher: string; dateOfPublication: string }[];
+	isbns?: string[];
+	issns?: string[];
+}

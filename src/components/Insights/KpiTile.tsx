@@ -11,6 +11,10 @@ import { ArrowDropUp, ArrowDropDown } from "@mui/icons-material";
 
 import { outcomeTextColour } from "@helpers/outcomeTextColour";
 
+import { MetricId } from "@helpers/insightsMetrics";
+import { formatPercent } from "@helpers/formatters";
+import MetricInfo from "./MetricInfo";
+
 interface KpiTileProps {
 	title: string;
 	value: ReactNode;
@@ -20,6 +24,10 @@ interface KpiTileProps {
 	// Whether a positive delta is good (fill rate) or bad (error rate) - drives colour.
 	higherIsBetter?: boolean;
 	loading?: boolean;
+	/** Opens the four-part explanation beside the figure, where one is registered. */
+	metric?: MetricId;
+	/** Passed through to the explanation; absent where the endpoint reports no count. */
+	sampleCount?: number | null;
 }
 
 const FIXED_HEIGHT = 132; // skeleton matches loaded height exactly (no CLS)
@@ -31,6 +39,8 @@ export default function KpiTile({
 	deltaPct,
 	higherIsBetter = true,
 	loading = false,
+	metric,
+	sampleCount,
 }: KpiTileProps) {
 	const hasDelta =
 		deltaPct !== undefined && deltaPct !== null && isFinite(deltaPct);
@@ -45,9 +55,21 @@ export default function KpiTile({
 	return (
 		<Card variant="outlined" sx={{ height: FIXED_HEIGHT }}>
 			<CardContent>
-				<Typography variant="subtitle2" color="text.secondary" gutterBottom>
-					{title}
-				</Typography>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
+					{/* component, because MUI maps subtitle2 to h6 by default and this is a
+							LABEL for the figure below it, not a section heading - it put an h6
+							straight after the page h1. */}
+					<Typography variant="subtitle2" component="p" color="text.secondary">
+						{title}
+					</Typography>
+					{metric ? (
+						<MetricInfo
+							metric={metric}
+							label={title}
+							sampleCount={sampleCount}
+						/>
+					) : null}
+				</Box>
 				{loading ? (
 					<Skeleton variant="text" width="60%" height={40} />
 				) : (
@@ -71,7 +93,7 @@ export default function KpiTile({
 									) : (
 										<ArrowDropDown fontSize="small" />
 									)}
-									{Math.abs(deltaPct as number).toFixed(1)}%
+									{formatPercent(Math.abs(deltaPct as number))}
 								</Typography>
 							)}
 							{subtitle && (

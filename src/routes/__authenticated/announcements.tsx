@@ -27,30 +27,12 @@ import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import type { Library } from "@models/Library";
 
 /**
- * Telling this library's patrons something — V-12.
+ * Telling this library's patrons something.
  *
- * <h2>What this is for, and the sentence that says so</h2>
- *
- * Discovery-affecting news: an ILS migration, a requesting outage, a branch closure that
- * changes where things can be collected. It is not a what's-on board, not a newsletter and
- * not a marketing slot — every one of which a library will reasonably ask for once the
- * field exists. §V-12 says to put that constraint in the form's help text rather than only
- * in the plan, "because the constraint will not survive being only in this document", and
- * `announcements.scope_help` is that sentence.
- *
- * <h2>Why the expiry is a required field with no "never"</h2>
- *
- * The failure mode of every announcement banner ever built is the notice from March still
- * up in November, which teaches every patron to ignore that strip permanently — including
- * on the day it matters. dcb-service refuses a notice with no end; this asks for one, and
- * defaults it to a fortnight so the easy path is also the right one.
- *
- * <h2>Behind a flag that changes the DOCUMENT</h2>
- *
- * dcb-service declares none of these operations before the `feat/discovery-contract` branch merges, and an
- * undeclared mutation fails the whole operation rather than returning null. The route
- * renders an explanation rather than a form when the flag is off, so an administrator who
- * lands here from a bookmark is told why instead of meeting something that cannot work.
+ * The flag gates the DOCUMENT, not the render: an operation dcb-service does not declare
+ * fails the whole operation, so the route explains itself rather than showing a form that
+ * cannot work. What this is for, why the expiry is required, and the rest of the argument:
+ * docs/announcements.md.
  */
 export const Route = createFileRoute("/__authenticated/announcements")({
 	component: AnnouncementsRoute,

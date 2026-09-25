@@ -125,29 +125,3 @@ export const handleClusterTabChange = (
 
 	navigate({ to: targetPath });
 };
-// export const handleTopLevelPatronRequestTabChange = (
-// 	event: React.SyntheticEvent,
-// 	newValue: number,
-// 	navigate: UseNavigateResult<string>,
-
-// 	setTabIndex: Dispatch<SetStateAction<number>>
-// ) => {
-// 	setTabIndex(newValue);
-// 	switch (newValue) {
-// 		case 0:
-// 			navigate({ to: `/patronRequests/exception` });
-// 			break;
-// 		case 1:
-// 			navigate({ to: `/patronRequests/outOfSequence` });
-// 			break;
-// 		case 2:
-// 			navigate({ to: `/patronRequests/active` });
-// 			break;
-// 		case 3:
-// 			navigate({ to: `/patronRequests/completed` });
-// 			break;
-// 		case 4:
-// 			navigate({ to: `/patronRequests/all` });
-// 			break;
-// 	}
-// };

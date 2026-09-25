@@ -17,7 +17,7 @@ export interface Library {
 	type: string;
 	latitude: number;
 	longitude: number;
-	// V-11.1. The library's own site, and the desk that hears "discovery is broken".
+	// The library's own site, and the desk that hears "discovery is broken".
 	// Two different questions and rarely the same desk, so two fields; discovery renders
 	// both in the footer of every page.
 	patronWebsite?: string | null;

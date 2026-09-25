@@ -1,25 +1,50 @@
 import type { Page } from "@playwright/test";
 
 /**
- * The insights statistics API.
- *
- * These are REST, not GraphQL: axios calls `${VITE_DCB_API_BASE}/insights/<name>`
- * with the window and the library's Host LMS code as query params. Dispatch is on
- * the path segment after `insights/`, mirroring mockGraphQL's dispatch on
- * operationName.
- *
- * The defaults are POPULATED rather than empty on purpose. An empty response
- * renders the "no data" placeholder, which would let the accessibility gate pass
- * without ever drawing a chart - and chart series contrast in dark mode is exactly
- * the kind of failure this gate exists to catch.
- *
- * An unmocked endpoint is aborted rather than continued: the API host does not
- * resolve, so continuing means a 30s DNS wait per call.
+ * The insights statistics API: REST, dispatched on the path segment after
+ * `insights/`. The defaults are POPULATED, because an empty response renders
+ * the no-data placeholder and the axe gate would never see a chart.
+ * docs/testing.md.
  */
 export type StatsMocks = Record<string, unknown>;
 
 const bucket = (daysAgo: number) =>
 	new Date(Date.UTC(2026, 0, 31 - daysAgo)).toISOString();
+
+/**
+ * The flow series the trend strip and the plot builder both read. Generated rather than
+ * written out: the SHAPE is what the tests are about, and fifty-two literal objects hide
+ * it.
+ */
+function flowSeries() {
+	const rows: { bucket: string; series: string; count: number }[] = [];
+
+	for (let week = 0; week < 13; week += 1) {
+		const at = bucket(90 - week * 7);
+		const submitted = 100;
+		// 78% climbing to 90%, and 9% falling to 3%.
+		const loaned = 78 + week;
+		const errored = Math.max(3, 9 - Math.floor(week / 2));
+
+		rows.push(
+			{ bucket: at, series: "SUBMITTED_TO_DCB", count: submitted },
+			{ bucket: at, series: "LOANED", count: loaned },
+			{ bucket: at, series: "ERROR", count: errored },
+		);
+	}
+
+	return rows;
+}
+
+/** Eight weekly buckets of a percentile trend, one of them missing entirely. */
+function trendSeries() {
+	return [0, 1, 2, 3, 5, 6, 7].map((week) => ({
+		bucket: bucket(90 - week * 7),
+		p50Seconds: 150_000 + week * 4_000,
+		p95Seconds: 420_000 + week * 9_000,
+		sampleCount: 40 + week,
+	}));
+}
 
 export const DEFAULT_STATS: StatsMocks = {
 	dashboard: {
@@ -31,14 +56,14 @@ export const DEFAULT_STATS: StatsMocks = {
 		savedByReResolution: 57,
 		collectionSummary: { uniqueTitlesRequested: 731, totalRequests: 908 },
 	},
-	timeseries: [
-		{ bucket: bucket(20), series: "LOANED", count: 41 },
-		{ bucket: bucket(10), series: "LOANED", count: 63 },
-		{ bucket: bucket(0), series: "LOANED", count: 58 },
-		{ bucket: bucket(20), series: "ERROR", count: 6 },
-		{ bucket: bucket(10), series: "ERROR", count: 4 },
-		{ bucket: bucket(0), series: "ERROR", count: 9 },
-	],
+	// Thirteen buckets, because the direction rule needs nine CLOSED ones and the last is
+	// dropped as partial. Shaped deliberately - submissions flat, the fill rate climbing,
+	// the error rate falling - so a run exercises the arithmetic rather than the empty
+	// state a three-bucket fixture would give it.
+	timeseries: flowSeries(),
+	// One bucket is deliberately ABSENT rather than zero: a period with no completions
+	// has no median, and the panel must leave a gap rather than draw an instant journey.
+	trend: trendSeries(),
 	"failure-taxonomy": [
 		{ reason: "NO_ITEMS_SELECTABLE_AT_ANY_AGENCY", count: 44 },
 		{ reason: "PATRON_NOT_FOUND", count: 31 },
@@ -52,9 +77,13 @@ export const DEFAULT_STATS: StatsMocks = {
 		{ libraryCode: "e2e-lms", borrowedCount: 908, suppliedCount: 1043 },
 		{ libraryCode: "peer-lms", borrowedCount: 654, suppliedCount: 501 },
 	],
+	// RETURN_TRANSIT is deliberately absent: a host LMS that never reports the status
+	// produces no row, and the durations panel has to say so rather than draw an instant
+	// leg. PICKUP_TRANSIT is present so both paths are exercised on one page.
 	"time-in-status": [
 		{ status: "RESOLVED", medianDwellSeconds: 43200, sampleCount: 611 },
 		{ status: "CONFIRMED", medianDwellSeconds: 21600, sampleCount: 588 },
+		{ status: "PICKUP_TRANSIT", medianDwellSeconds: 108000, sampleCount: 502 },
 	],
 	"supplier-response-sla": [
 		{

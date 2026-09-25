@@ -1,7 +1,7 @@
 import { gql } from "graphql-request";
 
 /**
- * Every announcement at one scope, live or not — V-12.
+ * Every announcement at one scope, live or not.
  *
  * A FUNCTION, not a constant, for the reason getLibrary already gives: it is only ever
  * called behind `isAnnouncementsEnabled`, and a document built at module scope would be

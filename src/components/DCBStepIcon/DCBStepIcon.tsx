@@ -46,13 +46,16 @@ export default function DCBStepIcon(props: StepIconProps) {
 	}
 
 	// Active step
-	// Shows the number on green background
 	if (active) {
 		return (
 			<Avatar
 				sx={{
 					bgcolor: (theme.vars || theme).palette.primary.main,
-					color: (theme.vars || theme).palette.primary.iconSymbol,
+					// contrastText, not iconSymbol: the ink has to answer to the ground
+					// beneath it, and primary.main is a light blue in dark mode - white
+					// on it measured 2.24:1. MUI derives this per scheme, so it stays
+					// right if primary.main moves.
+					color: (theme.vars || theme).palette.primary.contrastText,
 					width: iconSize,
 					height: iconSize,
 					fontWeight: "bold",

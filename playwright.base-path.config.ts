@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // Port 4204: the base-path band (420x) for dcb-admin-for-libraries (…4). It was 4175,
-// which is symposia-ui's primary e2e port under the allocation in playwright.config.ts.
+// which is the discovery UI's primary e2e port under the allocation in playwright.config.ts.
 
 /**
  * The app served from a PATH PREFIX, which is how it actually ships: the CI
@@ -20,7 +20,8 @@ export default defineConfig({
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
-	workers: process.env.CI ? 1 : undefined,
+	// Capped rather than left to default to half the cores: see docs/testing.md.
+	workers: process.env.CI ? 1 : 4,
 	reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "html",
 
 	use: {

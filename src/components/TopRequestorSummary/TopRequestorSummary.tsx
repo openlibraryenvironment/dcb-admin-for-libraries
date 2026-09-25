@@ -97,14 +97,9 @@ export default function TopRequestorsSummary({
 
 	if (topRequestorsData.length === 0) {
 		return (
-			<>
-				<Typography variant="attributeTitle">
-					{t("library.statistics.top_requesters_month")}
-				</Typography>
-				<Typography variant="body2">
-					{t("library.statistics.no_requesters")}
-				</Typography>
-			</>
+			<Typography variant="body2">
+				{t("library.statistics.no_requesters")}
+			</Typography>
 		);
 	}
 

@@ -231,37 +231,3 @@ export const usePatronRequestExport = ({
 		handleExport,
 	};
 };
-// We could also do a promise based approach where we fetch all at once
-// Fetch them all at the same time
-// const pageRequests = [];
-// for (let page = 1; page < totalPages; page++) {
-// 	pageRequests.push(
-// 		request<any>(
-// 			`${dcbApiBase}/graphql`,
-// 			getPatronRequests,
-// 			{
-// 				query: exportQueryString,
-// 				pagesize: pageSize,
-// 				pageno: page,
-// 				order: sortModel[0]?.field ?? "dateCreated",
-// 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
-// 			},
-// 			headers
-// 		)
-// 	);
-// }
-// if (pageRequests.length > 0) {
-// 	const pagesData = await Promise.all(pageRequests);
-
-// 	pagesData.forEach((nextPageData) => {
-// 		if (nextPageData?.patronRequests?.content) {
-// 			allContent = [...allContent, ...nextPageData.patronRequests.content];
-// 		}
-// 	});
-
-// 	// Update progress to 100% after all fetches complete
-// 	setExportProgress((prev) => ({
-// 		...prev,
-// 		progress: Math.round((allContent.length / totalSize) * 100),
-// 	}));
-// }

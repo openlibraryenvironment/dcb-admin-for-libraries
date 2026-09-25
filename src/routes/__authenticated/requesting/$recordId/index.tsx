@@ -15,10 +15,9 @@ import { Contributor, Note } from "@models/ClusterDetailResponse";
 import { useTranslation } from "react-i18next";
 import Loading from "@components/Loading/Loading";
 import Error from "@components/Error/Error";
-// import { Route } from "@/routes/__authenticated/indexes/$indexCode/$recordId";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import { useClusterDetail } from "@/hooks/useClusterDetail";
-import { Section } from "@components/Section/Section";
+import { Attribute } from "@components/Attribute/Attribute";
 import { useState } from "react";
 
 export const Route = createFileRoute("/__authenticated/requesting/$recordId/")({
@@ -76,62 +75,62 @@ function ClusterRecordComponent() {
 				spacing={{ xs: 2, md: 3 }}
 				columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Section
-						title={t("requesting.contributors")}
+					<Attribute
+						label={t("requesting.contributors")}
 						children={clusterDetail?.contributors
 							?.map((c: Contributor) => c.name)
 							.join(", ")}
 					/>
 				</Grid>
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Section
-						title={t("requesting.format_title")}
+					<Attribute
+						label={t("requesting.format_title")}
 						children={
 							<Typography>{clusterDetail?.sourceTypes?.join(",")}</Typography>
 						}
 					/>
 				</Grid>
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Section
-						title={t("requesting.publication_year")}
+					<Attribute
+						label={t("requesting.publication_year")}
 						children={
 							<RenderAttribute attribute={clusterDetail?.publicationYear} />
 						}
 					/>
 				</Grid>
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Section
-						title={t("requesting.description")}
+					<Attribute
+						label={t("requesting.description")}
 						children={
 							<RenderAttribute attribute={clusterDetail?.description} />
 						}
 					/>
 				</Grid>
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Section
-						title={t("requesting.languages")}
+					<Attribute
+						label={t("requesting.languages")}
 						children={
 							<Typography>{clusterDetail?.languages?.join(",")}</Typography>
 						}
 					/>
 				</Grid>
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Section
-						title={t("requesting.publisher")}
+					<Attribute
+						label={t("requesting.publisher")}
 						children={clusterDetail?.publication
 							?.map((pub: { publisher: string }) => pub.publisher)
 							.join(", ")}
 					/>
 				</Grid>
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Section
-						title={t("requesting.physical_descriptions")}
+					<Attribute
+						label={t("requesting.physical_descriptions")}
 						children={clusterDetail?.physicalDescriptions}
 					/>
 				</Grid>
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-					<Section
-						title={t("requesting.notes")}
+					<Attribute
+						label={t("requesting.notes")}
 						children={clusterDetail?.notes
 							?.map(
 								(note: { labelKey: string; note: string }) =>
@@ -141,8 +140,8 @@ function ClusterRecordComponent() {
 					/>
 				</Grid>
 				<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
-					<Section
-						title={t("requesting.subjects")}
+					<Attribute
+						label={t("requesting.subjects")}
 						children={
 							<Stack
                                 direction="row"
@@ -165,8 +164,8 @@ function ClusterRecordComponent() {
 					/>
 				</Grid>
 				<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
-					<Section
-						title={t("requesting.series")}
+					<Attribute
+						label={t("requesting.series")}
 						children={
 							<Stack
                                 direction="row"
@@ -189,8 +188,8 @@ function ClusterRecordComponent() {
 					/>
 				</Grid>
 				<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
-					<Section
-						title={t("requesting.notes")}
+					<Attribute
+						label={t("requesting.notes")}
 						children={
 							<Stack
                                 direction="row"
@@ -211,12 +210,8 @@ function ClusterRecordComponent() {
 					/>
 				</Grid>
 				<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
-					<Section
-						title={
-							<Typography variant="attributeTitle">
-								{t("requesting.identifiers")}
-							</Typography>
-						}
+					<Attribute
+						label={t("requesting.identifiers")}
 						children={
 							<>
 								<Typography>

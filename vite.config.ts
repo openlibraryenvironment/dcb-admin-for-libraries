@@ -62,20 +62,10 @@ export default defineConfig(({ mode }) => {
 			react(),
 			kiBootstrapCssPlugin(),
 		],
-		// No `server.historyApiFallback` here: that is a webpack-dev-server option
-		// and Vite has never had it, so it was dead config that read like the thing
-		// keeping deep links alive. Vite's SPA fallback comes from the default
-		// `appType: "spa"`, and it is base-aware - GET /dcb-admin-for-libraries-dev/
-		// patronRequests/<id> serves index.html without it.
-		// Deliberately an absolute path, NOT a relative "./" base. A relative base
-		// resolves asset URLs against the CURRENT page path, and every SPA-fallback
-		// host serves index.html AT the deep URL rather than at "/" - so refreshing
-		// /dcb-admin-for-libraries/patronRequests/<id> would resolve
-		// ./assets/index-<hash>.js against /dcb-admin-for-libraries/patronRequests/
-		// and 404 every asset.
-		//
-		// This is also the single source of the router basepath: main.tsx reads it
-		// back as import.meta.env.BASE_URL. It must never be re-supplied at runtime.
+		// An ABSOLUTE base, never a relative "./" one: a relative base resolves assets
+		// against the current page path, and an SPA fallback serves index.html AT the
+		// deep URL. This is also the single source of the router basepath, which
+		// main.tsx reads back and must never re-supply. docs/routing.md.
 		base: env.VITE_PUBLIC_URL || "/",
 		experimental: {
 			renderBuiltUrl(_filename, { hostType }) {

@@ -1,3 +1,6 @@
+import { clampPageSize } from "@constants/dataGrid/pagination";
+import { pageTitle } from "@helpers/pageTitle";
+import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -40,7 +43,6 @@ import { getLibrary } from "@queries/getLibrary";
 import { getMappings } from "@queries/getMappings";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-// import dayjs from "dayjs";
 import request from "graphql-request";
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -48,6 +50,7 @@ import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/mappings")({
+	head: () => ({ meta: [{ title: pageTitle("nav.mappings.title") }] }),
 	component: RouteComponent,
 });
 
@@ -105,6 +108,9 @@ function RouteComponent() {
 		storedState.columnVisibility ?? referenceValueMappingColumnVisibility
 	);
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
+	// An inline edit that did not save. The grid used to build this message and
+	// throw it away, so a failed save reverted the row and said nothing.
+	const [rowUpdateError, setRowUpdateError] = useState<string | null>(null);
 
 	const handleSnackbarClose = (
 		event?: React.SyntheticEvent | Event,
@@ -189,7 +195,7 @@ function RouteComponent() {
 						"fromCategory",
 						"toCategory",
 					]) ?? "",
-				pagesize: paginationModel.pageSize ?? 200,
+				pagesize: clampPageSize(paginationModel.pageSize),
 				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "lastImported",
 				orderBy: getSortOrderForServer(sortModel[0]?.sort) ?? "DESC",
@@ -383,23 +389,23 @@ function RouteComponent() {
 							/>,
 						];
 					}
+					// One element PER action, not a fragment wrapping both: the grid
+					// inspects each returned element (for showInMenu, among others),
+					// and a fragment hides them from it.
 					return [
-						<>
-							<GridActionsCellItem
-								key="edit"
-								icon={<Edit />}
-								label={t("ui.actions.edit")}
-								onClick={handleEditClick(id)}
-								disabled={!editingEnabled}
-							/>
-
-							<GridActionsCellItem
-								key="delete"
-								icon={<Delete />}
-								label={t("ui.actions.delete")}
-								onClick={handleDeleteClick(id)}
-							/>
-						</>,
+						<GridActionsCellItem
+							key="edit"
+							icon={<Edit />}
+							label={t("ui.actions.edit")}
+							onClick={handleEditClick(id)}
+							disabled={!editingEnabled}
+						/>,
+						<GridActionsCellItem
+							key="delete"
+							icon={<Delete />}
+							label={t("ui.actions.delete")}
+							onClick={handleDeleteClick(id)}
+						/>,
 					];
 				},
 			},
@@ -462,9 +468,11 @@ function RouteComponent() {
 
 	return (
 		<>
+			<Typography variant="h1">{t("nav.mappings.title")}</Typography>
 			{
 				<DataGrid
 					disablePivoting
+					label={t("nav.mappings.title")}
 					identifier={gridId}
 					type="referenceValueMappings"
 					columns={refValueColumns}
@@ -486,6 +494,7 @@ function RouteComponent() {
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
 					processRowUpdate={processRowUpdate}
+					onRowUpdateError={setRowUpdateError}
 					checkboxSelection={false}
 					disableAggregation
 					disableHoverInteractions
@@ -495,7 +504,7 @@ function RouteComponent() {
 					pagination
 					toolbarVisible
 					noResultsText={t("audit.no_results")}
-					searchText="Search by mappings"
+					searchText={t("ui.data_grid.search_mappings")}
 					scrollbarVisible={false}
 				/>
 			}
@@ -520,6 +529,12 @@ function RouteComponent() {
 					action="deletion"
 				/>
 			}
+			<TimedAlert
+				open={rowUpdateError !== null}
+				onCloseFunc={() => setRowUpdateError(null)}
+				severityType="error"
+				alertText={rowUpdateError ?? ""}
+			/>
 			{
 				<TimedAlert
 					open={snackbarOpen}
@@ -527,7 +542,6 @@ function RouteComponent() {
 					severityType="warning"
 					// variant="filled"
 					// sx={{ width: "100%" }}
-					autoHideDuration={6000}
 					alertText={
 						t("ui.feedback.error.cannot_process") ||
 						"We could not process that operation, so we have reset the data grid options."

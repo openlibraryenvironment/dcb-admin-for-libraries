@@ -6,16 +6,10 @@ import { persist } from "zustand/middleware";
 import { storageKey } from "@helpers/appBase";
 
 /**
- * The agencies named by the `code` claim.
- *
- * Read as a list rather than a scalar because one person can be responsible for several
- * libraries: whoever administers a shared Koha on behalf of some of its tenants is not a
- * consortium administrator and must not be given consortium-wide access, but neither do
- * they belong to exactly one library. dcb-service already accepts the claim in either
- * shape.
- *
- * Almost every deployment issues a single value, and this returns a one-element list for
- * those - nothing downstream has to care which kind of user it is looking at.
+ * The agencies named by the `code` claim, always as a LIST: one person can
+ * administer several libraries on a shared system without being a consortium
+ * administrator. A single-value claim returns a one-element list, so nothing
+ * downstream has to care. docs/insights.md.
  */
 export const agencyCodesFrom = (claim: unknown): string[] => {
 	if (Array.isArray(claim)) {
@@ -55,17 +49,10 @@ interface AgencySelectionState {
 }
 
 /**
- * ONE selection, shared by every consumer.
- *
- * Fourteen components ask which library is being looked at - the header, six routes,
- * three request forms, the search result and the shared query hook. Holding this in
- * `useState` inside the hook gave each of them a private copy, so changing library in
- * the header would have relabelled the picker and left every grid on screen scoped to
- * the previous one. It is client UI state shared across the tree, which is what the
- * store layer is for.
- *
- * Persisted so the choice survives a reload, and namespaced by app base because one
- * origin may host several of these apps under path prefixes.
+ * ONE selection, shared by every consumer. In `useState` each of the fourteen
+ * readers got a private copy, so changing library in the header left every
+ * grid on screen scoped to the previous one. Persisted, and namespaced by app
+ * base. docs/insights.md.
  */
 const useAgencySelectionStore = create<AgencySelectionState>()(
 	persist(

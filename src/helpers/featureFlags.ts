@@ -1,18 +1,9 @@
 /**
- * Runtime feature flags.
- *
- * Deliberately read from the injected runtime config (`window.__APP_ENV__`,
- * populated in application.tsx from /inject_env.json) rather than from
- * `import.meta.env` at build time: a flag that gates a feature on a *backend*
- * release has to be flippable per environment without rebuilding and
- * redeploying the UI. The import.meta.env read is only the local-dev fallback.
- *
- * Adding a flag means adding it to docker/production/inject_env.json.template
- * too, or it is undefined in every deployed environment and the feature can
- * never be turned on. featureFlags.test.ts fails if you forget.
- *
- * Flags are off unless explicitly turned on, so an environment that has never
- * heard of the flag hides the feature.
+ * Runtime feature flags, read from the injected config rather than
+ * import.meta.env: a flag gating a feature on a BACKEND release has to be
+ * flippable per environment without rebuilding the UI. Off unless turned on.
+ * Adding one means touching inject_env.json.template too, and
+ * featureFlags.test.ts fails if you forget. docs/service-compatibility.md.
  */
 const readFlag = (name: string): boolean => {
 	const injected =
@@ -21,6 +12,17 @@ const readFlag = (name: string): boolean => {
 
 	return String(value).toLowerCase() === "true";
 };
+
+/**
+ * The guarded cleanup flow - dcb-service 9.0.0 and later.
+ *
+ * 9.0.0 refuses a cleanup that would delete the borrowing library's temporary records while
+ * the item is out, and says so with a 409 this app reports. 8.71.0 has no such refusal: it
+ * cleans up whatever it is asked to, so with this off the status list in
+ * isCleanupEligible is the only gate and an item that has left the library is never offered.
+ */
+export const isGuardedCleanupEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_GUARDED_CLEANUP");
 
 /**
  * Insights depends on the /insights/** endpoints, first released in dcb-service 9.0.0.
@@ -33,31 +35,27 @@ export const isInsightsEnabled = (): boolean =>
 /**
  * The patron-facing library brand - dcb-service 9.0.0 and later.
  *
- * THIS FLAG IS NOT A RENDER SWITCH. brandLogoUrl, brandLogoAlt and defaultThemeName do
- * not exist on Library before 9.0.0, and a GraphQL field the server has never heard of
- * is not a null - it is a validation error that fails the WHOLE operation. LoadLibrary
- * is run by the header on every page and by six routes, so selecting them on an older
- * deployment does not grey out a form, it takes the application down.
- *
- * So the flag changes the DOCUMENT and the mutation VARIABLES. See
- * @constants/serviceCapabilities and @helpers/capabilityFields.
+ * NOT A RENDER SWITCH. It changes the DOCUMENT and the mutation VARIABLES,
+ * because selecting a field 8.71.0 has never heard of takes the application
+ * down rather than greying out a form. @constants/serviceCapabilities.
  */
 export const isLibraryBrandingEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_LIBRARY_BRANDING");
 
 /**
- * Patron announcements - V-12, and on no dcb-service release at all.
+ * Patron announcements, on no dcb-service release at all.
  *
- * The store, the scoped read and the three mutations are on the `feat/discovery-contract` branch. Asking
- * a deployment that lacks them for `announcements` is a GraphQL validation error that fails
- * the whole operation, so this flag changes the DOCUMENT, not just what renders - and it is
- * off everywhere until that branch merges and a release carries it.
+ * The store, the scoped read and the three mutations are on the
+ * `feat/discovery-contract` branch. Asking a deployment that lacks them for
+ * `announcements` is a GraphQL validation error that fails the whole operation, so this
+ * flag changes the DOCUMENT, not just what renders - and it is off everywhere until that
+ * branch merges and a release carries it.
  */
 export const isAnnouncementsEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_ANNOUNCEMENTS");
 
 /**
- * The library's patron support link - dcb-service AFTER 9.0.0, V-11.1.
+ * The library's patron support link - dcb-service AFTER 9.0.0.
  *
  * `library.support_url` arrived in V9_0_008, which is on main and in no release, so this
  * is a SEPARATE flag from the branding one above rather than a fourth field on it.
@@ -92,3 +90,28 @@ export const isAgencyScopedRequestsEnabled = (): boolean =>
  * featureFlags.test.ts keeps checking each of them reaches a deployment.
  */
 export const isCapabilityEnabled = (flag: string): boolean => readFlag(flag);
+
+/**
+ * Percentile trends - `/insights/trend`, on dcb-service branch `insights-improvements`
+ * and in NO release, not 8.71.0 and not the 9.0.0 tag.
+ *
+ * Separate from VITE_FEATURE_INSIGHTS because the thresholds differ: a deployment on
+ * 9.0.0 has the Insights surface and answers 404 to this one endpoint, and a 404 through
+ * the panel contract reads as "this panel could not be loaded" - a fault report for a
+ * server that is simply older.
+ */
+export const isInsightsTrendsEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_INSIGHTS_TRENDS");
+
+/**
+ * Whether a discovery front end is deployed beside us — docs/DEPLOYMENT.md §2b.
+ *
+ * NOT a `VITE_FEATURE_*` and not a SERVICE_CAPABILITIES row: those say whether this
+ * environment's dcb-service is new enough, and no dcb-service release can say
+ * whether a discovery front end is deployed. So this one is a pure render switch,
+ * which the flags above deliberately are not — it makes no claim about the schema,
+ * leaves every document unchanged, and is composed WITH a capability flag rather
+ * than replacing it. `VITE_`-prefixed because the dev fallback reads
+ * `import.meta.env`, which needs that prefix.
+ */
+export const isDiscoveryActive = (): boolean => readFlag("VITE_DISCOVERY_ACTIVE");

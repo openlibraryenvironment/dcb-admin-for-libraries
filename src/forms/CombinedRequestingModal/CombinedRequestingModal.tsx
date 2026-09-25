@@ -152,7 +152,7 @@ export default function CombinedRequestingModal({
 			<Dialog
 				open={show}
 				onClose={handleClose}
-				aria-labelledby="patron-request-modal"
+				aria-labelledby="form-dialog-title"
 				fullWidth
 				maxWidth="sm">
 				<DialogTitle id="form-dialog-title" variant="modalTitle">

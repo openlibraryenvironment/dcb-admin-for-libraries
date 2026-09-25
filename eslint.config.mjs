@@ -61,6 +61,45 @@ export default defineConfig(
 					message:
 						"A console message must be a plain string literal. Interpolating a value is how PII reaches the console.",
 				},
+				// The Insights view belongs in the URL. The range and the plotted series
+				// were held in a Zustand store, so a link to "last quarter, plotting these
+				// statuses" opened on somebody else's default. These two catch the next
+				// piece of dashboard state reaching for the same place. insightsCostStore
+				// is deliberately NOT banned: it is the per-user default for a fresh visit,
+				// and the tile writes the assumption through to the URL.
+				{
+					selector:
+						"CallExpression[callee.name='useState'] > Literal[value=/^(7d|30d|90d|365d)$/]",
+					message:
+						"A time range is part of the view: put it in the URL (insightsSearch.ts), not in component state.",
+				},
+				{
+					selector: "ImportDeclaration[source.value=/insightsPlotStore/]",
+					message:
+						"insightsPlotStore was deleted: the range and the plotted series live in the URL now. See insightsSearch.ts.",
+				},
+
+				// Mobius serves this app at /dcb-admin-for-libraries/ beside dcb-admin on one
+				// origin, and only the router adds the base: a root-relative href or a bare
+				// window.open leaves the app.
+				{
+					selector:
+						"JSXAttribute[name.name='href'] > Literal[value=/^\\/(?!\\/)/]",
+					message:
+						"A root-relative href leaves the app's base path. Navigate with `to` on a router link (CustomLink, or `component={Link} to=…`).",
+				},
+				{
+					selector:
+						"JSXAttribute[name.name='href'] > JSXExpressionContainer > TemplateLiteral[quasis.0.value.raw=/^\\/(?!\\/)/]",
+					message:
+						"A root-relative href leaves the app's base path. Navigate with `to` on a router link (CustomLink, or `component={Link} to=…`).",
+				},
+				{
+					selector:
+						"CallExpression[callee.object.name='window'][callee.property.name='open']:not([arguments.0.callee.name='appUrl']):not([arguments.0.value=/^https?:/])",
+					message:
+						"window.open resolves a path against the origin root, outside the deployment base. Pass appUrl(path).",
+				},
 			],
 		},
 	},
@@ -71,21 +110,33 @@ export default defineConfig(
 		files: ["src/**/*.{ts,tsx}"],
 		plugins: { "react-hooks": reactHooks },
 		rules: {
-			// exhaustive-deps as an error, not a warning: a missing dependency froze
-			// editingEnabled in the mappings grid's column memo, leaving libraries
-			// that ARE permitted to edit with a permanently disabled Edit action. It
-			// took an e2e test to find; it should have taken a lint run.
-			//
-			// The rest of eslint-plugin-react-hooks v7 - its "recommended-latest" set
-			// - is the React Compiler rule family (set-state-in-effect, purity, refs,
-			// immutability, incompatible-library). It reports 14 further findings
-			// here, three of them react-hook-form's watch() being flagged as
-			// compiler-incompatible, which has no fix short of changing the form
-			// architecture. A gate that can only be satisfied with suppressions is not
-			// a gate, so that family stays off until it can be turned on and left
-			// green.
+			// exhaustive-deps is an ERROR here: a missing dependency froze editingEnabled
+			// in the mappings grid and left permitted libraries unable to edit. The rest of
+			// react-hooks v7 - the React Compiler family - reports 14 findings that cannot
+			// be fixed without changing the form architecture, so it stays off until it can
+			// be left green. docs/testing.md.
 			"react-hooks/rules-of-hooks": "error",
 			"react-hooks/exhaustive-deps": "error",
+		},
+	},
+	{
+		// Build tooling that runs in Node and whose job is to print a report.
+		//
+		// The console restrictions above exist to keep a barcode or a token out of
+		// a BROWSER console; these never run in a browser, and a budget check that
+		// cannot name the chunk it is failing on is useless. Node globals are
+		// declared for the same reason the .cjs block below declares `module`.
+		files: ["scripts/**/*.{mjs,js}"],
+		languageOptions: {
+			globals: {
+				console: "readonly",
+				process: "readonly",
+				URL: "readonly",
+			},
+		},
+		rules: {
+			"no-console": "off",
+			"no-restricted-syntax": "off",
 		},
 	},
 	{
@@ -95,8 +146,16 @@ export default defineConfig(
 		// pulling in the `globals` package for two identifiers.
 		files: ["**/*.cjs"],
 		languageOptions: {
-			globals: { module: "writable", require: "readonly", __dirname: "readonly" },
+			globals: {
+				module: "writable",
+				require: "readonly",
+				__dirname: "readonly",
+				process: "readonly",
+			},
 		},
+		// lighthouserc.cjs is CommonJS BECAUSE this package is "type": "module" -
+		// lhci require()s its config, so an ESM one throws. require() is the point.
+		rules: { "@typescript-eslint/no-require-imports": "off" },
 	},
 	{
 		// TanStack file-based routes necessarily pair the route component with a

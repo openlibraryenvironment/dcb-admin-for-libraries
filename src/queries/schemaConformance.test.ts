@@ -9,35 +9,10 @@ import {
 } from "@constants/serviceCapabilities";
 
 /**
- * Every document this application can emit must be valid against the dcb-service it will
- * be sent to — R-19.
- *
- * <h2>What this catches, and why prose could not</h2>
- *
- * A GraphQL field the server has never heard of is NOT a null. It is a validation error,
- * and it fails the whole operation. So one field selected a release too early does not
- * degrade a panel - `LoadLibrary` runs in the header on every page and in six routes, so
- * it takes the application down.
- *
- * A note in a CONTRIBUTING.md saying "remember to flag fields from an unreleased
- * dcb-service" prevents none of it. This does, on the NEXT one as well as this one, in
- * milliseconds and with no server.
- *
- * <h2>The three passes</h2>
- *
- * The same documents, three times, with the flags in the state each deployment would
- * have. Every flag on against `schema.graphqls` (dcb-service main); every flag off
- * against `schema.v8.71.0.graphqls` (the release before 9.0.0, which this app still has
- * to run against); and the RELEASE's own flags against `schema.v9.0.0.graphqls`.
- *
- * That third pass is the one that was missing, and it stopped being optional when
- * `schema.graphqls` diverged from the 9.0.0 tag: V9_0_008 added `supportUrl` after it.
- * Neither of the other two can catch a field gated at the wrong THRESHOLD — all-flags-on
- * validates against a schema that has everything, and all-flags-off against one that has
- * nothing. A deployment on the 9.0.0 RELEASE is in neither state.
- *
- * The flags change the documents themselves, which is why the flag state has to be set
- * before the document is BUILT and not merely before it is rendered.
+ * Every document this application can emit must be valid against the
+ * dcb-service it will be sent to - R-19. Three passes, because a field gated
+ * at the wrong THRESHOLD is invisible to all-on and all-off alike.
+ * docs/service-compatibility.md.
  */
 
 const repoRoot = process.cwd();
@@ -73,14 +48,9 @@ const modules = import.meta.glob("../{queries,mutations}/*.ts");
 /**
  * Documents that are only ever sent when a flag is on, with the flag that sends them.
  *
- * They are EXCLUDED from the narrower passes, not skipped: excluding one here is a claim
- * that a route guard stops it being emitted on an older deployment, and the claim is
- * reviewable because the flag is named next to it. A silent skip would be a hole in the
- * gate; this is a documented door.
- *
- * Announcements are the whole of it today. dcb-service declares none of them before the
- * `feat/discovery-contract` branch merges, so a deployment on any release must never see one - which is
- * exactly what the two passes below would otherwise, correctly, fail on.
+ * EXCLUDED from the narrower passes, not skipped, and the flag is named so the exclusion
+ * is a reviewable claim rather than a hole: docs/testing.md, "Documents only sent behind a
+ * flag".
  */
 const FLAG_ONLY: Record<string, string> = {
 	"queries/getAnnouncements.ts": "VITE_FEATURE_ANNOUNCEMENTS",

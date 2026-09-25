@@ -1,27 +1,10 @@
 /**
- * Uploading staged brand images at save time — R-17e.
+ * Uploading staged brand images at save time - R-17e.
  *
- * <h2>Why the upload waits for Save</h2>
- *
- * Uploading the moment a file is picked leaves a stored image behind whenever an
- * administrator changes their mind, closes the tab, or never gets to Save. dcb-service
- * cannot tell that from an image about to be used — the upload and the mutation that stores
- * its URL are two separate calls — so it keeps unreferenced uploads for a grace period and
- * sweeps them daily. That works, but it means the ordinary act of reconsidering a logo
- * leaves rows in a database.
- *
- * Staging the file and uploading it as part of Save collapses the window from "until the
- * administrator decides" to the moment between two calls in one submit handler. An orphan
- * then only happens if the upload succeeds and the mutation immediately fails, which is
- * rare and still swept.
- *
- * <h2>The cost, stated plainly</h2>
- *
- * Validation moves from immediate to on-save. An administrator who picks a 6000x4000 image
- * used to be told at once; now they are told when they save. That is a worse form, and it
- * is the accepted trade: the size check in {@link BrandImageField} catches the common case
- * at pick time, and everything else — magic bytes, dimensions, decodability — can only be
- * answered by the server, which is the whole point of it being the authority.
+ * Uploading at pick time left an orphan behind every time somebody changed
+ * their mind; waiting for Save narrows that to the gap between two calls in
+ * one handler. The cost is that validation moves from immediate to on-save,
+ * which docs/branding.md states plainly rather than hiding.
  */
 
 /** Just enough of the REST client to post a file. Structural, so tests need no axios. */

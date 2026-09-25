@@ -4,22 +4,9 @@ import path from "node:path";
 import en from "../src/locales/en/en.json";
 
 /**
- * Every literal translation key in the source must exist in en.json.
- *
- * i18next does not throw on a missing key - it renders the key itself, so
- * "ui.data_grid.export_all_csv" appears on the export menu in front of a
- * librarian. Nothing else catches that: it type-checks, it lints, and it only
- * shows up if someone happens to open the affected screen.
- *
- * Scope and limits:
- *  - Literal keys only. `t(`a.${b}`)` and `t(variable)` cannot be checked here;
- *    they are checked by reading the code.
- *  - A call carrying an inline English default - either `defaultValue` or
- *    i18next's positional form, t("key", "Some text") - is satisfied. Those
- *    render correct text; they are a translation-coverage question, which
- *    `npm run i18n:missed` reports, not a broken screen.
- *  - Comments are stripped first, so a key inside commented-out code is not a
- *    finding.
+ * Every literal translation key in the source must exist in en.json: i18next
+ * renders a missing key as the key itself, in front of a librarian. What this
+ * deliberately does not cover: docs/testing.md.
  */
 
 const SRC = path.resolve(import.meta.dirname, "../src");
@@ -138,18 +125,29 @@ function hasInlineDefault(args: string): boolean {
 	return opener === "'" || opener === '"' || opener === "`";
 }
 
+const lookup = (key: string): unknown =>
+	key
+		.split(".")
+		.reduce<unknown>(
+			(node, part) =>
+				node && typeof node === "object"
+					? (node as Record<string, unknown>)[part]
+					: undefined,
+			en,
+		);
+
+/**
+ * i18next's plural suffixes. A pluralised key is written `t("a.b", { count })` and stored
+ * as `a.b_one` / `a.b_other`, so the base key is legitimately absent - without this the
+ * gate reports every pluralised key in the app as missing, which is how a gate teaches
+ * people to route around it.
+ */
+const PLURAL_SUFFIXES = ["_one", "_other", "_zero", "_two", "_few", "_many"];
+
 function resolves(key: string): boolean {
-	return (
-		key
-			.split(".")
-			.reduce<unknown>(
-				(node, part) =>
-					node && typeof node === "object"
-						? (node as Record<string, unknown>)[part]
-						: undefined,
-				en,
-			) !== undefined
-	);
+	if (lookup(key) !== undefined) return true;
+
+	return PLURAL_SUFFIXES.some((suffix) => lookup(`${key}${suffix}`) !== undefined);
 }
 
 interface Finding {
@@ -239,5 +237,7 @@ ${report}`
 		expect(hasInlineDefault(`"a.key", { count: 2 }`)).toBe(false);
 		expect(resolves("ui.actions.save")).toBe(true);
 		expect(resolves("definitely.not.a.key")).toBe(false);
+		// Stored as insights.trends.buckets_counted_one / _other, never under the base.
+		expect(resolves("insights.trends.buckets_counted")).toBe(true);
 	});
 });

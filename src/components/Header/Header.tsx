@@ -1,3 +1,4 @@
+import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -45,7 +46,7 @@ export const Header = () => {
 				getLibrary(),
 				{
 					query: "agencyCode:" + code,
-					pagesize: 1000,
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
 					pageno: 0,
 					orderBy: "fullName",
 					order: "DESC",

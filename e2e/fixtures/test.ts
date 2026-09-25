@@ -3,23 +3,16 @@ import { injectRuntimeConfig } from "./runtime-config";
 import { seedAuth, type FakeUserOptions } from "./auth";
 import { mockGraphQL, type OperationMocks } from "./graphql";
 import { mockStats, type StatsMocks } from "./stats";
+import { mockSearch, type SearchMock } from "./search";
 import { enableFeatures } from "./features";
 import { useColorScheme, type ColorScheme } from "./color-scheme";
 import { analyse, formatViolations } from "./axe";
 
 /**
- * The app harness. Every spec imports `test` and `expect` from here rather than
- * from @playwright/test, so that:
- *
- *  - runtime config is always injected (no spec can accidentally hit a real
- *    host, and none has to remember the boilerplate);
- *  - signing in, mocking GraphQL and choosing a colour scheme are one call each,
- *    in the order the app requires (all of them install init scripts, so they
- *    must run before the first navigation);
- *  - the accessibility assertion is the same assertion everywhere, which is
- *    what makes it a gate rather than a habit.
- *
- * Adding a new spec should mean writing assertions, not wiring.
+ * The app harness. Every spec imports `test` and `expect` from here, so that
+ * runtime config is always injected and the accessibility assertion is the
+ * same assertion everywhere. Adding a spec should mean writing assertions,
+ * not wiring. docs/testing.md.
  */
 export interface AppFixture {
 	/** Seed an authenticated session. Call before goto. */
@@ -28,6 +21,8 @@ export interface AppFixture {
 	mockGraphQL(mocks: OperationMocks): Promise<void>;
 	/** Mock the REST statistics endpoints by path segment. Call before goto. */
 	mockStats(overrides?: StatsMocks): Promise<void>;
+	/** Mock the shared index search endpoint. Call before goto. */
+	mockSearch(override?: Partial<SearchMock>): Promise<void>;
 	/** Turn runtime feature flags on for this spec. Call before goto. */
 	enableFeatures(flags: string[]): Promise<void>;
 	/** Boot the app in a given colour scheme. Call before goto. */
@@ -52,14 +47,26 @@ export const test = base.extend<{ app: AppFixture; runtimeConfig: void }>({
 			signIn: (options) => seedAuth(page, options),
 			mockGraphQL: (mocks) => mockGraphQL(page, mocks),
 			mockStats: (overrides) => mockStats(page, overrides),
+			mockSearch: (override) => mockSearch(page, override),
 			enableFeatures: (flags) => enableFeatures(page, flags),
 			useColorScheme: (scheme) => useColorScheme(page, scheme),
 			expectNoAccessibilityViolations: async () => {
-				const violations = await analyse(page);
+				const { violations, incomplete } = await analyse(page);
 				expect(
 					violations,
 					violations.length
 						? `axe found ${violations.length} WCAG 2.2 AA violation(s):\n\n${formatViolations(violations)}`
+						: undefined,
+				).toEqual([]);
+
+				// Asserted too, because axe reports a check it could not DECIDE
+				// separately from one it failed - and a dangling aria-labelledby is
+				// an "incomplete", not a violation. Reading `violations` alone is how
+				// five unnamed dialogs passed this gate.
+				expect(
+					incomplete,
+					incomplete.length
+						? `axe could not verify ${incomplete.length} check(s):\n\n${formatViolations(incomplete)}`
 						: undefined,
 				).toEqual([]);
 			},

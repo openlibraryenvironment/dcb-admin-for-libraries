@@ -8,6 +8,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 import { storageKey } from "@helpers/appBase";
+import { clampPageSize } from "@constants/dataGrid/pagination";
 
 // Persist all our grid options so we don't lose them on reload
 interface GridState {
@@ -50,7 +51,10 @@ export const useGridStore = create<GridState & GridActions>()(
 
 			setPaginationModel: (gridType, model) =>
 				set((state) => ({
-					paginationModel: { ...state.paginationModel, [gridType]: model },
+					paginationModel: {
+						...state.paginationModel,
+						[gridType]: { ...model, pageSize: clampPageSize(model.pageSize) },
+					},
 				})),
 
 			setColumnVisibilityModel: (gridType, model) =>
@@ -75,6 +79,22 @@ export const useGridStore = create<GridState & GridActions>()(
 			// On a shared origin the two collide and hydration can throw.
 			name: storageKey("grid-storage"),
 			storage: createJSONStorage(() => sessionStorage), // or localStorage
+			/**
+			 * A page size this build no longer offers survives in sessionStorage
+			 * across the deployment that removed it (200 was on the list until the
+			 * 100-row bound was applied), and MUI X does not clamp a
+			 * paginationModel to its pageSizeOptions.
+			 */
+			merge: (persisted, current) => {
+				const stored = (persisted ?? {}) as Partial<GridState>;
+				const paginationModel = Object.fromEntries(
+					Object.entries(stored.paginationModel ?? {}).map(([grid, model]) => [
+						grid,
+						{ ...model, pageSize: clampPageSize(model?.pageSize) },
+					]),
+				);
+				return { ...current, ...stored, paginationModel };
+			},
 		}
 	)
 );

@@ -29,15 +29,6 @@ export const buildQuery = (filters: SearchFilter[]): string => {
 		const fieldMapping = CQL_FIELD_MAPPING[filter.field];
 		const value = filter.value;
 
-		// Language field needs special handling
-		// Translate the drop-down to something the server will understand.
-		// And bear in mind that there could be multiple server values for one language.
-		// if (filter.field === SearchField.Language) {
-		// 	const languageOption = LANGUAGE_OPTIONS.find(
-		// 		(opt) => opt.label === value,
-		// 	);
-		// 	value = languageOption?.value || value;
-		// }
 		const safelyQuotedValue = JSON.stringify(value);
 		let fieldQuery = "";
 

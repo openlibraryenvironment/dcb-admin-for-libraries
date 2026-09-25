@@ -1,25 +1,20 @@
-import {
-	FormControl,
-	FormControlLabel,
-	FormLabel,
-	Radio,
-	RadioGroup,
-	useColorScheme,
-} from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { createFileRoute } from "@tanstack/react-router";
+import Typography from "@mui/material/Typography";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
+import MuiLink from "@mui/material/Link";
+
+import { DisplaySettings } from "@components/App/DisplaySettings";
+import { pageTitle } from "@helpers/pageTitle";
+
 export const Route = createFileRoute("/__authenticated/settings")({
+	head: () => ({ meta: [{ title: pageTitle("nav.settings.title") }] }),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	const { mode, setMode } = useColorScheme();
-	if (!mode) {
-		return null;
-	}
 
 	return (
 		<Grid
@@ -27,35 +22,22 @@ function RouteComponent() {
 			spacing={{ xs: 2, md: 3 }}
 			columns={{ xs: 4, sm: 8, md: 12 }}>
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<FormControl>
-					<FormLabel id="theme-toggle">
-						{t("settings.theme_selection")}
-					</FormLabel>
-					<RadioGroup
-						aria-labelledby="demo-theme-toggle"
-						name="theme-toggle"
-						row
-						value={mode}
-						onChange={(event) =>
-							setMode(event.target.value as "system" | "light" | "dark")
-						}>
-						<FormControlLabel
-							value="system"
-							control={<Radio />}
-							label={t("settings.system_mode")}
-						/>
-						<FormControlLabel
-							value="light"
-							control={<Radio />}
-							label={t("settings.light_mode")}
-						/>
-						<FormControlLabel
-							value="dark"
-							control={<Radio />}
-							label={t("settings.dark_mode")}
-						/>
-					</RadioGroup>
-				</FormControl>
+				<Typography variant="h1">{t("nav.settings.title")}</Typography>
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Typography variant="h3" component="h2">
+					{t("display.heading")}
+				</Typography>
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<DisplaySettings />
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				{/* Beside the settings it describes, which is where somebody looking
+				    for it will be. */}
+				<MuiLink component={Link} to="/accessibility">
+					{t("legal.accessibility.title")}
+				</MuiLink>
 			</Grid>
 		</Grid>
 	);

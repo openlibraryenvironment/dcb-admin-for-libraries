@@ -1,6 +1,7 @@
-import { test, expect, type AppFixture } from "./fixtures/test";
+import { test, expect as strictExpect, type AppFixture } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
+import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 import {
 	colorSchemeAttribute,
 	type ColorScheme,
@@ -8,19 +9,17 @@ import {
 import { scrollUntilPresent } from "./fixtures/lazy";
 
 /**
- * The accessibility gate. WCAG 2.2 AA is the floor, and this is where it is
- * enforced rather than asserted: zero axe violations on every surface below, in
- * BOTH colour schemes, because a palette that passes in light routinely fails
- * in dark.
- *
- * Automated rules catch roughly a third of WCAG failures. This gate is a floor,
- * not a certificate - keyboard completeness, focus order and announcement still
- * need a human. What it does guarantee is that no change silently reintroduces
- * a contrast, name, role or landmark failure.
- *
- * Adding a page: add it to PAGES. That is the whole cost, and it is meant to be
- * that low, because a gate people route around is worse than no gate.
+ * The accessibility gate: zero axe violations on every surface in PAGES, in
+ * both colour schemes. Adding a page means adding it here, and that is meant
+ * to be the whole cost. What it does and does not prove: docs/testing.md.
  */
+
+/**
+ * Readiness waits are not the thing under test, so they get a longer timeout
+ * than the axe assertion: under fullyParallel, MUI X's grid does not always
+ * paint inside 5s. docs/testing.md explains what that failure looks like.
+ */
+const expect = strictExpect.configure({ timeout: 20_000 });
 
 interface Surface {
 	name: string;
@@ -41,25 +40,39 @@ interface Surface {
 }
 
 /**
- * The last panel on the insights page, and the only one whose presence proves the
- * deferred half actually mounted. RareGemPanel is unconditional, so unlike a
- * panel that hides itself when empty this cannot be satisfied vacuously, and its
- * title renders outside its own loading branch so it appears on mount rather than
- * on fetch.
+ * The last panel on the insights page, and unconditional - so unlike a panel
+ * that hides itself when empty, its presence cannot be satisfied vacuously.
+ * Its title renders outside its own loading branch, so it appears on mount
+ * rather than on fetch.
  */
 const RARE_GEM = "Unique collection value";
+
+/**
+ * Every subject, and the heading that proves its last panel has mounted.
+ *
+ * Waiting on a NAMED heading rather than a count is what makes the reveal
+ * deterministic: the panel either mounted or the test says which one did not.
+ */
+const INSIGHTS_SUBJECTS = [
+	{ subject: "trends", lastPanel: "Requesting activity over time" },
+	{ subject: "service", lastPanel: "Supplier responsiveness" },
+	{ subject: "demand", lastPanel: "Demand by patron group" },
+	{ subject: "partners", lastPanel: "Borrowing vs supplying" },
+	{ subject: "gaps", lastPanel: RARE_GEM },
+] as const;
 
 const PAGES: Surface[] = [
 	{
 		// The library profile: the biggest FORM in the app and the only surface where an
-		// administrator types. It was not scanned at all, which meant the fields §V-11.1
-		// adds would have gone in unaudited — and a form is where name, label and error
+		// administrator types. It was not scanned at all, which meant the presence
+		// fields would have gone in unaudited — and a form is where name, label and error
 		// association actually fail. Every backend-gated block is switched on, so the
 		// scan covers the widest shape the page can render rather than the narrowest.
 		name: "library profile",
 		path: "/",
 		prepare: async (app) => {
 			await app.enableFeatures([
+				"VITE_DISCOVERY_ACTIVE",
 				"VITE_FEATURE_LIBRARY_BRANDING",
 				"VITE_FEATURE_LIBRARY_SUPPORT_URL",
 			]);
@@ -76,7 +89,7 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
-		// V-12's compose form. Two text fields, a date input and a switch — a form, which is
+		// The announcements compose form. Two text fields, a date input and a switch — a form, which is
 		// where accessible names and error association fail, and the only surface in this
 		// app that publishes something patrons will read.
 		name: "announcements",
@@ -125,21 +138,74 @@ const PAGES: Surface[] = [
 			await app.mockGraphQL({ LoadLibrary: library });
 		},
 		ready: async (page) => {
-			await expect(page.getByRole("radiogroup")).toBeVisible();
+			// Four radiogroups now, so this names one. The high-contrast option is
+			// the reason this page is scanned at all.
+			await expect(
+				page.getByRole("radiogroup", { name: /colour scheme/i }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("radio", { name: /high contrast/i }),
+			).toBeVisible();
 		},
 	},
+	...INSIGHTS_SUBJECTS.map(
+		({ subject, lastPanel }): Surface => ({
+			// Insights is the chart-heavy surface, and charts are where contrast
+			// failures hide: series colours, axis ticks and legend swatches are all
+			// painted from the palette rather than the theme's text tokens, and a
+			// palette that clears AA on the light ground routinely fails on the dark
+			// one. Scanned with populated data (see DEFAULT_STATS) so the charts are
+			// actually drawn - an empty state would pass this gate without testing
+			// anything it exists to test.
+			//
+			// ONE SCAN PER SUBJECT. A subject that is not open does not render, so a
+			// scan of the default view would cover a fifth of the feature and report
+			// clean - the same failure this gate exists to prevent, wearing a new shape.
+			name: `insights - ${subject}`,
+			path: `/insights?tab=${subject}`,
+			prepare: async (app) => {
+				await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+				await app.signIn();
+				await app.mockGraphQL({
+					LoadLibrary: library,
+					LoadLibraryBasics: library,
+				});
+				await app.mockStats();
+			},
+			// The open subject still wraps its panels in LazyPanel. Without this the
+			// scan saw the KPI header and nothing else: every chart, table and heading
+			// below the fold was unmounted, so the WCAG gate passed over most of what
+			// it exists to cover.
+			reveal: (page) =>
+				scrollUntilPresent(page, page.getByRole("heading", { name: lastPanel })),
+			ready: async (page) => {
+				await expect(
+					page.getByRole("heading", { level: 1, name: /insights/i }),
+				).toBeVisible();
+				// The KPI header is fed by the one combined /stats/dashboard call, so a
+				// rendered figure means the page got past its loader rather than being
+				// caught mid-skeleton. `.first()` because the same fill rate can
+				// legitimately appear again further down the open subject.
+				await expect(page.getByText("89.4%").first()).toBeVisible();
+				// ...and the LAST panel of this subject, which is what proves the scroll
+				// mounted the deferred half rather than merely running.
+				await expect(
+					page.getByRole("heading", { name: lastPanel }),
+				).toBeVisible();
+			},
+		}),
+	),
 	{
-		// Insights is the chart-heavy surface, and charts are where contrast
-		// failures hide: series colours, axis ticks and legend swatches are all
-		// painted from the palette rather than the theme's text tokens, and a
-		// palette that clears AA on the light ground routinely fails on the dark
-		// one. Scanned with populated data (see DEFAULT_STATS) so the charts are
-		// actually drawn - an empty state would pass this gate without testing
-		// anything it exists to test.
-		name: "insights",
-		path: "/insights",
+		// The duration trends, which sit behind a flag that is off everywhere today - so
+		// the trends scan above does not reach this panel at all. A chart with its own
+		// toggle group, which is where focus order and unlabelled controls go wrong.
+		name: "insights - duration trends",
+		path: "/insights?tab=trends",
 		prepare: async (app) => {
-			await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+			await app.enableFeatures([
+				"VITE_FEATURE_INSIGHTS",
+				"VITE_FEATURE_INSIGHTS_TRENDS",
+			]);
 			await app.signIn();
 			await app.mockGraphQL({
 				LoadLibrary: library,
@@ -147,28 +213,103 @@ const PAGES: Surface[] = [
 			});
 			await app.mockStats();
 		},
-		// InsightsDashboard wraps nineteen panels in LazyPanel. Without this the scan
-		// saw the KPI header and nothing else: every chart, table and heading below
-		// the fold was unmounted, so the WCAG gate passed over most of the page it
-		// exists to cover. Charts are where a palette actually fails contrast.
 		reveal: (page) =>
-			scrollUntilPresent(page, page.getByRole("heading", { name: RARE_GEM })),
+			scrollUntilPresent(
+				page,
+				page.getByRole("heading", { name: "How durations are moving" }),
+			),
 		ready: async (page) => {
 			await expect(
-				page.getByRole("heading", { level: 1, name: /insights/i }),
+				page.getByRole("heading", { name: "How durations are moving" }),
 			).toBeVisible();
-			// The KPI header is fed by the one combined /stats/dashboard call, so a
-			// rendered figure means the page got past its loader rather than being
-			// caught mid-skeleton. `.first()` because the same fill rate legitimately
-			// appears again in the peer-benchmark table further down - which it could
-			// not do before `reveal`, and which is itself a sign the scroll worked.
-			await expect(page.getByText("89.4%").first()).toBeVisible();
-			// ...and the LAST panel on the page, which is what proves the scroll
-			// actually mounted the deferred half rather than merely running. It is
-			// unconditional (RareGemPanel, always rendered), so this cannot pass
-			// vacuously the way a conditional panel would.
+		},
+	},
+	{
+		// The requesting page: the ONLY surface a read-only user has, and it was
+		// not scanned at all. Every Stepper and every requesting dialog lives
+		// behind it.
+		name: "requesting",
+		path: "/requesting?filters=keyword%3Amiddlemarch",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library });
+			await app.mockSearch();
+		},
+		ready: async (page) => {
 			await expect(
-				page.getByRole("heading", { name: RARE_GEM }),
+				page.getByRole("heading", { level: 1, name: /requesting/i }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("list", { name: /search results/i }),
+			).toBeVisible();
+		},
+	},
+	{
+		// A grid page with rows on it. The mappings scan covers a grid, but this
+		// one carries the row links and the detail-panel toggles.
+		name: "patron requests",
+		path: "/patronRequests",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraries: library,
+				LoadPatronRequests: patronRequests,
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("grid", { name: /patron requests/i }),
+			).toBeVisible();
+			await expect(page.getByRole("link", { name: /2026-09-01/ })).toBeVisible();
+		},
+	},
+	{
+		// The library profile IN EDIT MODE, with a validation error on screen.
+		// Neither state was ever scanned, and between them they carry every
+		// form control and every error message in the application - which is
+		// where error.main sat at 3.85:1 unnoticed.
+		name: "library profile, editing with an error",
+		path: "/",
+		prepare: async (app) => {
+			await app.enableFeatures([
+				"VITE_FEATURE_LIBRARY_BRANDING",
+				"VITE_FEATURE_LIBRARY_SUPPORT_URL",
+			]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraryBasics: library,
+				LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
+				LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
+			});
+		},
+		reveal: async (page) => {
+			await expect(page.getByText("E2E Test Library").first()).toBeVisible();
+			await page.getByRole("button", { name: /^edit$/i }).click();
+			const fullName = page
+				.getByRole("textbox", { name: /full name/i })
+				.first();
+			await expect(fullName).toBeVisible();
+			await fullName.fill("");
+			await fullName.blur();
+		},
+		ready: async (page) => {
+			await expect(page.getByText(/Enter the Full name/i)).toBeVisible();
+		},
+	},
+	{
+		// The statement about this application's accessibility, which would be a
+		// poor thing to have an accessibility defect on.
+		name: "accessibility statement",
+		path: "/accessibility",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library });
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: /accessibility/i }),
 			).toBeVisible();
 		},
 	},

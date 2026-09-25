@@ -14,19 +14,17 @@ import {
 import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocompleteOption";
 import { StaffRequestFormData } from "@models/StaffRequestFormData";
 import { TFunction } from "i18next";
-import { isEmpty } from "lodash";
 import {
 	Control,
 	Controller,
 	FieldErrors,
 	UseFormSetValue,
-	UseFormWatch,
+	useWatch,
 } from "react-hook-form";
 
 interface StaffRequestDetailsStepProps {
 	control: Control<StaffRequestFormData, any>;
 	errors: FieldErrors<StaffRequestFormData>;
-	watch: UseFormWatch<StaffRequestFormData>;
 	setValue: UseFormSetValue<StaffRequestFormData>;
 	pickupLocationOptions: PatronRequestAutocompleteOption[];
 	pickupLocationsLoading: boolean;
@@ -46,7 +44,6 @@ interface StaffRequestDetailsStepProps {
 export const StaffRequestDetailsStep = ({
 	control,
 	errors,
-	watch,
 	setValue,
 	pickupLocationOptions,
 	pickupLocationsLoading,
@@ -62,9 +59,13 @@ export const StaffRequestDetailsStep = ({
 	isValid,
 	t,
 }: StaffRequestDetailsStepProps) => {
-	const selectionType = watch("selectionType");
-	const itemAgencyCode = watch("itemAgencyCode");
-	const itemsData = watch("itemLocalId"); // to check if items are fetched
+	// useWatch rather than the form's watch: the subscription belongs to
+	// whichever component called useForm, so reading it here re-rendered the whole
+	// StaffRequest form on every keystroke in these three fields.
+	const [selectionType, itemAgencyCode, itemsData] = useWatch({
+		control,
+		name: ["selectionType", "itemAgencyCode", "itemLocalId"],
+	});
 
 	return (
 		<>
@@ -172,7 +173,7 @@ export const StaffRequestDetailsStep = ({
 					<Controller
 						name="itemLocalId"
 						control={control}
-						disabled={isEmpty(itemAgencyCode)}
+						disabled={!itemAgencyCode}
 						render={({ field: { onChange, value } }) => (
 							<Autocomplete
 								value={
@@ -181,7 +182,7 @@ export const StaffRequestDetailsStep = ({
 								onChange={(_, newValue) => onChange(newValue?.value || "")}
 								options={itemOptions}
 								onOpen={() => {
-									if (isEmpty(itemsData)) fetchItems();
+									if (!itemsData) fetchItems();
 								}}
 								loading={itemsLoading}
 								getOptionLabel={(option) => option.label}
@@ -190,7 +191,7 @@ export const StaffRequestDetailsStep = ({
 										{...params}
 										margin="normal"
 										required
-										disabled={isEmpty(itemAgencyCode)}
+										disabled={!itemAgencyCode}
 										fullWidth
 										label={t("requesting.staff_request.patron.item_local_id")}
 										error={!!errors.itemLocalId || itemsError}

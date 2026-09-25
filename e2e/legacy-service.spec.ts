@@ -2,22 +2,11 @@ import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
- * This app against dcb-service 8.71.0 — R-19.
+ * This app against dcb-service 8.71.0 - R-19.
  *
- * <h2>What this holds shut</h2>
- *
- * `brandLogoUrl`, `brandLogoAlt` and `defaultThemeName` arrived on `Library` in
- * dcb-service 9.0.0. A GraphQL field the server has never heard of is not a null - it is
- * a validation error that fails the WHOLE operation - and `LoadLibrary` is run by the
- * header on every page and by six routes. Selecting them on an older deployment therefore
- * does not grey out a form: it takes the application down.
- *
- * `src/queries/schemaConformance.test.ts` proves the DOCUMENTS are valid. This proves the
- * APPLICATION is: the page renders, the brand fields are not offered, and - the part a
- * unit test cannot see - the request that goes over the wire does not name them.
- *
- * Every flag is off here, which is the deployed default and the state of an environment
- * that has never heard of them.
+ * schemaConformance proves the DOCUMENTS are valid; this proves the
+ * APPLICATION is, including that the request on the wire does not name a
+ * field 8.71.0 has never heard of. docs/service-compatibility.md.
  */
 
 /** Everything 9.0.0 added to Library, behind VITE_FEATURE_LIBRARY_BRANDING. */

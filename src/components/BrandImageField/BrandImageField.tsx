@@ -32,35 +32,13 @@ interface Props {
 }
 
 /**
- * One brand image, two ways to supply it — R-17e.
+ * One brand image, two ways to supply it - R-17e. Neither is the fallback for
+ * the other, and they write to the same field.
  *
- * <h2>Neither control is the fallback for the other</h2>
- *
- * A consortium with a brand team and a CDN must not be made to re-upload into our storage.
- * A consortium with neither must not be told to go and find hosting before it can have a
- * logo. So both controls are here and they write to the same field, because the column
- * stores a URL either way.
- *
- * <h2>Choosing a file does not upload it</h2>
- *
- * The file is held here and uploaded by the form when the administrator saves. Uploading at
- * pick time left a stored image behind every time somebody changed their mind or closed the
- * tab — dcb-service cannot distinguish those from an image about to be used, so it keeps
- * them for a day and sweeps them. Staging makes that the rare case rather than the ordinary
- * one. See `helpers/brandAssetUpload.ts`.
- *
- * The consequence is that a rejected image is reported at Save rather than at pick, so the
- * size check below matters more than it used to: it is the one refusal we can still give
- * immediately. It remains a courtesy and not a control — dcb-service sniffs magic bytes,
- * enforces byte and dimension caps from the image header before any decode, and re-encodes
- * what it stores. Nothing a browser says is evidence about the bytes.
- *
- * <h2>The accepted formats are stated BEFORE the file picker</h2>
- *
- * PNG or JPEG, said next to the button rather than discovered from a rejected upload. SVG
- * is refused because it is a script-capable document and one served from our origin would
- * be stored XSS in the chrome of every patron page; WebP is refused because it cannot be
- * re-encoded server-side, and an image we cannot decode is one we will not store.
+ * Choosing a file does NOT upload it: the form uploads at Save, so changing
+ * your mind does not leave a stored image behind. The size check below is
+ * therefore the only refusal we can still give immediately, and it is a
+ * courtesy rather than a control. docs/branding.md.
  */
 export function BrandImageField({
 	value,

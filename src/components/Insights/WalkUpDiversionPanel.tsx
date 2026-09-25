@@ -19,12 +19,14 @@ import {
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { libraryBreakdownQueryOptions, StatsParams } from "@helpers/statsApi";
 
+import MetricInfo from "./MetricInfo";
+
 const PANEL_MIN_HEIGHT = 300;
 
 /**
- * How many requests the reader collected in person, and how many travelled — §V-2.5.
+ * How many requests the reader collected in person, and how many travelled.
  *
- * §V-2.5: the courier saving from walk-up is an assertion until it is counted. This is the
+ * The courier saving from walk-up is an assertion until it is counted. This is the
  * count. A request collected at the supplying library moved no van; a shipped one did.
  *
  * The panel deliberately reports VOLUME and not money. `CostAvoidanceTile` beside it already
@@ -45,7 +47,7 @@ export default function WalkUpDiversionPanel({ params }: { params: StatsParams }
 				libraryCode: row.libraryCode,
 				// A Host LMS code means nothing to most librarians, so lead with the name.
 				// Fall back to the code rather than an empty cell when a system has requests
-				// but is not onboarded as a library — §N-5's degrade-honestly rule.
+				// but is not onboarded as a library — the degrade-honestly rule.
 				libraryName: row.libraryName ?? row.libraryCode,
 				totalRequests: row.totalRequests,
 				walkUpRequests: row.walkUpRequests,
@@ -67,9 +69,15 @@ export default function WalkUpDiversionPanel({ params }: { params: StatsParams }
 		// question it answers, and a reader of either cannot tell them apart.
 		<Card variant="outlined" component="section" aria-labelledby={headingId}>
 			<CardContent sx={{ minHeight: PANEL_MIN_HEIGHT }}>
-				<Typography variant="h6" id={headingId} gutterBottom>
-					{t("insights.walk_up.title")}
-				</Typography>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+					<Typography variant="h6" component="h3" id={headingId}>
+						{t("insights.walk_up.title")}
+					</Typography>
+					<MetricInfo
+						metric="walk_up_diversion"
+						label={t("insights.walk_up.title")}
+					/>
+				</Box>
 				<Typography variant="body2" color="text.secondary" gutterBottom>
 					{t("insights.walk_up.explainer")}
 				</Typography>

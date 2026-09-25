@@ -1,22 +1,17 @@
 import Box from "@mui/material/Box";
 import { useTranslation } from "react-i18next";
 import Error from "@components/Error/Error";
+import { useInsideMain } from "@/hooks/useInsideMain";
 
 /**
- * The router's notFoundComponent: every URL that matches no route, and every
- * `notFound()` a loader throws.
- *
- * TanStack's built-in fallback is the bare string "Not Found" - no heading, no
- * address, and no way out of the dead end but the back button. That is what
- * made a doubled base path hard to place (see e2e-base-path/navigation.spec.ts):
- * the app reported the symptom without reporting the address it had failed to
- * match, so the doubled segment was only visible in devtools.
- *
- * The way out is home, not "go back": the previous page is what produced the
- * bad link, so returning to it re-offers the same dead end.
+ * The router's notFoundComponent. It shows the ADDRESS it failed to match,
+ * and offers home rather than back - the previous page is what produced the
+ * bad link. Both of those cost real debugging time once: docs/routing.md.
  */
 export default function NotFound() {
 	const { t } = useTranslation();
+	// Bare, this page IS the main landmark; inside Layout there is already one.
+	const insideMain = useInsideMain();
 
 	// The BROWSER path, deliberately, not useLocation().pathname - the router
 	// strips the deployment base off the latter, and the base is exactly what a
@@ -25,6 +20,7 @@ export default function NotFound() {
 
 	return (
 		<Box
+			component={insideMain ? "div" : "main"}
 			sx={{
 				display: "flex",
 				justifyContent: "center",

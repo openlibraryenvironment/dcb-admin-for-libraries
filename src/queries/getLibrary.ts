@@ -26,7 +26,7 @@ export const getLibrary = () => gql`
 				longitude
 				training
 				patronWebsite
-				# V-11.1. Where a patron reports that discovery itself is wrong — a
+				# Where a patron reports that discovery itself is wrong — a
 				# different destination from patronWebsite, which answers opening hours
 				# and joining. New in V9_0_008, on dcb-service main and in no release, so
 				# an older deployment selects nothing here rather than failing this query

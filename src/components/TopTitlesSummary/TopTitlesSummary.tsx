@@ -99,14 +99,9 @@ export default function TopTitlesSummary({
 
 	if (topRequestedTitlesData.length === 0) {
 		return (
-			<>
-				<Typography variant="attributeTitle">
-					{t("library.statistics.top_titles_month")}
-				</Typography>
-				<Typography variant="body2">
-					{t("library.statistics.no_titles")}
-				</Typography>
-			</>
+			<Typography variant="body2">
+				{t("library.statistics.no_titles")}
+			</Typography>
 		);
 	}
 

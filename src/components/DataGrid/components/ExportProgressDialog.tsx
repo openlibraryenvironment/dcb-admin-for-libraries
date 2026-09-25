@@ -13,7 +13,6 @@ interface ExportProgressProps {
 	open: boolean;
 	progress: number;
 	totalRecords: number;
-	// onCancel: any;
 }
 export const ExportProgressDialog = ({
 	open,

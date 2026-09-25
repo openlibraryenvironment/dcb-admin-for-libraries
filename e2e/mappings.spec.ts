@@ -79,7 +79,7 @@ test.describe("Mappings", () => {
 		await expect(page.getByRole("grid")).toBeVisible();
 
 		await expect(
-			page.getByRole("menuitem", { name: "Edit" }).first(),
+			page.getByRole("button", { name: "Edit" }).first(),
 		).toBeEnabled();
 	});
 
@@ -98,7 +98,7 @@ test.describe("Mappings", () => {
 		// The actions column is not rendered at all when the consortium withholds
 		// editing. Hiding a control is not the security boundary - the API is - but
 		// a library that may not edit should not be offered the action.
-		await expect(page.getByRole("menuitem", { name: "Edit" })).toHaveCount(0);
+		await expect(page.getByRole("button", { name: "Edit" })).toHaveCount(0);
 	});
 
 	test("asks the server for its rows rather than filtering locally", async ({

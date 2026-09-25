@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import { useTranslation } from "react-i18next";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import Error from "@components/Error/Error";
+import { useInsideMain } from "@/hooks/useInsideMain";
 
 /**
  * The router's defaultErrorComponent: anything a route's loader or component
@@ -16,10 +17,13 @@ import Error from "@components/Error/Error";
  */
 export default function RouteError({ error }: Partial<ErrorComponentProps>) {
 	const { t } = useTranslation();
+	// Bare, this page IS the main landmark; inside Layout there is already one.
+	const insideMain = useInsideMain();
 	void error;
 
 	return (
 		<Box
+			component={insideMain ? "div" : "main"}
 			sx={{
 				display: "flex",
 				justifyContent: "center",
