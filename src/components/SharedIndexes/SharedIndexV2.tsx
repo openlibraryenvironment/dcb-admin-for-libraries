@@ -323,10 +323,7 @@ export function SharedIndexV2() {
 									},
 								}}>
 								<MenuItem onClick={handleQuickWalkUpClick}>
-									{t(
-										"requesting.quick_walk_up.button",
-										"Quick Walk-Up Request",
-									)}
+									{t("requesting.quick_walk_up.button")}
 								</MenuItem>
 							</Menu>
 						</Box>
@@ -432,12 +429,14 @@ export function SharedIndexV2() {
 				open={showModal}
 				onClose={() => setShowModal(false)}
 				fullWidth
-				maxWidth="sm">
-				<DialogTitle variant="modalTitle">
-					{t("requesting.quick_walk_up.title", "Quick Walk-Up Request")}
+				maxWidth="sm"
+				aria-labelledby="quick-walk-up-title">
+				<DialogTitle variant="modalTitle" id="quick-walk-up-title">
+					{t("requesting.quick_walk_up.title")}
 				</DialogTitle>
 				<IconButton
 					onClick={() => setShowModal(false)}
+					aria-label={t("ui.actions.close")}
 					sx={{
 						position: "absolute",
 						right: 8,

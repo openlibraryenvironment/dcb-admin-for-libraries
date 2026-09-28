@@ -119,7 +119,10 @@ export const QuickWalkUpRequestStep = ({
 					id="walk-up-create-request"
 					disabled={!isValid || isSubmitting}>
 					{isSubmitting ? (
-						<CircularProgress size={24} />
+						<CircularProgress
+							size={24}
+							aria-label={t("ui.actions.submitting")}
+						/>
 					) : (
 						t("requesting.expedited_checkout.create_request")
 					)}

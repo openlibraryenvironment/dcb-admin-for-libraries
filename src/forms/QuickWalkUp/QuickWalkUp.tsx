@@ -7,6 +7,8 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { quickWalkUpSchema } from "@/schemas/quickWalkUp";
 import {
+	Alert,
+	Box,
 	DialogContent,
 	Step,
 	StepIconProps,
@@ -45,8 +47,21 @@ import {
 	getStepLabelFontWeight,
 } from "@helpers/getStepLabelStyles";
 import { PatronLookupResponse } from "@models/PatronLookupResponse";
-import { getRequestError } from "@helpers/getRequestError";
 import { QuickWalkUpFormData } from "@models/QuickWalkUpFormData";
+import {
+	buildWalkUpPayload,
+	walkUpKeys,
+	walkUpRefusalKey,
+} from "@helpers/walkUpRequest";
+
+// Reference lists change rarely; a walk-up is a minute at the desk
+const REFERENCE_STALE_TIME = 30_000;
+const REQUEST_POLL_INTERVAL = 10_000;
+
+const isCheckedOut = (data: PatronRequestQueryData | undefined) =>
+	successfulExpeditedCheckoutStatuses.includes(
+		data?.patronRequests?.content?.[0]?.status ?? "",
+	);
 
 export default function QuickWalkUpRequest({
 	onClose,
@@ -77,9 +92,10 @@ export default function QuickWalkUpRequest({
 		null,
 	);
 	const [patronRequestId, setPatronRequestId] = useState<string | null>(null);
-	const [patronRequestWaiting, setPatronRequestWaiting] = useState(false);
-	const [checkoutCompleted, setCheckoutCompleted] = useState(false);
 	const [stepError, setStepError] = useState<number | null>(null);
+	// Shown until the next attempt, not on a timer: staff read it while the patron waits
+	const [errorText, setErrorText] = useState<string | null>(null);
+	const stepRegionRef = useRef<HTMLDivElement | null>(null);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const [resolvedBibClusterId, setResolvedBibClusterId] = useState<
 		string | null
@@ -87,7 +103,7 @@ export default function QuickWalkUpRequest({
 
 	const steps = [
 		t("requesting.expedited_checkout.steps.patron_validation"),
-		t("requesting.quick_walk_up.steps.request_creation", "Scan Item"),
+		t("requesting.quick_walk_up.steps.request_creation"),
 		t("requesting.expedited_checkout.steps.checkout"),
 	];
 
@@ -117,8 +133,10 @@ export default function QuickWalkUpRequest({
 	const itemBarcode = watch("itemBarcode");
 
 	const { data: librariesData, isLoading: librariesLoading } =
+		// eslint-disable-next-line @tanstack/query/exhaustive-deps -- the token stays out of the key: see walkUpKeys
 		useQuery<LibrariesQueryData>({
-			queryKey: ["librariesInfo", headers, cfg.VITE_DCB_API_BASE],
+			queryKey: walkUpKeys.libraries(cfg.VITE_DCB_API_BASE),
+			staleTime: REFERENCE_STALE_TIME,
 			queryFn: () =>
 				request(
 					`${cfg.VITE_DCB_API_BASE}/graphql`,
@@ -171,8 +189,10 @@ export default function QuickWalkUpRequest({
 		? `agency:${staffLibraryOption.agencyId}`
 		: "";
 	const { data: pickupLocations, isLoading: pickupLocationsLoading } = useQuery(
+		// eslint-disable-next-line @tanstack/query/exhaustive-deps -- the token stays out of the key: see walkUpKeys
 		{
-			queryKey: ["locations", locationQuery, headers, cfg.VITE_DCB_API_BASE],
+			queryKey: walkUpKeys.pickupLocations(cfg.VITE_DCB_API_BASE, locationQuery),
+			staleTime: REFERENCE_STALE_TIME,
 			queryFn: () =>
 				request(
 					`${cfg.VITE_DCB_API_BASE}/graphql`,
@@ -202,13 +222,11 @@ export default function QuickWalkUpRequest({
 		[pickupLocations],
 	);
 
+	// eslint-disable-next-line @tanstack/query/exhaustive-deps -- the token stays out of the key: see walkUpKeys
 	const { data: patronRequestData } = useQuery<PatronRequestQueryData>({
-		queryKey: [
-			"patronRequestEssentials",
-			patronRequestId,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-		],
+		queryKey: walkUpKeys.request(cfg.VITE_DCB_API_BASE, patronRequestId),
+		// Polled until the checkout lands, so every answer is wanted fresh
+		staleTime: 0,
 		queryFn: () =>
 			request(
 				`${cfg.VITE_DCB_API_BASE}/graphql`,
@@ -216,17 +234,18 @@ export default function QuickWalkUpRequest({
 				{ query: `id:${patronRequestId}` },
 				headers,
 			),
-		enabled: patronRequestWaiting && !!patronRequestId,
-		refetchInterval: 10000,
+		enabled: !!patronRequestId,
+		refetchInterval: (query) =>
+			isCheckedOut(query.state.data) ? false : REQUEST_POLL_INTERVAL,
 	});
 
+	const patronRequest = patronRequestData?.patronRequests?.content?.[0];
+	const checkoutCompleted = isCheckedOut(patronRequestData);
+	const displayedStepError = checkoutCompleted ? null : stepError;
+
+	// eslint-disable-next-line @tanstack/query/exhaustive-deps -- the token stays out of the key: see walkUpKeys
 	const { data: availabilityData } = useQuery({
-		queryKey: [
-			"availability",
-			resolvedBibClusterId,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-		],
+		queryKey: walkUpKeys.availability(cfg.VITE_DCB_API_BASE, resolvedBibClusterId),
 		queryFn: async () => {
 			const response = await axios.get(
 				`${cfg.VITE_DCB_API_BASE}/items/availability`,
@@ -252,21 +271,10 @@ export default function QuickWalkUpRequest({
 		return checkedOutItem?.dueDate || "";
 	}, [availabilityData, itemBarcode]);
 
+	// Content is replaced between steps, and the button that had focus goes with it
 	useEffect(() => {
-		if (patronRequestData) {
-			const status = patronRequestData?.patronRequests?.content?.[0]?.status;
-			if (
-				successfulExpeditedCheckoutStatuses.includes(status ?? "") &&
-				patronRequestWaiting
-			) {
-				setPatronRequestWaiting(false);
-				setCheckoutCompleted(true);
-				setStepError(null);
-			}
-		}
-	}, [patronRequestData, patronRequestWaiting]);
-
-	const patronRequest = patronRequestData?.patronRequests?.content?.[0];
+		if (activeStep > 0) stepRegionRef.current?.focus();
+	}, [activeStep]);
 
 	useEffect(() => {
 		if (timeoutRef.current) {
@@ -299,22 +307,15 @@ export default function QuickWalkUpRequest({
 				setPatronData(data);
 				setPatronValidated(true);
 				setStepError(null);
-				setActiveStep(1); // Move to Step 2
+				setErrorText(null);
+				setActiveStep(1);
 			} else {
-				setAlert({
-					open: true,
-					severity: "error",
-					text: t("requesting.staff_request.patron.error.validation_failure"),
-				});
+				setErrorText(t("requesting.staff_request.patron.error.validation_failure"));
 				setStepError(0);
 			}
 		},
 		onError: () => {
-			setAlert({
-				open: true,
-				severity: "error",
-				text: t("requesting.staff_request.patron.error.validation_failure"),
-			});
+			setErrorText(t("requesting.staff_request.patron.error.validation_failure"));
 			setStepError(0);
 		},
 	});
@@ -332,16 +333,15 @@ export default function QuickWalkUpRequest({
 					t("requesting.staff_request.patron.error.validation_failure"),
 				);
 
-			const payload = {
-				itemHostLmsCode: staffLibraryOption?.hostLmsCode,
-				itemAgencyCode: staffAgencyCode,
+			const payload = buildWalkUpPayload({
+				staffHostLmsCode: staffLibraryOption?.hostLmsCode ?? "",
+				staffAgencyCode,
 				itemBarcode: data.itemBarcode,
 				pickupLocationCode: data.pickupLocationCode,
-				patronBarcode: data.patronBarcode,
 				patronLocalId: patronData.localPatronId[0],
-				agencyCode: data.agencyCode,
+				patronAgencyCode: data.agencyCode,
 				patronHostLmsCode: patronData.systemCode,
-			};
+			});
 
 			const response = await axios.post(
 				`${cfg.VITE_DCB_API_BASE}/patrons/requests/place/walkup`,
@@ -358,19 +358,19 @@ export default function QuickWalkUpRequest({
 				severity: "success",
 				text: t("requesting.expedited_checkout.feedback.in_progress"),
 			});
-			setPatronRequestWaiting(true);
 			setStepError(null);
-			setActiveStep(2); // Move to Step 3
+			setErrorText(null);
+			setActiveStep(2);
 		},
 		onError: (error: any) => {
-			setAlert({
-				open: true,
-				severity: "error",
-				text: t(getRequestError(error.response?.data?.failedChecks), {
-					code: error?.response?.data?.failedChecks?.[0]?.code,
-					description: error?.response?.data?.failedChecks?.[0]?.description,
+			const failedChecks = error?.response?.data?.failedChecks;
+
+			setErrorText(
+				t(walkUpRefusalKey(error?.response?.status, failedChecks), {
+					code: failedChecks?.[0]?.code,
+					description: failedChecks?.[0]?.description,
 				}),
-			});
+			);
 			setStepError(1);
 		},
 	});
@@ -379,15 +379,27 @@ export default function QuickWalkUpRequest({
 		if (activeStep === 1) placeRequestMutation.mutate(data);
 	};
 
+	// A scanner ends with Enter; on the first step the whole form cannot validate yet
+	const onFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+		if (activeStep === 0) {
+			event.preventDefault();
+			if (patronBarcode && agencyCode && !validatePatronMutation.isPending) {
+				validatePatron();
+			}
+			return;
+		}
+
+		return handleSubmit(onSubmit)(event);
+	};
+
 	const handleClose = () => {
 		if (timeoutRef.current) clearTimeout(timeoutRef.current);
 		reset();
 		setActiveStep(0);
 		setPatronValidated(false);
 		setPatronData(null);
-		setPatronRequestWaiting(false);
-		setCheckoutCompleted(false);
 		setStepError(null);
+		setErrorText(null);
 		setPatronRequestId(null);
 		onClose();
 	};
@@ -442,7 +454,7 @@ export default function QuickWalkUpRequest({
 						handleViewRequest={handleViewRequest}
 						handleReadOnlyReturn={handleReadOnlyReturn}
 						checkoutCompleted={checkoutCompleted}
-						stepError={stepError}
+						stepError={displayedStepError}
 						t={t}
 						dueDate={postCheckoutDueDate}
 					/>
@@ -462,7 +474,7 @@ export default function QuickWalkUpRequest({
 					id="quick-walk-up-steps"
 					connector={
 						<StatusStepConnector
-							stepError={stepError}
+							stepError={displayedStepError}
 							activeStep={activeStep}
 						/>
 					}>
@@ -477,7 +489,7 @@ export default function QuickWalkUpRequest({
 						const isCompleted =
 							index < activeStep ||
 							(index === steps.length - 1 && checkoutCompleted);
-						const hasError = stepError === index;
+						const hasError = displayedStepError === index;
 
 						if (isCompleted) stepProps.completed = true;
 						if (hasError) labelProps.error = true;
@@ -506,9 +518,18 @@ export default function QuickWalkUpRequest({
                         );
 					})}
 				</Stepper>
-				<form onSubmit={handleSubmit(onSubmit)}>
-					{getStepContent(activeStep)}
-				</form>
+				{errorText ? (
+					<Alert severity="error" role="alert" sx={{ mb: 2 }}>
+						{errorText}
+					</Alert>
+				) : null}
+				<Box
+					ref={stepRegionRef}
+					tabIndex={-1}
+					role="group"
+					aria-label={steps[activeStep]}>
+					<form onSubmit={onFormSubmit}>{getStepContent(activeStep)}</form>
+				</Box>
 			</DialogContent>
             <TimedAlert
 				severityType={alert.severity}
