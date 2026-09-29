@@ -38,6 +38,9 @@ describe("walkUpRefusalKey", () => {
 		expect(walkUpRefusalKey(400, [{ code: "ITEM_NOT_FOUND" }])).toBe(
 			"requesting.quick_walk_up.errors.item_not_found",
 		);
+		expect(
+			walkUpRefusalKey(400, [{ code: "WALK_UP_ITEM_ALREADY_REQUESTED" }]),
+		).toBe("requesting.quick_walk_up.errors.walk_up_item_already_requested");
 	});
 
 	it("says the item is not at the caller's library when the service refuses the caller", () => {

@@ -1123,6 +1123,7 @@
 				"item_not_found": "No item with that barcode was found at your library. Check the barcode and try again.",
 				"item_not_in_shared_index": "This item's record is not in the shared catalogue yet, so it cannot be lent through a walk-up.",
 				"request_limits_unchecked": "The patron's request limits could not be checked. Try again in a moment.",
+				"walk_up_item_already_requested": "This item is already part of a request that is still in progress. Finish or cancel that request before lending the item again.",
 				"walk_up_item_agency_mismatch": "Your library is not on the library system recorded for this item. Ask your OpenRS team to check your library's set-up.",
 				"walk_up_pickup_elsewhere": "Choose a pickup location at your library: a walk-up is collected where the item is.",
 				"walk_up_same_library": "This patron belongs to your library. Check the item out to them in your own system instead."
