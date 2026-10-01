@@ -28,6 +28,7 @@ import {
 	RequestedTitleStat,
 	StatsParams,
 	TopClusterStat,
+	UnfillableDemandStat,
 	acquisitionOpportunitiesQueryOptions,
 	consortialLifelineQueryOptions,
 	dashboardQueryOptions,
@@ -36,6 +37,7 @@ import {
 	netFlowQueryOptions,
 	supplierResponseSlaQueryOptions,
 	topRequestedTitlesQueryOptions,
+	unfillableDemandQueryOptions,
 	unmetLocalDemandQueryOptions,
 } from "@helpers/statsApi";
 import {
@@ -61,6 +63,8 @@ import LazyPanel from "./LazyPanel";
 import PeerBenchmarkPanel from "./PeerBenchmarkPanel";
 import WalkUpDiversionPanel from "./WalkUpDiversionPanel";
 import CollectionDimensionPanel from "./CollectionDimensionPanel";
+import CollectionAnalysisSection from "./CollectionAnalysisSection";
+import TradingPartnersPanel from "./TradingPartnersPanel";
 import NewAcquisitionsPanel from "./NewAcquisitionsPanel";
 import SubjectBar from "./SubjectBar";
 import { InsightsExportProvider } from "./ExportContext";
@@ -607,6 +611,35 @@ export default function InsightsDashboard({
 							/>
 						</Box>
 					</LazyPanel>
+
+					{/* Demand no library could supply: the acquisition signal the failure
+					    taxonomy cannot give, because these requests never had a supplier. */}
+					<LazyPanel minHeight={320}>
+						<TableStatPanel<UnfillableDemandStat>
+							titleKey="insights.charts.unfillable_demand.title"
+							subtitleKey="insights.charts.unfillable_demand.subtitle"
+							queryOptions={unfillableDemandQueryOptions(client, params)}
+							getRowKey={(r) => r.clusterId}
+							columns={[
+								{
+									headerKey: "insights.charts.top_titles.col_title",
+									text: (r) => r.title,
+									cell: (r) => r.title ?? "—",
+								},
+								{
+									headerKey: "insights.charts.rare_gem.col_author",
+									text: (r) => r.author,
+									cell: (r) => r.author ?? "—",
+								},
+								{
+									headerKey: "insights.charts.top_titles.col_requests",
+									align: "right",
+									text: (r) => r.requestCount,
+									cell: (r) => r.requestCount,
+								},
+							]}
+						/>
+					</LazyPanel>
 				</Section>
 
 				<Section
@@ -615,10 +648,23 @@ export default function InsightsDashboard({
 					current={subject}
 					titleKey="insights.sections.partners"
 				>
+					<LazyPanel minHeight={360}>
+						<TradingPartnersPanel params={params} libraryCode={libraryCode} />
+					</LazyPanel>
+
 					{/* Reciprocity / value */}
 					<LazyPanel minHeight={360}>
 						<NetFlowChart params={params} />
 					</LazyPanel>
+				</Section>
+
+				<Section
+					id="insights-collection-heading"
+					subject="collection"
+					current={subject}
+					titleKey="insights.sections.collection"
+				>
+					<CollectionAnalysisSection libraryCode={libraryCode} />
 				</Section>
 
 				<Section

@@ -64,8 +64,9 @@ const RARE_GEM = "Unique collection value";
 const INSIGHTS_SUBJECTS = [
 	{ subject: "trends", lastPanel: "Requesting activity over time" },
 	{ subject: "service", lastPanel: "Supplier responsiveness" },
-	{ subject: "demand", lastPanel: "Demand by patron group" },
+	{ subject: "demand", lastPanel: "Demand nothing could supply" },
 	{ subject: "partners", lastPanel: "Borrowing vs supplying" },
+	{ subject: "collection", lastPanel: "Who holds the same works" },
 	{ subject: "gaps", lastPanel: RARE_GEM },
 ] as const;
 

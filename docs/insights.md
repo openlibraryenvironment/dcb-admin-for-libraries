@@ -66,6 +66,28 @@ the caller supplies it rather than relying on the consortium-wide default.
 Sorting is optional: dcb-service applies `total_count` descending by default,
 so "top partners" costs the client nothing.
 
+## Collection analysis
+
+The Collection subject reports what the catalogue holds, where every other
+subject reports what was asked for. It takes no date window.
+
+**Most of it is consortium-wide, by decision.** Totals, clustering confidence
+and the per-library profile describe the whole shared catalogue; this library
+is pinned and highlighted in the profile rather than shown alone, because a
+unique-title count means nothing without the others beside it. dcb-service
+serves these figures to a library administrator deliberately — who may see
+whose collection is decided in dcb-service's `docs/insights.md`, part 5.5. The
+format mix and the overlap are this library's own, and dcb-service refuses a
+library role that asks for any library but its own.
+
+**Slow the first time, then cached.** dcb-service computes the consortium-wide
+figures in one shared pass and keeps it for 15 minutes; the queries here match
+that `staleTime`. A first pass over a large catalogue can outlast the proxy in
+front of dcb-service, which answers 502 or 504 while the pass carries on. The
+panels treat that, and the 429 an older dcb-service gives, as "still
+counting": they say so and retry three times, 20, 40 and 60 seconds apart,
+and never retry any other failure.
+
 ## Outcome colour
 
 `outcomeTextColour` returns a **theme token**, not a mode-dependent choice.

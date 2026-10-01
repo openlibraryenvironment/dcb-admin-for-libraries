@@ -488,6 +488,19 @@
 				"title": "Unmet local demand",
 				"subtitle": "Titles your own patrons requested but you do not hold.",
 				"col_supplied": "Supplied"
+			},
+			"trading_partners": {
+				"title": "Trading partners",
+				"subtitle": "Who this library trades with most, in both directions, ranked on the total.",
+				"col_partner": "Partner",
+				"col_borrowed": "Borrowed from",
+				"col_supplied": "Supplied to",
+				"col_total": "Total",
+				"rows_per_page": "Partners per page"
+			},
+			"unfillable_demand": {
+				"title": "Demand nothing could supply",
+				"subtitle": "Titles this library's patrons requested that no library in the consortium holds. Unlike a failed request, these never had a supplier to lose."
 			}
 		},
 		"export": {
@@ -533,7 +546,8 @@
 			"performance": "Service performance",
 			"demand": "Demand",
 			"partners": "Trading partners",
-			"gaps": "Collection gaps and supply value"
+			"gaps": "Collection gaps and supply value",
+			"collection": "Collection analysis"
 		},
 		"subjects": {
 			"label": "Insights subjects",
@@ -541,6 +555,7 @@
 			"service": "Service",
 			"demand": "Demand",
 			"partners": "Partners",
+			"collection": "Collection",
 			"gaps": "Gaps"
 		},
 		"panel": {
@@ -700,6 +715,81 @@
 				"what": "How many requests the reader collected in person at the supplying library, and how many travelled to their own.",
 				"how": "dcb-service splits each library’s requests by whether the item moved and writes both counts, so they sum to the total and nothing here has to interpret an unset expedited-checkout flag.",
 				"not": "Volume, not money. A per-van cost would be a confident number nobody could source, which is why the saving beside it multiplies a figure the librarian types in."
+			},
+			"collection_totals": {
+				"what": "The consortium's shared catalogue in four numbers: distinct works, works only one library holds, holdings, and the libraries contributing records.",
+				"how": "Bib records grouped into clusters, one per work. Each library is counted once per work however many records it contributes, and deleted clusters are left out.",
+				"not": "Distinct titles is not the sum of each library's works: a work three libraries hold is one title and three holdings. Records not yet clustered are not counted."
+			},
+			"clustering_confidence": {
+				"what": "How many libraries hold each work.",
+				"how": "Clusters grouped by the number of different libraries contributing a record to them.",
+				"not": "It measures the record matching as much as the collection: if most works have a single holder, records may not be matched to each other, and every unique-title figure is inflated."
+			},
+			"collection_profile": {
+				"what": "Each library's works in the shared catalogue, and how many of them no other library holds.",
+				"how": "Per library, the distinct clusters it contributes a record to, and of those the ones with exactly one contributing library. Deleted clusters are left out.",
+				"not": "A record that is not in a cluster is not counted as unique: with nothing to match it against, there is no way to say nobody else holds it."
+			},
+			"format_mix": {
+				"what": "This library's works by format.",
+				"how": "Distinct works per format, from each record's derived type. A work held in two formats counts once in each.",
+				"not": "Records with no derived type are shown as Not recorded rather than dropped. Because a work can be held in more than one format, the formats can add up to more than the number of works."
+			},
+			"collection_overlap": {
+				"what": "The other libraries that hold the same works as this one.",
+				"how": "For each work this library contributes a record to, every other library that also contributes a record to it, counted once per work.",
+				"not": "It is this library against each other one, never every pair in the consortium, and it does not say which copy would be supplied."
+			}
+		},
+		"collection": {
+			"section_subtitle": "The catalogue as ingested, rather than the traffic over it. These figures count works held, not requests made, so the date range does not apply to them.",
+			"busy": "The collection figures are still being counted. Try again in a minute.",
+			"computing": "Counting across the whole catalogue. The first count can take several minutes, and this panel will check again on its own.",
+			"failed": "The collection figures could not be loaded.",
+			"totals": {
+				"heading": "The consortium's shared catalogue",
+				"distinct_titles": "Distinct titles",
+				"distinct_titles_sub": "Works across the consortium, after clustering",
+				"singly_held": "Singly held titles",
+				"singly_held_sub": "Works only one library holds",
+				"holdings": "Holdings",
+				"holdings_sub": "Work and library pairs, duplicates included",
+				"sources": "Contributing libraries",
+				"sources_sub": "Systems with at least one clustered record"
+			},
+			"cluster_quality": {
+				"title": "Clustering confidence",
+				"subtitle": "How many libraries hold each work. Read this before the figures beside it: they depend on it.",
+				"summary": "{{single}}% of {{total}} works are held by a single library. The commonest work is held by {{commonest}}.",
+				"under_clustered": "{{single}}% of works have exactly one holder. That is high enough to suggest records are not being matched to each other, in which case the unique-title figures describe the matching rather than the collection.",
+				"axis_holders": "Libraries holding the work",
+				"series": "Works",
+				"chart_label": "Distribution of works by number of holding libraries. {{single}}% are held by one library."
+			},
+			"profile": {
+				"title": "What each library contributes",
+				"subtitle": "Works contributed to the shared catalogue, and how many of them nobody else holds. This library is highlighted.",
+				"col_library": "Library",
+				"col_works": "Works",
+				"col_unique": "Unique",
+				"col_unique_share": "Unique share",
+				"caption": "Showing {{shown}} of {{total}} libraries."
+			},
+			"format_mix": {
+				"title": "Format mix of the catalogue",
+				"subtitle": "Works by format across the consortium.",
+				"subtitle_library": "Works by format that this library holds. Compare with demand by format: what is held and what is asked for need not match.",
+				"series": "Works",
+				"unknown": "Not recorded",
+				"chart_label": "Catalogue format mix across {{count}} formats, largest is {{top}}."
+			},
+			"overlap": {
+				"title": "Who holds the same works",
+				"subtitle": "Works this library holds that another library also holds. High overlap means a partner can usually supply; low overlap means this library is the only route to those titles.",
+				"col_library": "Library",
+				"col_shared": "Shared works",
+				"caption": "Showing {{shown}} of {{total}} libraries."
 			}
 		},
 		"walk_up": {

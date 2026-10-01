@@ -231,6 +231,68 @@ export interface StatsParams {
 	endDate?: string; // ISO instant
 }
 
+/**
+ * Demand nothing in the consortium could satisfy: titles requested where no library
+ * holds a bib record. Distinct from the failure taxonomy, which says why requests that
+ * had a supplier still failed - this is demand with no supplier to begin with.
+ */
+export interface UnfillableDemandStat {
+	clusterId: string;
+	title: string;
+	author: string;
+	requestCount: number;
+}
+
+// --- Collection analysis ------------------------------------------------------
+// These aggregate bib_record - the catalogue as INGESTED - rather than patron_request,
+// so they take no date window and report on what the consortium holds rather than on
+// what it has been asked for. See docs/insights.md part 5 in dcb-service.
+
+/** The consortium in four numbers. Only as good as the clustering - read with ClusterSizeStat. */
+export interface CollectionTotalsStat {
+	distinctTitles: number;
+	singlyHeldTitles: number;
+	holdings: number;
+	contributingSources: number;
+}
+
+export interface CollectionProfileStat {
+	sourceSystemId: string;
+	// Host LMS code - the stable identifier, not display text.
+	sourceSystemCode: string;
+	clusterCount: number;
+	uniqueTitleCount: number;
+}
+
+// This library (left) and one other holder of its works (right). One row per peer; never
+// the full matrix.
+export interface CollectionOverlapStat {
+	leftSystemId: string;
+	leftSystemCode: string;
+	rightSystemId: string;
+	rightSystemCode: string;
+	sharedTitleCount: number;
+}
+
+/**
+ * How many source systems hold each work. The confidence signal for every other
+ * collection number: a corpus that is overwhelmingly holderCount = 1 is under-clustered,
+ * and the unique-title counts are then fiction. Never render the others without it.
+ */
+export interface ClusterSizeStat {
+	holderCount: number;
+	clusterCount: number;
+}
+
+export interface SourceFormatStat {
+	sourceSystemId: string;
+	sourceSystemCode: string;
+	// Nullable: derived_type has no NOT NULL, and an ingest that could not derive one
+	// produces a null. Reported rather than dropped, so the totals still add up.
+	derivedType: string | null;
+	titleCount: number;
+}
+
 export type TimeSeriesInterval = "day" | "week" | "month";
 
 // dcb-service serves Insights from /insights. It was /patrons/requests/stats, which was
@@ -757,6 +819,119 @@ export function newAcquisitionsQueryOptions(
 				`${STATS_BASE}/new-acquisitions-performance`,
 				{ params: cleanParams(params) },
 			);
+			return data;
+		},
+	};
+}
+
+export function unfillableDemandQueryOptions(
+	client: AxiosInstance,
+	params: StatsParams,
+) {
+	return {
+		queryKey: ["stats", "unfillable-demand", params] as const,
+		queryFn: async (): Promise<UnfillableDemandStat[]> => {
+			const { data } = await client.get(`${STATS_BASE}/unfillable-demand`, {
+				params: cleanParams(params),
+			});
+			return data;
+		},
+	};
+}
+
+// --- Collection analysis ------------------------------------------------------
+// The four consortium-wide queries take no parameters, not even the date window: they count
+// the catalogue, not traffic over it, so their keys are constant and the range picker cannot
+// refetch them. staleTime matches dcb-service's 15-minute cache. They retry only while the
+// count is still running: dcb-service keeps a shared pass going when a caller leaves, so a
+// retry joins it, where any other failure would only repeat.
+const COLLECTION_ANALYSIS_STALE_MS = 15 * 60 * 1000;
+const STILL_COMPUTING_RETRIES = 3;
+
+/**
+ * An answer that means "the count is still running", not "it failed": a 502 or 504 from the
+ * proxy in front of dcb-service, whose pass outlived the proxy and carries on, or the 429 a
+ * dcb-service from before shared computation gave when its single permit was taken.
+ */
+const STILL_COMPUTING_STATUSES = new Set([429, 502, 504]);
+
+export function isStillComputing(error: unknown): boolean {
+	const status =
+		typeof error === "object" && error !== null
+			? (error as { response?: { status?: number } }).response?.status
+			: undefined;
+	return status !== undefined && STILL_COMPUTING_STATUSES.has(status);
+}
+
+export const collectionAnalysisPolicy = {
+	staleTime: COLLECTION_ANALYSIS_STALE_MS,
+	retry: (failureCount: number, error: unknown) =>
+		isStillComputing(error) && failureCount < STILL_COMPUTING_RETRIES,
+	retryDelay: (failureCount: number) =>
+		Math.min(20_000 * 2 ** failureCount, 60_000),
+};
+
+export function collectionTotalsQueryOptions(client: AxiosInstance) {
+	return {
+		...collectionAnalysisPolicy,
+		queryKey: ["stats", "collection-totals"] as const,
+		queryFn: async (): Promise<CollectionTotalsStat> => {
+			const { data } = await client.get(`${STATS_BASE}/collection-totals`);
+			return data;
+		},
+	};
+}
+
+export function collectionProfileQueryOptions(client: AxiosInstance) {
+	return {
+		...collectionAnalysisPolicy,
+		queryKey: ["stats", "collection-profile"] as const,
+		queryFn: async (): Promise<CollectionProfileStat[]> => {
+			const { data } = await client.get(`${STATS_BASE}/collection-profile`);
+			return data;
+		},
+	};
+}
+
+export function clusterSizeDistributionQueryOptions(client: AxiosInstance) {
+	return {
+		...collectionAnalysisPolicy,
+		queryKey: ["stats", "cluster-size-distribution"] as const,
+		queryFn: async (): Promise<ClusterSizeStat[]> => {
+			const { data } = await client.get(
+				`${STATS_BASE}/cluster-size-distribution`,
+			);
+			return data;
+		},
+	};
+}
+
+export function formatProfileQueryOptions(client: AxiosInstance) {
+	return {
+		...collectionAnalysisPolicy,
+		queryKey: ["stats", "format-profile"] as const,
+		queryFn: async (): Promise<SourceFormatStat[]> => {
+			const { data } = await client.get(`${STATS_BASE}/format-profile`);
+			return data;
+		},
+	};
+}
+
+/**
+ * The one collection query that is scoped: who duplicates THIS library. dcb-service
+ * refuses a library role that asks for any library but its own (StatsScopeGuard).
+ */
+export function collectionOverlapQueryOptions(
+	client: AxiosInstance,
+	{ libraryCode }: { libraryCode: string },
+) {
+	return {
+		...collectionAnalysisPolicy,
+		queryKey: ["stats", "collection-overlap", libraryCode] as const,
+		queryFn: async (): Promise<CollectionOverlapStat[]> => {
+			const { data } = await client.get(`${STATS_BASE}/collection-overlap`, {
+				params: cleanParams({ libraryCode }),
+			});
 			return data;
 		},
 	};

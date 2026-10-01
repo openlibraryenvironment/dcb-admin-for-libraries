@@ -2,9 +2,14 @@ import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Box, Button, Skeleton, Typography } from "@mui/material";
 
+import { isStillComputing } from "@helpers/statsApi";
+
 interface PanelStateProps {
 	isLoading: boolean;
+	/** A retry is pending because the count is still running; see isStillComputing. */
+	isComputing?: boolean;
 	isError: boolean;
+	error?: unknown;
 	isEmpty: boolean;
 	onRetry: () => void;
 	isRetrying?: boolean;
@@ -12,6 +17,8 @@ interface PanelStateProps {
 	height: number;
 	/** What would put data here, when the generic line is not the useful answer. */
 	emptyKey?: string;
+	/** Names what failed, where "this panel" is vaguer than the reader deserves. */
+	failedKey?: string;
 	children: () => ReactNode;
 }
 
@@ -20,20 +27,22 @@ interface PanelStateProps {
  *
  * Fourteen panels here branched on the loading flag and then on the data, so a 500
  * rendered "no data" - and this app's reader has no second view to cross-check against,
- * so that was the whole answer they got. DCB Admin carries the same component; it also
- * reads a 429 from the catalogue aggregates, which this app never calls.
+ * so that was the whole answer they got. DCB Admin carries the same component.
  *
  * `children` is a function: the data branch is the only one that evaluates it, and several
  * panels index into data that is absent in the other three.
  */
 export default function PanelState({
 	isLoading,
+	isComputing = false,
 	isError,
+	error,
 	isEmpty,
 	onRetry,
 	isRetrying = false,
 	height,
 	emptyKey = "insights.no_data",
+	failedKey = "insights.panel.failed",
 	children,
 }: PanelStateProps) {
 	const { t } = useTranslation();
@@ -51,14 +60,22 @@ export default function PanelState({
 		</Box>
 	);
 
+	if (isLoading && isComputing) {
+		return centred(
+			<Alert severity="info">{t("insights.collection.computing")}</Alert>,
+		);
+	}
+
 	if (isLoading) {
 		return <Skeleton variant="rounded" height={height} />;
 	}
 
 	if (isError) {
+		const busy = isStillComputing(error);
+
 		return centred(
 			<Alert
-				severity="warning"
+				severity={busy ? "info" : "warning"}
 				action={
 					<Button
 						color="inherit"
@@ -70,7 +87,7 @@ export default function PanelState({
 					</Button>
 				}
 			>
-				{t("insights.panel.failed")}
+				{t(busy ? "insights.collection.busy" : failedKey)}
 			</Alert>,
 		);
 	}

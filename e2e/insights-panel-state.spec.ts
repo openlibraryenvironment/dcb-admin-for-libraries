@@ -63,6 +63,90 @@ test.describe("Insights panel states", () => {
 		await app.mockStats();
 	});
 
+	test("collection analysis shows this library among its peers, and who shares its works", async ({
+		page,
+	}) => {
+		await page.goto("/insights?tab=collection");
+
+		await reveal(page, "Who holds the same works");
+
+		// This library is pinned and highlighted in the consortium-wide profile.
+		const profile = cardFor(page, "What each library contributes");
+		await expect(profile.getByRole("row", { name: /e2e-lms/ })).toContainText(
+			"(your library)",
+		);
+
+		// Overlap is always this library's own: the app has one library, fixed by the token.
+		const overlap = cardFor(page, "Who holds the same works");
+		await expect(overlap).toContainText("peer-lms");
+		await expect(overlap).toContainText("402,118");
+	});
+
+	test("a collection count that outlives the proxy says it is still counting, then answers", async ({
+		page,
+	}) => {
+		let timedOut = 0;
+		await page.route("**/insights/collection-totals**", async (route) => {
+			if (timedOut++ === 0) {
+				await route.fulfill({ status: 504, body: "" });
+				return;
+			}
+			await route.fulfill({
+				json: {
+					distinctTitles: 4_120_884,
+					singlyHeldTitles: 1_902_311,
+					holdings: 7_884_002,
+					contributingSources: 42,
+				},
+			});
+		});
+		await page.clock.install();
+
+		await page.goto("/insights?tab=collection");
+
+		const computing = page.getByText("Counting across the whole catalogue.");
+		for (let i = 0; i < 14 && !(await computing.isVisible()); i++) {
+			await page.mouse.wheel(0, 600);
+			await expect(page.locator("body")).toBeVisible();
+		}
+		await expect(computing).toBeVisible();
+
+		// The first retry is 20 seconds out; nobody should have to wait for it in a test.
+		await page.clock.fastForward(21_000);
+
+		await expect(page.getByText("4,120,884", { exact: true })).toBeVisible();
+		expect(timedOut).toBe(2);
+	});
+
+	test("trading partners ranks this library's partners, and says so when it fails", async ({
+		page,
+	}) => {
+		let failNext = true;
+		await page.route("**/insights/top-partners**", async (route) => {
+			if (failNext) {
+				await route.fulfill({ status: 500, json: { message: "boom" } });
+				return;
+			}
+			await route.fallback();
+		});
+
+		await page.goto("/insights?tab=partners");
+		await reveal(page, "Trading partners");
+		const panel = cardFor(page, "Trading partners");
+
+		await expect(panel).toContainText("This panel could not be loaded.", {
+			timeout: 15_000,
+		});
+		await expect(panel).not.toContainText("No data for the selected period.");
+
+		failNext = false;
+		await panel.getByRole("button", { name: "Retry" }).click();
+
+		await expect(panel.getByRole("row", { name: /Peer Test Library/ })).toContainText(
+			"104",
+		);
+	});
+
 	test("a failed panel says it failed, and offers a retry that works", async ({
 		page,
 	}) => {
@@ -244,22 +328,21 @@ test.describe("Insights subjects", () => {
 		// Links, not tabs: the layout already owns the application's tab strip, and a
 		// second tablist inside the panel of the first gives a keyboard user two sets of
 		// arrow keys with no way to tell which has focus.
-		await expect(nav.getByRole("link")).toHaveCount(5);
+		await expect(nav.getByRole("link")).toHaveCount(6);
 		await expect(nav.getByRole("link", { name: "Demand" })).toHaveAttribute(
 			"aria-current",
 			"page",
 		);
 
-		// The sixth subject belongs to DCB Admin: the collection-analysis endpoints
-		// describe the consortium's catalogue, and this app has no panels for them.
-		await expect(nav.getByRole("link", { name: "Collection" })).toHaveCount(0);
+		// The same six subjects as DCB Admin, so a link copied between the two opens.
+		await expect(nav.getByRole("link", { name: "Collection" })).toHaveCount(1);
 	});
 
 	test("a subject this app does not offer falls back rather than blanking", async ({
 		page,
 	}) => {
-		// A link copied from DCB Admin, which has a sixth subject.
-		await page.goto("/insights?tab=collection");
+		// An old or hand-edited link naming a subject neither app has.
+		await page.goto("/insights?tab=holdings");
 
 		await expect(
 			page.getByRole("heading", { level: 2, name: "Trends" }),
