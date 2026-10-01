@@ -144,6 +144,19 @@ land.
 The locator used is the **last** panel, and one that renders unconditionally —
 a panel that hides itself when empty could be satisfied vacuously.
 
+### Documents only sent behind a flag
+
+`schemaConformance.test.ts` validates every GraphQL document in the app against
+`schema.graphqls`. A document that is only ever sent when a feature flag is on is
+**excluded** from the narrower passes rather than skipped, and `FLAG_ONLY` names the
+flag beside it.
+
+The difference matters: excluding one is a claim that a route guard stops it being
+emitted on an older deployment, and naming the flag is what makes the claim reviewable.
+A silent skip would be a hole in the gate; this is a documented door.
+
+Announcements are the whole of it today — see [announcements.md](announcements.md).
+
 ## The harness
 
 Every spec imports `test` and `expect` from `e2e/fixtures/test.ts` rather than

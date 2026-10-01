@@ -1,6 +1,7 @@
 import { test, expect } from "./fixtures/test";
 import { READ_ONLY_ROLES } from "./fixtures/auth";
 import library from "./fixtures-data/library.json" with { type: "json" };
+import { scrollUntilPresent } from "./fixtures/lazy";
 
 /**
  * Library insights. Two properties neither of which is visible in a
@@ -15,6 +16,9 @@ import library from "./fixtures-data/library.json" with { type: "json" };
  * produces it; if the two drift, that is exactly what this should catch.
  */
 const LIBRARY_PARAM = "requestedLibraryCode";
+
+/** WalkUpDiversionPanel's own heading, and what proves it mounted. */
+const WALK_UP_PANEL = "Collected in person, or sent";
 
 const mocks = { LoadLibrary: library, LoadLibraryBasics: library };
 
@@ -183,6 +187,102 @@ test.describe("Library insights", () => {
 				(url) => url.searchParams.get(LIBRARY_PARAM) === "e2e-lms",
 			),
 		).toBe(true);
+	});
+
+	test("reports walk-up against shipped, scoped to the caller's own library", async ({
+		page,
+		app,
+	}) => {
+		// The courier saving is an assertion until it is counted. These are the
+		// two numbers, and the call that fetches them must narrow like every other one -
+		// this panel sits beside peer benchmarking, which is deliberately consortium-wide,
+		// and the two must not be confused.
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+
+		const statsRequests = trackStatsRequests(page);
+
+		await page.goto("/insights?tab=service");
+
+		const panel = page.getByRole("heading", { name: WALK_UP_PANEL });
+		await scrollUntilPresent(page, panel);
+		await expect(panel).toBeVisible();
+
+		const row = page
+			.getByRole("region", { name: WALK_UP_PANEL })
+			.getByRole("row")
+			.filter({ has: page.getByText("E2E Test Library", { exact: true }) });
+
+		await expect(row).toContainText("227");
+		await expect(row).toContainText("681");
+		// 227 of 908. Rendered rather than computed by the API, so an arithmetic slip
+		// shows up here rather than in a slide.
+		await expect(row).toContainText("25.0%");
+
+		const breakdown = statsRequests.find((url) =>
+			url.pathname.endsWith("/insights/library-breakdown"),
+		);
+		expect(breakdown, paths(statsRequests)).toBeDefined();
+		expect(breakdown!.searchParams.get(LIBRARY_PARAM)).toBe("e2e-lms");
+	});
+
+	test("names a Host LMS that is not an onboarded library by its code", async ({
+		page,
+		app,
+	}) => {
+		// Degrade honestly where there are no libraries rather than reporting zero.
+		// A blank cell reads as a rendering fault; the code reads as a configuration fact.
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+
+		await page.goto("/insights?tab=service");
+
+		await scrollUntilPresent(
+			page, page.getByRole("heading", { name: WALK_UP_PANEL }));
+
+		// Scoped to this panel: peer benchmarking below renders the same code in its own
+		// table, and an unscoped row locator matches both.
+		await expect(
+			page
+				.getByRole("region", { name: WALK_UP_PANEL })
+				.getByRole("row")
+				.filter({ hasText: "unnamed-lms" }),
+		).toBeVisible();
+	});
+
+	test("says so when nothing was collected in person, rather than showing zeroes", async ({
+		page,
+		app,
+	}) => {
+		// A table of zeroes reads as a broken panel. While walk-up is not switched on,
+		// zero is the correct and expected answer and the page has to say which it is.
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats({
+			"library-breakdown": [
+				{
+					libraryCode: "e2e-lms",
+					libraryName: "E2E Test Library",
+					totalRequests: 908,
+					walkUpRequests: 0,
+					shippedRequests: 908,
+				},
+			],
+		});
+
+		await page.goto("/insights?tab=service");
+
+		await scrollUntilPresent(
+			page, page.getByRole("heading", { name: WALK_UP_PANEL }));
+
+		await expect(
+			page.getByText("Walk-up collection may not be switched on yet."),
+		).toBeVisible();
 	});
 
 	test("does not take the library from the URL", async ({ page, app }) => {

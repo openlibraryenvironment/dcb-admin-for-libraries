@@ -65,6 +65,24 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		},
 	},
 	{
+		// On the dcb-service `feat/discovery-contract` branch and in no release at all - not 8.71.0,
+		// not the 9.0.0 tag, not main. `since: null` says exactly that, and the flag stays
+		// off until the branch merges and a release carries it.
+		//
+		// Query and Mutation are listed rather than left empty: they are types like any
+		// other, and listing them is what makes `since: null` a CHECKED claim rather than a
+		// comment. serviceCapabilities.test.ts asserts they are in the target schema and in
+		// none of the releases we hold, and it will fail the day somebody commits the schema
+		// of the release that ships them - which is the reminder to set `since`.
+		id: "announcements",
+		flag: "VITE_FEATURE_ANNOUNCEMENTS",
+		since: null,
+		fields: {
+			Query: ["announcements"],
+			Mutation: ["createAnnouncement", "updateAnnouncement", "deleteAnnouncement"],
+		},
+	},
+	{
 		// On dcb-service MAIN, and in no release: V9_0_008 landed after the 9.0.0 tag, so
 		// `since` stays null and serviceCapabilities.test.ts says so. A SEPARATE row from
 		// library_branding, whose since is 9.0.0 - one flag over both would be a lie about

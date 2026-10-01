@@ -43,6 +43,18 @@ export const isLibraryBrandingEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_LIBRARY_BRANDING");
 
 /**
+ * Patron announcements, on no dcb-service release at all.
+ *
+ * The store, the scoped read and the three mutations are on the
+ * `feat/discovery-contract` branch. Asking a deployment that lacks them for
+ * `announcements` is a GraphQL validation error that fails the whole operation, so this
+ * flag changes the DOCUMENT, not just what renders - and it is off everywhere until that
+ * branch merges and a release carries it.
+ */
+export const isAnnouncementsEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_ANNOUNCEMENTS");
+
+/**
  * The library's patron support link - dcb-service AFTER 9.0.0.
  *
  * `library.support_url` arrived in V9_0_008, which is on main and in no release, so this

@@ -6,6 +6,7 @@ import {
 	colorSchemeAttribute,
 	type ColorScheme,
 } from "./fixtures/color-scheme";
+import { scrollUntilPresent } from "./fixtures/lazy";
 
 /**
  * The accessibility gate: zero axe violations on every surface in PAGES, in
@@ -47,33 +48,6 @@ interface Surface {
 const RARE_GEM = "Unique collection value";
 
 /**
- * Steps down the page until `locator` exists, so everything behind an
- * IntersectionObserver has mounted before axe scans. POLLED rather than a
- * fixed number of steps, and one viewport per pass: the failure both of those
- * avoid is in docs/testing.md.
- */
-async function scrollUntilPresent(
-	page: import("@playwright/test").Page,
-	locator: import("@playwright/test").Locator,
-) {
-	await expect
-		.poll(
-			async () => {
-				await page.evaluate(() =>
-					window.scrollBy(0, Math.max(window.innerHeight - 100, 200)),
-				);
-				return locator.count();
-			},
-			{
-				message:
-					"scrolled to the bottom without the last deferred panel ever mounting",
-				timeout: 30_000,
-			},
-		)
-		.toBeGreaterThan(0);
-}
-
-/**
  * Every subject, and the heading that proves its last panel has mounted.
  *
  * Waiting on a NAMED heading rather than a count is what makes the reveal
@@ -112,6 +86,27 @@ const PAGES: Surface[] = [
 		},
 		ready: async (page) => {
 			await expect(page.getByText("E2E Test Library").first()).toBeVisible();
+		},
+	},
+	{
+		// The announcements compose form. Two text fields, a date input and a switch — a form, which is
+		// where accessible names and error association fail, and the only surface in this
+		// app that publishes something patrons will read.
+		name: "announcements",
+		path: "/announcements",
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_ANNOUNCEMENTS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraryBasics: library,
+				LoadAnnouncements: { announcements: [] },
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Tell your patrons" }),
+			).toBeVisible();
 		},
 	},
 	{

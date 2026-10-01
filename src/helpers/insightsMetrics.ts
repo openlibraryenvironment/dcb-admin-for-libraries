@@ -29,6 +29,7 @@ export const METRIC_IDS = [
 	"peer_benchmarks",
 	"checkout_rate",
 	"cost_avoidance",
+	"walk_up_diversion",
 	// --- trends -----------------------------------------------------------------------
 	"request_volume",
 	"trend_direction",
