@@ -17,6 +17,7 @@ import {
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateRangePicker } from "@mui/x-date-pickers-pro";
+import { MultiInputDateRangeField } from "@mui/x-date-pickers-pro/MultiInputDateRangeField";
 import dayjs from "dayjs";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
@@ -274,7 +275,13 @@ export default function InsightsDashboard({
 								}
 							}}
 							disableFuture
-							slotProps={{ textField: { size: "small" } }}
+							// Two labelled inputs and the same actions as the data grid's date
+							// filter, rather than one combined field with neither.
+							slots={{ field: MultiInputDateRangeField }}
+							slotProps={{
+								textField: { size: "small" },
+								actionBar: { actions: ["clear", "nextOrAccept"] },
+							}}
 							localeText={{
 								start: t("insights.range.from"),
 								end: t("insights.range.to"),

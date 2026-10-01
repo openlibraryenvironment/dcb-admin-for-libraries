@@ -147,6 +147,26 @@ test.describe("Insights panel states", () => {
 		);
 	});
 
+	test("a chosen date range shows as two labelled fields, and Clear returns to the preset", async ({
+		page,
+	}) => {
+		await page.goto("/insights?from=2026-09-01&to=2026-09-15");
+
+		const from = page.getByRole("group", { name: "From" });
+		const to = page.getByRole("group", { name: "To" });
+		await expect(from.getByRole("spinbutton", { name: "Day" })).toHaveText("01");
+		await expect(to.getByRole("spinbutton", { name: "Day" })).toHaveText("15");
+
+		await from.click();
+		await page.getByRole("button", { name: "Clear" }).click();
+
+		await expect(page).not.toHaveURL(/from=/);
+		await expect(page.getByRole("button", { name: "30 days" })).toHaveAttribute(
+			"aria-pressed",
+			"true",
+		);
+	});
+
 	test("a failed panel says it failed, and offers a retry that works", async ({
 		page,
 	}) => {
