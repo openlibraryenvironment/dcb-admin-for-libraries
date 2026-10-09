@@ -155,6 +155,9 @@ export default function DurationTrendPanel({
 									data: p50,
 									label: t("insights.trends.durations.p50"),
 									color: categorical[0],
+									// A shape per series, so the legend and the line are not told
+									// apart by colour alone. WCAG 1.4.1.
+									shape: "circle",
 									// connectNulls is deliberately OFF: a missing bucket is a
 									// period with no observations, and joining across it would
 									// draw a measurement nobody took.
@@ -166,6 +169,7 @@ export default function DurationTrendPanel({
 									data: p95,
 									label: t("insights.trends.durations.p95"),
 									color: categorical[1],
+									shape: "square",
 									valueFormatter: (value: number | null) =>
 										formatTurnaround(value, t),
 									showMark: true,

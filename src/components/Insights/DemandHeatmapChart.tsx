@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, Typography, Box, useTheme } from "@mui/material";
+import { Card, CardContent, Typography, Box } from "@mui/material";
 import { Heatmap } from "@mui/x-charts-pro";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
+import { useChartPalette } from "@/hooks/useChartPalette";
 import { demandHeatmapQueryOptions, StatsParams } from "@helpers/statsApi";
 
 import PanelState from "./PanelState";
@@ -21,11 +22,6 @@ function weekdayLabels(): string[] {
 	);
 }
 
-// Sequential single-hue ramp per the dataviz rule (light -> dark, one hue).
-function heatRamp(isDark: boolean): [string, string] {
-	return isDark ? ["#12233d", "#3987e5"] : ["#e8eefc", "#2a78d6"];
-}
-
 export default function DemandHeatmapChart({
 	params,
 }: {
@@ -33,7 +29,7 @@ export default function DemandHeatmapChart({
 }) {
 	const { t } = useTranslation();
 	const client = useDcbRestClient();
-	const isDark = useTheme().palette.mode === "dark";
+	const { sequential } = useChartPalette();
 
 	const { data, isLoading, isError, refetch, isFetching } = useQuery(
 		demandHeatmapQueryOptions(client, params),
@@ -89,7 +85,7 @@ export default function DemandHeatmapChart({
 												type: "continuous",
 												min: 0,
 												max: maxCount,
-												color: heatRamp(isDark),
+												color: sequential,
 											},
 										},
 									]}
