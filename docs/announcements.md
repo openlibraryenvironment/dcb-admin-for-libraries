@@ -27,6 +27,13 @@ The date input sends the **end** of the chosen day. An administrator choosing th
 "up to and including the 30th"; sending midnight would take the notice down a day early, on
 the day they thought it would still be up.
 
+That day is the administrator's **own** calendar day, not UTC's. It used to be UTC's in both
+directions: the default was computed with `toISOString()`, which west of Greenwich is
+tomorrow every evening, and the end of the 30th went out as 23:59 UTC — a notice in Missouri
+came down at teatime. `src/helpers/announcementDates.ts` holds both, and
+`tests/announcementDates.test.ts` runs them in two zones either side of UTC. The input
+refuses a day already past.
+
 ## No scope on the update input
 
 That is dcb-service's decision rather than an omission in the client. Moving a library's

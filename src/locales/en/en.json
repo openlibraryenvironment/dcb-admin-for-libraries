@@ -1474,6 +1474,13 @@
 		"expired": "Finished",
 		"until": "Shows until {{date}}",
 		"withdraw": "Take down",
+		"withdraw_named": "Take down: {{headline}}",
+		"published": "Notice published",
+		"withdrawn": "Notice taken down",
+		"loading": "Loading your notices",
+		"load_failed": "Your notices could not be loaded.",
+		"publish_failed": "The notice could not be published.",
+		"withdraw_failed": "The notice could not be taken down.",
 		"unavailable": "Announcements are not available on this deployment yet. They need a newer DCB service."
 	}
 }

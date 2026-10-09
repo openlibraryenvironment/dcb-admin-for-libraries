@@ -1,5 +1,6 @@
 import type { Page, Route } from "@playwright/test";
 import library from "../fixtures-data/library.json" with { type: "json" };
+import { API_BASE } from "./runtime-config";
 
 /**
  * Every GraphQL call in this app goes through graphql-request to
@@ -47,7 +48,9 @@ export async function mockGraphQL(
 	mocks: OperationMocks,
 ): Promise<void> {
 	const all = { ...DEFAULT_MOCKS, ...mocks };
-	await page.route(`**/graphql`, async (route) => {
+	// The configured API base exactly, not **/graphql: the loose pattern also answered
+	// a page posting to "undefined/graphql" on the preview's own origin.
+	await page.route(`${API_BASE}/graphql`, async (route) => {
 		const name = operationName(route);
 		const responder = name ? all[name] : undefined;
 
