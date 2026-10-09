@@ -1427,6 +1427,7 @@
 			"out": "Logged out",
 			"out_current": "Logging you out",
 			"out_progress": "Please wait while we sign you out securely...",
+			"retry": "Try again",
 			"success": "You have successfully logged out from DCB Admin for Libraries. We hope to see you again soon!"
 		},
 		"tooltips": {
