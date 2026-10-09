@@ -1,4 +1,11 @@
-import { MenuItem, TextField, useTheme } from "@mui/material";
+import {
+	MenuItem,
+	TextField,
+	inputLabelClasses,
+	outlinedInputClasses,
+	selectClasses,
+	useTheme,
+} from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
@@ -66,6 +73,8 @@ export const LibrarySelector = () => {
 
 	if (!hasMultipleAgencies || !agencyCode) return null;
 
+	const headerText = (theme.vars || theme).palette.primary.headerText;
+
 	return (
 		<TextField
 			select
@@ -75,13 +84,17 @@ export const LibrarySelector = () => {
 			label={t("header.library_selector")}
 			sx={{
 				mr: 2,
-				minWidth: 220,
+				minWidth: { xs: "10rem", sm: "13.75rem" },
 				"& .MuiInputBase-root": {
-					color: (theme.vars || theme).palette.primary.headerText,
+					color: headerText,
 				},
-				"& .MuiInputLabel-root": {
-					color: (theme.vars || theme).palette.primary.headerText,
-				},
+				[`& .${inputLabelClasses.root}, & .${inputLabelClasses.root}.${inputLabelClasses.focused}`]:
+					{ color: headerText },
+				// MUI's defaults are text.primary at rest and primary.main on focus, and
+				// light mode paints the bar itself primary.main.
+				[`& .${outlinedInputClasses.notchedOutline}, & .${outlinedInputClasses.root}:hover .${outlinedInputClasses.notchedOutline}, & .${outlinedInputClasses.root}.${outlinedInputClasses.focused} .${outlinedInputClasses.notchedOutline}`]:
+					{ borderColor: headerText },
+				[`& .${selectClasses.icon}`]: { color: headerText },
 			}}>
 			{agencyCodes.map((code) => (
 				<MenuItem key={code} value={code}>

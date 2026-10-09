@@ -241,7 +241,9 @@
 		"title": "DCB Admin for {{library}}",
 		"title_requesting": "DCB Admin for {{library}} - requesting only mode",
 		"user": "Welcome, {{user}}",
+		"user_fallback": "User",
 		"welcome": "Welcome to DCB Admin for {{name}}",
+		"library_fallback": "Libraries",
 		"library_selector": "Library"
 	},
 	"hostlms": {
