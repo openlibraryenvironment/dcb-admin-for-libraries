@@ -1,4 +1,5 @@
 import type { Page, Route } from "@playwright/test";
+import library from "../fixtures-data/library.json" with { type: "json" };
 
 /**
  * Every GraphQL call in this app goes through graphql-request to
@@ -15,6 +16,22 @@ export type GraphQLResponder =
 
 export type OperationMocks = Record<string, GraphQLResponder>;
 
+/**
+ * The header's library name renders on every authenticated page, so it is
+ * mocked by default rather than in every spec. A spec's own mock overrides it.
+ */
+const DEFAULT_MOCKS: OperationMocks = {
+	LoadLibraryNames: {
+		libraries: {
+			content: library.libraries.content.map(({ id, fullName, agencyCode }) => ({
+				id,
+				fullName,
+				agencyCode,
+			})),
+		},
+	},
+};
+
 function operationName(route: Route): string | undefined {
 	return route.request().postDataJSON()?.operationName;
 }
@@ -29,9 +46,10 @@ export async function mockGraphQL(
 	page: Page,
 	mocks: OperationMocks,
 ): Promise<void> {
+	const all = { ...DEFAULT_MOCKS, ...mocks };
 	await page.route(`**/graphql`, async (route) => {
 		const name = operationName(route);
-		const responder = name ? mocks[name] : undefined;
+		const responder = name ? all[name] : undefined;
 
 		if (!responder) {
 			await route.abort("failed");

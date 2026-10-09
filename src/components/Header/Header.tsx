@@ -1,4 +1,3 @@
-import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -13,7 +12,7 @@ import { Tooltip, useTheme } from "@mui/material";
 import { useMemo } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
-import { getLibrary } from "@queries/getLibrary";
+import { getLibraryNames } from "@queries/getLibraryNames";
 import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
 import { appPath, assetUrl } from "@helpers/appBase";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
@@ -38,22 +37,18 @@ export const Header = () => {
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const { data } = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", headers, code, cfg.VITE_DCB_API_BASE],
+		queryKey: ["libraryName", headers, code, cfg.VITE_DCB_API_BASE],
 		placeholderData: keepPreviousData,
+		// A library's name changes at the pace of onboarding, and this renders on
+		// every page: a staleTime of 0 would refetch it on every navigation.
+		staleTime: 5 * 60 * 1000,
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: REFERENCE_LIST_PAGE_SIZE,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
+				getLibraryNames,
+				{ query: "agencyCode:" + code, pagesize: 1, pageno: 0 },
 				headers
 			),
-		// do the on success here
 	});
 
 	const library = data?.libraries?.content?.[0];

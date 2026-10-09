@@ -2,9 +2,13 @@
 
 R-19. This application is deployed against several `dcb-service` releases at
 once, and a GraphQL field the server has never heard of is **not a null**. It is
-a validation error, and it fails the whole operation. `LoadLibrary` runs in the
-header on every page and in six routes, so one field selected a release too
-early does not grey out a form — it takes the application down.
+a validation error, and it fails the whole operation. `LoadLibrary` runs in six
+routes and the expedited checkout form, so one field selected a release too
+early does not grey out a form — it takes those pages down.
+
+The header and the library selector, which render on every page, run
+`LoadLibraryNames` instead: `id`, `fullName` and `agencyCode`, nothing gated by
+release, and none of the Host LMS `clientConfig` that `LoadLibrary` carries.
 
 ## The capability registry
 

@@ -108,9 +108,9 @@ A flag left **off** after the upgrade costs a hidden feature and nothing else.
 
 A flag switched **on** too early is the expensive mistake, because the newer GraphQL
 fields do not degrade gracefully: a field the server does not declare is a validation
-error that fails the whole operation. `LoadLibrary` runs in the header on every page and
-in six routes, so `VITE_FEATURE_LIBRARY_BRANDING=true` against 8.71.0 does not grey out a
-form — it takes the application down.
+error that fails the whole operation. `LoadLibrary` runs in six routes and the expedited
+checkout form, so `VITE_FEATURE_LIBRARY_BRANDING=true` against 8.71.0 does not grey out a
+form — it takes those pages down.
 
 ### Adding the next one
 

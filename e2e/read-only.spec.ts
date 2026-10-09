@@ -13,9 +13,8 @@ const readOnlyOn = async (
 	path: string,
 ) => {
 	await app.signIn({ roles: READ_ONLY_ROLES });
-	// LoadLibrary is the header, which renders on the destination too. The rest
-	// are the pages the guard is supposed to prevent: if one of them appears in
-	// a run, the guard let a loader through.
+	// The pages the guard is supposed to prevent: if one of them appears in a run,
+	// the guard let a loader through. The header's own query is a fixture default.
 	await app.mockGraphQL({
 		LoadLibrary: library,
 		LoadLibraryBasics: library,
@@ -64,6 +63,23 @@ test("never renders the page it is redirecting away from", async ({
 	await expect(page).toHaveURL(/\/requesting$/);
 
 	expect(headings.join(" | ")).not.toMatch(/patron requests/i);
+});
+
+/**
+ * The header loaded LoadLibrary, Host LMS clientConfig and all, on every page
+ * for every role, to show one name. clientConfig carries ILS credentials.
+ */
+test("is never sent a Host LMS client configuration", async ({ app, page }) => {
+	const bodies: string[] = [];
+	page.on("request", (request) => {
+		if (request.url().endsWith("/graphql")) bodies.push(request.postData() ?? "");
+	});
+
+	await readOnlyOn(app, page, "/requesting");
+	await expect(page.getByText(/E2E Test Library/).first()).toBeVisible();
+
+	expect(bodies.length).toBeGreaterThan(0);
+	expect(bodies.filter((body) => body.includes("clientConfig"))).toEqual([]);
 });
 
 test("stays on the requesting page it is sent to", async ({ app, page }) => {

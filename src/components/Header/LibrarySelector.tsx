@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 
-import { getLibraries } from "@queries/getLibraries";
+import { getLibraryNames } from "@queries/getLibraryNames";
 import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
@@ -41,7 +41,7 @@ export const LibrarySelector = () => {
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibraries,
+				getLibraryNames,
 				{
 					query: agencyCodes.map((code) => `agencyCode:${code}`).join(" OR "),
 					pagesize: agencyCodes.length,
