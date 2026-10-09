@@ -352,3 +352,48 @@ for (const scheme of SCHEMES) {
 		}
 	});
 }
+
+/** The widest elements past the right edge, so a failure names what to fix. */
+async function horizontalOverflow(page: import("@playwright/test").Page) {
+	return page.evaluate(() => {
+		const root = document.documentElement;
+		const limit = root.clientWidth;
+		const offenders = [...document.body.querySelectorAll<HTMLElement>("*")]
+			.filter((el) => el.getBoundingClientRect().right > limit + 1)
+			.filter((el) => {
+				// Inside its own scroller (a tab strip, a grid) it does not move the page.
+				for (let up = el.parentElement; up && up !== document.body; up = up.parentElement) {
+					if (getComputedStyle(up).overflowX !== "visible") return false;
+				}
+				return true;
+			})
+			.slice(0, 8)
+			.map((el) => {
+				const id = el.id ? `#${el.id}` : "";
+				const cls = [...el.classList].slice(0, 2).map((c) => `.${c}`).join("");
+				return `${el.tagName.toLowerCase()}${id}${cls} right=${Math.round(el.getBoundingClientRect().right)}`;
+			});
+		return { overflow: root.scrollWidth - limit, offenders };
+	});
+}
+
+// WCAG 1.4.10: content reflows at 320 CSS px with no horizontal page scroll. A data grid
+// may scroll inside itself; the page around it may not.
+test.describe("WCAG 2.2 AA - 1.4.10 reflow at 320 CSS px", () => {
+	test.use({ viewport: { width: 320, height: 640 } });
+
+	for (const surface of PAGES) {
+		test(`${surface.name} does not scroll horizontally`, async ({ app, page }) => {
+			await surface.prepare?.(app);
+			await page.goto(surface.path);
+			await surface.reveal?.(page);
+			await surface.ready(page);
+
+			const { overflow, offenders } = await horizontalOverflow(page);
+			expect(
+				overflow,
+				`the page is ${overflow}px wider than the viewport:\n  ${offenders.join("\n  ")}`,
+			).toBeLessThanOrEqual(0);
+		});
+	}
+});
