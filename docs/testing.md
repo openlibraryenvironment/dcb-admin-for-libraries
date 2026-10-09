@@ -220,6 +220,12 @@ because it renders correct text and is a coverage question for
 `npm run i18n:missed` rather than a broken screen; and comments are stripped
 first, so a key inside commented-out code is not a finding.
 
+A key must resolve to **text**. One that names a branch of the tree renders
+i18next's "returned an object instead of string" - which is what a progress
+bar on the requesting page carried as its accessible name. An inline default
+does not excuse a branch, because i18next never reaches the default; only
+`returnObjects` asks for one on purpose.
+
 ## The route error boundary
 
 `e2e/route-error.spec.ts` fails a route chunk on purpose. That is not a

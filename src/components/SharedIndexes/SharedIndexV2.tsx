@@ -1,7 +1,11 @@
 import { useRouter, useSearch } from "@tanstack/react-router";
 import { useState, useCallback, useEffect } from "react";
 import axios from "axios";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+	keepPreviousData,
+	useQuery,
+	type QueryFunctionContext,
+} from "@tanstack/react-query";
 import { useAuth } from "react-oidc-context";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
@@ -33,34 +37,19 @@ import { SearchResult } from "@components/SearchResultComponent/SearchResultComp
 import Error from "@components/Error/Error";
 import { useSearchGridStore } from "@/hooks/useSearchGridStore";
 import { parseQuery } from "@helpers/search/queryParser";
+import type { RequestingSearch } from "@helpers/requestingSearch";
+import { clampPageSize, PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
 import { validate } from "uuid";
 import { ChecklistRounded, Close } from "@mui/icons-material";
 import QuickWalkUpRequest from "@forms/QuickWalkUp/QuickWalkUp";
-
-interface SharedIndexQueryParams {
-	filters?: string; // JSON stringified filters
-	pageno?: number;
-	pagesize?: number;
-}
-
-// Need to improve:
-// Filters in URL look horrible. Can we have a nicer URL and a filter store in zustand?
-// Presentation when empty (messaging etc)
-// Hiding sort buttons + improving grid integrations
-// Searches should really only run on Enter or Search
-
-// Features to add
-// Sorting
-// Faceting
-// Natural Language search (moonshot)
-// Suggestions
-// Possibly a separate filter panel
 
 const createDefaultFilter = (): SearchFilter => ({
 	id: Date.now().toString(),
 	field: SearchField.Title,
 	value: "",
 });
+
+type SearchKey = readonly [string, string, number, number];
 
 export function SharedIndexV2() {
 	const auth = useAuth();
@@ -70,21 +59,18 @@ export function SharedIndexV2() {
 	const announce = useAnnounce();
 	const roles = auth?.user?.profile?.roles ? auth?.user?.profile?.roles : [];
 
+	// Quick walk-up stays with consortium admins until its role gate is decided.
 	const isAdmin = roles.includes("CONSORTIUM_ADMIN");
-	// Get the simplified query from URL search params
-	// We should really store the queryType in the URL
-	const {
-		filters: queryParam,
-		pageno = 0,
-		pagesize = 25,
-	}: SharedIndexQueryParams = useSearch({
-		strict: false,
-	});
-	// Cards still cut off
+	// Validated by the route's requestingSearchSchema; shared with /indexes.
+	const search: RequestingSearch = useSearch({ strict: false });
+	const queryParam = search.filters;
+	const pageno = search.pageno ?? 0;
+	const pagesize = clampPageSize(search.pagesize);
 
-	// Get state from Zustand store
-	const { appliedFilters, setAppliedFilters } = useSearchGridStore();
-	// But keep pagination in URL only for now because of weird conflicts.
+	const appliedFilters = useSearchGridStore((state) => state.appliedFilters);
+	const setAppliedFilters = useSearchGridStore(
+		(state) => state.setAppliedFilters,
+	);
 	const paginationModel: GridPaginationModel = {
 		page: pageno,
 		pageSize: pagesize,
@@ -93,23 +79,21 @@ export function SharedIndexV2() {
 	const handlePaginationModelChange = (newModel: GridPaginationModel) => {
 		router.navigate({
 			to: "/requesting",
-			// params: { indexCode: indexCode },
 			search: {
-				filters: queryParam, // Keep the existing search filters
+				filters: queryParam,
 				pageno: newModel.page,
 				pagesize: newModel.pageSize,
 			},
-			replace: true, // Use replace to avoid adding a new entry to the browser's history
+			replace: true,
 		});
 	};
 
-	// This state holds the "current" filters being edited in the UI
 	const [stagedFilters, setStagedFilters] = useState<SearchFilter[]>([
 		createDefaultFilter(),
 	]);
 
-	const [isDirty, setIsDirty] = useState(false); // State to track if filters have changed
-	const [isAdvancedMode, setIsAdvancedMode] = useState(false); // <-- State for mode
+	const [isDirty, setIsDirty] = useState(false);
+	const [isAdvancedMode, setIsAdvancedMode] = useState(false);
 
 	const isAdvancedSearchAvailable =
 		stagedFilters[0].field !== SearchField.ClusterRecordID;
@@ -131,13 +115,9 @@ export function SharedIndexV2() {
 		setShowModal(true);
 	};
 
-	// On initial load, synchronize state from the URL
-	// Dependency on queryParam ensures this runs on URL change
-
 	useEffect(() => {
 		const initialFilters = parseQuery(queryParam || "");
 
-		// If parsing the URL results in an empty array, use a default filter instead.
 		const filtersToSet =
 			initialFilters.length > 0 ? initialFilters : [createDefaultFilter()];
 
@@ -147,9 +127,7 @@ export function SharedIndexV2() {
 			setIsAdvancedMode(true);
 		}
 	}, [queryParam, setAppliedFilters]);
-	// Compare staged and applied filters to determine if UI is "dirty"
 	useEffect(() => {
-		// A simple deep comparison using JSON.stringify
 		const staged = JSON.stringify(stagedFilters.filter((f) => f.value));
 		const applied = JSON.stringify(appliedFilters.filter((f) => f.value));
 		setIsDirty(staged !== applied);
@@ -160,31 +138,35 @@ export function SharedIndexV2() {
 			const activeFilters = newFilters.filter((f) => f.value);
 			setAppliedFilters(activeFilters);
 
-			// Build the simple query for the URL
-			const simpleQuery = buildQuery(activeFilters);
-
 			router.navigate({
 				to: "/requesting",
-				// params: { indexCode: indexCode },
 				search: {
-					filters: simpleQuery,
+					filters: buildQuery(activeFilters),
 					pagesize: paginationModel.pageSize,
-					pageno: paginationModel.page,
-				}, // Use the simple query in the URL
+					// A new search starts at its first page: page 4 of the last one may
+					// not exist in this one.
+					pageno: 0,
+				},
 				replace: true,
 			});
 		},
-		[router, setAppliedFilters, paginationModel.page, paginationModel.pageSize],
+		[router, setAppliedFilters, paginationModel.pageSize],
 	);
+
+	const isClusterIdSearch =
+		stagedFilters[0]?.field === SearchField.ClusterRecordID;
+	const stagedValue = stagedFilters[0]?.value?.trim() ?? "";
+	const isInvalidClusterId =
+		isClusterIdSearch && stagedValue !== "" && !validate(stagedValue);
 
 	const handleSearchSubmit = (event: React.FormEvent) => {
 		event.preventDefault();
+		if (isInvalidClusterId) return;
 		handleApplyFilters(stagedFilters);
 	};
 	const toggleAdvancedMode = () => {
 		setIsAdvancedMode((prev) => {
 			const nextMode = !prev;
-			// If switching from advanced to simple, keep only the first filter
 			if (!nextMode) {
 				setStagedFilters((currentFilters) => [
 					currentFilters[0] || createDefaultFilter(),
@@ -195,9 +177,7 @@ export function SharedIndexV2() {
 	};
 
 	const fetchSearchResults = useCallback(
-		async ({ queryKey }: any) => {
-			// Need this
-
+		async ({ queryKey, signal }: QueryFunctionContext<SearchKey>) => {
 			const [, query, pageno, pagesize] = queryKey;
 			const isUUID = query.length === 36 ? validate(query) : false;
 
@@ -208,33 +188,29 @@ export function SharedIndexV2() {
 			let url: string;
 			let params: Record<string, any>;
 
-			// Conditional URL and params logic
 			if (isUUID) {
-				// If searching by Cluster Record ID, use the specific instance endpoint
 				url = `${cfg.VITE_DCB_SEARCH_BASE}/public/opac-inventory/instances/${query}`;
-				params = {
-					limit: 25,
-				};
+				params = {};
 			} else {
-				// Otherwise, use the general search endpoint
 				url = `${cfg.VITE_DCB_SEARCH_BASE}/search/instances`;
 				params = {
 					query: query,
-					// queryType: queryType,
 					offset: pageno * pagesize,
 					limit: pagesize,
 				};
 			}
+			// The signal cancels a search the user has already replaced with another.
 			const response = await axios.get(url, {
 				headers: {
 					Authorization: `Bearer ${auth.user?.access_token}`,
 				},
 				params: params,
+				signal,
 			});
 
 			if (isUUID && response.data) {
 				return {
-					instances: [response.data], // Wrap single object in an array
+					instances: [response.data],
 					totalRecords: 1,
 				};
 			} else {
@@ -244,8 +220,6 @@ export function SharedIndexV2() {
 				};
 			}
 		},
-		// pageno/pagesize come from the queryKey the fetcher is handed, not from
-		// the model, so the model is deliberately not a dependency here.
 		[auth.user?.access_token, cfg.VITE_DCB_SEARCH_BASE],
 	);
 
@@ -255,15 +229,10 @@ export function SharedIndexV2() {
 		isFetching,
 		isError,
 	} = useQuery({
-		queryKey: [
-			"searchResults",
-			queryParam, // Query depends directly on the URL param
-			pageno,
-			pagesize,
-		],
+		queryKey: ["searchResults", queryParam ?? "", pageno, pagesize] as const,
 		queryFn: fetchSearchResults,
 		enabled: !!auth.user?.access_token && !!queryParam,
-		staleTime: 1000 * 60 * 5, // 5 minutes,
+		staleTime: 1000 * 60 * 5,
 		placeholderData: keepPreviousData,
 	});
 
@@ -279,22 +248,16 @@ export function SharedIndexV2() {
 		announce(t("requesting.titles_found", { number: totalRecords }));
 	}, [totalRecords, announce, t]);
 
-	// The quick walk up is locked to consortia admin for testing, for now
 	return (
-        <Box sx={{ width: "100%" }}>
-            <Stack spacing={2} direction={"column"}>
-				{/* <Typography variant="h1" gutterBottom>
-					{t("nav.requesting.title")}
-				</Typography> */}
-				{/* Can we use react-hook-form here */}
-
+		<Box sx={{ width: "100%" }}>
+			<Stack spacing={2} direction={"column"}>
 				<Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={2}
-                    sx={{
-                        justifyContent: "space-between",
-                        alignItems: { xs: "flex-start", sm: "center" }
-                    }}>
+					direction={{ xs: "column", sm: "row" }}
+					spacing={2}
+					sx={{
+						justifyContent: "space-between",
+						alignItems: { xs: "flex-start", sm: "center" },
+					}}>
 					<Typography variant="h1" gutterBottom sx={{ mb: { xs: 0, sm: 0 } }}>
 						{t("nav.requesting.title")}
 					</Typography>
@@ -310,7 +273,7 @@ export function SharedIndexV2() {
 								variant="contained"
 								color="primary"
 								startIcon={<ChecklistRounded />}>
-								{t("ui.actions.menu", "Actions")}
+								{t("ui.actions.title")}
 							</Button>
 							<Menu
 								id="actions-menu"
@@ -323,10 +286,7 @@ export function SharedIndexV2() {
 									},
 								}}>
 								<MenuItem onClick={handleQuickWalkUpClick}>
-									{t(
-										"requesting.quick_walk_up.button",
-										"Quick Walk-Up Request",
-									)}
+									{t("requesting.quick_walk_up.button")}
 								</MenuItem>
 							</Menu>
 						</Box>
@@ -337,14 +297,19 @@ export function SharedIndexV2() {
 						filters={stagedFilters}
 						onFiltersChange={setStagedFilters}
 						isAdvancedMode={isAdvancedMode}
+						invalidFilterId={
+							isInvalidClusterId ? stagedFilters[0].id : undefined
+						}
 					/>
 					<Stack
-                        direction="row"
-                        spacing={2}
-                        sx={{
-                            alignItems: "center",
-                            mt: 2
-                        }}>
+						direction="row"
+						spacing={2}
+						useFlexGap
+						sx={{
+							alignItems: "center",
+							flexWrap: "wrap",
+							mt: 2,
+						}}>
 						{isAdvancedMode ? (
 							<Button
 								type="submit"
@@ -358,7 +323,7 @@ export function SharedIndexV2() {
 								type="submit"
 								variant="contained"
 								color="primary"
-								disabled={!stagedFilters[0]?.value?.trim()}>
+								disabled={!stagedValue || isInvalidClusterId}>
 								{t("ui.actions.search")}
 							</Button>
 						)}
@@ -378,14 +343,14 @@ export function SharedIndexV2() {
 					</Typography>
 				) : null}
 			</Stack>
-            {isError && (
+			{isError && (
 				<Error
 					title={t("requesting.shared_index.error_connecting_title")}
 					message={t("requesting.shared_index.error_connecting")}
 					action={t("ui.actions.go_back")}
 					goBack="/"></Error>
 			)}
-            {/* A LIST, not a one-column grid. These are search results: rendering
+			{/* A LIST, not a one-column grid. These are search results: rendering
 			    them through DataGridPremium with a null column header announced
 			    "grid, row, column 1 of 1" before each card and bought nothing -
 			    sorting and filtering are both server-side and the toolbar was
@@ -400,7 +365,10 @@ export function SharedIndexV2() {
 				))}
 			</List>
 			{isFetching || isLoading ? (
-				<LinearProgress aria-label={t("ui.info.loading")} sx={{ mt: 2 }} />
+				<LinearProgress
+					aria-label={t("requesting.shared_index.loading_results")}
+					sx={{ mt: 2 }}
+				/>
 			) : null}
 			{!isFetching && !isLoading && instances.length === 0 ? (
 				<Typography sx={{ mt: 2 }}>
@@ -415,7 +383,7 @@ export function SharedIndexV2() {
 					count={totalRecords}
 					page={paginationModel.page}
 					rowsPerPage={paginationModel.pageSize}
-					rowsPerPageOptions={[10, 25, 50, 100]}
+					rowsPerPageOptions={PAGE_SIZE_OPTIONS}
 					onPageChange={(_event, page) =>
 						handlePaginationModelChange({ ...paginationModel, page })
 					}
@@ -428,15 +396,17 @@ export function SharedIndexV2() {
 					labelRowsPerPage={t("requesting.results_per_page")}
 				/>
 			) : null}
-            <Dialog
+			<Dialog
 				open={showModal}
 				onClose={() => setShowModal(false)}
+				aria-labelledby="quick-walk-up-title"
 				fullWidth
 				maxWidth="sm">
-				<DialogTitle variant="modalTitle">
-					{t("requesting.quick_walk_up.title", "Quick Walk-Up Request")}
+				<DialogTitle id="quick-walk-up-title" variant="modalTitle">
+					{t("requesting.quick_walk_up.title")}
 				</DialogTitle>
 				<IconButton
+					aria-label={t("ui.actions.close")}
 					onClick={() => setShowModal(false)}
 					sx={{
 						position: "absolute",
@@ -449,6 +419,6 @@ export function SharedIndexV2() {
 
 				<QuickWalkUpRequest onClose={() => setShowModal(false)} />
 			</Dialog>
-        </Box>
-    );
+		</Box>
+	);
 }
