@@ -33,3 +33,5 @@ dist-ssr
 user.json
 .lighthouseci
 .worktrees/
+/reports/
+/coverage/
