@@ -22,7 +22,8 @@ Log into your Keycloak dashboard, select the `dcb-hub` realm, and complete these
 8. Set the flow to **Standard flow**.
 9. Turn **OFF** client authentication (this must be a public access type, not a confidential OIDC client).
 10. Under the "Advanced" tab, set the Proof Key for Code Exchange (PKCE) Code Challenge Method to **S256**.
-11. Set the **Valid Redirect URIs** and **Web Origins** strictly to the exact URL where your application will be hosted (e.g., `https://libraries.yourlibrary.org`). **CRITICAL SECURITY NOTE:** Never use a wildcard (`*`) in production, as this may allow malicious sites to steal user tokens.
+11. Set **Valid Redirect URIs** to the app's own path, scoped by a trailing wildcard: `https://<host>/dcb-admin-for-libraries/*` on a shared origin such as `mobius.kihosting.net`, or `https://<host>/*` when the app is at the root. Sign-in returns to the base and sign-out to `<base>logout?loggedOut=true`, so the exact base URL alone rejects the sign-out redirect. Leave **Valid post logout redirect URIs** as `+` (the same list). Set **Web Origins** to the origin only, with no path (`https://<host>`). Keep this client separate from DCB Admin's even on the same host.
+    **CRITICAL SECURITY NOTE:** Never use a bare wildcard (`*`) or a host-wide one where other apps share the origin: either lets a redirect deliver the authorisation code somewhere this app does not control.
 
 ---
 
@@ -145,6 +146,20 @@ Configure KI Console SPA bootstrap host records with app
 
 The existing S3 paths, Docker image, `inject_env.json`, and local `npm run dev`
 flow remain unchanged.
+
+### After a deploy
+
+Every deploy deletes the previous build's hashed chunks, so a tab opened before it asks
+for a chunk that no longer exists at its next lazy route. `src/helpers/chunkReload.ts`
+handles Vite's `vite:preloadError` by reloading once, which fetches the new `index.html`;
+a second failure in the same tab is left to the route's error page rather than reloading
+forever. The guard is cleared after each resolved navigation, so the next deploy gets its
+own attempt.
+
+That only works if `index.html` is never served from a cache. The pipeline uploads it with
+`Cache-Control: no-store`, hashed assets as immutable, and the other stable names
+(`ki-bootstrap.js`, the favicon) as `no-cache`. If the Cloudflare worker sets its own
+headers, it must keep those semantics.
 
 ### Option A: Cloudflare Pages
 

@@ -13,6 +13,10 @@ import "@fontsource/roboto/700.css";
 import App from "@components/App/App";
 import NotFound from "@components/Error/NotFound";
 import RouteError from "@components/Error/RouteError";
+import {
+	clearChunkReloadGuard,
+	installChunkReloadGuard,
+} from "@helpers/chunkReload";
 import { User } from "oidc-client-ts";
 import {
 	appPath,
@@ -149,6 +153,10 @@ export async function mountDcbAdminForLibraries(
 			cfg,
 		},
 	});
+
+	// A deploy deletes the previous build's chunks: reload once, then let the route boundary show the error.
+	installChunkReloadGuard();
+	router.subscribe("onResolved", clearChunkReloadGuard);
 
 	if (cfg.VITE_MUI_X_LICENSE_KEY) {
 		LicenseInfo.setLicenseKey(cfg.VITE_MUI_X_LICENSE_KEY);
