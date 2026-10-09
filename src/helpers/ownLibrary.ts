@@ -2,10 +2,11 @@ import request from "graphql-request";
 import { getLibraryBasics } from "@queries/getLibraryBasics";
 
 // The signed-in user's own library. Every insights query is scoped by a Host LMS
-// code, and this app has no library picker: the code is derived from the agency
-// claim on the access token, never from anything the user can type. Keep it that
-// way - a libraryCode taken from the URL or a form would let a library admin read
-// another library's figures for as long as dcb-service trusts the query param.
+// code derived from the agency claim on the access token - the header picker only
+// chooses among the libraries that claim names - never from anything the user can
+// type. Keep it that way: a libraryCode taken from the URL or a form would let a
+// library admin read another library's figures for as long as dcb-service trusts
+// the query param.
 
 export interface OwnLibrary {
 	id: string;

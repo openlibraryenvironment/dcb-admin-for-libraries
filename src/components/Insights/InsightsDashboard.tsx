@@ -1,6 +1,6 @@
 import { useEffect, useMemo, type ReactNode } from "react";
 
-import { formatNumber, formatPercent } from "@helpers/formatters";
+import { formatDate, formatNumber, formatPercent } from "@helpers/formatters";
 import { useAnnounce } from "@/hooks/useAnnouncer";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -39,9 +39,8 @@ import {
 	unmetLocalDemandQueryOptions,
 } from "@helpers/statsApi";
 import {
-	rangeToParams,
-	intervalForRange,
-	intervalForSpan,
+	localDay,
+	statsWindow,
 	formatTurnaround,
 } from "@helpers/insightsRange";
 
@@ -123,9 +122,8 @@ export default function InsightsDashboard({
 	libraryCode,
 	view,
 }: {
-	// Always the signed-in user's own library. This app has no consortium-wide
-	// scope and no library picker: the code is derived from the access token's
-	// agency claim by the route, never chosen in the UI.
+	// One of the signed-in user's own libraries, from the access token's agency
+	// claim; this app has no consortium-wide scope.
 	libraryCode: string;
 	/** The view as the URL states it, and the writers that change it. */
 	view: InsightsView;
@@ -144,14 +142,8 @@ export default function InsightsDashboard({
 	const setCustomRange = view.setCustomRange;
 
 	const { params, interval } = useMemo(() => {
-		// An explicit custom window wins over the preset.
-		const current = customRange ?? rangeToParams(rangePreset);
-		return {
-			params: { libraryCode, ...current } as StatsParams,
-			interval: customRange
-				? intervalForSpan(current.startDate, current.endDate)
-				: intervalForRange(rangePreset),
-		};
+		const { window: span, interval } = statsWindow(rangePreset, customRange);
+		return { params: { libraryCode, ...span } as StatsParams, interval };
 	}, [rangePreset, customRange, libraryCode]);
 
 	// Scope never changes here - this app is one library - so the range is the whole of
@@ -168,9 +160,9 @@ export default function InsightsDashboard({
 		: null;
 
 	const window = customRange
-		? `${dayjs(customRange.startDate).format("D MMM YYYY")} - ${dayjs(
-				customRange.endDate,
-			).format("D MMM YYYY")}`
+		? `${formatDate(localDay(customRange.startDate))} – ${formatDate(
+				localDay(customRange.endDate),
+			)}`
 		: t(`insights.range.${rangePreset}`);
 
 	// Changing the range rewrites every panel below it, and a screen-reader user was
@@ -267,10 +259,11 @@ export default function InsightsDashboard({
 							}
 							onChange={(value) => {
 								const [start, end] = value;
+								// The URL holds calendar days; statsWindow makes them instants.
 								if (start && end) {
 									setCustomRange({
-										startDate: start.startOf("day").toISOString(),
-										endDate: end.endOf("day").toISOString(),
+										startDate: start.format("YYYY-MM-DD"),
+										endDate: end.format("YYYY-MM-DD"),
 									});
 								} else if (!start && !end) {
 									setCustomRange(null);

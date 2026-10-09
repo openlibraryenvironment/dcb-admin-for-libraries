@@ -48,6 +48,7 @@ const NOT_FIGURES = new Set([
 	"MetricInfo",
 	"PanelState",
 	"InsightsDashboard",
+	"LibraryInsights",
 	"ScopeSelector",
 	"SubjectBar",
 	"ExportContext",

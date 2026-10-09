@@ -68,6 +68,23 @@ describe("the Insights view, in the URL", () => {
 		expect(parse({ to: "2026-08-31" }).custom).toBeNull();
 	});
 
+	it("rejects a window that ends before it starts", () => {
+		expect(parse({ from: "2026-08-31", to: "2026-08-01" }).custom).toBeNull();
+		expect(parse({ from: "2026-08-01", to: "2026-08-01" }).custom).toEqual({
+			startDate: "2026-08-01",
+			endDate: "2026-08-01",
+		});
+	});
+
+	it("keeps a window the date picker writes", () => {
+		// The picker writes calendar days. It once wrote ISO instants, which this schema
+		// dropped, so a chosen range never applied.
+		expect(
+			parse({ from: "2026-08-01T00:00:00.000Z", to: "2026-08-31" }).custom,
+		).toBeNull();
+		expect(parse({ from: "2026-08-01", to: "2026-08-31" }).custom).not.toBeNull();
+	});
+
 	it("caps the plotted series at the number a reader can tell apart", () => {
 		// Real status codes carry no digits, which is what the schema's filter enforces -
 		// so the fixture must not either, or this would be testing the filter instead.
