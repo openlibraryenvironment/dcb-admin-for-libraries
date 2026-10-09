@@ -789,6 +789,8 @@
 				"polaris_username": "Polaris staff account: Username"
 			},
 			"hostlms_title": "Host LMS - {{name}}",
+			"load_failed": "Your library's service details could not be loaded. Try reloading the page.",
+			"loading": "Loading service details",
 			"systems": {
 				"discovery": "Discovery system/PAC(s)",
 				"ils": "ILS",
