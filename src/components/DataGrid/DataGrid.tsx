@@ -103,7 +103,7 @@ interface DataGridProps {
 	noResultsText: string;
 	onColumnVisibilityModelChange?: (model: GridColumnVisibilityModel) => void;
 	onFilterModelChange?: (model: GridFilterModel) => void;
-	onPaginationModelChange?: any;
+	onPaginationModelChange?: (model: GridPaginationModel) => void;
 	onRowModesModelChange?: (model: GridRowModesModel) => void;
 	onRowEditStop?: (params: any, event: any) => void;
 	/** Told when an inline edit fails to save, with the message to show. */
