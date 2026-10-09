@@ -1,5 +1,6 @@
 import { test, expect } from "../e2e/fixtures/test";
 import library from "../e2e/fixtures-data/library.json" with { type: "json" };
+import { RUNTIME_CONFIG } from "../e2e/fixtures/runtime-config";
 
 /**
  * Navigation with the app mounted under a path prefix.
@@ -106,3 +107,30 @@ test.describe("Navigation under a deployment base path", () => {
 		expect(failures).toEqual([]);
 	});
 });
+
+// Every other spec injects window.__APP_ENV__, so the production fetch is exercised only here.
+const withoutInjectedConfig = test.extend({
+	// eslint-disable-next-line no-empty-pattern -- Playwright reads fixture dependencies from this pattern
+	runtimeConfig: async ({}, use) => {
+		await use();
+	},
+});
+
+withoutInjectedConfig(
+	"runtime config is fetched under the base, never from the origin root",
+	async ({ page }) => {
+		const requested: string[] = [];
+		await page.route("**/inject_env.json", async (route) => {
+			requested.push(new URL(route.request().url()).pathname);
+			await route.fulfill({ json: RUNTIME_CONFIG });
+		});
+
+		await page.goto(`${BASE}/login`);
+
+		await expect(
+			page.getByRole("button", { name: /sign in with keycloak/i }),
+		).toBeVisible();
+		// On a shared origin the root's inject_env.json belongs to another app.
+		expect(requested).toEqual([`${BASE}/inject_env.json`]);
+	},
+);
