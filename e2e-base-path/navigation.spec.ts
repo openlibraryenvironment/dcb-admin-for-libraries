@@ -33,6 +33,17 @@ test.describe("Navigation under a deployment base path", () => {
 		}
 	});
 
+	test("the header logo goes home under the base", async ({ page }) => {
+		await page.goto(`${BASE}/settings`);
+
+		const logo = page.getByRole("link", { name: /go to the home page/i });
+		await expect(logo).toHaveAttribute("href", `${BASE}/`);
+
+		await logo.click();
+		await expect(page).toHaveURL(new RegExp(`${BASE}/$`));
+		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+	});
+
 	test("clicking a tab lands on the page, not on Not Found", async ({
 		page,
 	}) => {
