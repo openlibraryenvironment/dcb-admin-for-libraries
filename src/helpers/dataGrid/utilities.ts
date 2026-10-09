@@ -5,7 +5,10 @@ import {
 	GridSortDirection,
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
-import { buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
+import {
+	buildFilterQuery,
+	escapeLucene,
+} from "@helpers/dataGrid/buildFilterQuery";
 import i18n from "@/i18n";
 
 export const processGridFilterModel = (
@@ -29,7 +32,7 @@ export const processGridFilterModel = (
 				// Create an OR condition for every field provided in quickFilterFields
 				// To be refined into a "universal search" at some point
 				const fieldSearches = quickFilterFields.map(
-					(field) => `${field}:*${val}*`,
+					(field) => `${field}:*${escapeLucene(val).replaceAll(" ", "?")}*`,
 				);
 				return `(${fieldSearches.join(" OR ")})`;
 			})
