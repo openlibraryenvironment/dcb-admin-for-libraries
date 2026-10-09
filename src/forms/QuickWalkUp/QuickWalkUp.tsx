@@ -366,10 +366,7 @@ export default function QuickWalkUpRequest({
 			setAlert({
 				open: true,
 				severity: "error",
-				text: t(getRequestError(error.response?.data?.failedChecks), {
-					code: error?.response?.data?.failedChecks?.[0]?.code,
-					description: error?.response?.data?.failedChecks?.[0]?.description,
-				}),
+				text: getRequestError(error?.response?.data?.failedChecks, t),
 			});
 			setStepError(1);
 		},

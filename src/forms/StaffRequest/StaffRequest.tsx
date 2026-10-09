@@ -378,10 +378,7 @@ export default function StaffRequest({
 			setAlert({
 				open: true,
 				severity: "error",
-				text: t(getRequestError(error.response?.data?.failedChecks), {
-					code: error?.response?.data?.failedChecks[0].code,
-					description: error?.response?.data?.failedChecks[0].description,
-				}),
+				text: getRequestError(error?.response?.data?.failedChecks, t),
 			});
 			setStepError(1); // Set error on step 1
 		},
@@ -548,6 +545,10 @@ export default function StaffRequest({
 				open={alert.open}
 				onCloseFunc={() => setAlert({ ...alert, open: false })}
 				alertText={
+					// Only the success text is a key with a link in it; an error is already text.
+					alert.severity !== "success" ? (
+						alert.text
+					) : (
 					<Trans
 						i18nKey={alert.text || ""}
 						components={{
@@ -562,6 +563,7 @@ export default function StaffRequest({
 							),
 						}}
 					/>
+					)
 				}
 				key="staff-request-alert"
 			/>
