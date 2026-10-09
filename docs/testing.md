@@ -15,7 +15,8 @@ What the gates are, and the two ways each of them can lie to you.
 | Lighthouse | `npx lhci autorun` | transfer, CLS and the category scores |
 | Naming | `npm run naming` | no name that only means something inside this workspace |
 | Secrets | `npm run gates -- --only secrets` | gitleaks over the whole history; needs a binary or Docker |
-| **Everything** | **`npm run gates`** | **all seven CI gates, in about eight minutes** |
+| Dependencies | `npm run gates -- --only dependencies` | no high or critical advisory in production dependencies; every production licence on the allow-list in `scripts/check-licences.mjs` |
+| **Everything** | **`npm run gates`** | **all eight CI gates, in about eight minutes** |
 
 ### react-hooks/exhaustive-deps is an error, not a warning
 
