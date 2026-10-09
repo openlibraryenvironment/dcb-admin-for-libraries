@@ -54,8 +54,13 @@ test.describe("Announcements", () => {
 		await page.goto("/announcements");
 
 		await expect(page).toHaveTitle(/^Tell your patrons · DCB Admin for Libraries$/);
-		await expect(page.getByText("Requesting paused")).toBeVisible();
-		await expect(page.getByText("Branch closed")).toBeVisible();
+		// Each notice is a heading under "Your notices"; subtitle1 alone renders an h6.
+		await expect(
+			page.getByRole("heading", { level: 3, name: "Requesting paused" }),
+		).toBeVisible();
+		await expect(
+			page.getByRole("heading", { level: 3, name: "Branch closed" }),
+		).toBeVisible();
 		expect(scopes).toContain(LIBRARY_ID);
 
 		await expect(

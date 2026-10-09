@@ -272,7 +272,9 @@ function Announcements() {
 						{rows.map((row) => (
 							<Stack key={row.id} spacing={0.5}>
 								<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-									<Typography variant="subtitle1">{row.headline}</Typography>
+									<Typography variant="subtitle1" component="h3">
+										{row.headline}
+									</Typography>
 									{/* An expired notice is still listed, because "why has that
 									    gone" is the next question an administrator asks. */}
 									{isExpired(row) && (
