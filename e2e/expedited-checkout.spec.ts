@@ -91,7 +91,7 @@ test("reaches the item step and asks for availability once", async ({
 	await page.getByRole("button", { name: /validate|next|continue/i }).first().click();
 
 	await expect(
-		page.getByRole("textbox", { name: /item/i }).first(),
+		page.getByRole("combobox", { name: /item local id/i }),
 	).toBeVisible({ timeout: 15_000 });
 	// The card asked, then the dialog asked. Repeatedly re-firing the fan-out is
 	// the failure this count exists to catch.

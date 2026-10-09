@@ -1,6 +1,13 @@
 import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	FormEvent,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
@@ -36,7 +43,9 @@ import DCBStepIcon from "@components/DCBStepIcon/DCBStepIcon";
 import { PatronValidationStep } from "./steps/PatronValidationStep";
 import { RequestCreationStep } from "./steps/RequestCreationStep";
 import { CheckoutStep } from "./steps/CheckoutStep";
-import { successfulExpeditedCheckoutStatuses } from "@constants/statuses/successfulExpeditedCheckoutStatuses";
+import { checkoutOutcome, nextCheckoutPoll } from "@helpers/checkoutPolling";
+import { useCheckedOutDueDate } from "@/hooks/useCheckedOutDueDate";
+import StepAnnouncement from "@components/StepAnnouncement/StepAnnouncement";
 import { StatusStepConnector } from "../../components/StatusStepConnector/StatusStepConnector";
 import request from "graphql-request";
 import { Library } from "@models/Library";
@@ -53,7 +62,6 @@ import {
 } from "@helpers/getStepLabelStyles";
 
 export default function ExpeditedCheckout({
-	// show,
 	onClose,
 	bibClusterId,
 }: PatronRequestFormType) {
@@ -99,16 +107,11 @@ export default function ExpeditedCheckout({
 	const [patronRequestId, setPatronRequestId] = useState<string | null>(null);
 	const [patronRequestWaiting, setPatronRequestWaiting] = useState(false);
 	const [checkoutCompleted, setCheckoutCompleted] = useState(false);
+	const [checkoutFailed, setCheckoutFailed] = useState(false);
 	const [stepError, setStepError] = useState<number | null>(null);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-	// The library ID of the staff user and item is known. Now we fetch its data
-
-	const {
-		data: staffLibraryData,
-		// isError: errorFetchingStaffLibrary,
-		// isLoading: staffLibraryLoading,
-	} = useQuery<LibrariesQueryData>({
+	const { data: staffLibraryData } = useQuery<LibrariesQueryData>({
 		queryKey: ["libraryInfo", staffAgencyCode, headers, cfg.VITE_DCB_API_BASE],
 		queryFn: async () =>
 			request(
@@ -122,16 +125,12 @@ export default function ExpeditedCheckout({
 				},
 				headers,
 			),
-		// do the on success here
 	});
 
 	const staffLibrary = staffLibraryData?.libraries?.content?.[0];
 
-	const {
-		data: patronLibrariesData,
-		isLoading: patronLibrariesLoading,
-		// isError: patronLibrariesError,
-	} = useQuery<LibrariesQueryData>({
+	const { data: patronLibrariesData, isLoading: patronLibrariesLoading } =
+		useQuery<LibrariesQueryData>({
 		queryKey: ["librariesInfo", headers, cfg.VITE_DCB_API_BASE],
 		queryFn: () =>
 			request(
@@ -197,20 +196,26 @@ export default function ExpeditedCheckout({
 				headers,
 			),
 		enabled: patronRequestWaiting && !!patronRequestId,
-		refetchInterval: 10000,
+		refetchInterval: (query) =>
+			nextCheckoutPoll(
+				query.state.data?.patronRequests?.content?.[0]?.status,
+				stepError === 2,
+			),
 	});
 
 	useEffect(() => {
-		if (patronRequestData) {
-			const status = patronRequestData?.patronRequests?.content?.[0]?.status;
-			if (
-				successfulExpeditedCheckoutStatuses.includes(status ?? "") &&
-				patronRequestWaiting
-			) {
-				setPatronRequestWaiting(false);
-				setCheckoutCompleted(true);
-				setStepError(null);
-			}
+		if (!patronRequestData || !patronRequestWaiting) return;
+		const outcome = checkoutOutcome(
+			patronRequestData?.patronRequests?.content?.[0]?.status,
+		);
+		if (outcome === "completed") {
+			setPatronRequestWaiting(false);
+			setCheckoutCompleted(true);
+			setStepError(null);
+		} else if (outcome === "failed") {
+			setPatronRequestWaiting(false);
+			setCheckoutFailed(true);
+			setStepError(2);
 		}
 	}, [patronRequestData, patronRequestWaiting]);
 
@@ -308,7 +313,7 @@ export default function ExpeditedCheckout({
 			return response.data;
 		},
 		...AVAILABILITY_QUERY_POLICY,
-		enabled: (activeStep === 1 || checkoutCompleted) && !!bibClusterId,
+		enabled: activeStep === 1 && !!bibClusterId,
 	});
 
 	// The step marker is local state, so a failed fetch still has to be told to
@@ -364,8 +369,14 @@ export default function ExpeditedCheckout({
 			}),
 		) || [];
 
-
-	const rawSelectedItem = itemsData.find((item) => item.id === itemLocalId);
+	const { dueDate, dueDateUnavailable } = useCheckedOutDueDate({
+		patronRequestId,
+		bibClusterId,
+		checkoutCompleted,
+		isCheckedOutItem: (item) => item.id === itemLocalId,
+		apiBase: cfg.VITE_DCB_API_BASE,
+		headers,
+	});
 
 	useEffect(() => {
 		if (timeoutRef.current) {
@@ -485,6 +496,7 @@ export default function ExpeditedCheckout({
 	});
 
 	const validatePatron = () => {
+		if (!patronBarcode || !agencyCode) return;
 		validatePatronMutation.mutate({
 			patronPrinciple: patronBarcode,
 			agencyCode: agencyCode,
@@ -503,6 +515,15 @@ export default function ExpeditedCheckout({
 		placeRequestMutation.mutate(data);
 	};
 
+	const submitStep = (event: FormEvent<HTMLFormElement>) => {
+		if (activeStep === 0) {
+			event.preventDefault();
+			validatePatron();
+			return;
+		}
+		return handleSubmit(onSubmit)(event);
+	};
+
 	const handleClose = () => {
 		if (timeoutRef.current) {
 			clearTimeout(timeoutRef.current);
@@ -513,6 +534,7 @@ export default function ExpeditedCheckout({
 		setPatronData(null);
 		setPatronRequestWaiting(false);
 		setCheckoutCompleted(false);
+		setCheckoutFailed(false);
 		setStepError(null);
 		setPatronRequestId(null);
 		onClose();
@@ -520,13 +542,15 @@ export default function ExpeditedCheckout({
 
 	const handleViewRequest = () => {
 		if (patronRequest?.id) {
-			navigate({ to: `/patronRequests/${patronRequest.id}` });
+			navigate({ to: "/patronRequests/$id", params: { id: patronRequest.id } });
 		}
 	};
 
-	// For read only users who are not allowed to look at patron requests
+	// For read-only users, who may not look at patron requests. Closes the dialog
+	// as well: on the requesting page itself the navigation alone changes nothing.
 	const handleReadOnlyReturn = () => {
-		navigate({ to: `/requesting` });
+		handleClose();
+		navigate({ to: "/requesting" });
 	};
 
 	const handleAlertClose = useCallback(() => {
@@ -542,7 +566,6 @@ export default function ExpeditedCheckout({
 						patronValidated={patronValidated}
 						isValidatingPatron={validatePatronMutation.isPending}
 						handleClose={handleClose}
-						validatePatron={validatePatron}
 						patronBarcode={patronBarcode}
 						agencyCode={agencyCode}
 						libraryOptions={patronLibraryOptions}
@@ -555,8 +578,6 @@ export default function ExpeditedCheckout({
 					<RequestCreationStep
 						control={control}
 						errors={errors}
-						// itemLibraryOptions={itemLibraryOptions}
-						// itemLibrariesLoading={librariesLoading}
 						setValue={setValue}
 						pickupLocationOptions={pickupLocationOptions}
 						pickupLocationsLoading={pickupLocationsLoading}
@@ -577,26 +598,15 @@ export default function ExpeditedCheckout({
 						handleViewRequest={handleViewRequest}
 						handleReadOnlyReturn={handleReadOnlyReturn}
 						checkoutCompleted={checkoutCompleted}
+						checkoutFailed={checkoutFailed}
 						stepError={stepError}
 						t={t}
-						dueDate={rawSelectedItem?.dueDate ?? ""}
+						dueDate={dueDate}
+						dueDateUnavailable={dueDateUnavailable}
 					/>
 				);
 			default:
-				return (
-					<PatronValidationStep
-						control={control}
-						patronValidated={patronValidated}
-						isValidatingPatron={validatePatronMutation.isPending}
-						handleClose={handleClose}
-						validatePatron={validatePatron}
-						patronBarcode={patronBarcode}
-						agencyCode={agencyCode}
-						libraryOptions={patronLibraryOptions}
-						librariesLoading={patronLibrariesLoading}
-						t={t}
-					/>
-				); // This should never happen - but putting this in place ensures that the process would reset gracefully.
+				return null;
 		}
 	};
 
@@ -657,7 +667,8 @@ export default function ExpeditedCheckout({
                         );
 					})}
 				</Stepper>
-				<form onSubmit={handleSubmit(onSubmit)}>
+				<StepAnnouncement activeStep={activeStep} steps={steps} />
+				<form onSubmit={submitStep}>
 					{getStepContent(activeStep)}
 				</form>
 			</DialogContent>

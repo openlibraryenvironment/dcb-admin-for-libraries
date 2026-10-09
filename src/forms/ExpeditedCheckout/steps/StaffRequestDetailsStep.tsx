@@ -8,7 +8,6 @@ import {
 	RadioGroup,
 	Stack,
 	TextField,
-	Tooltip,
 	Typography,
 } from "@mui/material";
 import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocompleteOption";
@@ -34,9 +33,10 @@ interface StaffRequestDetailsStepProps {
 	itemOptions: PatronRequestAutocompleteOption[];
 	itemsLoading: boolean;
 	itemsError: boolean;
-	fetchItems: () => void;
 	handleClose: () => void;
 	isSubmitting: boolean;
+	/** Placed already: a second submission would be a duplicate request. */
+	isPlaced: boolean;
 	isValid: boolean;
 	t: TFunction;
 }
@@ -53,18 +53,18 @@ export const StaffRequestDetailsStep = ({
 	itemOptions,
 	itemsLoading,
 	itemsError,
-	fetchItems,
 	handleClose,
 	isSubmitting,
+	isPlaced,
 	isValid,
 	t,
 }: StaffRequestDetailsStepProps) => {
 	// useWatch rather than the form's watch: the subscription belongs to
 	// whichever component called useForm, so reading it here re-rendered the whole
 	// StaffRequest form on every keystroke in these three fields.
-	const [selectionType, itemAgencyCode, itemsData] = useWatch({
+	const [selectionType, itemAgencyCode] = useWatch({
 		control,
-		name: ["selectionType", "itemAgencyCode", "itemLocalId"],
+		name: ["selectionType", "itemAgencyCode"],
 	});
 
 	return (
@@ -110,29 +110,39 @@ export const StaffRequestDetailsStep = ({
 						<FormLabel component="legend">
 							{t("requesting.staff_request.patron.selection.type")}
 						</FormLabel>
-						<RadioGroup row {...field}>
-							<Tooltip
-								title={t(
-									"requesting.staff_request.patron.selection.automatic_context"
-								)}>
-								<FormControlLabel
-									value="automatic"
-									control={<Radio />}
-									label={t(
-										"requesting.staff_request.patron.selection.automatic"
-									)}
-								/>
-							</Tooltip>
-							<Tooltip
-								title={t(
-									"requesting.staff_request.patron.selection.manual_context"
-								)}>
-								<FormControlLabel
-									value="manual"
-									control={<Radio />}
-									label={t("requesting.staff_request.patron.selection.manual")}
-								/>
-							</Tooltip>
+						{/* Visible text, as in the request type choice: a tooltip replaced
+						    the radio's accessible name and never reached a touch user. */}
+						<RadioGroup {...field}>
+							<FormControlLabel
+								value="automatic"
+								control={<Radio />}
+								label={
+									<>
+										<Typography variant="body1">
+											{t("requesting.staff_request.patron.selection.automatic")}
+										</Typography>
+										<Typography variant="body2" sx={{ color: "text.secondary" }}>
+											{t(
+												"requesting.staff_request.patron.selection.automatic_context",
+											)}
+										</Typography>
+									</>
+								}
+							/>
+							<FormControlLabel
+								value="manual"
+								control={<Radio />}
+								label={
+									<>
+										<Typography variant="body1">
+											{t("requesting.staff_request.patron.selection.manual")}
+										</Typography>
+										<Typography variant="body2" sx={{ color: "text.secondary" }}>
+											{t("requesting.staff_request.patron.selection.manual_context")}
+										</Typography>
+									</>
+								}
+							/>
 						</RadioGroup>
 					</FormControl>
 				)}
@@ -181,9 +191,6 @@ export const StaffRequestDetailsStep = ({
 								}
 								onChange={(_, newValue) => onChange(newValue?.value || "")}
 								options={itemOptions}
-								onOpen={() => {
-									if (!itemsData) fetchItems();
-								}}
 								loading={itemsLoading}
 								getOptionLabel={(option) => option.label}
 								renderInput={(params) => (
@@ -231,7 +238,7 @@ export const StaffRequestDetailsStep = ({
 					type="submit"
 					color="primary"
 					variant="contained"
-					disabled={!isValid || isSubmitting}>
+					disabled={!isValid || isSubmitting || isPlaced}>
 					{isSubmitting ? t("ui.actions.submitting") : t("ui.actions.submit")}
 				</Button>
 			</Stack>

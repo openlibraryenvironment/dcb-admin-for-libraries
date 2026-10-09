@@ -1,10 +1,11 @@
 import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
-import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { FormEvent, useMemo, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { staffRequestSchema } from "@/schemas/staffRequest";
 import {
+	Alert,
 	DialogContent,
 	Step,
 	StepLabel,
@@ -19,6 +20,7 @@ import { getLocations } from "@queries/getLocations";
 import axios, { AxiosError } from "axios";
 import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
+import StepAnnouncement from "@components/StepAnnouncement/StepAnnouncement";
 import { getRequestError } from "@helpers/getRequestError";
 import { Agency } from "@models/Agency";
 import { LibraryGroupMember } from "@models/LibraryGroupMember";
@@ -69,13 +71,11 @@ export default function StaffRequest({
 	const [alert, setAlert] = useState<{
 		open: boolean;
 		severity: "success" | "error";
-		text: string | null;
-		patronRequestId?: string;
+		text: string;
 	}>({
 		open: false,
 		severity: "success",
-		text: null,
-		patronRequestId: "",
+		text: "",
 	});
 
 	const [activeStep, setActiveStep] = useState(0);
@@ -96,7 +96,6 @@ export default function StaffRequest({
 		control,
 		handleSubmit,
 		reset,
-		watch,
 		setValue,
 		formState: { errors, isValid },
 	} = useForm<StaffRequestFormData>({
@@ -114,10 +113,11 @@ export default function StaffRequest({
 		mode: "onChange",
 	});
 
-	const selectionType = watch("selectionType");
-	const patronAgencyCode = watch("agencyCode");
-	const itemAgencyCode = watch("itemAgencyCode");
-	const patronBarcode = watch("patronBarcode");
+	const [selectionType, patronAgencyCode, itemAgencyCode, patronBarcode] =
+		useWatch({
+			control,
+			name: ["selectionType", "agencyCode", "itemAgencyCode", "patronBarcode"],
+		});
 
 	const { data: librariesData, isLoading: librariesDataLoading } =
 		useQuery<LibrariesQueryData>({
@@ -196,11 +196,13 @@ export default function StaffRequest({
 		enabled: false,
 	});
 
+	// Asked once, when manual selection is chosen, and then served from cache for
+	// AVAILABILITY_QUERY_POLICY's staleTime: every open of the item picker used to
+	// call refetch(), which ignores staleTime and fans out to every member LMS.
 	const {
 		data: availabilityResults,
 		isLoading: itemsLoading,
 		isError: itemsError,
-		refetch: fetchItems,
 	} = useQuery<any>({
 		queryKey: [
 			"itemAvailability",
@@ -214,7 +216,7 @@ export default function StaffRequest({
 				params: { clusteredBibId: bibClusterId },
 			}),
 		...AVAILABILITY_QUERY_POLICY,
-		enabled: false,
+		enabled: activeStep === 1 && selectionType === "manual" && !!bibClusterId,
 		select: (response) => response.data,
 	});
 
@@ -249,7 +251,6 @@ export default function StaffRequest({
 				agencyCode: item?.agency?.code,
 			}),
 		);
-		// Sort the array of options
 		return options.sort((a: any, b: any) => {
 			const isAUserAgency = a.agencyCode === agencyCode;
 			const isBUserAgency = b.agencyCode === agencyCode;
@@ -300,7 +301,6 @@ export default function StaffRequest({
 			}),
 		) || [];
 
-	// This handles loading state, errors, and success callbacks cleanly.
 	const validatePatronMutation = useMutation<
 		PatronLookupResponse,
 		unknown,
@@ -317,17 +317,17 @@ export default function StaffRequest({
 					{ headers },
 				)
 				.then((res) => res.data),
-		onSuccess: (data) => {
+		onSuccess: (data, variables) => {
 			if (data.status === "VALID") {
 				setPatronData(data);
 				setActiveStep(1);
-				setStepError(null); // Clear error on success
+				setStepError(null);
 				setAlert({
 					open: true,
 					severity: "success",
 					text: t("requesting.staff_request.patron.success.lookup", {
-						barcode: patronBarcode,
-						library: agencyCode,
+						barcode: variables.patronBarcode,
+						library: selectedLibrary?.label ?? variables.agencyCode,
 					}),
 				});
 			} else {
@@ -336,7 +336,7 @@ export default function StaffRequest({
 					severity: "error",
 					text: t("requesting.staff_request.patron.error.validation_failure"),
 				});
-				setStepError(0); // Set error on step 0
+				setStepError(0);
 			}
 		},
 		onError: () => {
@@ -345,7 +345,7 @@ export default function StaffRequest({
 				severity: "error",
 				text: t("requesting.staff_request.patron.error.validation_failure"),
 			});
-			setStepError(0); // Set error on step 0
+			setStepError(0);
 		},
 	});
 
@@ -360,19 +360,8 @@ export default function StaffRequest({
 					headers,
 				})
 				.then((res) => res.data),
-		onSuccess: (data) => {
-			setStepError(null); // Clear error on success
-			setAlert({
-				open: true,
-				severity: "success",
-				text: isReadOnly
-					? t("requesting.staff_request.patron.success.request_requesting_only")
-					: t("requesting.staff_request.patron.success.request"),
-				patronRequestId: data.id,
-			});
-			setTimeout(() => {
-				handleClose();
-			}, 6000);
+		onSuccess: () => {
+			setStepError(null);
 		},
 		onError: (error: any) => {
 			setAlert({
@@ -380,14 +369,18 @@ export default function StaffRequest({
 				severity: "error",
 				text: getRequestError(error?.response?.data?.failedChecks, t),
 			});
-			setStepError(1); // Set error on step 1
+			setStepError(1);
 		},
 	});
 
+	// The patron's own library, never the staff member's: with the patron library
+	// cleared, the lookup used to fall back to the staff member's and validate the
+	// barcode against the wrong library. The button is disabled without one.
 	const validatePatron = () => {
+		if (!patronBarcode || !patronAgencyCode) return;
 		validatePatronMutation.mutate({
 			patronBarcode,
-			agencyCode: selectedLibrary?.value ?? agencyCode,
+			agencyCode: patronAgencyCode,
 		});
 	};
 
@@ -438,15 +431,31 @@ export default function StaffRequest({
 		placeRequestMutation.mutate(finalPayload);
 	};
 
+	const submitStep = (event: FormEvent<HTMLFormElement>) => {
+		if (activeStep === 0) {
+			event.preventDefault();
+			validatePatron();
+			return;
+		}
+		// Placed once: the same submission twice is a duplicate request.
+		if (placeRequestMutation.isSuccess) {
+			event.preventDefault();
+			return;
+		}
+		return handleSubmit(onSubmit)(event);
+	};
+
 	const handleClose = () => {
 		reset();
 		setActiveStep(0);
 		setPatronData(null);
 		placeRequestMutation.reset();
 		validatePatronMutation.reset();
-		setStepError(null); // Reset step error
+		setStepError(null);
 		onClose();
 	};
+
+	const placedRequestId = placeRequestMutation.data?.id;
 
 	const getStepContent = (step: number) => {
 		switch (step) {
@@ -457,9 +466,8 @@ export default function StaffRequest({
 						patronValidated={activeStep !== 0}
 						isValidatingPatron={validatePatronMutation.isPending}
 						handleClose={handleClose}
-						validatePatron={validatePatron}
 						patronBarcode={patronBarcode}
-						agencyCode={agencyCode}
+						agencyCode={patronAgencyCode}
 						libraryOptions={libraryOptions}
 						librariesLoading={librariesDataLoading}
 						t={t}
@@ -479,22 +487,21 @@ export default function StaffRequest({
 						itemOptions={itemOptions}
 						itemsLoading={itemsLoading}
 						itemsError={itemsError}
-						fetchItems={fetchItems}
 						handleClose={handleClose}
 						isSubmitting={placeRequestMutation.isPending}
+						isPlaced={placeRequestMutation.isSuccess}
 						isValid={isValid}
 						t={t}
 					/>
 				);
 			default:
-				return "Unknown step";
+				return null;
 		}
 	};
 
 	return (
-        <>
-            <DialogContent>
-				{/* Same style as Expedited Checkout */}
+		<>
+			<DialogContent>
 				<Stepper
 					activeStep={activeStep}
 					alternativeLabel
@@ -522,51 +529,54 @@ export default function StaffRequest({
 						}
 
 						return (
-                            <Step key={label} {...stepProps}>
-                                <StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
+							<Step key={label} {...stepProps}>
+								<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
 									<Typography
 										color={getStepColors(isActive, hasError, isCompleted)}
 										sx={{
-                                            fontWeight: getStepLabelFontWeight(isActive)
-                                        }}>
+											fontWeight: getStepLabelFontWeight(isActive),
+										}}>
 										{label}
 									</Typography>
 								</StepLabel>
-                            </Step>
-                        );
+							</Step>
+						);
 					})}
 				</Stepper>
-				<form onSubmit={handleSubmit(onSubmit)}>
-					{getStepContent(activeStep)}
-				</form>
+				<StepAnnouncement activeStep={activeStep} steps={steps} />
+				<form onSubmit={submitStep}>{getStepContent(activeStep)}</form>
+				{/* In the dialog rather than a toast, so the link stays until the user
+				    closes it: WCAG 2.2.1. */}
+				{placedRequestId ? (
+					<Alert severity="success" sx={{ mt: 2 }}>
+						{isReadOnly ? (
+							t("requesting.staff_request.patron.success.request_requesting_only")
+						) : (
+							<Trans
+								i18nKey="requesting.staff_request.patron.success.request"
+								components={{
+									linkComponent: (
+										<CustomLink
+											key="patron-request-link"
+											to="/patronRequests/$id"
+											params={{ id: placedRequestId }}
+											target="_blank"
+											rel="noopener noreferrer"
+										/>
+									),
+								}}
+							/>
+						)}
+					</Alert>
+				) : null}
 			</DialogContent>
-            <TimedAlert
+			<TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
 				onCloseFunc={() => setAlert({ ...alert, open: false })}
-				alertText={
-					// Only the success text is a key with a link in it; an error is already text.
-					alert.severity !== "success" ? (
-						alert.text
-					) : (
-					<Trans
-						i18nKey={alert.text || ""}
-						components={{
-							linkComponent: (
-								<CustomLink
-									key="patron-request-link"
-									to="/patronRequests/$id"
-									params={{ id: alert.patronRequestId ?? "" }}
-									target="_blank"
-									rel="noopener noreferrer"
-								/>
-							),
-						}}
-					/>
-					)
-				}
+				alertText={alert.text}
 				key="staff-request-alert"
 			/>
-        </>
-    );
+		</>
+	);
 }

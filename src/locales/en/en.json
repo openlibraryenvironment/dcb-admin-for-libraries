@@ -1087,7 +1087,10 @@
 					"instructions": "Scan the item barcode and select a pickup location for this request"
 				},
 				"request_creation": "Request creation",
-				"request_creation_instruction": "The patron barcode is valid. Please now provide the remaining details."
+				"request_creation_instruction": "The patron barcode is valid. Please now provide the remaining details.",
+				"due_date_loading": "still loading",
+				"due_date_unavailable": "not known yet - view the request to see it",
+				"checkout_error": "The checkout failed. Please view the request for details."
 			},
 			"title_on_site": "Walk-up request",
 			"view_request": "View request"
@@ -1261,6 +1264,9 @@
 			"steps": {
 				"request_creation": "Scan item"
 			}
+		},
+		"steps": {
+			"announce": "Step {{number}} of {{total}}: {{label}}"
 		}
 	},
 	"settings": {
