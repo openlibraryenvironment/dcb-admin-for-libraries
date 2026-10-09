@@ -29,3 +29,5 @@ dist-ssr
 /blob-report/
 /playwright/.cache/
 user.json
+/typedocs
+.project

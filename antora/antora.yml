@@ -1,0 +1,22 @@
+name: dcb.admin-libs
+ext:
+  collector:
+    run:
+      -
+        dir: ''
+        command: "npm ci"
+        shell: true
+      -
+        dir: ''
+        command: "npx typedoc --displayBasePath ./ --entryPointStrategy Expand src --out ./typedocs"
+        shell: true
+
+    scan:
+       
+       # Scan directory relative to the repository root
+       - dir: typedocs
+         clean: true
+
+         # Into is anotra bucket not a physical directory
+         into:
+           dir: modules/api/attachments/typedoc
