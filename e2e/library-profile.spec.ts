@@ -1,5 +1,6 @@
 import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
+import { API_BASE } from "./fixtures/runtime-config";
 
 /**
  * The library profile is the biggest form in the application and the surface the
@@ -176,5 +177,142 @@ test.describe("field labels are attached to their values", () => {
 
 		const labels = (await pairs(page)).map((pair) => pair.label);
 		expect(labels).not.toContain("Full name");
+	});
+});
+
+const STATS_MOCKS = {
+	LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
+	LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
+};
+
+const renamed = (fullName: string) => ({
+	libraries: {
+		...library.libraries,
+		content: [{ ...library.libraries.content[0], fullName }],
+	},
+});
+
+test.describe("editing the profile", () => {
+	test("keeps an edit in progress when the record is refetched", async ({
+		app,
+		page,
+	}) => {
+		await page.clock.install();
+		let loads = 0;
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: () => {
+				loads += 1;
+				return loads === 1 ? library : renamed("Renamed on the server");
+			},
+			LoadLibraryBasics: library,
+			...STATS_MOCKS,
+		});
+
+		await page.goto("/");
+		await page.getByRole("button", { name: /^edit$/i }).click();
+		const fullName = page.getByRole("textbox", { name: /full name/i }).first();
+		await fullName.fill("Typed but not saved");
+
+		// Past the five-minute staleTime, then back to the tab: a focus refetch.
+		await page.clock.fastForward("06:00");
+		await page.evaluate(() => window.dispatchEvent(new Event("visibilitychange")));
+
+		await expect(
+			page.getByRole("heading", { level: 1, name: /Renamed on the server/ }),
+		).toBeVisible();
+		await expect(fullName).toHaveValue("Typed but not saved");
+	});
+
+	test("a staged logo alone can be saved, and cancelling forgets it", async ({
+		app,
+		page,
+	}) => {
+		await app.enableFeatures([
+			"VITE_DISCOVERY_ACTIVE",
+			"VITE_FEATURE_LIBRARY_BRANDING",
+		]);
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			...STATS_MOCKS,
+		});
+		await page.route("**/brand-assets", (route) =>
+			route.fulfill({ json: { url: "https://assets.example.invalid/logo.png" } }),
+		);
+
+		await page.goto("/");
+		await page.getByRole("button", { name: /^edit$/i }).click();
+		const save = page.getByRole("button", { name: /^save$/i });
+		await expect(save).toBeDisabled();
+
+		const logo = {
+			name: "logo.png",
+			mimeType: "image/png",
+			buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47]),
+		};
+		await page.locator('input[type="file"]').setInputFiles(logo);
+		await expect(save).toBeEnabled();
+
+		await page.getByRole("button", { name: /^cancel$/i }).click();
+		await page.getByRole("button", { name: /^edit$/i }).click();
+		await expect(save).toBeDisabled();
+
+		await page.locator('input[type="file"]').setInputFiles(logo);
+		await save.click();
+		await expect(page.getByRole("dialog")).toBeVisible();
+	});
+});
+
+test.describe("when the profile cannot be loaded", () => {
+	test("says so instead of rendering an empty profile", async ({
+		app,
+		page,
+	}) => {
+		await app.signIn();
+		await app.mockGraphQL({ LoadLibraryBasics: library, ...STATS_MOCKS });
+		await page.route(`${API_BASE}/graphql`, (route) =>
+			route.request().postDataJSON()?.operationName === "LoadLibrary"
+				? route.fulfill({
+						json: { data: null, errors: [{ message: "unavailable" }] },
+					})
+				: route.fallback(),
+		);
+
+		await page.goto("/");
+
+		await expect(page.getByRole("alert")).toContainText(/could not be loaded/i);
+	});
+});
+
+test.describe("statistics", () => {
+	test("names its spinners while they load", async ({
+		app,
+		page,
+	}) => {
+		await app.signIn();
+		await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+		let release!: () => void;
+		const held = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		await page.route(`${API_BASE}/graphql`, async (route) => {
+			const name = route.request().postDataJSON()?.operationName;
+			if (name !== "LoadPatronRequestStats" && name !== "LoadSupplierRequests") {
+				return route.fallback();
+			}
+			await held;
+			return route.fulfill({
+				json: { data: { patronRequests: { totalSize: 1 } } },
+			});
+		});
+
+		await page.goto("/");
+
+		await expect(
+			page.getByRole("progressbar", { name: "Loading" }),
+		).toHaveCount(2);
+		release();
 	});
 });

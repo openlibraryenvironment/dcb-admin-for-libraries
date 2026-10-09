@@ -17,6 +17,7 @@ import { Library } from "@models/Library";
 import { useTranslation } from "react-i18next";
 import RenderAttribute from "../../components/RenderAttribute/RenderAttribute";
 import {
+	Alert,
 	Button,
 	CircularProgress,
 	MenuItem,
@@ -123,6 +124,7 @@ function HomeComponent() {
 	const handleCancel = () => {
 		setEditMode(false);
 		setChangedFields({});
+		setStagedLogo(null);
 		reset();
 	};
 
@@ -163,11 +165,7 @@ function HomeComponent() {
 		}, 0);
 	};
 
-	// skip if headers not available
-	// figure out polling intervals
-	// need a better way of handling tokens as this causes a request to be sent (almost) every time
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const { data, isError, isLoading, refetch } = useQuery({
+	const { data, isError, refetch } = useQuery({
 		queryKey: ["libraryInfo", headers, code, DCB_API_BASE],
 		queryFn: async () =>
 			request(
@@ -182,9 +180,7 @@ function HomeComponent() {
 				},
 				headers,
 			),
-		// do the on success here
 	});
-	// on success
 
 	const library: Library = data?.libraries?.content?.[0];
 	const userLibraryHostLmsCode = library?.agency?.hostLms?.code;
@@ -215,7 +211,6 @@ function HomeComponent() {
 		// Gated on the agency code, which is what supplyingAgencyCode is built from -
 		// this waited on a Host LMS lookup the query never used
 		enabled: !!headers && !!DCB_API_BASE && !!code,
-		// refetchInterval: 1000000, // milliseconds
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
@@ -257,7 +252,6 @@ function HomeComponent() {
 			!!headers &&
 			!!DCB_API_BASE &&
 			hasBorrowingScope(code, userLibraryHostLmsCode),
-		// refetchInterval: 1000000, // milliseconds
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
@@ -288,7 +282,7 @@ function HomeComponent() {
 			);
 			return response.updateLibrary;
 		},
-		onSuccess: (data) => {
+		onSuccess: () => {
 			setChangedFields({});
 			setEditMode(false);
 			refetch();
@@ -301,23 +295,6 @@ function HomeComponent() {
 				}),
 				title: t("common.updated"),
 			});
-			if (data) {
-				reset({
-					fullName: library.fullName ?? "",
-					shortName: library.shortName ?? "",
-					abbreviatedName: library.abbreviatedName ?? "",
-					supportHours: library.supportHours ?? "",
-					backupDowntimeSchedule: library.backupDowntimeSchedule,
-					longitude: library.longitude,
-					latitude: library.latitude,
-					brandLogoUrl: library.brandLogoUrl ?? "",
-					brandLogoAlt: library.brandLogoAlt ?? "",
-					defaultThemeName: library.defaultThemeName ?? "",
-					patronWebsite: library.patronWebsite ?? "",
-					supportUrl: library.supportUrl ?? "",
-				});
-			}
-			refetch();
 		},
 		onError: () => {
 			setAlert({
@@ -367,7 +344,6 @@ function HomeComponent() {
 		reset,
 		setValue,
 		formState: { errors, isDirty },
-		// watch,
 	} = useForm<UpdateLibraryFormData>({
 		defaultValues: {
 			fullName: library?.fullName,
@@ -383,11 +359,9 @@ function HomeComponent() {
 	});
 
 	useEffect(() => {
-		if (library) {
-			// The reset function populates the form with the latest data
-			// from the query, whether it's the initial fetch or a subsequent poll.
-			// This exists to replicate what was previously handled by the onSuccess in react-query
-			// https://tkdodo.eu/blog/breaking-react-querys-api-on-purpose
+		// Not while editing: a refetch (a focus, a renewed token in the key) would
+		// otherwise replace what the administrator has typed with the server's copy.
+		if (library && !editMode) {
 			reset({
 				fullName: library.fullName ?? "",
 				shortName: library.shortName ?? "",
@@ -403,10 +377,13 @@ function HomeComponent() {
 				supportUrl: library.supportUrl ?? "",
 			});
 		}
-	}, [library, reset]);
+	}, [library, editMode, reset]);
 
 	// refactor this into common code
 	const onSubmit = async (data: Partial<Library>) => {
+		// Nothing to compare against while the record is being refetched.
+		if (!library) return;
+
 		// The staged logo is uploaded HERE, before the confirmation dialog rather than after
 		// it: asking somebody to confirm a save we already know will be rejected is asking
 		// them to approve something that will not happen.
@@ -467,30 +444,14 @@ function HomeComponent() {
 		changeCategory: string,
 		changeReferenceUrl: string,
 	) => {
-		try {
-			updateLibraryMutation.mutate({
-				id: library.id,
-				...changedFields,
-				reason,
-				changeCategory,
-				changeReferenceUrl,
-			});
-		} catch {
-			setAlert({
-				open: true,
-				severity: "error",
-				text: t("common.update_failure", {
-					entity: t("entities.location"),
-					name: library?.fullName,
-				}),
-				// The failure path, so the alert title is Error - matching the
-				// identical handler above. It read ui.data_grid.updated, a key that
-				// does not exist, so the alert was titled with the key itself.
-				title: t("common.error"),
-			});
-		} finally {
-			setConfirmationEdit(false);
-		}
+		updateLibraryMutation.mutate({
+			id: library?.id,
+			...changedFields,
+			reason,
+			changeCategory,
+			changeReferenceUrl,
+		});
+		setConfirmationEdit(false);
 	};
 
 	return (
@@ -503,6 +464,11 @@ function HomeComponent() {
 					{t("library.title", { library: library?.fullName })}
 				</Typography>
 			</Grid>
+            {isError && (
+				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+					<Alert severity="error">{t("library.load_failed")}</Alert>
+				</Grid>
+			)}
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography>
 					{t("welcome.title", {
@@ -521,7 +487,11 @@ function HomeComponent() {
 									color="primary"
 									startIcon={<Save />}
 									onClick={handleSubmit(onSubmit)}
-									disabled={Object.keys(errors).length > 0 || !isDirty}
+									disabled={
+										!library ||
+										Object.keys(errors).length > 0 ||
+										!(isDirty || stagedLogo)
+									}
 									ref={saveButtonRef}
 									sx={{ mr: 1 }}>
 									{t("ui.actions.save")}
@@ -549,7 +519,6 @@ function HomeComponent() {
 				<Typography variant="h3" component="h2" sx={{
                     fontWeight: "bold"
                 }}>
-					{/* {t("welcome.library", { library: library?.fullName })} */}
 					{t("welcome.library_short")}
 				</Typography>
 			</Grid>
@@ -898,12 +867,6 @@ function HomeComponent() {
             )}
             </>
             )}
-            {/* /* 'Primary location' title goes here/* */}
-            {/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" component="h2" fontWeight={"bold"}>
-					{t("library.primary_location.title")}
-				</Typography>
-			</Grid> */}
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("library.primary_location.address")}>
 					{/* This will need address-specific handling, and possibly its own component - leave as placeholder until we're ready + open maps in new tab*/}
@@ -966,7 +929,10 @@ function HomeComponent() {
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("library.statistics.requests_made")}>
 					{patronRequestStatsLoading || patronRequestStatsFetching ? (
-						<CircularProgress size="1rem" />
+						<CircularProgress
+							size="1rem"
+							aria-label={t("library.statistics.loading")}
+						/>
 					) : (
 						<RenderAttribute
 							attribute={
@@ -981,7 +947,10 @@ function HomeComponent() {
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("library.statistics.requests_supplied")}>
 					{supplierRequestStatsLoading || supplierRequestFetching ? (
-						<CircularProgress size="1rem" />
+						<CircularProgress
+							size="1rem"
+							aria-label={t("library.statistics.loading")}
+						/>
 					) : (
 						<RenderAttribute
 							attribute={
