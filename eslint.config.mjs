@@ -178,6 +178,9 @@ export default defineConfig(
 		"coverage/",
 		"playwright-report/",
 		"test-results/",
+		".lighthouseci/",
+		// Nested git worktrees are other checkouts, with their own dist/ and node_modules/.
+		".worktrees/",
 		"eslint.config.mjs",
 		"src/routeTree.gen.ts",
 	])

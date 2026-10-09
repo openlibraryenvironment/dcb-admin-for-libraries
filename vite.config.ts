@@ -113,8 +113,8 @@ export default defineConfig(({ mode }) => {
 		},
 
 		test: {
-			include: ["**/*.test.ts"],
-			exclude: ["node_modules", "dist", "coverage", "playwright", "**/*.d.ts"],
+			// Named directories only: checkouts under .worktrees/ hold test files that are not ours.
+			include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
 		},
 		resolve: {
 			alias: {
