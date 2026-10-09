@@ -59,16 +59,23 @@ test.describe("Header", () => {
 		app,
 		page,
 	}) => {
+		const scopes: string[] = [];
+		page.on("request", (request) => {
+			if (!request.url().endsWith("/graphql")) return;
+			const scope = request.postDataJSON()?.variables?.query;
+			if (typeof scope === "string") scopes.push(scope);
+		});
 		const requests = libraryNameRequests(page);
 		await app.signIn({ agencyCode: "" });
 		await app.mockGraphQL({ LoadLibrary: library });
 
 		await page.goto("/settings");
-		await expect(
-			page.getByText("DCB Admin for Libraries", { exact: true }),
-		).toBeVisible();
 		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+		await expect(page.getByRole("banner")).toContainText(
+			"DCB Admin for Libraries",
+		);
 
 		expect(requests).toEqual([]);
+		expect(scopes.filter((scope) => scope.includes("undefined"))).toEqual([]);
 	});
 });
