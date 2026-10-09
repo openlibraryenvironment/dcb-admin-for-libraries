@@ -23,8 +23,27 @@ existed and why it looked necessary.
 guards re-run with the session in hand, and the effect is gone.
 
 **`isAuthenticated` false means undecidable, not "no roles".** A guard that
-treats it as a denial fights `withAuthenticationRequired`, which is what
+treats it as a denial fights the layout's sign-in redirect, which is what
 actually keeps a signed-out visitor out. Let it pass and judge on the next run.
+
+## Starting sign-in
+
+`AuthenticatedLayout` starts the redirect to Keycloak itself, once per mount,
+and only when nothing else is in flight: no callback parameters in the URL, no
+session restore, no navigator running, no session, **and no error**.
+
+It used to be `react-oidc-context`'s `withAuthenticationRequired`, which (3.3.1)
+re-calls `signinRedirect` whenever the auth state changes and never reads
+`auth.error`. A failed redirect sets the error and changes the state, so with
+Keycloak down the tab re-requested the discovery document for as long as it
+stayed open. The root route compounded it by unmounting the whole tree while a
+navigator ran, so the failed page remounted and started again.
+
+A failure goes to `/login`, which shows the error and offers the button: the
+person decides when to try again. That also covers Keycloak sending back
+`?error=access_denied`, which the wrapper rendered as a blank page because the
+callback parameters suppressed its redirect and nothing else rendered.
+`e2e/login.spec.ts` asserts both.
 
 ## Read-only users
 
