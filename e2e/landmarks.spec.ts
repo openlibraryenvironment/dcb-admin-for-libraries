@@ -22,6 +22,10 @@ test("the page has a main and a named navigation landmark", async ({ page }) => 
 	await expect(
 		page.getByRole("navigation", { name: /main navigation/i }),
 	).toHaveCount(1);
+	// Tabs has no color prop, so color="primary" landed on the DOM as an attribute.
+	await expect(
+		page.getByRole("navigation", { name: /main navigation/i }).locator("[color]"),
+	).toHaveCount(0);
 });
 
 test("the first Tab reaches a skip link that moves focus to main", async ({
