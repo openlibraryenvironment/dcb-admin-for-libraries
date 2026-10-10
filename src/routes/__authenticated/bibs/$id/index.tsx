@@ -7,7 +7,15 @@ import Loading from "@components/Loading/Loading";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import { BibsQueryData } from "@models/ReactQueryHelperTypes";
 import { ExpandMoreOutlined } from "@mui/icons-material";
-import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
+import {
+	Accordion,
+	AccordionDetails,
+	AccordionSummary,
+	Box,
+	CircularProgress,
+} from "@mui/material";
+import { validate as isUuid } from "uuid";
+import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { getBibMainDetails } from "@queries/getBib";
@@ -30,6 +38,7 @@ function RouteComponent() {
 	const auth = useAuth();
 
 	const { id } = Route.useParams();
+	const isValidId = isUuid(id);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const DCB_API_BASE = cfg.VITE_DCB_API_BASE + "/graphql";
@@ -59,7 +68,7 @@ function RouteComponent() {
 				},
 				headers
 			),
-		enabled: !!auth.user,
+		enabled: !!auth.user && isValidId,
 	});
 
 	const {
@@ -70,7 +79,7 @@ function RouteComponent() {
 		queryKey: ["bib", "sourceRecord", id, DCB_API_BASE, headers],
 		queryFn: async () =>
 			request(DCB_API_BASE, getBibSourceRecord, { query: "id:" + id }, headers),
-		enabled: !!auth.user && !!id && isSourceExpanded,
+		enabled: !!auth.user && isValidId && isSourceExpanded,
 	});
 	const bibRecord = bibData?.sourceBibs?.content?.[0];
 
@@ -101,7 +110,7 @@ function RouteComponent() {
 		);
 	}
 
-	if (bibDataError || !bibData) {
+	if (bibDataError || !bibRecord) {
 		return (
 			<Error
 				title={
@@ -124,9 +133,9 @@ function RouteComponent() {
 		<Grid
 			container
 			spacing={{ xs: 2, md: 3 }}
-			columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h1">{bibRecord?.title}</Typography>
+			columns={DETAIL_COLUMNS}>
+			<Grid size={FULL_ROW}>
+				<Typography variant="h1">{bibRecord.title || t("bibs.title")}</Typography>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("bibs.author")}>
@@ -159,9 +168,7 @@ function RouteComponent() {
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("bibs.date_of_publication")}>
-					<RenderAttribute
-						attribute={formatTimestamp(bibRecord?.dateOfPublication, clock)}
-					/>
+					<RenderAttribute attribute={bibRecord?.dateOfPublication} />
 				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
@@ -204,7 +211,7 @@ function RouteComponent() {
 					<RenderAttribute attribute={bibRecord?.contributesTo?.id} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+			<Grid size={FULL_ROW}>
 				<Accordion
 					expanded={isCanonicalExpanded}
 					onChange={handleCanonicalAccordionChange}
@@ -219,11 +226,13 @@ function RouteComponent() {
 						</Typography>
 					</AccordionSummary>
 					<AccordionDetails>
-						<pre>{JSON.stringify(bibRecord?.canonicalMetadata, null, 2)}</pre>
+						<Box component="pre" sx={WRAPPED_PRE}>
+							{JSON.stringify(bibRecord?.canonicalMetadata, null, 2)}
+						</Box>
 					</AccordionDetails>
 				</Accordion>
 			</Grid>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+			<Grid size={FULL_ROW}>
 				<Accordion
 					expanded={isSourceExpanded}
 					onChange={handleAccordionChange}
@@ -241,14 +250,16 @@ function RouteComponent() {
 						{isSourceError ? (
 							t("bibs.source_error")
 						) : isSourceLoading ? (
-							<Loading
-								title={t("ui.info.loading.document", {
+							<CircularProgress
+								size="1.5rem"
+								aria-label={t("ui.info.loading.document", {
 									document_type: t("bibs.source_record").toLowerCase(),
 								})}
-								subtitle={t("ui.info.wait")}
 							/>
 						) : (
-							<pre>{JSON.stringify(sourceRecord, null, 2)}</pre>
+							<Box component="pre" sx={WRAPPED_PRE}>
+								{JSON.stringify(sourceRecord, null, 2)}
+							</Box>
 						)}
 					</AccordionDetails>
 				</Accordion>

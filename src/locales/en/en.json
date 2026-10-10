@@ -826,6 +826,7 @@
 		"print_label": "Print label",
 		"service_point": "FOLIO service point ID",
 		"sierra": "Sierra location ID",
+		"title": "Location",
 		"type": "Location type",
 		"view_location": "View pickup location"
 	},
