@@ -150,14 +150,15 @@ flow remain unchanged.
 ### After a deploy
 
 Every deploy deletes the previous build's hashed chunks, so a tab opened before it asks
-for a chunk that no longer exists at its next lazy route. `src/helpers/chunkReload.ts`
-handles Vite's `vite:preloadError` by reloading once, which fetches the new `index.html`;
-a second failure in the same tab is left to the route's error page rather than reloading
-forever. The guard is cleared after each resolved navigation, so the next deploy gets its
-own attempt.
+for a chunk that no longer exists at its next lazy route. TanStack Router recovers from
+that itself: `lazyRouteComponent` reloads the page once per missing chunk, which fetches the
+new `index.html`, and shows the route's error page if the chunk is still missing after
+that. `e2e/route-error.spec.ts` holds it to one reload. Do not add a second
+`vite:preloadError` handler on top: one was tried, and it reloaded a permanently missing
+chunk in a loop.
 
-That only works if `index.html` is never served from a cache. The pipeline uploads it with
-`Cache-Control: no-store`, hashed assets as immutable, and the other stable names
+The reload only helps if `index.html` is never served from a cache. The pipeline uploads it
+with `Cache-Control: no-store`, hashed assets as immutable, and the other stable names
 (`ki-bootstrap.js`, the favicon) as `no-cache`. If the Cloudflare worker sets its own
 headers, it must keep those semantics.
 
