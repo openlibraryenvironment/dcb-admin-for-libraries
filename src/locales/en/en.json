@@ -839,7 +839,10 @@
 	},
 	"mappings": {
 		"category": "Category",
+		"delete_failed": "The mapping was not deleted.",
+		"delete_failed_reason": "The mapping was not deleted: {{reason}}",
 		"delete_warning": "Are you sure you want to delete this mapping?",
+		"deleted": "Mapping deleted.",
 		"domain": "Domain",
 		"editing_disabled": "Editing mappings has been disabled by your consortium administrator",
 		"from_value": "From value",

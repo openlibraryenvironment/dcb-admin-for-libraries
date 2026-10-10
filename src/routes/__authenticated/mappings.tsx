@@ -41,6 +41,8 @@ import { deleteReferenceValueMapping } from "@mutations/deleteReferenceValueMapp
 import { updateReferenceValueMapping } from "@mutations/updateReferenceValueMapping";
 import { getLibrary } from "@queries/getLibrary";
 import { getMappings } from "@queries/getMappings";
+import { UserFacingError, userFacingReason } from "@helpers/userFacingReason";
+import { useAnnounce } from "@/hooks/useAnnouncer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
@@ -56,6 +58,17 @@ export const Route = createFileRoute("/__authenticated/mappings")({
 
 interface UpdateMappingResponse {
 	updateReferenceValueMapping: GridValidRowModel;
+}
+
+interface DeleteMappingInput {
+	id: GridRowId;
+	reason: string;
+	changeCategory: string;
+	changeReferenceUrl: string;
+}
+
+interface DeleteMappingResponse {
+	deleteReferenceValueMapping: { success: boolean; message: string | null };
 }
 
 function RouteComponent() {
@@ -108,8 +121,8 @@ function RouteComponent() {
 		storedState.columnVisibility ?? referenceValueMappingColumnVisibility
 	);
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
-	// An inline edit that did not save. The grid used to build this message and
-	// throw it away, so a failed save reverted the row and said nothing.
+	// An edit or a deletion that did not save. The grid used to build this message
+	// and throw it away, so a failed save reverted the row and said nothing.
 	const [rowUpdateError, setRowUpdateError] = useState<string | null>(null);
 
 	const handleSnackbarClose = (
@@ -222,24 +235,40 @@ function RouteComponent() {
 				headers
 			),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [gridId] });
-		},
-		onError: () => {
-			// Set alerts
-			// Catch "Library mapping editing has been disabled by your consortium administrator" too just in case
+			queryClient.invalidateQueries({ queryKey: [gridId, libraryHostLmsCode] });
 		},
 	});
 
-	const { mutate: deleteMapping } = useMutation({
-		mutationFn: (idToDelete: GridRowId) =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+	const announce = useAnnounce();
+	const { mutate: deleteMapping } = useMutation<
+		DeleteMappingResponse,
+		unknown,
+		DeleteMappingInput
+	>({
+		mutationFn: async (input) => {
+			const result = await request<DeleteMappingResponse>(
+				DCB_URL,
 				deleteReferenceValueMapping,
-				{ id: idToDelete },
+				{ input },
 				headers
-			),
+			);
+			// A refusal can come back as success:false with a 200, not only as an error.
+			if (!result.deleteReferenceValueMapping?.success) {
+				throw new UserFacingError(result.deleteReferenceValueMapping?.message);
+			}
+			return result;
+		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [gridId] });
+			queryClient.invalidateQueries({ queryKey: [gridId, libraryHostLmsCode] });
+			announce(t("mappings.deleted"));
+		},
+		onError: (error) => {
+			const reason = userFacingReason(error);
+			setRowUpdateError(
+				reason
+					? t("mappings.delete_failed_reason", { reason })
+					: t("mappings.delete_failed")
+			);
 		},
 	});
 
@@ -303,9 +332,18 @@ function RouteComponent() {
 		setDeleteConfirmationId(id);
 	};
 
-	const handleConfirmDelete = () => {
+	const handleConfirmDelete = (
+		reason: string,
+		changeCategory: string,
+		changeReferenceUrl: string
+	) => {
 		if (deleteConfirmationId) {
-			deleteMapping(deleteConfirmationId);
+			deleteMapping({
+				id: deleteConfirmationId,
+				reason,
+				changeCategory,
+				changeReferenceUrl,
+			});
 			setDeleteConfirmationId(null);
 		}
 	};

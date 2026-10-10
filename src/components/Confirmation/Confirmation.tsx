@@ -119,6 +119,8 @@ const Confirmation = ({
 	};
 	const getButtonText = () => {
 		switch (action) {
+			case "deletion":
+				return t("ui.actions.delete");
 			case "gridEdit":
 			case "pageEdit":
 				return t("ui.actions.confirm_changes");

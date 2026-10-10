@@ -101,6 +101,74 @@ test.describe("Mappings", () => {
 		await expect(page.getByRole("button", { name: "Edit" })).toHaveCount(0);
 	});
 
+	test("deletes a mapping, recording the reason the user gave", async ({
+		app,
+		page,
+	}) => {
+		const deletions: Record<string, unknown>[] = [];
+		await app.mockGraphQL({
+			LoadLibrary: libraryWithEditing(true),
+			LoadMappings: mappings,
+			DeleteReferenceValueMapping: (variables) => {
+				deletions.push(variables);
+				return { deleteReferenceValueMapping: { success: true, message: null } };
+			},
+		});
+
+		await page.goto("/mappings");
+		await page
+			.getByRole("row", { name: /Adult/ })
+			.getByRole("button", { name: "Delete" })
+			.click();
+
+		const dialog = page.getByRole("dialog");
+		await dialog.getByRole("combobox", { name: /Change category/ }).click();
+		await page.getByRole("option", { name: "Error correction" }).click();
+		await dialog
+			.getByRole("textbox", { name: /Reason for change/ })
+			.fill("Duplicate of the branch mapping");
+		await dialog.getByRole("button", { name: "Delete" }).click();
+
+		await expect.poll(() => deletions.length).toBe(1);
+		expect(deletions[0]).toEqual({
+			input: {
+				id: mappings.referenceValueMappings.content[0].id,
+				reason: "Duplicate of the branch mapping",
+				changeCategory: "Error correction",
+				changeReferenceUrl: "",
+			},
+		});
+	});
+
+	test("says why a deletion was refused", async ({ app, page }) => {
+		await app.mockGraphQL({
+			LoadLibrary: libraryWithEditing(true),
+			LoadMappings: mappings,
+			DeleteReferenceValueMapping: {
+				deleteReferenceValueMapping: {
+					success: false,
+					message: "This mapping is in use",
+				},
+			},
+		});
+
+		await page.goto("/mappings");
+		await page
+			.getByRole("row", { name: /Adult/ })
+			.getByRole("button", { name: "Delete" })
+			.click();
+
+		const dialog = page.getByRole("dialog");
+		await dialog.getByRole("combobox", { name: /Change category/ }).click();
+		await page.getByRole("option", { name: "Error correction" }).click();
+		await dialog.getByRole("textbox", { name: /Reason for change/ }).fill("Tidy");
+		await dialog.getByRole("button", { name: "Delete" }).click();
+
+		await expect(page.getByRole("alert")).toContainText(
+			"The mapping was not deleted: This mapping is in use",
+		);
+	});
+
 	test("asks the server for its rows rather than filtering locally", async ({
 		app,
 		page,
