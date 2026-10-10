@@ -109,11 +109,18 @@ export const components: Components<Theme> = {
 			disableRipple: true, // This can also be toggled on a per-variant basis
 		},
 		styleOverrides: {
-			root: {
+			root: ({ theme }) => ({
 				"&.Mui-focusVisible": {
 					outline: "2px solid", // For keyboard focus
 				},
-			},
+				// currentColor on a contained button is its contrast text - white on
+				// the white page in light mode - so the ring is drawn outside the fill
+				// in the token measured against the page.
+				"&.MuiButton-contained.Mui-focusVisible": {
+					outlineColor: (theme.vars || theme).palette.primary.outlineColor,
+					outlineOffset: "2px",
+				},
+			}),
 		},
 	},
 	MuiIconButton: {

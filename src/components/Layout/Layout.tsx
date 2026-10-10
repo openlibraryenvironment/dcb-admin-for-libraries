@@ -110,8 +110,7 @@ export const Layout = ({ children }: LayoutProps) => {
 					<Tabs
 						value={activeTab}
 						variant="scrollable"
-						scrollButtons="auto"
-						color="primary">
+						scrollButtons="auto">
 						{tabsConfig.map((tab) => (
 							<Tab
 								key={tab.value}

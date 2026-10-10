@@ -1,11 +1,10 @@
-import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { useAuth } from "react-oidc-context";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import Button from "@mui/material/Button";
 import { useTranslation } from "react-i18next";
 import Avatar from "@mui/material/Avatar";
@@ -13,9 +12,9 @@ import { Tooltip, useTheme } from "@mui/material";
 import { useMemo } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
-import { getLibrary } from "@queries/getLibrary";
+import { getLibraryNames } from "@queries/getLibraryNames";
 import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
-import { appPath, assetUrl } from "@helpers/appBase";
+import { assetUrl } from "@helpers/appBase";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { LibrarySelector } from "@components/Header/LibrarySelector";
 
@@ -38,36 +37,35 @@ export const Header = () => {
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const { data } = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", headers, code, cfg.VITE_DCB_API_BASE],
+		queryKey: ["libraryName", headers, code, cfg.VITE_DCB_API_BASE],
+		enabled: Boolean(code) && Boolean(cfg.VITE_DCB_API_BASE),
 		placeholderData: keepPreviousData,
+		// A library's name changes at the pace of onboarding, and this renders on
+		// every page: a staleTime of 0 would refetch it on every navigation.
+		staleTime: 5 * 60 * 1000,
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: REFERENCE_LIST_PAGE_SIZE,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
+				getLibraryNames,
+				{ query: "agencyCode:" + code, pagesize: 1, pageno: 0 },
 				headers
 			),
-		// do the on success here
 	});
-
-	const library = data?.libraries?.content?.[0];
 
 	const { t } = useTranslation();
 	const theme = useTheme();
+	const libraryName = data?.libraries?.content?.[0]?.fullName ?? t("header.library_fallback");
 
 	return (
 		<AppBar position="static">
-			<Toolbar disableGutters>
+			<Toolbar
+				disableGutters
+				sx={{ flexWrap: "wrap", columnGap: 1, rowGap: 1, px: { xs: 1, sm: 0 } }}>
 				<Tooltip title={t("ui.tooltips.logo")}>
 					<Button
 						variant="outlined"
-						href={appPath()}
+						component={Link}
+						to="/"
 						startIcon={
 							<Avatar
 								alt={t("ui.tooltips.logo")}
@@ -80,22 +78,31 @@ export const Header = () => {
 				<Typography
 					variant="h6"
 					component="div"
-					sx={{ flexGrow: 1, color: (theme.vars || theme).palette.primary.headerText }}>
+					sx={{
+						flexGrow: 1,
+						minWidth: 0,
+						overflowWrap: "anywhere",
+						color: (theme.vars || theme).palette.primary.headerText,
+					}}>
 					{isReadOnly
-						? t("header.title_requesting", {
-								library: library ? library?.fullName : "Libraries",
-							})
-						: t("header.title", {
-								library: library ? library?.fullName : "Libraries",
-							})}
+						? t("header.title_requesting", { library: libraryName })
+						: t("header.title", { library: libraryName })}
 				</Typography>
 				{auth.isAuthenticated && auth.user && (
-					<Box sx={{ display: "flex", alignItems: "center" }}>
+					<Box
+						sx={{
+							display: "flex",
+							flexWrap: "wrap",
+							alignItems: "center",
+							rowGap: 1,
+						}}>
 						<LibrarySelector />
 						<Typography
 							variant="body2"
 							sx={{ mr: 2, color: (theme.vars || theme).palette.primary.headerText }}>
-							{t("header.user", { user: auth.user.profile?.name || "User" })}
+							{t("header.user", {
+								user: auth.user.profile?.name || t("header.user_fallback"),
+							})}
 						</Typography>
 						<Button
 							color="inherit"

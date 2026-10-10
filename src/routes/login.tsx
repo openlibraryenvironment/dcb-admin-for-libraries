@@ -5,25 +5,17 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import Alert from "@mui/material/Alert";
 import LoginIcon from "@mui/icons-material/Login";
-import { z } from "zod";
 import Loading from "@components/Loading/Loading";
 import { useTranslation } from "react-i18next";
-import { storageKey } from "@helpers/appBase";
 
 const Login = () => {
 	const auth = useAuth();
 	const { t } = useTranslation();
 
-	// Retrieve the redirect path from the URL search parameters.
-	const { redirect } = Route.useSearch();
-
-
 	const handleLogin = () => {
-		// Store current location. Namespaced: sibling apps on this origin share one
-		// sessionStorage.
-		sessionStorage.setItem(storageKey("postLoginRedirectPath"), redirect || "/");
-		auth.signinRedirect();
+		void auth.signinRedirect();
 	};
 
 	if (auth.isLoading) {
@@ -77,18 +69,15 @@ const Login = () => {
 				</Button>
 
 				{auth.error && (
-					<Typography color="error" sx={{ mt: 2 }}>
+					<Alert severity="error" sx={{ mt: 2, width: "100%" }}>
 						{t("login.error", { message: auth.error.message })}
-					</Typography>
+					</Alert>
 				)}
 			</Paper>
 		</Box>
 	);
 };
 export const Route = createFileRoute("/login")({
-	validateSearch: z.object({
-		redirect: z.string().optional().catch(""),
-	}),
 	head: () => ({ meta: [{ title: pageTitle("login.title") }] }),
 	component: Login,
 });

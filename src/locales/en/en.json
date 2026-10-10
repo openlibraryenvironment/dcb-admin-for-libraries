@@ -241,7 +241,9 @@
 		"title": "DCB Admin for {{library}}",
 		"title_requesting": "DCB Admin for {{library}} - requesting only mode",
 		"user": "Welcome, {{user}}",
+		"user_fallback": "User",
 		"welcome": "Welcome to DCB Admin for {{name}}",
+		"library_fallback": "Libraries",
 		"library_selector": "Library"
 	},
 	"hostlms": {
@@ -787,6 +789,8 @@
 				"polaris_username": "Polaris staff account: Username"
 			},
 			"hostlms_title": "Host LMS - {{name}}",
+			"load_failed": "Your library's service details could not be loaded. Try reloading the page.",
+			"loading": "Loading service details",
 			"systems": {
 				"discovery": "Discovery system/PAC(s)",
 				"ils": "ILS",
@@ -797,7 +801,9 @@
 		},
 		"short_name": "Short name",
 		"site_designation": "Site designation",
+		"load_failed": "Your library's details could not be loaded. Try reloading the page.",
 		"statistics": {
+			"loading": "Loading",
 			"no_requesters": "No requesters this month",
 			"no_titles": "No titles requested this month",
 			"requests_made": "Requests made",
@@ -1423,6 +1429,7 @@
 			"out": "Logged out",
 			"out_current": "Logging you out",
 			"out_progress": "Please wait while we sign you out securely...",
+			"retry": "Try again",
 			"success": "You have successfully logged out from DCB Admin for Libraries. We hope to see you again soon!"
 		},
 		"tooltips": {
@@ -1472,6 +1479,13 @@
 		"expired": "Finished",
 		"until": "Shows until {{date}}",
 		"withdraw": "Take down",
+		"withdraw_named": "Take down: {{headline}}",
+		"published": "Notice published",
+		"withdrawn": "Notice taken down",
+		"loading": "Loading your notices",
+		"load_failed": "Your notices could not be loaded.",
+		"publish_failed": "The notice could not be published.",
+		"withdraw_failed": "The notice could not be taken down.",
 		"unavailable": "Announcements are not available on this deployment yet. They need a newer DCB service."
 	}
 }
