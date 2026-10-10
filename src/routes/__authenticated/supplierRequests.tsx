@@ -1,4 +1,7 @@
-import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
+import {
+	clampPageSize,
+	REFERENCE_LIST_PAGE_SIZE,
+} from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
@@ -14,8 +17,11 @@ import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import { standardSupplierRequestColumns } from "@helpers/dataGrid/columns/supplierRequestColumns";
 import { defaultSupplierRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/supplierRequestColumnVisibility";
-import { processGridFilterModel } from "@helpers/dataGrid/utilities";
-import { Library } from "@models/Library";
+import {
+	checkIfFiltering,
+	processGridFilterModel,
+} from "@helpers/dataGrid/utilities";
+import { hostLmsLibraryOptions } from "@helpers/hostLmsLibraryOptions";
 import {
 	LibrariesQueryData,
 	PatronRequestQueryData,
@@ -35,7 +41,7 @@ import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport"
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
@@ -62,23 +68,20 @@ function RouteComponent() {
 	const apiRef = useGridApiRef();
 
 	const gridId = "supplierPatronRequests";
-	const {
-		sortModel: storedSortModel,
-		filterModel: storedFilterModel,
-		paginationModel: storedPaginationModel,
-		columnVisibilityModel: storedColumnVisibilityModel,
-		setSortModel,
-		setFilterModel,
-		setPaginationModel,
-		setColumnVisibilityModel,
-	} = useGridStore();
-
 	const storedState = {
-		sort: storedSortModel[gridId],
-		filter: storedFilterModel[gridId],
-		pagination: storedPaginationModel[gridId],
-		columnVisibility: storedColumnVisibilityModel[gridId],
+		sort: useGridStore((state) => state.sortModel[gridId]),
+		filter: useGridStore((state) => state.filterModel[gridId]),
+		pagination: useGridStore((state) => state.paginationModel[gridId]),
+		columnVisibility: useGridStore(
+			(state) => state.columnVisibilityModel[gridId],
+		),
 	};
+	const setSortModel = useGridStore((state) => state.setSortModel);
+	const setFilterModel = useGridStore((state) => state.setFilterModel);
+	const setPaginationModel = useGridStore((state) => state.setPaginationModel);
+	const setColumnVisibilityModel = useGridStore(
+		(state) => state.setColumnVisibilityModel,
+	);
 
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
@@ -88,6 +91,7 @@ function RouteComponent() {
 		storedState.filter ?? { items: [] },
 	);
 	const debouncedFilterModel = useDebounce(filterModel, 500);
+	const isFiltering = checkIfFiltering(filterModel, debouncedFilterModel);
 
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
 		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }],
@@ -96,22 +100,6 @@ function RouteComponent() {
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
 		storedState.columnVisibility ?? defaultSupplierRequestColumnVisibility,
 	);
-
-	const [isFiltering, setIsFiltering] = useState(false);
-
-	useEffect(() => {
-		const hasActiveFilters =
-			filterModel.items.some(
-				(item) => item.value && item.value !== "" && item.value !== null,
-			) ||
-			(filterModel.quickFilterValues &&
-				filterModel.quickFilterValues.length > 0);
-
-
-		const isDifferent =
-			JSON.stringify(filterModel) !== JSON.stringify(debouncedFilterModel);
-		setIsFiltering(!!hasActiveFilters && isDifferent);
-	}, [filterModel, debouncedFilterModel]);
 
 	const handlePaginationChange = useCallback(
 		(model: GridPaginationModel) => {
@@ -193,19 +181,14 @@ function RouteComponent() {
 			presetQuery,
 		],
 		queryFn: async () => {
-			const additionalFilters = processGridFilterModel(
-				debouncedFilterModel,
-				presetQuery,
-				["status", "description"],
-			);
-			const finalQuery = additionalFilters
-				? `(${presetQuery}) AND (${additionalFilters})`
-				: presetQuery;
-
 			const queryVariables = {
-				query: finalQuery,
-				pagesize: paginationModel.pageSize,
-				pageno: paginationModel.page, // Use actual page number now
+				// Already scoped: processGridFilterModel puts presetQuery first.
+				query: processGridFilterModel(debouncedFilterModel, presetQuery, [
+					"status",
+					"description",
+				]),
+				pagesize: clampPageSize(paginationModel.pageSize),
+				pageno: paginationModel.page ?? 0,
 				order: sortModel[0]?.field ?? "dateCreated",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
 			};
@@ -249,15 +232,10 @@ function RouteComponent() {
 		[librariesData],
 	);
 
-	const libraryHostLmsOptions = useMemo(() => {
-		if (!libraries) return [];
-		return libraries
-			.filter((lib: Library) => lib?.agency?.hostLms?.code) // Libraries must have a Host LMS code
-			.map((lib: Library) => ({
-				value: lib.agency.hostLms.code,
-				label: lib.fullName,
-			}));
-	}, [libraries]);
+	const libraryHostLmsOptions = useMemo(
+		() => hostLmsLibraryOptions(libraries),
+		[libraries],
+	);
 
 	const dynamicColumns = useMemo(() => {
 		const targetField = "patronHostlmsCode";
@@ -426,8 +404,6 @@ function RouteComponent() {
 					open={alert.open}
 					onCloseFunc={handleSnackbarClose}
 					severityType={alert.severity}
-					// variant="filled"
-					// sx={{ width: "100%" }}
 					alertText={alert.text}></TimedAlert>
 			}
 		</>

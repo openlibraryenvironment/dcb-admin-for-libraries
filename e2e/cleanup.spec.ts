@@ -107,6 +107,10 @@ test.describe("Supplier requests clean up", () => {
 		await page.goto("/patronRequests");
 		await expect(page.getByRole("row", { name: new RegExp(ALPHA) })).toBeVisible();
 		await expect(page.getByRole("button", { name: /^Actions/ })).toHaveCount(0);
+		// Nothing on this grid acts on a selection, so it offers none.
+		await expect(page.getByRole("checkbox", { name: /select all/i })).toHaveCount(
+			0,
+		);
 	});
 
 	test("never offers a request another library supplied", async ({ page }) => {

@@ -16,7 +16,10 @@ import TimedAlert from "@components/TimedAlert/TimedAlert";
 import { standardFilters } from "@constants/filters/filters";
 import { defaultPatronRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/patronRequestColumnVisibility";
 import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
-import { processGridFilterModel } from "@helpers/dataGrid/utilities";
+import {
+	checkIfFiltering,
+	processGridFilterModel,
+} from "@helpers/dataGrid/utilities";
 import {
 	borrowedByLibraryQuery,
 	hasBorrowingScope,
@@ -42,12 +45,11 @@ import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport"
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
-	// useNavigate,
 	useRouter,
 } from "@tanstack/react-router";
 import axios from "axios";
 import request from "graphql-request";
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
@@ -73,23 +75,20 @@ function RouteComponent() {
 		[token],
 	);
 	const gridId = "mainPatronRequests";
-	const {
-		sortModel: storedSortModel,
-		filterModel: storedFilterModel,
-		paginationModel: storedPaginationModel,
-		columnVisibilityModel: storedColumnVisibilityModel,
-		setSortModel,
-		setFilterModel,
-		setPaginationModel,
-		setColumnVisibilityModel,
-	} = useGridStore();
-
 	const storedState = {
-		sort: storedSortModel[gridId],
-		filter: storedFilterModel[gridId],
-		pagination: storedPaginationModel[gridId],
-		columnVisibility: storedColumnVisibilityModel[gridId],
+		sort: useGridStore((state) => state.sortModel[gridId]),
+		filter: useGridStore((state) => state.filterModel[gridId]),
+		pagination: useGridStore((state) => state.paginationModel[gridId]),
+		columnVisibility: useGridStore(
+			(state) => state.columnVisibilityModel[gridId],
+		),
 	};
+	const setSortModel = useGridStore((state) => state.setSortModel);
+	const setFilterModel = useGridStore((state) => state.setFilterModel);
+	const setPaginationModel = useGridStore((state) => state.setPaginationModel);
+	const setColumnVisibilityModel = useGridStore(
+		(state) => state.setColumnVisibilityModel,
+	);
 
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
@@ -106,7 +105,6 @@ function RouteComponent() {
 		text: null,
 	});
 
-
 	const handleSnackbarClose = (
 		event?: React.SyntheticEvent | Event,
 		reason?: string,
@@ -120,6 +118,7 @@ function RouteComponent() {
 		storedState.filter ?? { items: [] },
 	);
 	const debouncedFilterModel = useDebounce(filterModel, 500);
+	const isFiltering = checkIfFiltering(filterModel, debouncedFilterModel);
 
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
 		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }],
@@ -128,24 +127,6 @@ function RouteComponent() {
 	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
 		storedState.columnVisibility ?? defaultPatronRequestColumnVisibility,
 	);
-
-	// Add state to track if we're filtering
-	const [isFiltering, setIsFiltering] = useState(false);
-
-	// Track when filter is being applied
-	useEffect(() => {
-		const hasActiveFilters =
-			filterModel.items.some(
-				(item) => item.value && item.value !== "" && item.value !== null,
-			) ||
-			(filterModel.quickFilterValues &&
-				filterModel.quickFilterValues.length > 0);
-
-		// We're filtering if there are active filters but they don't match debounced filters
-		const isDifferent =
-			JSON.stringify(filterModel) !== JSON.stringify(debouncedFilterModel);
-		setIsFiltering(!!hasActiveFilters && isDifferent);
-	}, [filterModel, debouncedFilterModel]);
 
 	const handlePaginationChange = useCallback(
 		(model: GridPaginationModel) => {
@@ -184,7 +165,8 @@ function RouteComponent() {
 
 	const isAdmin = roles.includes("ADMIN");
 	// facets for options
-	const { data: publisherOptions = [], isLoading: isPublishersLoading } =
+	// Only the publisher column uses these, and only administrators get it.
+	const { data: publisherOptions = [] } =
 		useQuery({
 			queryKey: ["publisherFacets", searchApiBase, headers],
 			queryFn: async () => {
@@ -210,7 +192,7 @@ function RouteComponent() {
 					return [];
 				}
 			},
-			enabled: !!searchApiBase && !!token,
+			enabled: isAdmin && !!searchApiBase && !!token,
 		});
 
 	// Library query
@@ -515,7 +497,6 @@ function RouteComponent() {
 	const shouldShowLoading =
 		isFiltering ||
 		isPatronRequestLoading ||
-		isPublishersLoading ||
 		(isFetching && !!patronRequestData);
 
 	return (
@@ -534,7 +515,7 @@ function RouteComponent() {
 					type="patronRequests"
 					label={t("nav.patron_requests.title")}
 					identifier="patronRequestsMain"
-					checkboxSelection={true}
+					checkboxSelection={false}
 					disableAggregation={true}
 					disableHoverInteractions={true}
 					disableRowGrouping={true}
@@ -572,8 +553,6 @@ function RouteComponent() {
 					open={alert.open}
 					onCloseFunc={handleSnackbarClose}
 					severityType={alert.severity}
-					// variant="filled"
-					// sx={{ width: "100%" }}
 					alertText={alert.text}></TimedAlert>
 			}
 		</>

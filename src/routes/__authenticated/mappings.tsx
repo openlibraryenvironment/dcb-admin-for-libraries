@@ -46,7 +46,7 @@ import { useAnnounce } from "@/hooks/useAnnouncer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
@@ -82,23 +82,20 @@ function RouteComponent() {
 	);
 
 	const gridId = "referenceValueMappings";
-	const {
-		sortModel: storedSortModel,
-		filterModel: storedFilterModel,
-		paginationModel: storedPaginationModel,
-		columnVisibilityModel: storedColumnVisibilityModel,
-		setSortModel,
-		setFilterModel,
-		setPaginationModel,
-		setColumnVisibilityModel,
-	} = useGridStore();
-
 	const storedState = {
-		sort: storedSortModel[gridId],
-		filter: storedFilterModel[gridId],
-		pagination: storedPaginationModel[gridId],
-		columnVisibility: storedColumnVisibilityModel[gridId],
+		sort: useGridStore((state) => state.sortModel[gridId]),
+		filter: useGridStore((state) => state.filterModel[gridId]),
+		pagination: useGridStore((state) => state.paginationModel[gridId]),
+		columnVisibility: useGridStore(
+			(state) => state.columnVisibilityModel[gridId],
+		),
 	};
+	const setSortModel = useGridStore((state) => state.setSortModel);
+	const setFilterModel = useGridStore((state) => state.setFilterModel);
+	const setPaginationModel = useGridStore((state) => state.setPaginationModel);
+	const setColumnVisibilityModel = useGridStore(
+		(state) => state.setColumnVisibilityModel,
+	);
 
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
@@ -108,6 +105,7 @@ function RouteComponent() {
 		storedState.filter ?? { items: [] }
 	);
 	const debouncedFilterModel = useDebounce(filterModel, 500);
+	const isFiltering = checkIfFiltering(filterModel, debouncedFilterModel);
 
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
 		storedState.sort ?? [{ field: "lastImported", sort: "desc" }]
@@ -135,16 +133,8 @@ function RouteComponent() {
 		setSnackbarOpen(false);
 	};
 
-	// Add state to track if we're filtering
-	const [isFiltering, setIsFiltering] = useState(false);
-
 	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
 	const { agencyCode: code } = useAgencyCodes();
-
-	// Track when filter is being applied
-	useEffect(() => {
-		setIsFiltering(checkIfFiltering(filterModel, debouncedFilterModel));
-	}, [filterModel, debouncedFilterModel]);
 
 	// Library query
 	const {
@@ -614,11 +604,8 @@ function RouteComponent() {
 					open={snackbarOpen}
 					onCloseFunc={handleSnackbarClose}
 					severityType="warning"
-					// variant="filled"
-					// sx={{ width: "100%" }}
 					alertText={
-						t("ui.feedback.error.cannot_process") ||
-						"We could not process that operation, so we have reset the data grid options."
+						t("ui.feedback.error.cannot_process")
 					}></TimedAlert>
 			}
 		</>
