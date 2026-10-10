@@ -2,6 +2,7 @@ import { test, expect as strictExpect, type AppFixture } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
+import polarisLibrary from "./fixtures-data/library-polaris.json" with { type: "json" };
 import {
 	colorSchemeAttribute,
 	type ColorScheme,
@@ -323,6 +324,93 @@ const PAGES: Surface[] = [
 		ready: async (page) => {
 			await expect(
 				page.getByRole("heading", { level: 1, name: "Page not found" }),
+			).toBeVisible();
+		},
+	},
+	{
+		// Two Host LMS configurations, so every credential row and both sections render.
+		name: "service",
+		path: "/service",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: polarisLibrary });
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Service" }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("heading", { level: 2, name: /E2E Second Host LMS/ }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "maintenance",
+		path: "/maintenance",
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Maintenance in progress" }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "network error",
+		path: "/networkError",
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Network error detected" }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "logged out",
+		path: "/logout?loggedOut=true",
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Logged out" }),
+			).toBeVisible();
+		},
+	},
+	{
+		// The library selector renders only for a multi-agency claim; no other surface has one.
+		name: "header with library selector",
+		path: "/settings",
+		prepare: async (app) => {
+			await app.signIn({ agencyCode: "e2e-agency,e2e-agency-2" });
+			await app.mockGraphQL({ LoadLibrary: library });
+		},
+		ready: async (page) => {
+			await expect(page.getByRole("combobox", { name: "Library" })).toBeVisible();
+		},
+	},
+	{
+		name: "announcements, with notices",
+		path: "/announcements",
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_ANNOUNCEMENTS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibraryBasics: library,
+				LoadAnnouncements: {
+					announcements: [
+						{
+							id: "aaaaaaaa-0000-4000-8000-000000000001",
+							scopeType: "LIBRARY",
+							scopeId: library.libraries.content[0].id,
+							headline: "Requesting paused",
+							body: "Requests resume on Monday.",
+							urgent: false,
+							dismissible: true,
+							startsAt: "2020-01-01T00:00:00Z",
+							expiresAt: "2020-01-31T23:59:59Z",
+						},
+					],
+				},
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("button", { name: "Take down: Requesting paused" }),
 			).toBeVisible();
 		},
 	},
