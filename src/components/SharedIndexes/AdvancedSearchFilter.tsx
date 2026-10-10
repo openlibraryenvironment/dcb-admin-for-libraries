@@ -26,12 +26,18 @@ interface AdvancedSearchFilterProps {
 	filters: SearchFilter[];
 	onFiltersChange: (filters: SearchFilter[]) => void;
 	isAdvancedMode: boolean;
+	/** The filter whose value is a cluster record ID that is not a UUID. */
+	invalidFilterId?: string;
 }
+
+/** Stacked on a phone, so the row never sets a minimum wider than 320px. */
+const fieldWidth = (rem: number) => ({ xs: 0, sm: `${rem}rem` });
 
 export const AdvancedSearchFilter = ({
 	filters,
 	onFiltersChange,
 	isAdvancedMode,
+	invalidFilterId,
 }: AdvancedSearchFilterProps) => {
 	const { t } = useTranslation();
 
@@ -128,11 +134,12 @@ export const AdvancedSearchFilter = ({
 							size="small"
 						/>
 					)}
-					sx={{ minWidth: 200, flexGrow: 1 }}
+					sx={{ minWidth: fieldWidth(12.5), flexGrow: 1 }}
 				/>
 			);
 		}
 
+		const invalid = filter.id === invalidFilterId;
 		return (
 			<TextField
 				value={filter.value}
@@ -140,29 +147,30 @@ export const AdvancedSearchFilter = ({
 				label={t("ui.common.search_term")}
 				variant="outlined"
 				size="small"
-				sx={{ minWidth: 200, flexGrow: 1 }}
+				error={invalid}
+				helperText={
+					invalid ? t("requesting.shared_index.invalid_cluster_id") : undefined
+				}
+				sx={{ minWidth: fieldWidth(12.5), flexGrow: 1 }}
 			/>
 		);
 	};
 
-	// Determine which filters to render based on the mode
 	const filtersToRender = isAdvancedMode ? filters : filters.slice(0, 1);
 
-	//fix this styling
 	return (
         <Box sx={{ p: 2, border: 1, borderColor: "divider", borderRadius: 1 }}>
             <Stack spacing={2}>
 				{filtersToRender.map((filter, index) => (
 					<Stack
 						key={filter.id}
-						direction="row"
+						direction={{ xs: "column", sm: "row" }}
 						spacing={2}
 						sx={{
-                            alignItems: "center"
+                            alignItems: { xs: "stretch", sm: "center" }
                         }}>
-						{/* Only show boolean operator in advanced mode for subsequent filters */}
 						{isAdvancedMode && index > 0 && (
-							<FormControl size="small" sx={{ minWidth: 80 }}>
+							<FormControl size="small" sx={{ minWidth: fieldWidth(5) }}>
 								<InputLabel id={`operator-label-${filter.id}`}>
 									{t("ui.common.operator")}
 								</InputLabel>
@@ -184,7 +192,7 @@ export const AdvancedSearchFilter = ({
 							</FormControl>
 						)}
 
-						<FormControl size="small" sx={{ minWidth: 150 }}>
+						<FormControl size="small" sx={{ minWidth: fieldWidth(9.5) }}>
 							<InputLabel id={`field-label-${filter.id}`}>
 								{t("ui.common.field")}
 							</InputLabel>
@@ -198,22 +206,31 @@ export const AdvancedSearchFilter = ({
 									})
 								}
 								label={t("ui.common.field")}>
-								{searchFieldOptions.map((field) => (
-									<MenuItem key={field.value} value={field.value}>
-										{field.label}
-									</MenuItem>
-								))}
+								{/* A cluster record ID is a lookup, not a clause: it only
+								    stands alone, so later filters do not offer it. */}
+								{searchFieldOptions
+									.filter(
+										(field) =>
+											index === 0 ||
+											field.value !== SearchField.ClusterRecordID,
+									)
+									.map((field) => (
+										<MenuItem key={field.value} value={field.value}>
+											{field.label}
+										</MenuItem>
+									))}
 							</Select>
 						</FormControl>
 
 						{renderValueInput(filter)}
 
-						{/* Only show delete button in advanced mode */}
 						{isAdvancedMode && (
 							<IconButton
+								aria-label={t("ui.actions.remove_filter")}
 								onClick={() => removeFilter(filter.id)}
 								disabled={filters.length === 1}
-								color="error">
+								color="error"
+								sx={{ alignSelf: { xs: "flex-end", sm: "center" } }}>
 								<Delete />
 							</IconButton>
 						)}

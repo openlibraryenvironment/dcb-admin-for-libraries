@@ -1,32 +1,34 @@
-// Step 3: Progress to checkout.
-
 import { formatLongDateTime } from "@helpers/formatters";
 import { Box, Button, LinearProgress, Stack, Typography } from "@mui/material";
 import { TFunction } from "i18next";
 import { useAuth } from "react-oidc-context";
 
-// The align items on the stack is to prevent the button taking up full width of the container.
 interface CheckoutStep {
 	checkoutCompleted: boolean;
+	/** The request went to ERROR: no later poll will turn it into a loan. */
+	checkoutFailed: boolean;
 	stepError: number | null;
 	handleViewRequest: () => void;
 	handleReadOnlyReturn: () => void;
 	t: TFunction;
-	dueDate: string;
+	dueDate: string | undefined;
+	dueDateUnavailable: boolean;
 }
 export const CheckoutStep = ({
 	checkoutCompleted,
+	checkoutFailed,
 	stepError,
 	handleViewRequest,
 	handleReadOnlyReturn,
 	t,
 	dueDate,
+	dueDateUnavailable,
 }: CheckoutStep) => {
 	const isButtonEnabled = checkoutCompleted || stepError === 2;
 
 	const getProgressColor = (): "success" | "error" | "primary" => {
 		if (checkoutCompleted) return "success";
-		if (stepError === 2) return "error"; // Use error color for progress bar on timeout
+		if (stepError === 2) return "error";
 		return "primary";
 	};
 	const auth = useAuth();
@@ -34,14 +36,20 @@ export const CheckoutStep = ({
 	const isReadOnly = roles.includes("LIBRARY_READ_ONLY");
 	const displayDueDate = dueDate
 		? formatLongDateTime(dueDate)
-		: t(
-				"requesting.expedited_checkout.steps.due_date_loading",
-				"Loading due date...",
-			);
+		: dueDateUnavailable
+			? t("requesting.expedited_checkout.steps.due_date_unavailable")
+			: t("requesting.expedited_checkout.steps.due_date_loading");
+
+	const failureText = checkoutFailed
+		? t("requesting.expedited_checkout.steps.checkout_error")
+		: isReadOnly
+			? t("requesting.expedited_checkout.steps.checkout_failure_request_only")
+			: t("requesting.expedited_checkout.steps.checkout_failure");
 
 	return (
 		<Stack direction="column" spacing={2}>
-			<Typography id="progress-bar-checkout">
+			{/* A live region: the outcome arrives while the user waits on this step. */}
+			<Typography id="progress-bar-checkout" role="status">
 				{checkoutCompleted &&
 					t("requesting.expedited_checkout.steps.checkout_success", {
 						dueDate: displayDueDate,
@@ -49,13 +57,7 @@ export const CheckoutStep = ({
 				{!checkoutCompleted &&
 					stepError !== 2 &&
 					t("requesting.expedited_checkout.steps.checkout_waiting")}
-				{!checkoutCompleted &&
-					stepError === 2 &&
-					(isReadOnly
-						? t(
-								"requesting.expedited_checkout.steps.checkout_failure_request_only",
-							)
-						: t("requesting.expedited_checkout.steps.checkout_failure"))}
+				{!checkoutCompleted && stepError === 2 && failureText}
 			</Typography>
 
 			<LinearProgress

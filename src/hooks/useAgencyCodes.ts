@@ -64,6 +64,13 @@ const useAgencySelectionStore = create<AgencySelectionState>()(
 	),
 );
 
+/** The library being looked at, for a route loader, which cannot call the hook. */
+export const currentAgencyCode = (claim: unknown): string | undefined =>
+	resolveAgencyCode(
+		agencyCodesFrom(claim),
+		useAgencySelectionStore.getState().selected,
+	);
+
 export interface AgencyCodeSelection {
 	/** Every library this user administers. */
 	agencyCodes: string[];

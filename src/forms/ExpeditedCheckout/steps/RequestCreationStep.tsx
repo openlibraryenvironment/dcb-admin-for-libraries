@@ -33,10 +33,8 @@ interface RequestCreationStepType {
 	pickupLocationId: string;
 	t: TFunction;
 }
-// need to pass in the item library and agency code and local system code
 export const RequestCreationStep = ({
 	control,
-	// setValue,
 	errors,
 	pickupLocationOptions,
 	pickupLocationsLoading,
@@ -118,6 +116,8 @@ export const RequestCreationStep = ({
 								error={!!errors.itemLocalId || itemsError}
 								helperText={errors.itemLocalId?.message}
 								slotProps={{
+									// Kept, or the input loses its combobox role and popup state.
+									...params.slotProps,
 									input: {
 										...params.slotProps.input,
 										endAdornment: (
