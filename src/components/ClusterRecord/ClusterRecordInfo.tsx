@@ -229,13 +229,14 @@ export default function ClusterRecordInfo() {
 
 				<Grid size={{ xs: 4, sm: 8, md: 12, lg: 12 }}>
 					<Accordion
+						slotProps={{ heading: { component: "h2" } }}
 						expanded={isAccordionExpanded}
 						onChange={() => setIsAccordionExpanded(!isAccordionExpanded)}>
 						<AccordionSummary
 							expandIcon={<ExpandMoreIcon />}
 							aria-controls="cluster-details-content"
 							id="cluster-details-header">
-							<Typography variant="h6" component="h2">
+							<Typography variant="h6" component="span">
 								{t("requesting.shared_index.cluster_details")}
 							</Typography>
 						</AccordionSummary>

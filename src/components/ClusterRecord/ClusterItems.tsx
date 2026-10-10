@@ -198,7 +198,7 @@ export default function ClusterItems() {
 							expandIcon={<ExpandMoreIcon />}
 							aria-controls="items-not-shown-content"
 							id="not-shown-header">
-							<Typography variant="h6" component="h3">
+							<Typography variant="h6" component="span">
 								{t("requesting.shared_index.items_not_shown", {
 									number: itemsNotShown?.length,
 								})}

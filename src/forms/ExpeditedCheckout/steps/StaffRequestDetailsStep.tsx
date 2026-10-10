@@ -192,13 +192,15 @@ export const StaffRequestDetailsStep = ({
 								onChange={(_, newValue) => onChange(newValue?.value || "")}
 								options={itemOptions}
 								loading={itemsLoading}
+								// On the Autocomplete, not the TextField: there it greyed the label
+								// and left the input focusable and enabled.
+								disabled={!itemAgencyCode}
 								getOptionLabel={(option) => option.label}
 								renderInput={(params) => (
 									<TextField
 										{...params}
 										margin="normal"
 										required
-										disabled={!itemAgencyCode}
 										fullWidth
 										label={t("requesting.staff_request.patron.item_local_id")}
 										error={!!errors.itemLocalId || itemsError}
