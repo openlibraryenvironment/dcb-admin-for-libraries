@@ -8,6 +8,8 @@ import {
 	type ColorScheme,
 } from "./fixtures/color-scheme";
 import { scrollUntilPresent } from "./fixtures/lazy";
+import { AGENCY_CODE } from "./fixtures/auth";
+import type { Page } from "@playwright/test";
 
 /**
  * The accessibility gate: zero axe violations on every surface in PAGES, in
@@ -26,7 +28,7 @@ interface Surface {
 	name: string;
 	path: string;
 	/** Runs before navigation: sign-in, mocks, anything else the page needs. */
-	prepare?: (app: AppFixture) => Promise<void>;
+	prepare?: (app: AppFixture, page: Page) => Promise<void>;
 	/**
 	 * Mount anything the page defers until it is scrolled into view.
 	 *
@@ -35,9 +37,9 @@ interface Surface {
 	 * page that defers content MUST bring it in here, and `ready` must then wait
 	 * for the LAST thing revealed rather than the first thing painted.
 	 */
-	reveal?: (page: import("@playwright/test").Page) => Promise<void>;
+	reveal?: (page: Page) => Promise<void>;
 	/** Waited for before scanning, so axe never sees a half-rendered page. */
-	ready: (page: import("@playwright/test").Page) => Promise<void>;
+	ready: (page: Page) => Promise<void>;
 }
 
 /**
@@ -61,6 +63,73 @@ const INSIGHTS_SUBJECTS = [
 	{ subject: "partners", lastPanel: "Borrowing vs supplying" },
 	{ subject: "gaps", lastPanel: RARE_GEM },
 ] as const;
+
+/** A cluster record with one requestable item at the signed-in library. */
+const RECORD = "aaaaaaaa-0000-4000-8000-000000000001";
+
+const mockRecord = async (app: AppFixture, page: Page) => {
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraries: library,
+		LoadPatronRequests: patronRequests,
+		LoadLocations: {
+			locations: {
+				totalSize: 1,
+				content: [
+					{
+						id: "loc-1",
+						name: "Main desk",
+						code: "MAIN",
+						agency: { name: "E2E Test Library", code: AGENCY_CODE },
+					},
+				],
+			},
+		},
+	});
+	await page.route("**/opac-inventory/instances/**", (route) =>
+		route.fulfill({
+			json: {
+				id: RECORD,
+				title: "Middlemarch",
+				description: "A study of provincial life",
+				contributors: [{ name: "Eliot, George" }],
+				sourceTypes: ["Book"],
+				subjects: [{ value: "Provincial life" }],
+			},
+		}),
+	);
+	await page.route("**/items/availability**", (route) =>
+		route.fulfill({
+			json: {
+				itemList: [
+					{
+						id: "item-1",
+						barcode: "30001",
+						status: { code: "AVAILABLE" },
+						agency: { code: AGENCY_CODE, description: "E2E Test Library" },
+						isRequestable: true,
+						isSuppressed: false,
+						location: { code: "MAIN", name: "Main" },
+					},
+				],
+				timings: {},
+			},
+		}),
+	);
+	await page.route("**/patron/auth/lookup", (route) =>
+		route.fulfill({
+			json: { status: "VALID", localPatronId: ["p1"], agencyCode: AGENCY_CODE },
+		}),
+	);
+};
+
+const openRequestDialog = async (page: Page) => {
+	const place = page.getByRole("button", { name: /^place request$/i });
+	await expect(place).toBeEnabled();
+	await place.click();
+	await page.getByRole("button", { name: /continue/i }).click();
+};
 
 const PAGES: Surface[] = [
 	{
@@ -414,6 +483,85 @@ const PAGES: Surface[] = [
 			).toBeVisible();
 		},
 	},
+	{
+		name: "record information",
+		path: `/requesting/${RECORD}`,
+		prepare: mockRecord,
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Middlemarch" }),
+			).toBeVisible();
+			await expect(page.getByText("Eliot, George")).toBeVisible();
+		},
+	},
+	{
+		name: "record items",
+		path: `/requesting/${RECORD}/items`,
+		prepare: mockRecord,
+		ready: async (page) => {
+			await expect(page.getByRole("grid", { name: /^items$/i })).toBeVisible();
+			await expect(page.getByText("item-1")).toBeVisible();
+		},
+	},
+	{
+		name: "record history",
+		path: `/requesting/${RECORD}/history`,
+		prepare: mockRecord,
+		ready: async (page) => {
+			await expect(
+				page.getByRole("grid", { name: /request history/i }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "requesting dialog, patron step",
+		path: `/requesting/${RECORD}`,
+		prepare: mockRecord,
+		reveal: openRequestDialog,
+		ready: async (page) => {
+			await expect(
+				page.getByRole("textbox", { name: /patron barcode/i }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "staff request, manual item selection",
+		path: `/requesting/${RECORD}`,
+		prepare: mockRecord,
+		reveal: async (page) => {
+			await openRequestDialog(page);
+			const barcode = page.getByRole("textbox", { name: /patron barcode/i });
+			await barcode.fill("12345");
+			await barcode.press("Enter");
+			await page.getByRole("radio", { name: /manual/i }).check();
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("combobox", { name: /item library/i }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "requesting, advanced search",
+		path: "/requesting?filters=keyword%3Amiddlemarch",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library });
+			await app.mockSearch();
+		},
+		reveal: async (page) => {
+			await page.getByRole("button", { name: /show advanced search/i }).click();
+			await page.getByRole("button", { name: /add filter/i }).click();
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("button", { name: /remove filter/i }).first(),
+			).toBeVisible();
+			await expect(
+				page.getByRole("list", { name: /search results/i }),
+			).toBeVisible();
+		},
+	},
 ];
 
 const SCHEMES: ColorScheme[] = ["light", "dark"];
@@ -423,7 +571,7 @@ for (const scheme of SCHEMES) {
 		for (const surface of PAGES) {
 			test(`${surface.name} has no violations`, async ({ app, page }) => {
 				await app.useColorScheme(scheme);
-				await surface.prepare?.(app);
+				await surface.prepare?.(app, page);
 
 				await page.goto(surface.path);
 				await surface.reveal?.(page);
@@ -442,7 +590,7 @@ for (const scheme of SCHEMES) {
 }
 
 /** The widest elements past the right edge, so a failure names what to fix. */
-async function horizontalOverflow(page: import("@playwright/test").Page) {
+async function horizontalOverflow(page: Page) {
 	return page.evaluate(() => {
 		const root = document.documentElement;
 		const limit = root.clientWidth;
@@ -472,7 +620,7 @@ test.describe("WCAG 2.2 AA - 1.4.10 reflow at 320 CSS px", () => {
 
 	for (const surface of PAGES) {
 		test(`${surface.name} does not scroll horizontally`, async ({ app, page }) => {
-			await surface.prepare?.(app);
+			await surface.prepare?.(app, page);
 			await page.goto(surface.path);
 			await surface.reveal?.(page);
 			await surface.ready(page);
