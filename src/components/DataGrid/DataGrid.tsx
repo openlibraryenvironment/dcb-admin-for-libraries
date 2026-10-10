@@ -121,7 +121,6 @@ interface DataGridProps {
 	rowCount?: number;
 	rowModesModel: GridRowModesModel;
 	rows: GridRowsProp;
-	scrollbarVisible: boolean;
 	sortModel?: any;
 	sortingMode: GridFeatureMode;
 	toolbarVisible: boolean;
@@ -171,7 +170,6 @@ export default function DataGrid({
 	rowCount,
 	rowModesModel,
 	rows,
-	scrollbarVisible,
 	sortModel,
 	sortingMode,
 	styleOverrides,
@@ -327,8 +325,7 @@ export default function DataGrid({
 					// filter button whose visible text is "Filters" and whose accessible
 					// name is "Show filters", with an always-rendered "0" badge inside it -
 					// WCAG 2.5.3 Label in Name, caught once the axe gate was actually
-					// running the WCAG tag sets. Our own toolbar already branches on
-					// `type` for its export items, so it was written for this.
+					// running the WCAG tag sets.
 					toolbar: ExportToolbar,
 				}}
 				slotProps={{
@@ -355,9 +352,6 @@ export default function DataGrid({
 					minHeight: rows.length === 0 ? (theme) => theme.spacing(50) : undefined,
 					"@media print": {
 						".MuiDataGrid-main": { color: "common.black" },
-					},
-					".MuiDataGrid-virtualScroller": {
-						overflow: scrollbarVisible ? "" : "hidden",
 					},
 					// both hover styles need to be added, otherwise a flashing effect appears when hovering
 					// https://stackoverflow.com/questions/76563478/disable-hover-effect-on-mui-datagrid

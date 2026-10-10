@@ -172,7 +172,6 @@ export const CleanupProgressDialog = ({
 											listViewEnabled={false}
 											pivotingEnabled
 											loading={isCleaning}
-											scrollbarVisible={false}
 											paginationModel={currentPagination}
 											filterModel={currentFilter}
 											rowModesModel={rowModesModel}
@@ -235,7 +234,6 @@ export const CleanupProgressDialog = ({
 										listViewEnabled={false}
 										pivotingEnabled
 										loading={isCleaning}
-										scrollbarVisible={false}
 										paginationModel={currentPagination}
 										filterModel={currentFilter}
 										rowModesModel={rowModesModel}
@@ -309,7 +307,6 @@ export const CleanupProgressDialog = ({
 										listViewEnabled={false}
 										pivotingEnabled
 										loading={isCleaning}
-										scrollbarVisible={false}
 										paginationModel={currentPagination}
 										filterModel={currentFilter}
 										rowModesModel={rowModesModel}

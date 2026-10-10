@@ -380,7 +380,6 @@ function RouteComponent() {
 					pivotingEnabled={false}
 					toolbarVisible
 					searchText={t("ui.data_grid.search_supplier_requests")}
-					scrollbarVisible={false}
 					paginationMode="server"
 					paginationModel={paginationModel}
 					onPaginationModelChange={handlePaginationChange}

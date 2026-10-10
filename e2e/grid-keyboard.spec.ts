@@ -67,3 +67,29 @@ test("a cell reached by arrow key shows a focus outline", async ({
 	expect(outline.style).not.toBe("none");
 	expect(parseFloat(outline.width)).toBeGreaterThan(0);
 });
+
+test("a grid wider than the screen scrolls by wheel and touch", async ({
+	app,
+	page,
+}) => {
+	await page.setViewportSize({ width: 320, height: 800 });
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraries: library,
+		LoadPatronRequests: patronRequests,
+	});
+
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("link", { name: /2026-09-01/ }).first()).toBeVisible();
+
+	// The scroller is the grid's own scroll container; overflow: hidden on it
+	// left the custom scrollbar as the only way across, which no wheel, trackpad
+	// or finger reaches.
+	const scroller = page.locator(".MuiDataGrid-virtualScroller").first();
+	await scroller.hover();
+	await page.mouse.wheel(400, 0);
+	await expect
+		.poll(() => scroller.evaluate((element) => element.scrollLeft))
+		.toBeGreaterThan(0);
+});

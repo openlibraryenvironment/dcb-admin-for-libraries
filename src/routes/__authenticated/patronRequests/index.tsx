@@ -545,7 +545,6 @@ function RouteComponent() {
 					pivotingEnabled={false}
 					toolbarVisible
 					searchText={t("ui.actions.search")}
-					scrollbarVisible={false}
 					paginationMode="server"
 					paginationModel={paginationModel}
 					onPaginationModelChange={handlePaginationChange}

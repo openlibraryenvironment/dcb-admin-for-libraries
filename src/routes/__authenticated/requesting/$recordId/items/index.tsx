@@ -169,7 +169,6 @@ function ItemsPageComponent() {
 					paginationModel={itemsCurrentPagination}
 					pivotingEnabled={false}
 					rows={items}
-					scrollbarVisible={false}
 					searchText={t("requesting.items_search")}
 					toolbarVisible={true}
 					type={"Items"}
@@ -229,7 +228,6 @@ function ItemsPageComponent() {
 								paginationMode="client"
 								paginationModel={itemsNotShownCurrentPagination}
 								pivotingEnabled={false}
-								scrollbarVisible={false}
 								searchText={t("requesting.items_search")}
 								toolbarVisible={false}
 								rows={itemsNotShown ?? []}

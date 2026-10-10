@@ -72,7 +72,6 @@ function HistoryPage() {
 			pagination
 			listViewEnabled={false}
 			rowModesModel={{}}
-			scrollbarVisible={false}
 			toolbarVisible={true}
 			searchText={t("ui.actions.search")}
 		/>

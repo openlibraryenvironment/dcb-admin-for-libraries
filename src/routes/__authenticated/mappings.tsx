@@ -543,7 +543,6 @@ function RouteComponent() {
 					toolbarVisible
 					noResultsText={t("audit.no_results")}
 					searchText={t("ui.data_grid.search_mappings")}
-					scrollbarVisible={false}
 				/>
 			}
 			{

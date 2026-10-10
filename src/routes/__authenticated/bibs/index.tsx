@@ -276,7 +276,6 @@ function RouteComponent() {
 					pivotingEnabled={false}
 					toolbarVisible
 					searchText={"bibs.search"}
-					scrollbarVisible={false}
 					paginationMode="server"
 					paginationModel={paginationModel}
 					onPaginationModelChange={handlePaginationChange}

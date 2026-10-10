@@ -1610,7 +1610,6 @@ function RouteComponent() {
 						toolbarVisible
 						rowModesModel={rowModesModel}
 						searchText={t("ui.data_grid.search_audits")}
-						scrollbarVisible={false}
 						sortingMode="client"
 						sortModel={currentSort}
 						onSortModelChange={(newModel) =>
