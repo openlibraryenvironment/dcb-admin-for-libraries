@@ -179,8 +179,9 @@ export default defineConfig(
 		"playwright-report/",
 		"test-results/",
 		".lighthouseci/",
-		// Nested git worktrees are other checkouts, with their own dist/ and node_modules/.
+		// Nested git worktrees (incl. agent ones under .claude/) are other checkouts, with their own dist/ and node_modules/.
 		".worktrees/",
+		".claude/",
 		"eslint.config.mjs",
 		"src/routeTree.gen.ts",
 	])
