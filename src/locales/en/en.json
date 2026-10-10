@@ -228,6 +228,7 @@
 			"status": "Status",
 			"supplying_library": "Supplying library",
 			"time_in_state_days": "Time in state (days)",
+			"time_in_state_description": "The time the request has been in its current status, as days:hours:minutes:seconds",
 			"title": "Title",
 			"to_category": "To category",
 			"to_context": "To context",
