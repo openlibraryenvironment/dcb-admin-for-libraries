@@ -3,6 +3,11 @@ import library from "./fixtures-data/library.json" with { type: "json" };
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 import polarisLibrary from "./fixtures-data/library-polaris.json" with { type: "json" };
+import supplierRequests from "./fixtures-data/supplier-requests.json" with { type: "json" };
+import sparseRequest from "./fixtures-data/patronRequest-sparse.json" with { type: "json" };
+import locations from "./fixtures-data/locations.json" with { type: "json" };
+import bibs from "./fixtures-data/bibs.json" with { type: "json" };
+import audit from "./fixtures-data/audit.json" with { type: "json" };
 import {
 	colorSchemeAttribute,
 	type ColorScheme,
@@ -559,6 +564,126 @@ const PAGES: Surface[] = [
 			).toBeVisible();
 			await expect(
 				page.getByRole("list", { name: /search results/i }),
+			).toBeVisible();
+		},
+	},
+	{
+		// No suppliers and no members: the sparse shape a new request has.
+		name: "patron request detail",
+		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library, LoadPatronRequest: sparseRequest });
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Patron request" }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("button", { name: "Check for updates" }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "patron request audit log",
+		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library, LoadPatronRequest: sparseRequest });
+		},
+		reveal: async (page) => {
+			await page.getByRole("tab", { name: "Audit log" }).click();
+		},
+		ready: async (page) => {
+			const grid = page.getByRole("grid", { name: "Audit log" });
+			await expect(grid).toBeVisible();
+			await expect(grid.getByRole("link")).toBeVisible();
+		},
+	},
+	{
+		name: "audit entry",
+		path: `/patronRequests/audits/${audit.audits.content[0].id}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				GetAuditById: audit,
+				GetAuditsByPatronRequest: audit,
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: audit.audits.content[0].id }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "supplier requests",
+		path: "/supplierRequests",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraries: library,
+				LoadPatronRequests: supplierRequests,
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("grid", { name: /supplier requests/i }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("row", { name: /Alpha and the art of failure/ }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "locations",
+		path: "/locations",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library, LoadLocations: locations });
+		},
+		ready: async (page) => {
+			await expect(page.getByRole("grid", { name: "Locations" })).toBeVisible();
+			await expect(page.getByRole("link", { name: "Main Library" })).toBeVisible();
+		},
+	},
+	{
+		name: "location detail",
+		path: `/locations/${locations.locations.content[0].id}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library, LoadLocation: locations });
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Main Library" }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "bibs",
+		path: "/bibs",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library, LoadBibs: bibs });
+		},
+		ready: async (page) => {
+			await expect(page.getByRole("grid", { name: "Bib records" })).toBeVisible();
+			await expect(page.getByRole("link", { name: "Middlemarch" })).toBeVisible();
+		},
+	},
+	{
+		name: "bib detail",
+		path: `/bibs/${bibs.sourceBibs.content[0].id}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library, LoadBibMainDetails: bibs });
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Middlemarch" }),
 			).toBeVisible();
 		},
 	},
