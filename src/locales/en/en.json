@@ -1267,7 +1267,8 @@
 		},
 		"steps": {
 			"announce": "Step {{number}} of {{total}}: {{label}}"
-		}
+		},
+		"record_sections": "Record sections"
 	},
 	"settings": {
 		"customisation": "Customisation",

@@ -73,3 +73,81 @@ test("a failed availability call is reported, not shown as no items", async ({
 	).toBeVisible({ timeout: 15_000 });
 	await expect(page.getByText(/no items found/i)).toHaveCount(0);
 });
+
+test("a record id that is not a UUID is not found, and nothing is fetched", async ({
+	app,
+	page,
+}) => {
+	const fetched: string[] = [];
+	page.on("request", (request) => {
+		if (/availability|opac-inventory/.test(request.url())) {
+			fetched.push(request.url());
+		}
+	});
+	await openRecord(app, page, "/requesting/not-a-record");
+
+	await expect(page.getByText("/requesting/not-a-record")).toBeVisible();
+	expect(fetched).toEqual([]);
+});
+
+for (const [path, title] of [
+	["", /^Record information · /],
+	["/items", /^Items · /],
+	["/history", /^Requesting history · /],
+] as const) {
+	test(`the record's ${path || "information"} page titles itself`, async ({
+		app,
+		page,
+	}) => {
+		await openRecord(app, page, `/requesting/${RECORD}${path}`);
+		await expect(page).toHaveTitle(title);
+	});
+}
+
+test("the record page has a heading and named tabs before the record arrives", async ({
+	app,
+	page,
+}) => {
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraries: library });
+	await page.route("**/opac-inventory/instances/**", (route) =>
+		route.fulfill({ status: 404, json: {} }),
+	);
+	await page.route("**/items/availability**", (route) =>
+		route.fulfill({ json: { itemList: [], timings: {} } }),
+	);
+	await page.goto(`/requesting/${RECORD}`);
+
+	await expect(
+		page.getByRole("heading", { level: 1, name: "Cluster record", exact: true }),
+	).toBeVisible();
+	await expect(
+		page.getByRole("tablist", { name: /record sections/i }),
+	).toBeVisible();
+});
+
+test("says why a record cannot be requested, beside the button", async ({
+	app,
+	page,
+}) => {
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraries: library });
+	await page.route("**/opac-inventory/instances/**", (route) =>
+		route.fulfill({ json: CLUSTER }),
+	);
+	await page.route("**/items/availability**", (route) =>
+		route.fulfill({ json: { itemList: [], timings: {} } }),
+	);
+	await page.goto(`/requesting/${RECORD}`);
+
+	const place = page.getByRole("button", { name: /^place request$/i });
+	await expect(place).toBeDisabled();
+	await expect(place).toHaveAccessibleDescription(/no items available/i);
+	await expect(page.getByText(/no items available to request/i)).toBeVisible();
+});
+
+test("the record information shows no raw JSON", async ({ app, page }) => {
+	await openRecord(app, page, `/requesting/${RECORD}`);
+	await page.getByRole("button", { name: /cluster details/i }).click();
+	await expect(page.locator("pre")).toHaveCount(0);
+});
