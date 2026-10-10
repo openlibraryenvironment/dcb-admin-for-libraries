@@ -498,12 +498,12 @@ function RouteComponent() {
 					{/** The tabs are a little frustrating with variants because they use functional variants.
 					 * So style variants like those we prefer to use everywhere else don't get a look in.
 					 */}
-					<Tab label={t("patron_request.general")} />
-					<Tab label={t("requesting.bib_record")} />
-					<Tab label={t("patron_request.supplying")} />
-					<Tab label={t("patron_request.borrowing")} />
-					<Tab label={t("patron_request.pickup")} />
-					<Tab label={t("audit.log")} />
+					<Tab value={0} label={t("patron_request.general")} />
+					<Tab value={1} label={t("requesting.bib_record")} />
+					<Tab value={2} label={t("patron_request.supplying")} />
+					<Tab value={3} label={t("patron_request.borrowing")} />
+					<Tab value={4} label={t("patron_request.pickup")} />
+					<Tab value={5} label={t("audit.log")} />
 				</TabList>
 
 				<TabPanel value={0}>

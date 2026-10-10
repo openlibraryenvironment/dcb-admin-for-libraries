@@ -216,12 +216,13 @@ function RouteComponent() {
 					expanded={isCanonicalExpanded}
 					onChange={handleCanonicalAccordionChange}
 					disableGutters
-					variant="outlined">
+					variant="outlined"
+					slotProps={{ heading: { component: "h2" } }}>
 					<AccordionSummary
 						expandIcon={<ExpandMoreOutlined />}
 						aria-controls="canonical-metadata-content"
 						id="canonical-metadata-header">
-						<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+						<Typography variant="h3" component="span" sx={{ fontWeight: "bold" }}>
 							{t("bibs.canonical_metadata")}
 						</Typography>
 					</AccordionSummary>
@@ -237,12 +238,13 @@ function RouteComponent() {
 					expanded={isSourceExpanded}
 					onChange={handleAccordionChange}
 					disableGutters
-					variant="outlined">
+					variant="outlined"
+					slotProps={{ heading: { component: "h2" } }}>
 					<AccordionSummary
 						expandIcon={<ExpandMoreOutlined />}
 						aria-controls="source-record-content"
 						id="source-record-header">
-						<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+						<Typography variant="h3" component="span" sx={{ fontWeight: "bold" }}>
 							{t("bibs.source_record")}
 						</Typography>
 					</AccordionSummary>

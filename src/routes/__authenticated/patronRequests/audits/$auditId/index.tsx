@@ -262,6 +262,7 @@ function AuditDetailsComponent() {
 					</Button>
 					<Stack direction="row" spacing={2}>
 						<Tooltip
+							describeChild
 							title={
 								previousAudit
 									? previousAudit.briefDescription
@@ -288,6 +289,7 @@ function AuditDetailsComponent() {
 							</span>
 						</Tooltip>
 						<Tooltip
+							describeChild
 							title={
 								nextAudit
 									? nextAudit.briefDescription

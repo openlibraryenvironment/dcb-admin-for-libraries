@@ -1,0 +1,19 @@
+{
+	"audits": {
+		"totalSize": 1,
+		"content": [
+			{
+				"id": "44444444-4444-4444-8444-444444444444",
+				"auditDate": "2026-09-03T08:15:00Z",
+				"briefDescription": "Moved to ERROR",
+				"fromStatus": "RESOLVED",
+				"toStatus": "ERROR",
+				"patronRequest": { "id": "33333333-3333-4333-8333-333333333333" },
+				"auditData": {
+					"patronRequestId": "33333333-3333-4333-8333-333333333333",
+					"detail": "The supplier did not respond to the request within the time allowed, so it was moved to ERROR for a person to look at."
+				}
+			}
+		]
+	}
+}
