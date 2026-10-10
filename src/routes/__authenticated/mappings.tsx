@@ -356,10 +356,36 @@ function RouteComponent() {
 					resolve(oldRow);
 					return;
 				}
+				const blank = standardRefValueMappingColumns.find(
+					(column) =>
+						column.editable &&
+						newRow[column.field] !== oldRow[column.field] &&
+						String(newRow[column.field] ?? "").trim() === ""
+				);
+				if (blank) {
+					reject(
+						new UserFacingError(
+							t("mappings.value_required", { field: blank.headerName })
+						)
+					);
+					return;
+				}
 				setEditRecord(changes);
 				setPromiseArguments({ resolve, reject, newRow, oldRow });
 			}),
-		[]
+		[t]
+	);
+
+	const handleRowUpdateError = useCallback(
+		(error: unknown) => {
+			const reason = userFacingReason(error);
+			setRowUpdateError(
+				reason
+					? t("mappings.update_failed_reason", { reason })
+					: t("mappings.update_failed")
+			);
+		},
+		[t]
 	);
 
 	const handleModalConfirm = async (
@@ -383,8 +409,10 @@ function RouteComponent() {
 		});
 
 		try {
-			const result = await updateMapping({ input });
-			resolve(result.updateReferenceValueMapping);
+			await updateMapping({ input });
+			// The mutation returns only id and toValue; resolving with that would
+			// blank every other cell of the row until the refetch lands.
+			resolve(newRow);
 		} catch (error) {
 			reject(error);
 		} finally {
@@ -462,9 +490,18 @@ function RouteComponent() {
 		]
 	);
 
-	const refValueColumns = editingEnabled
-		? [...standardRefValueMappingColumns, ...actionsColumn]
-		: standardRefValueMappingColumns;
+	// Without editing, the cells must not be editable either: Enter or typing on a
+	// focused cell starts row editing whether or not there is an Edit button.
+	const refValueColumns = useMemo(
+		() =>
+			editingEnabled
+				? [...standardRefValueMappingColumns, ...actionsColumn]
+				: standardRefValueMappingColumns.map((column) => ({
+						...column,
+						editable: false,
+					})),
+		[editingEnabled, actionsColumn]
+	);
 
 	useDataGridErrorSafely(
 		gridId,
@@ -532,7 +569,7 @@ function RouteComponent() {
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
 					processRowUpdate={processRowUpdate}
-					onRowUpdateError={setRowUpdateError}
+					onRowUpdateError={handleRowUpdateError}
 					checkboxSelection={false}
 					disableAggregation
 					disableHoverInteractions

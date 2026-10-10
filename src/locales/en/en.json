@@ -849,7 +849,10 @@
 		"from_value": "From value",
 		"last_imported": "Last imported",
 		"title": "Mappings",
-		"to_value": "To value"
+		"to_value": "To value",
+		"update_failed": "The mapping was not updated.",
+		"update_failed_reason": "The mapping was not updated: {{reason}}",
+		"value_required": "{{field}} cannot be empty."
 	},
 	"nav": {
 		"bibs": {

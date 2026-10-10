@@ -14,7 +14,6 @@ import {
 	GridPaginationModel,
 	GridRowModes,
 	GridRowModesModel,
-	GridRowParams,
 	GridRowsProp,
 	GridSortModel,
 	useGridApiRef,
@@ -110,8 +109,8 @@ interface DataGridProps {
 	onPaginationModelChange?: any;
 	onRowModesModelChange?: (model: GridRowModesModel) => void;
 	onRowEditStop?: (params: any, event: any) => void;
-	/** Told when an inline edit fails to save, with the message to show. */
-	onRowUpdateError?: (message: string) => void;
+	/** Told when processRowUpdate rejects, with what it rejected with. */
+	onRowUpdateError?: (error: unknown) => void;
 	onSortModelChange?: (model: GridSortModel) => void;
 	pagination: boolean;
 	paginationMode: GridFeatureMode; // Determines client or server side pagination
@@ -283,22 +282,7 @@ export default function DataGrid({
 				onColumnVisibilityModelChange={onColumnVisibilityModelChange}
 				onFilterModelChange={onFilterModelChange}
 				onPaginationModelChange={onPaginationModelChange}
-				onProcessRowUpdateError={(params: GridRowParams) => {
-					const name = params?.row?.name ?? params?.row?.fullName;
-					onRowUpdateError?.(
-						t("common.update_failure", {
-							// entities.* are already lowercase singulars written for exactly
-							// this sentence, so no toLowerCase() is needed on them.
-							entity:
-								type === "ReferenceValueMapping"
-									? t("entities.reference_value_mapping")
-									: type === "NumericRangeMapping"
-										? t("entities.numeric_range_mapping")
-										: type?.toLowerCase(),
-							name: name,
-						}),
-					);
-				}}
+				onProcessRowUpdateError={onRowUpdateError}
 				onSortModelChange={onSortModelChange}
 				onRowClick={handleRowClick}
 				pageSizeOptions={PAGE_SIZE_OPTIONS}
