@@ -42,7 +42,7 @@ import request from "graphql-request";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
-import { validate as isUuid } from "uuid";
+import { isUuidShaped } from "@helpers/isUuidShaped";
 import DataGrid from "@components/DataGrid/DataGrid";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import ExpandMore from "@mui/icons-material/ExpandMore";
@@ -118,7 +118,7 @@ function RouteComponent() {
 	);
 	const setAuditFilterModel = useGridStore((state) => state.setFilterModel);
 	const setAuditSortModel = useGridStore((state) => state.setSortModel);
-	const isValidId = isUuid(id);
+	const isValidId = isUuidShaped(id);
 
 	const {
 		data,

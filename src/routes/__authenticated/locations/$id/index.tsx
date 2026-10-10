@@ -16,7 +16,7 @@ import request from "graphql-request";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
-import { validate as isUuid } from "uuid";
+import { isUuidShaped } from "@helpers/isUuidShaped";
 import { DETAIL_COLUMNS, FULL_ROW } from "@constants/detailGrid";
 
 export const Route = createFileRoute("/__authenticated/locations/$id/")({
@@ -55,7 +55,7 @@ function RouteComponent() {
 				},
 				headers
 			),
-		enabled: !!auth.user && isUuid(id),
+		enabled: !!auth.user && isUuidShaped(id),
 	});
 	const location = pickupLocationData?.locations?.content?.[0];
 

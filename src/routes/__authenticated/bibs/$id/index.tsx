@@ -14,7 +14,7 @@ import {
 	Box,
 	CircularProgress,
 } from "@mui/material";
-import { validate as isUuid } from "uuid";
+import { isUuidShaped } from "@helpers/isUuidShaped";
 import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
@@ -38,7 +38,7 @@ function RouteComponent() {
 	const auth = useAuth();
 
 	const { id } = Route.useParams();
-	const isValidId = isUuid(id);
+	const isValidId = isUuidShaped(id);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const DCB_API_BASE = cfg.VITE_DCB_API_BASE + "/graphql";

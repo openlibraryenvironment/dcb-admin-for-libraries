@@ -22,7 +22,7 @@ import request from "graphql-request";
 import { useAuth } from "react-oidc-context";
 import { useMemo } from "react";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
-import { validate as isUuid } from "uuid";
+import { isUuidShaped } from "@helpers/isUuidShaped";
 import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
 
 import RenderAttribute from "@/components/RenderAttribute/RenderAttribute";
@@ -47,7 +47,7 @@ function AuditDetailsComponent() {
 	const auth = useAuth();
 
 	const { auditId } = Route.useParams();
-	const isValidId = isUuid(auditId);
+	const isValidId = isUuidShaped(auditId);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
