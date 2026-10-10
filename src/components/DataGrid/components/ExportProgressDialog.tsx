@@ -18,29 +18,35 @@ export const ExportProgressDialog = ({
 	open,
 	progress,
 	totalRecords,
-	// onCancel,
 }: ExportProgressProps) => {
 	const { t } = useTranslation();
 
 	return (
-        <Dialog open={open} fullWidth>
-            <DialogTitle variant="modalTitle">
+		<Dialog open={open} fullWidth aria-labelledby="export-progress-title">
+			<DialogTitle id="export-progress-title" variant="modalTitle">
 				{t("ui.data_grid.export.modal_title")}
 			</DialogTitle>
-            <DialogContent>
+			<DialogContent>
 				<Box sx={{ width: "100%", mb: 2 }}>
-					<Typography variant="body1" align="center" sx={{
-                        color: "text.secondary"
-                    }}>
+					<Typography
+						variant="body1"
+						align="center"
+						sx={{
+							color: "text.secondary",
+						}}>
 						{t("ui.data_grid.export.complete", { percentage: progress + "%" })}
 					</Typography>
-					<LinearProgress variant="determinate" value={progress} />
+					<LinearProgress
+						variant="determinate"
+						value={progress}
+						aria-label={t("ui.data_grid.export.modal_title")}
+					/>
 				</Box>
 				<Typography variant="body1">
 					{t("ui.data_grid.export.records", { count: totalRecords })}
 				</Typography>
 			</DialogContent>
-            <DialogActions></DialogActions>
-        </Dialog>
-    );
+			<DialogActions></DialogActions>
+		</Dialog>
+	);
 };

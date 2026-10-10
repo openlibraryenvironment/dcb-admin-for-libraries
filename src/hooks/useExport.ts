@@ -1,15 +1,18 @@
-// patron requests for now. also should do mappings
-
 import { RefObject, useState } from "react";
 import request from "graphql-request";
 import {
 	GridApiPremium,
+	gridDataRowIdsSelector,
 	gridVisibleColumnFieldsSelector,
 } from "@mui/x-data-grid-premium";
 import { getFileNameForExport } from "@helpers/dataGrid/getFileNameForExport";
 import { convertFileToString } from "@helpers/dataGrid/convertFileToString";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import { getLocations } from "@queries/getLocations";
+
+/** Whole percent of an export fetched; an empty result is a finished one. */
+export const exportProgressPercent = (loaded: number, total: number): number =>
+	total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 100;
 
 interface UsePatronRequestExportProps {
 	apiRef: RefObject<GridApiPremium | null>;
@@ -76,7 +79,7 @@ export const usePatronRequestExport = ({
 		setExportProgress((prev) => ({
 			...prev,
 			totalRecords: totalSize,
-			progress: Math.round((allContent.length / totalSize) * 100),
+			progress: exportProgressPercent(allContent.length, totalSize),
 		}));
 
 		// Obtain all the pages that exist
@@ -98,7 +101,7 @@ export const usePatronRequestExport = ({
 				allContent = [...allContent, ...nextPageData.patronRequests.content];
 				setExportProgress((prev) => ({
 					...prev,
-					progress: Math.round((allContent.length / totalSize) * 100),
+					progress: exportProgressPercent(allContent.length, totalSize),
 				}));
 			}
 		}
@@ -159,10 +162,10 @@ export const usePatronRequestExport = ({
 
 	const handleExport = async (fileType: string, exportMode: string) => {
 		if (!apiRef?.current) return;
+		// The rows on this page, which can be fewer than the page size.
+		const currentCount = gridDataRowIdsSelector(apiRef).length;
 		if (exportMode === "current") {
 			apiRef.current.exportDataAsCsv();
-			const currentCount =
-				apiRef.current.state.pagination.paginationModel.pageSize;
 			onExportSuccess(
 				`Successfully exported ${currentCount} records.`,
 				currentCount,
@@ -171,8 +174,6 @@ export const usePatronRequestExport = ({
 		}
 		if (exportMode === "print") {
 			apiRef.current.exportDataAsPrint();
-			const currentCount =
-				apiRef.current.state.pagination.paginationModel.pageSize;
 			onExportSuccess(
 				`Successfully exported ${currentCount} records.`,
 				currentCount,
