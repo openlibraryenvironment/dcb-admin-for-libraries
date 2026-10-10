@@ -1365,6 +1365,8 @@
 			"master_detail": "Master detail",
 			"no_data": "No data available",
 			"open": "Open",
+			"results_one": "{{count}} result",
+			"results_other": "{{count}} results",
 			"search_audits": "Search by audit",
 			"search_locations": "Search by location",
 			"search_mappings": "Search by mappings",

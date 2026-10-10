@@ -38,3 +38,32 @@ test("a patron request opens from the keyboard alone", async ({ app, page }) => 
 
 	await expect(page).toHaveURL(/\/patronRequests\/11111111-1111-1111-1111-111111111111/);
 });
+
+test("a cell reached by arrow key shows a focus outline", async ({
+	app,
+	page,
+}) => {
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraries: library,
+		LoadPatronRequests: patronRequests,
+	});
+
+	await page.goto("/patronRequests");
+	const rowLink = page.getByRole("link", { name: /2026-09-01/ }).first();
+	await expect(rowLink).toBeVisible();
+	await rowLink.focus();
+	await page.keyboard.press("ArrowRight");
+
+	// WCAG 2.4.7: the cell after the link has nothing focusable inside it, so
+	// the cell's own outline is the only sign of where the keyboard is.
+	const focused = page.locator('[role="gridcell"]:focus');
+	await expect(focused).toHaveCount(1);
+	const outline = await focused.evaluate((cell) => {
+		const style = getComputedStyle(cell);
+		return { style: style.outlineStyle, width: style.outlineWidth };
+	});
+	expect(outline.style).not.toBe("none");
+	expect(parseFloat(outline.width)).toBeGreaterThan(0);
+});

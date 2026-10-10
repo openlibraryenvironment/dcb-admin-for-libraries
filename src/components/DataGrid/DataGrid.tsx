@@ -1,4 +1,5 @@
 import { useClock } from "@/hooks/useThemeStore";
+import { useAnnounce } from "@/hooks/useAnnouncer";
 import { PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
 import {
 	DataGridPremium,
@@ -14,12 +15,11 @@ import {
 	GridRowModes,
 	GridRowModesModel,
 	GridRowParams,
-	GridRowSelectionModel,
 	GridRowsProp,
 	GridSortModel,
 	useGridApiRef,
 } from "@mui/x-data-grid-premium";
-import { RefObject, useCallback, useState } from "react";
+import { RefObject, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { NoResultsOverlay } from "./components/NoResultsOverlay";
 import { useNavigate } from "@tanstack/react-router";
@@ -32,9 +32,13 @@ declare module "@mui/x-data-grid-premium" {
 	interface ToolbarPropsOverrides {
 		handleExport?: (fileType: string, exportMode: string) => Promise<void>;
 		allDataLoading?: boolean;
-		type?: string;
 		onCleanup?: () => void;
-		selectionCount?: number;
+	}
+	interface NoRowsOverlayPropsOverrides {
+		noResultsMessage?: string;
+	}
+	interface NoResultsOverlayPropsOverrides {
+		noResultsMessage?: string;
 	}
 }
 
@@ -183,10 +187,38 @@ export default function DataGrid({
 	const internalApiRef = useGridApiRef();
 	const apiRef = parentApiRef || internalApiRef;
 
-	const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
-		type: "include",
-		ids: new Set(),
-	});
+	const announce = useAnnounce();
+	// The server's count after a filter, sort or page change has settled. The
+	// first settle is the page arriving, which the route title already announced.
+	const settledQuery = useRef<string | null>(null);
+	useEffect(() => {
+		if (loading || paginationMode !== "server" || rowCount === undefined) {
+			return;
+		}
+		const query = JSON.stringify([
+			filterModel,
+			sortModel,
+			paginationModel,
+			rowCount,
+		]);
+		if (settledQuery.current === null) {
+			settledQuery.current = query;
+			return;
+		}
+		if (settledQuery.current === query) return;
+		settledQuery.current = query;
+		announce(t("ui.data_grid.results", { count: rowCount }));
+	}, [
+		loading,
+		paginationMode,
+		rowCount,
+		filterModel,
+		sortModel,
+		paginationModel,
+		announce,
+		t,
+	]);
+
 	const handleRowClick: GridEventListener<"rowClick"> = (params, event) => {
 		// Don't let them navigate away if editing is present
 		if (rowModesModel[params?.row?.id]?.mode === GridRowModes.Edit) {
@@ -271,9 +303,6 @@ export default function DataGrid({
 				}}
 				onSortModelChange={onSortModelChange}
 				onRowClick={handleRowClick}
-				onRowSelectionModelChange={(newSelection) => {
-					setSelectionModel(newSelection);
-				}}
 				pageSizeOptions={PAGE_SIZE_OPTIONS}
 				pagination={pagination}
 				paginationMode={paginationMode}
@@ -285,7 +314,6 @@ export default function DataGrid({
 				onRowModesModelChange={onRowModesModelChange}
 				rowCount={paginationMode === "server" ? rowCount : undefined}
 				rows={rows}
-				rowSelectionModel={selectionModel}
 				showToolbar={toolbarVisible}
 				sortingMode={sortingMode}
 				sortModel={sortModel}
@@ -293,12 +321,8 @@ export default function DataGrid({
 					baseTooltip: DescribingTooltip,
 					detailPanelExpandIcon: GridExpandMoreIcon,
 					detailPanelCollapseIcon: GridExpandLessIcon,
-					noRowsOverlay: () => (
-						<NoResultsOverlay noResultsMessage={noResultsText} />
-					),
-					noResultsOverlay: () => (
-						<NoResultsOverlay noResultsMessage={noResultsText} />
-					),
+					noRowsOverlay: NoResultsOverlay,
+					noResultsOverlay: NoResultsOverlay,
 					// EVERY grid, not just patron requests. MUI's stock GridToolbar paints a
 					// filter button whose visible text is "Filters" and whose accessible
 					// name is "Show filters", with an always-rendered "0" badge inside it -
@@ -313,10 +337,10 @@ export default function DataGrid({
 						handleExport: onExport, // Pass the export handler
 						excelOptions: { disableToolbarButton: true },
 						allDataLoading: isExporting, // Pass the loading state
-						type: type, // Pass type to determine menu options
 						onCleanup: enableCleanup ? onCleanup : undefined, // Pass cleanup handler
-						selectionCount: selectionModel?.ids?.size || 0,
 					},
+					noRowsOverlay: { noResultsMessage: noResultsText },
+					noResultsOverlay: { noResultsMessage: noResultsText },
 					filterPanel: expandedFilterPanel
 						? {
 								sx: {
@@ -327,13 +351,11 @@ export default function DataGrid({
 				}}
 				sx={{
 					border: "0",
-					minHeight: rows.length === 0 ? "400px" : undefined, // ensures that if there's nothing there, we still see loading etc
+					// Room for the loading and no-rows overlays when there are no rows.
+					minHeight: rows.length === 0 ? (theme) => theme.spacing(50) : undefined,
 					"@media print": {
-						".MuiDataGrid-main": { color: "rgba(0, 0, 0, 0.87)" },
+						".MuiDataGrid-main": { color: "common.black" },
 					},
-					// "& .MuiDataGrid-cell--editable": {
-					// 	bgcolor: (theme.vars || theme).palette.primary.editableFieldBackground,
-					// }, // How to signal editable cells.
 					".MuiDataGrid-virtualScroller": {
 						overflow: scrollbarVisible ? "" : "hidden",
 					},
@@ -344,9 +366,6 @@ export default function DataGrid({
 					},
 					"& .MuiDataGrid-row:hover": {
 						backgroundColor: disableHoverInteractions ? "transparent" : "",
-					},
-					"& .MuiDataGrid-cell:focus": {
-						outline: disableHoverInteractions ? "none" : "",
 					},
 					"& .MuiDataGrid-detailPanel": {
 						overflow: "hidden", // Prevent scrollbars in the detail panel

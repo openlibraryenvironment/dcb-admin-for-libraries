@@ -79,6 +79,36 @@ test.describe("Supplier requests clean up", () => {
 		});
 	});
 
+	test("counts a select-all selection, and cleans up nothing when none is selected", async ({
+		page,
+	}) => {
+		await page.goto("/supplierRequests");
+		await expect(page.getByRole("row", { name: new RegExp(ALPHA) })).toBeVisible();
+
+		await page.getByRole("button", { name: /^Actions/ }).click();
+		await expect(
+			page.getByRole("menuitem", { name: "Cleanup selected requests (0)" }),
+		).toBeDisabled();
+		await page.keyboard.press("Escape");
+
+		// Select-all makes the grid's model an EXCLUDE list, whose ids are the rows
+		// left out - so its size read 0 while the cleanup acted on the whole page.
+		await page.getByRole("checkbox", { name: /select all/i }).check();
+		await expect(page.getByRole("button", { name: "Actions (4)" })).toBeVisible();
+		await page.getByRole("button", { name: /^Actions/ }).click();
+		await expect(
+			page.getByRole("menuitem", { name: "Cleanup selected requests (4)" }),
+		).toBeEnabled();
+	});
+
+	test("is not offered on the grid of requests this library borrowed", async ({
+		page,
+	}) => {
+		await page.goto("/patronRequests");
+		await expect(page.getByRole("row", { name: new RegExp(ALPHA) })).toBeVisible();
+		await expect(page.getByRole("button", { name: /^Actions/ })).toHaveCount(0);
+	});
+
 	test("never offers a request another library supplied", async ({ page }) => {
 		const calls: string[] = [];
 		await recordCleanupCalls(page, calls);
