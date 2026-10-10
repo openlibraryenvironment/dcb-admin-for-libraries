@@ -513,9 +513,10 @@ const PAGES: Surface[] = [
 		path: `/requesting/${RECORD}/history`,
 		prepare: mockRecord,
 		ready: async (page) => {
-			await expect(
-				page.getByRole("grid", { name: /request history/i }),
-			).toBeVisible();
+			const grid = page.getByRole("grid", { name: /request history/i });
+			await expect(grid).toBeVisible();
+			// Rows, not the grid: an empty row group mid-load is an axe "incomplete".
+			await expect(grid.getByRole("link", { name: /2026-09-01/ }).first()).toBeVisible();
 		},
 	},
 	{
@@ -573,7 +574,12 @@ const PAGES: Surface[] = [
 		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
 		prepare: async (app) => {
 			await app.signIn();
-			await app.mockGraphQL({ LoadLibrary: library, LoadPatronRequest: sparseRequest });
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadPatronRequest: sparseRequest,
+				// Unmocked, it is aborted, and the app's error handler leaves for /networkError mid-scan.
+				LoadHostLms: { hostLms: { content: [] } },
+			});
 		},
 		ready: async (page) => {
 			await expect(
@@ -589,7 +595,12 @@ const PAGES: Surface[] = [
 		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
 		prepare: async (app) => {
 			await app.signIn();
-			await app.mockGraphQL({ LoadLibrary: library, LoadPatronRequest: sparseRequest });
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadPatronRequest: sparseRequest,
+				// Unmocked, it is aborted, and the app's error handler leaves for /networkError mid-scan.
+				LoadHostLms: { hostLms: { content: [] } },
+			});
 		},
 		reveal: async (page) => {
 			await page.getByRole("tab", { name: "Audit log" }).click();
@@ -707,6 +718,19 @@ for (const scheme of SCHEMES) {
 				await expect(page.locator("html")).toHaveAttribute(
 					colorSchemeAttribute(scheme),
 				);
+
+				// Contrast is judged at rest: a button fading from disabled to enabled was sampled mid-way.
+				await expect
+					.poll(() =>
+						page.evaluate(
+							() =>
+								document
+									.getAnimations()
+									.filter((a) => a instanceof CSSTransition && a.playState === "running")
+									.length,
+						),
+					)
+					.toBe(0);
 
 				await app.expectNoAccessibilityViolations();
 			});

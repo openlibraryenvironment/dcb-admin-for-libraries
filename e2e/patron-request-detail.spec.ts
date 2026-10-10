@@ -11,6 +11,8 @@ test.describe("Patron request detail", () => {
 		await app.mockGraphQL({
 			LoadLibrary: library,
 			LoadPatronRequest: sparse,
+			// Unmocked, it is aborted, and the app's error handler leaves for /networkError.
+			LoadHostLms: { hostLms: { content: [] } },
 		});
 	});
 
