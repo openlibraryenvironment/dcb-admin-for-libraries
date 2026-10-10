@@ -327,6 +327,10 @@ reference told a reader who could resolve it something they already had, and eve
 else nothing. `plan-document` catches a `*_PLAN.md` pointer and has never fired; it is
 here because the workspace plans are where the other two rules’ names come from.
 
+The plan prefix list is `N`, `R` and `V`. It began as `N` and `V` only, and nineteen
+`R-17`/`R-19` references sat in fourteen files under a green gate until the prefix was
+added; widening it to any capital letter matched those nineteen and nothing else.
+
 **The `.graphqls` files are excluded from `plan-reference` and hold thirteen more.** They
 are copied from dcb-service and re-taken whenever that contract moves, so editing their
 comments here is drift that the next copy silently reverts. That fix belongs upstream.

@@ -140,7 +140,7 @@ function HomeComponent() {
 	// the mutation sends changed fields only, so a stored brand survives being hidden.
 	const discoveryActive = isDiscoveryActive();
 
-	// R-17b. A deployment with dcb.branding.assets.store=none has no upload route, so the
+	// A deployment with dcb.branding.assets.store=none has no upload route, so the
 	// button would 404. The URL field stays either way — pointing at a CDN the library
 	// already runs is a first-class route in, not a fallback.
 	const brandUploadsAvailable = useBrandUploadsAvailable();
@@ -312,7 +312,7 @@ function HomeComponent() {
 	const validationSchema = useMemo(() => libraryProfileSchema(t), [t]);
 
 	/**
-	 * The logo chosen but not yet uploaded — R-17e.
+	 * The logo chosen but not yet uploaded.
 	 *
 	 * Uploading at pick time left a stored image behind every time somebody reconsidered or
 	 * closed the tab; dcb-service cannot tell those from an image about to be used, so it

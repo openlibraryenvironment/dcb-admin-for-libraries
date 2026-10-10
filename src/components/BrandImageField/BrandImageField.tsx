@@ -32,7 +32,7 @@ interface Props {
 }
 
 /**
- * One brand image, two ways to supply it - R-17e. Neither is the fallback for
+ * One brand image, two ways to supply it. Neither is the fallback for
  * the other, and they write to the same field.
  *
  * Choosing a file does NOT upload it: the form uploads at Save, so changing

@@ -1,6 +1,6 @@
 # Running against more than one dcb-service
 
-R-19. This application is deployed against several `dcb-service` releases at
+This application is deployed against several `dcb-service` releases at
 once, and a GraphQL field the server has never heard of is **not a null**. It is
 a validation error, and it fails the whole operation. `LoadLibrary` runs in six
 routes and the expedited checkout form, so one field selected a release too

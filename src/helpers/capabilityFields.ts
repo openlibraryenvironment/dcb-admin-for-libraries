@@ -6,7 +6,7 @@ import {
 import { isCapabilityEnabled } from "@helpers/featureFlags";
 
 /**
- * Turning the capability registry into selection sets and mutation variables — R-19.
+ * Turning the capability registry into selection sets and mutation variables.
  *
  * The registry says WHICH fields belong to which dcb-service release. This says what to
  * do about it: leave them out of the document, and strip them from the variables. Both,

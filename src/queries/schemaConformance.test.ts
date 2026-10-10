@@ -10,7 +10,7 @@ import {
 
 /**
  * Every document this application can emit must be valid against the
- * dcb-service it will be sent to - R-19. Three passes, because a field gated
+ * dcb-service it will be sent to. Three passes, because a field gated
  * at the wrong THRESHOLD is invisible to all-on and all-off alike.
  * docs/service-compatibility.md.
  */

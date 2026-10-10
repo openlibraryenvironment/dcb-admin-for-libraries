@@ -6,7 +6,7 @@ import { capabilitySelection } from "@helpers/capabilityFields";
 // This query fetches all information about a Library from DCB.
 // The main place this is used is the individual library page.
 //
-// A FUNCTION, not a constant - R-19. Part of the selection depends on the deployment's
+// A FUNCTION, not a constant. Part of the selection depends on the deployment's
 // dcb-service release, and the flag that decides is read from window.__APP_ENV__, which
 // application.tsx assigns only after awaiting inject_env.json. This module is in the
 // static import graph and evaluates first, so a constant would read every flag as off in

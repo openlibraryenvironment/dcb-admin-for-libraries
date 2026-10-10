@@ -1,5 +1,5 @@
 /**
- * Which features need which dcb-service release - R-19.
+ * Which features need which dcb-service release.
  *
  * A field the server does not declare is NOT a null: it is a validation error
  * that fails the whole operation. So a gate has to change the document and the

@@ -9,7 +9,7 @@ import {
 import { isDiscoveryActive } from "@helpers/featureFlags";
 
 /**
- * Whether to offer the brand image upload control - R-17b.
+ * Whether to offer the brand image upload control.
  *
  * UNKNOWN IS AVAILABLE: anything short of an explicit "none" resolves to true,
  * because hiding the control when /info is briefly unreachable removes a
