@@ -9,6 +9,7 @@ import {
 	useRouter,
 } from "@tanstack/react-router";
 import {
+	Box,
 	Button,
 	CircularProgress,
 	Grid,
@@ -21,6 +22,8 @@ import request from "graphql-request";
 import { useAuth } from "react-oidc-context";
 import { useMemo } from "react";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
+import { validate as isUuid } from "uuid";
+import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
 
 import RenderAttribute from "@/components/RenderAttribute/RenderAttribute";
 import Loading from "@/components/Loading/Loading";
@@ -30,7 +33,6 @@ import { AuditQueryData } from "@models/ReactQueryHelperTypes";
 import { getAuditById } from "@queries/getAuditById";
 import { getAuditsByPatronRequest } from "@queries/getAuditByPatronRequest";
 
-// Define the route and its component
 export const Route = createFileRoute(
 	"/__authenticated/patronRequests/audits/$auditId/"
 )({
@@ -45,6 +47,7 @@ function AuditDetailsComponent() {
 	const auth = useAuth();
 
 	const { auditId } = Route.useParams();
+	const isValidId = isUuid(auditId);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
@@ -72,13 +75,12 @@ function AuditDetailsComponent() {
 				},
 				headers
 			),
-		enabled: !!auth.user, // Only run when authenticated
+		enabled: !!auth.user && isValidId,
 	});
 	const audit = auditData?.audits?.content?.[0];
 
-	// Extract the patronRequestId to use in the next query
 	const patronRequestId =
-		audit?.patronRequest.id ?? audit?.auditData.patronRequestId;
+		audit?.patronRequest?.id ?? audit?.auditData?.patronRequestId;
 
 	const {
 		data: otherAudits = [],
@@ -150,16 +152,20 @@ function AuditDetailsComponent() {
 			? otherAudits[currentAuditIndex + 1]
 			: null;
 
-	// Helper functions for navigation
 	const handleReturn = () => {
 		if (patronRequestId) {
-			navigate({ to: `/patronRequests/${patronRequestId}`, hash: `auditlog` });
+			navigate({
+				to: "/patronRequests/$id",
+				params: { id: patronRequestId },
+				hash: "auditlog",
+			});
 		}
 	};
 	const handleNavigate = (targetAuditId: string | null) => {
-		if (targetAuditId && patronRequestId) {
+		if (targetAuditId) {
 			navigate({
-				to: `/patronRequests/audits/${targetAuditId}`,
+				to: "/patronRequests/audits/$auditId",
+				params: { auditId: targetAuditId },
 			});
 		}
 	};
@@ -199,9 +205,9 @@ function AuditDetailsComponent() {
         <Grid
 			container
 			spacing={{ xs: 2, md: 3 }}
-			columns={{ xs: 2, sm: 2, md: 2 }}>
-            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h1">{audit?.id}</Typography>
+			columns={DETAIL_COLUMNS}>
+            <Grid size={FULL_ROW}>
+				<Typography variant="h1">{audit.id}</Typography>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("audit.uuid")}>
@@ -237,13 +243,14 @@ function AuditDetailsComponent() {
 					<RenderAttribute attribute={audit?.patronRequest?.id} />
 				</Attribute>
 			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={FULL_ROW}>
 				<Attribute label={t("audit.data")}>
-					<pre>{JSON.stringify(audit?.auditData, null, 2)}</pre>
+					<Box component="pre" sx={WRAPPED_PRE}>
+						{JSON.stringify(audit?.auditData, null, 2)}
+					</Box>
 				</Attribute>
 			</Grid>
-            {/* Navigation Buttons */}
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={FULL_ROW}>
 				<Stack
                     direction="row"
                     sx={{
@@ -271,7 +278,7 @@ function AuditDetailsComponent() {
 									}
 									startIcon={
 										areOtherAuditsLoading ? (
-											<CircularProgress size={20} />
+											<CircularProgress size={20} aria-label={t("ui.info.loading.value")} />
 										) : (
 											<ArrowLeft />
 										)
@@ -295,7 +302,7 @@ function AuditDetailsComponent() {
 									}
 									endIcon={
 										areOtherAuditsLoading ? (
-											<CircularProgress size={20} />
+											<CircularProgress size={20} aria-label={t("ui.info.loading.value")} />
 										) : (
 											<ArrowRight />
 										)

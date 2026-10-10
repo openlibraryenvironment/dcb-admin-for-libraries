@@ -18,13 +18,13 @@
 		"data": "Audit data (JSON)",
 		"date": "Audit date",
 		"description": "Brief description",
-		"from_status": "fromStatus",
+		"from_status": "From status",
 		"log": "Audit log",
 		"no_data": "No audit log entries found.",
 		"no_results": "No audits found",
 		"no_rows": "Try changing your filters or search terms.",
 		"title": "Audit entry",
-		"to_status": "toStatus",
+		"to_status": "To status",
 		"uuid": "Audit UUID"
 	},
 	"bibs": {
