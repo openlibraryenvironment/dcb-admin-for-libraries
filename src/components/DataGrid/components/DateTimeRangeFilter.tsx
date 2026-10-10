@@ -2,14 +2,19 @@ import { GridFilterInputValueProps } from "@mui/x-data-grid-premium";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { useTranslation } from "react-i18next";
 import { MultiInputDateTimeRangeField } from "@mui/x-date-pickers-pro/MultiInputDateTimeRangeField";
 import { DateTimeRangePicker } from "@mui/x-date-pickers-pro/DateTimeRangePicker";
+import { useClock } from "@/hooks/useThemeStore";
 
-// For date time ranges
+// The pickers need it to show and take a value in UTC.
+dayjs.extend(utc);
+
 export default function DateTimeRangeFilter(props: GridFilterInputValueProps) {
 	const { item, applyValue, focusElementRef } = props;
 	const { t } = useTranslation();
+	const clock = useClock();
 
 	const [rawStart, rawEnd] = Array.isArray(item.value)
 		? item.value
@@ -21,14 +26,13 @@ export default function DateTimeRangeFilter(props: GridFilterInputValueProps) {
 		applyValue({ ...item, value: newValue });
 	};
 
-	// See if we can lift the provider up to app.tsx
-
 	return (
 		<LocalizationProvider dateAdapter={AdapterDayjs}>
 			<DateTimeRangePicker
 				value={[startDate, endDate]}
 				onChange={handleChange}
 				inputRef={focusElementRef}
+				timezone={clock === "service" ? "UTC" : "system"}
 				slots={{ field: MultiInputDateTimeRangeField }}
 				localeText={{
 					start: t("ui.data_grid.filters.from"),
@@ -37,11 +41,8 @@ export default function DateTimeRangeFilter(props: GridFilterInputValueProps) {
 				slotProps={{
 					textField: {
 						size: "small",
-						// variant: "standard",
-						// helperText: t("ui.data_grid.filters.local_time"),
 					},
-					actionBar: { actions: ["clear", "nextOrAccept"] }, // can we add custom actions?
-					// today applies to both - maybe it's better to keep it separate?
+					actionBar: { actions: ["clear", "nextOrAccept"] },
 				}}
 			/>
 		</LocalizationProvider>

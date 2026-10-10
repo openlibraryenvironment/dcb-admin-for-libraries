@@ -19,8 +19,14 @@ const getNestedValue = (item: any, path: string[]): any => {
 	return path.reduce((obj, key) => (obj ? obj[key] : undefined), item);
 };
 
-// Helper function to format cell value
-const formatCellValue = (
+/**
+ * A spreadsheet runs a cell starting with one of these as a formula. The text
+ * here is patron- and library-entered (notes, titles, error messages), so an
+ * export opened in Excel would otherwise execute it.
+ */
+const FORMULA_TRIGGER = /^[=+\-@\t\r]/;
+
+export const formatCellValue = (
 	value: any,
 	delimiter: string,
 	field: string,
@@ -28,18 +34,25 @@ const formatCellValue = (
 	if (value === null || value === undefined) {
 		return "";
 	}
-	const stringValue = value.toString();
-	if (
-		stringValue.includes(delimiter) ||
-		stringValue.includes('"') ||
-		stringValue.includes("\n")
-	) {
-		return `"${stringValue.replace(/"/g, '""')}"`;
-	}
 	if (field == "elapsedTimeInCurrentStatus") {
 		return formatDuration(value);
 	}
-	return stringValue;
+	if (typeof value === "number" || typeof value === "boolean") {
+		return String(value);
+	}
+	let text = String(value);
+	if (FORMULA_TRIGGER.test(text)) {
+		text = `'${text}`;
+	}
+	if (
+		text.includes(delimiter) ||
+		text.includes('"') ||
+		text.includes("\n") ||
+		text.includes("\r")
+	) {
+		return `"${text.replace(/"/g, '""')}"`;
+	}
+	return text;
 };
 // Array handlers for cases like supplying agency where we need to get the first value in an array
 const arrayHandlers = {

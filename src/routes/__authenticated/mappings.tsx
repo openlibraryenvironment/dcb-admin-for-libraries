@@ -41,10 +41,12 @@ import { deleteReferenceValueMapping } from "@mutations/deleteReferenceValueMapp
 import { updateReferenceValueMapping } from "@mutations/updateReferenceValueMapping";
 import { getLibrary } from "@queries/getLibrary";
 import { getMappings } from "@queries/getMappings";
+import { UserFacingError, userFacingReason } from "@helpers/userFacingReason";
+import { useAnnounce } from "@/hooks/useAnnouncer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
@@ -58,6 +60,17 @@ interface UpdateMappingResponse {
 	updateReferenceValueMapping: GridValidRowModel;
 }
 
+interface DeleteMappingInput {
+	id: GridRowId;
+	reason: string;
+	changeCategory: string;
+	changeReferenceUrl: string;
+}
+
+interface DeleteMappingResponse {
+	deleteReferenceValueMapping: { success: boolean; message: string | null };
+}
+
 function RouteComponent() {
 	const auth = useAuth();
 	const { t } = useTranslation();
@@ -69,23 +82,20 @@ function RouteComponent() {
 	);
 
 	const gridId = "referenceValueMappings";
-	const {
-		sortModel: storedSortModel,
-		filterModel: storedFilterModel,
-		paginationModel: storedPaginationModel,
-		columnVisibilityModel: storedColumnVisibilityModel,
-		setSortModel,
-		setFilterModel,
-		setPaginationModel,
-		setColumnVisibilityModel,
-	} = useGridStore();
-
 	const storedState = {
-		sort: storedSortModel[gridId],
-		filter: storedFilterModel[gridId],
-		pagination: storedPaginationModel[gridId],
-		columnVisibility: storedColumnVisibilityModel[gridId],
+		sort: useGridStore((state) => state.sortModel[gridId]),
+		filter: useGridStore((state) => state.filterModel[gridId]),
+		pagination: useGridStore((state) => state.paginationModel[gridId]),
+		columnVisibility: useGridStore(
+			(state) => state.columnVisibilityModel[gridId],
+		),
 	};
+	const setSortModel = useGridStore((state) => state.setSortModel);
+	const setFilterModel = useGridStore((state) => state.setFilterModel);
+	const setPaginationModel = useGridStore((state) => state.setPaginationModel);
+	const setColumnVisibilityModel = useGridStore(
+		(state) => state.setColumnVisibilityModel,
+	);
 
 	const [paginationModel, setLocalPaginationModel] =
 		useState<GridPaginationModel>(
@@ -95,6 +105,7 @@ function RouteComponent() {
 		storedState.filter ?? { items: [] }
 	);
 	const debouncedFilterModel = useDebounce(filterModel, 500);
+	const isFiltering = checkIfFiltering(filterModel, debouncedFilterModel);
 
 	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
 		storedState.sort ?? [{ field: "lastImported", sort: "desc" }]
@@ -108,8 +119,8 @@ function RouteComponent() {
 		storedState.columnVisibility ?? referenceValueMappingColumnVisibility
 	);
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
-	// An inline edit that did not save. The grid used to build this message and
-	// throw it away, so a failed save reverted the row and said nothing.
+	// An edit or a deletion that did not save. The grid used to build this message
+	// and throw it away, so a failed save reverted the row and said nothing.
 	const [rowUpdateError, setRowUpdateError] = useState<string | null>(null);
 
 	const handleSnackbarClose = (
@@ -122,16 +133,8 @@ function RouteComponent() {
 		setSnackbarOpen(false);
 	};
 
-	// Add state to track if we're filtering
-	const [isFiltering, setIsFiltering] = useState(false);
-
 	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
 	const { agencyCode: code } = useAgencyCodes();
-
-	// Track when filter is being applied
-	useEffect(() => {
-		setIsFiltering(checkIfFiltering(filterModel, debouncedFilterModel));
-	}, [filterModel, debouncedFilterModel]);
 
 	// Library query
 	const {
@@ -222,24 +225,40 @@ function RouteComponent() {
 				headers
 			),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [gridId] });
-		},
-		onError: () => {
-			// Set alerts
-			// Catch "Library mapping editing has been disabled by your consortium administrator" too just in case
+			queryClient.invalidateQueries({ queryKey: [gridId, libraryHostLmsCode] });
 		},
 	});
 
-	const { mutate: deleteMapping } = useMutation({
-		mutationFn: (idToDelete: GridRowId) =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+	const announce = useAnnounce();
+	const { mutate: deleteMapping } = useMutation<
+		DeleteMappingResponse,
+		unknown,
+		DeleteMappingInput
+	>({
+		mutationFn: async (input) => {
+			const result = await request<DeleteMappingResponse>(
+				DCB_URL,
 				deleteReferenceValueMapping,
-				{ id: idToDelete },
+				{ input },
 				headers
-			),
+			);
+			// A refusal can come back as success:false with a 200, not only as an error.
+			if (!result.deleteReferenceValueMapping?.success) {
+				throw new UserFacingError(result.deleteReferenceValueMapping?.message);
+			}
+			return result;
+		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [gridId] });
+			queryClient.invalidateQueries({ queryKey: [gridId, libraryHostLmsCode] });
+			announce(t("mappings.deleted"));
+		},
+		onError: (error) => {
+			const reason = userFacingReason(error);
+			setRowUpdateError(
+				reason
+					? t("mappings.delete_failed_reason", { reason })
+					: t("mappings.delete_failed")
+			);
 		},
 	});
 
@@ -303,9 +322,18 @@ function RouteComponent() {
 		setDeleteConfirmationId(id);
 	};
 
-	const handleConfirmDelete = () => {
+	const handleConfirmDelete = (
+		reason: string,
+		changeCategory: string,
+		changeReferenceUrl: string
+	) => {
 		if (deleteConfirmationId) {
-			deleteMapping(deleteConfirmationId);
+			deleteMapping({
+				id: deleteConfirmationId,
+				reason,
+				changeCategory,
+				changeReferenceUrl,
+			});
 			setDeleteConfirmationId(null);
 		}
 	};
@@ -318,10 +346,36 @@ function RouteComponent() {
 					resolve(oldRow);
 					return;
 				}
+				const blank = standardRefValueMappingColumns.find(
+					(column) =>
+						column.editable &&
+						newRow[column.field] !== oldRow[column.field] &&
+						String(newRow[column.field] ?? "").trim() === ""
+				);
+				if (blank) {
+					reject(
+						new UserFacingError(
+							t("mappings.value_required", { field: blank.headerName })
+						)
+					);
+					return;
+				}
 				setEditRecord(changes);
 				setPromiseArguments({ resolve, reject, newRow, oldRow });
 			}),
-		[]
+		[t]
+	);
+
+	const handleRowUpdateError = useCallback(
+		(error: unknown) => {
+			const reason = userFacingReason(error);
+			setRowUpdateError(
+				reason
+					? t("mappings.update_failed_reason", { reason })
+					: t("mappings.update_failed")
+			);
+		},
+		[t]
 	);
 
 	const handleModalConfirm = async (
@@ -345,8 +399,10 @@ function RouteComponent() {
 		});
 
 		try {
-			const result = await updateMapping({ input });
-			resolve(result.updateReferenceValueMapping);
+			await updateMapping({ input });
+			// The mutation returns only id and toValue; resolving with that would
+			// blank every other cell of the row until the refetch lands.
+			resolve(newRow);
 		} catch (error) {
 			reject(error);
 		} finally {
@@ -424,9 +480,18 @@ function RouteComponent() {
 		]
 	);
 
-	const refValueColumns = editingEnabled
-		? [...standardRefValueMappingColumns, ...actionsColumn]
-		: standardRefValueMappingColumns;
+	// Without editing, the cells must not be editable either: Enter or typing on a
+	// focused cell starts row editing whether or not there is an Edit button.
+	const refValueColumns = useMemo(
+		() =>
+			editingEnabled
+				? [...standardRefValueMappingColumns, ...actionsColumn]
+				: standardRefValueMappingColumns.map((column) => ({
+						...column,
+						editable: false,
+					})),
+		[editingEnabled, actionsColumn]
+	);
 
 	useDataGridErrorSafely(
 		gridId,
@@ -494,7 +559,7 @@ function RouteComponent() {
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
 					processRowUpdate={processRowUpdate}
-					onRowUpdateError={setRowUpdateError}
+					onRowUpdateError={handleRowUpdateError}
 					checkboxSelection={false}
 					disableAggregation
 					disableHoverInteractions
@@ -505,7 +570,6 @@ function RouteComponent() {
 					toolbarVisible
 					noResultsText={t("audit.no_results")}
 					searchText={t("ui.data_grid.search_mappings")}
-					scrollbarVisible={false}
 				/>
 			}
 			{
@@ -540,11 +604,8 @@ function RouteComponent() {
 					open={snackbarOpen}
 					onCloseFunc={handleSnackbarClose}
 					severityType="warning"
-					// variant="filled"
-					// sx={{ width: "100%" }}
 					alertText={
-						t("ui.feedback.error.cannot_process") ||
-						"We could not process that operation, so we have reset the data grid options."
+						t("ui.feedback.error.cannot_process")
 					}></TimedAlert>
 			}
 		</>

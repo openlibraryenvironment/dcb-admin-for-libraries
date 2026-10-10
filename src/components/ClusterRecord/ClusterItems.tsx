@@ -176,7 +176,6 @@ export default function ClusterItems() {
 					paginationModel={itemsGrid.paginationModel}
 					pivotingEnabled={false}
 					rows={items}
-					scrollbarVisible={false}
 					searchText={t("requesting.items_search")}
 					toolbarVisible={true}
 					type={"Items"}
@@ -233,7 +232,6 @@ export default function ClusterItems() {
 								paginationMode="client"
 								paginationModel={itemsNotShownGrid.paginationModel}
 								pivotingEnabled={false}
-								scrollbarVisible={false}
 								searchText={t("requesting.items_search")}
 								toolbarVisible={false}
 								rows={itemsNotShown ?? []}

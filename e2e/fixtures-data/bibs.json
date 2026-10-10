@@ -1,0 +1,30 @@
+{
+	"sourceBibs": {
+		"totalSize": 1,
+		"pageable": { "number": 0, "offset": 0 },
+		"content": [
+			{
+				"id": "55555555-5555-4555-8555-555555555555",
+				"title": "Middlemarch",
+				"author": "George Eliot",
+				"clusterRecordId": "88888888-8888-4888-8888-888888888888",
+				"contributesTo": { "id": "88888888-8888-4888-8888-888888888888" },
+				"sourceRecordId": "b1000001",
+				"sourceSystemId": "33333333-3333-4333-8333-333333333333",
+				"dateCreated": "2026-01-02T03:04:05Z",
+				"dateUpdated": "2026-01-02T03:04:05Z",
+				"processVersion": 2,
+				"metadataScore": 80,
+				"publisher": "Blackwood",
+				"placeOfPublication": "Edinburgh",
+				"dateOfPublication": "c1871.",
+				"edition": null,
+				"isLargePrint": false,
+				"canonicalMetadata": {
+					"title": "Middlemarch",
+					"identifiers": [{ "namespace": "ISBN", "value": "9780141439549" }]
+				}
+			}
+		]
+	}
+}

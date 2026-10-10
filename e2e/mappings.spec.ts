@@ -101,6 +101,152 @@ test.describe("Mappings", () => {
 		await expect(page.getByRole("button", { name: "Edit" })).toHaveCount(0);
 	});
 
+	test("deletes a mapping, recording the reason the user gave", async ({
+		app,
+		page,
+	}) => {
+		const deletions: Record<string, unknown>[] = [];
+		await app.mockGraphQL({
+			LoadLibrary: libraryWithEditing(true),
+			LoadMappings: mappings,
+			DeleteReferenceValueMapping: (variables) => {
+				deletions.push(variables);
+				return { deleteReferenceValueMapping: { success: true, message: null } };
+			},
+		});
+
+		await page.goto("/mappings");
+		await page
+			.getByRole("row", { name: /Adult/ })
+			.getByRole("button", { name: "Delete" })
+			.click();
+
+		const dialog = page.getByRole("dialog");
+		await dialog.getByRole("combobox", { name: /Change category/ }).click();
+		await page.getByRole("option", { name: "Error correction" }).click();
+		await dialog
+			.getByRole("textbox", { name: /Reason for change/ })
+			.fill("Duplicate of the branch mapping");
+		await dialog.getByRole("button", { name: "Delete" }).click();
+
+		await expect.poll(() => deletions.length).toBe(1);
+		expect(deletions[0]).toEqual({
+			input: {
+				id: mappings.referenceValueMappings.content[0].id,
+				reason: "Duplicate of the branch mapping",
+				changeCategory: "Error correction",
+				changeReferenceUrl: "",
+			},
+		});
+	});
+
+	test("says why a deletion was refused", async ({ app, page }) => {
+		await app.mockGraphQL({
+			LoadLibrary: libraryWithEditing(true),
+			LoadMappings: mappings,
+			DeleteReferenceValueMapping: {
+				deleteReferenceValueMapping: {
+					success: false,
+					message: "This mapping is in use",
+				},
+			},
+		});
+
+		await page.goto("/mappings");
+		await page
+			.getByRole("row", { name: /Adult/ })
+			.getByRole("button", { name: "Delete" })
+			.click();
+
+		const dialog = page.getByRole("dialog");
+		await dialog.getByRole("combobox", { name: /Change category/ }).click();
+		await page.getByRole("option", { name: "Error correction" }).click();
+		await dialog.getByRole("textbox", { name: /Reason for change/ }).fill("Tidy");
+		await dialog.getByRole("button", { name: "Delete" }).click();
+
+		await expect(page.getByRole("alert")).toContainText(
+			"The mapping was not deleted: This mapping is in use",
+		);
+	});
+
+	test("a denied library cannot start editing from the keyboard", async ({
+		app,
+		page,
+	}) => {
+		await app.mockGraphQL({
+			LoadLibrary: libraryWithEditing(false),
+			LoadMappings: mappings,
+		});
+
+		await page.goto("/mappings");
+		const row = page.getByRole("row", { name: /Adult/ });
+		await row.getByRole("gridcell", { name: "Adult" }).click();
+		await page.keyboard.press("Enter");
+
+		await expect(row.getByRole("textbox")).toHaveCount(0);
+	});
+
+	test("refuses to save a blank value, and says why", async ({ app, page }) => {
+		await app.mockGraphQL({
+			LoadLibrary: libraryWithEditing(true),
+			LoadMappings: mappings,
+		});
+
+		await page.goto("/mappings");
+		// By id: once the row is editing, "Adult" is an input's value, not its name.
+		const row = page.locator(
+			`[role="row"][data-id="${mappings.referenceValueMappings.content[0].id}"]`,
+		);
+		await row.getByRole("button", { name: "Edit" }).click();
+		await row.getByRole("textbox").first().fill("");
+		await row.getByRole("button", { name: "Save" }).click();
+
+		await expect(page.getByRole("alert")).toContainText(
+			"To value cannot be empty.",
+		);
+		await expect(page.getByRole("dialog")).toHaveCount(0);
+	});
+
+	test("shows the server's reason when a save is refused", async ({
+		app,
+		page,
+	}) => {
+		await app.mockGraphQL({
+			LoadLibrary: libraryWithEditing(true),
+			LoadMappings: mappings,
+		});
+		await page.route("**/graphql", async (route) => {
+			if (
+				route.request().postDataJSON()?.operationName !==
+				"UpdateReferenceValueMapping"
+			) {
+				return route.fallback();
+			}
+			await route.fulfill({
+				json: { errors: [{ message: "Mapping editing is disabled" }] },
+			});
+		});
+
+		await page.goto("/mappings");
+		// By id: once the row is editing, "Adult" is an input's value, not its name.
+		const row = page.locator(
+			`[role="row"][data-id="${mappings.referenceValueMappings.content[0].id}"]`,
+		);
+		await row.getByRole("button", { name: "Edit" }).click();
+		await row.getByRole("textbox").first().fill("Child");
+		await row.getByRole("button", { name: "Save" }).click();
+
+		const dialog = page.getByRole("dialog");
+		await dialog.getByRole("combobox", { name: /Change category/ }).click();
+		await page.getByRole("option", { name: "Error correction" }).click();
+		await dialog.getByRole("textbox", { name: /Reason for change/ }).fill("Typo");
+		await dialog.getByRole("button", { name: "Confirm changes" }).click();
+
+		await expect(page.getByRole("alert")).toContainText(
+			"The mapping was not updated: Mapping editing is disabled",
+		);
+	});
+
 	test("asks the server for its rows rather than filtering locally", async ({
 		app,
 		page,

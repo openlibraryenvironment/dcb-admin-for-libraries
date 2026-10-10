@@ -79,6 +79,40 @@ test.describe("Supplier requests clean up", () => {
 		});
 	});
 
+	test("counts a select-all selection, and cleans up nothing when none is selected", async ({
+		page,
+	}) => {
+		await page.goto("/supplierRequests");
+		await expect(page.getByRole("row", { name: new RegExp(ALPHA) })).toBeVisible();
+
+		await page.getByRole("button", { name: /^Actions/ }).click();
+		await expect(
+			page.getByRole("menuitem", { name: "Cleanup selected requests (0)" }),
+		).toBeDisabled();
+		await page.keyboard.press("Escape");
+
+		// Select-all makes the grid's model an EXCLUDE list, whose ids are the rows
+		// left out - so its size read 0 while the cleanup acted on the whole page.
+		await page.getByRole("checkbox", { name: /select all/i }).check();
+		await expect(page.getByRole("button", { name: "Actions (4)" })).toBeVisible();
+		await page.getByRole("button", { name: /^Actions/ }).click();
+		await expect(
+			page.getByRole("menuitem", { name: "Cleanup selected requests (4)" }),
+		).toBeEnabled();
+	});
+
+	test("is not offered on the grid of requests this library borrowed", async ({
+		page,
+	}) => {
+		await page.goto("/patronRequests");
+		await expect(page.getByRole("row", { name: new RegExp(ALPHA) })).toBeVisible();
+		await expect(page.getByRole("button", { name: /^Actions/ })).toHaveCount(0);
+		// Nothing on this grid acts on a selection, so it offers none.
+		await expect(page.getByRole("checkbox", { name: /select all/i })).toHaveCount(
+			0,
+		);
+	});
+
 	test("never offers a request another library supplied", async ({ page }) => {
 		const calls: string[] = [];
 		await recordCleanupCalls(page, calls);
@@ -150,6 +184,15 @@ test.describe("Supplier requests clean up", () => {
 		expect(calls.filter((call) => call.includes("force=true"))).toEqual([]);
 
 		// The result dialog is a surface a user reads and acts on, so it meets the floor.
+		// Scanned once its fade-in ends: mid-fade, axe measures the Close button
+		// blended with the backdrop (3.41:1) whenever the cleanup finishes first.
+		await expect
+			.poll(() =>
+				dialog.evaluate(
+					(node) => getComputedStyle(node.parentElement as Element).opacity,
+				),
+			)
+			.toBe("1");
 		await app.expectNoAccessibilityViolations();
 
 		// The keyboard half of that scan. MUI marks #root aria-hidden without

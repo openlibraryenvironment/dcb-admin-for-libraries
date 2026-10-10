@@ -1,4 +1,5 @@
 import { useClock } from "@/hooks/useThemeStore";
+import { useAnnounce } from "@/hooks/useAnnouncer";
 import { PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
 import {
 	DataGridPremium,
@@ -13,13 +14,11 @@ import {
 	GridPaginationModel,
 	GridRowModes,
 	GridRowModesModel,
-	GridRowParams,
-	GridRowSelectionModel,
 	GridRowsProp,
 	GridSortModel,
 	useGridApiRef,
 } from "@mui/x-data-grid-premium";
-import { RefObject, useCallback, useState } from "react";
+import { RefObject, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { NoResultsOverlay } from "./components/NoResultsOverlay";
 import { useNavigate } from "@tanstack/react-router";
@@ -32,9 +31,13 @@ declare module "@mui/x-data-grid-premium" {
 	interface ToolbarPropsOverrides {
 		handleExport?: (fileType: string, exportMode: string) => Promise<void>;
 		allDataLoading?: boolean;
-		type?: string;
 		onCleanup?: () => void;
-		selectionCount?: number;
+	}
+	interface NoRowsOverlayPropsOverrides {
+		noResultsMessage?: string;
+	}
+	interface NoResultsOverlayPropsOverrides {
+		noResultsMessage?: string;
 	}
 }
 
@@ -106,8 +109,8 @@ interface DataGridProps {
 	onPaginationModelChange?: (model: GridPaginationModel) => void;
 	onRowModesModelChange?: (model: GridRowModesModel) => void;
 	onRowEditStop?: (params: any, event: any) => void;
-	/** Told when an inline edit fails to save, with the message to show. */
-	onRowUpdateError?: (message: string) => void;
+	/** Told when processRowUpdate rejects, with what it rejected with. */
+	onRowUpdateError?: (error: unknown) => void;
 	onSortModelChange?: (model: GridSortModel) => void;
 	pagination: boolean;
 	paginationMode: GridFeatureMode; // Determines client or server side pagination
@@ -117,7 +120,6 @@ interface DataGridProps {
 	rowCount?: number;
 	rowModesModel: GridRowModesModel;
 	rows: GridRowsProp;
-	scrollbarVisible: boolean;
 	sortModel?: any;
 	sortingMode: GridFeatureMode;
 	toolbarVisible: boolean;
@@ -167,7 +169,6 @@ export default function DataGrid({
 	rowCount,
 	rowModesModel,
 	rows,
-	scrollbarVisible,
 	sortModel,
 	sortingMode,
 	styleOverrides,
@@ -183,10 +184,38 @@ export default function DataGrid({
 	const internalApiRef = useGridApiRef();
 	const apiRef = parentApiRef || internalApiRef;
 
-	const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
-		type: "include",
-		ids: new Set(),
-	});
+	const announce = useAnnounce();
+	// The server's count after a filter, sort or page change has settled. The
+	// first settle is the page arriving, which the route title already announced.
+	const settledQuery = useRef<string | null>(null);
+	useEffect(() => {
+		if (loading || paginationMode !== "server" || rowCount === undefined) {
+			return;
+		}
+		const query = JSON.stringify([
+			filterModel,
+			sortModel,
+			paginationModel,
+			rowCount,
+		]);
+		if (settledQuery.current === null) {
+			settledQuery.current = query;
+			return;
+		}
+		if (settledQuery.current === query) return;
+		settledQuery.current = query;
+		announce(t("ui.data_grid.results", { count: rowCount }));
+	}, [
+		loading,
+		paginationMode,
+		rowCount,
+		filterModel,
+		sortModel,
+		paginationModel,
+		announce,
+		t,
+	]);
+
 	const handleRowClick: GridEventListener<"rowClick"> = (params, event) => {
 		// Don't let them navigate away if editing is present
 		if (rowModesModel[params?.row?.id]?.mode === GridRowModes.Edit) {
@@ -253,27 +282,9 @@ export default function DataGrid({
 				onColumnVisibilityModelChange={onColumnVisibilityModelChange}
 				onFilterModelChange={onFilterModelChange}
 				onPaginationModelChange={onPaginationModelChange}
-				onProcessRowUpdateError={(params: GridRowParams) => {
-					const name = params?.row?.name ?? params?.row?.fullName;
-					onRowUpdateError?.(
-						t("common.update_failure", {
-							// entities.* are already lowercase singulars written for exactly
-							// this sentence, so no toLowerCase() is needed on them.
-							entity:
-								type === "ReferenceValueMapping"
-									? t("entities.reference_value_mapping")
-									: type === "NumericRangeMapping"
-										? t("entities.numeric_range_mapping")
-										: type?.toLowerCase(),
-							name: name,
-						}),
-					);
-				}}
+				onProcessRowUpdateError={onRowUpdateError}
 				onSortModelChange={onSortModelChange}
 				onRowClick={handleRowClick}
-				onRowSelectionModelChange={(newSelection) => {
-					setSelectionModel(newSelection);
-				}}
 				pageSizeOptions={PAGE_SIZE_OPTIONS}
 				pagination={pagination}
 				paginationMode={paginationMode}
@@ -285,7 +296,6 @@ export default function DataGrid({
 				onRowModesModelChange={onRowModesModelChange}
 				rowCount={paginationMode === "server" ? rowCount : undefined}
 				rows={rows}
-				rowSelectionModel={selectionModel}
 				showToolbar={toolbarVisible}
 				sortingMode={sortingMode}
 				sortModel={sortModel}
@@ -293,18 +303,13 @@ export default function DataGrid({
 					baseTooltip: DescribingTooltip,
 					detailPanelExpandIcon: GridExpandMoreIcon,
 					detailPanelCollapseIcon: GridExpandLessIcon,
-					noRowsOverlay: () => (
-						<NoResultsOverlay noResultsMessage={noResultsText} />
-					),
-					noResultsOverlay: () => (
-						<NoResultsOverlay noResultsMessage={noResultsText} />
-					),
+					noRowsOverlay: NoResultsOverlay,
+					noResultsOverlay: NoResultsOverlay,
 					// EVERY grid, not just patron requests. MUI's stock GridToolbar paints a
 					// filter button whose visible text is "Filters" and whose accessible
 					// name is "Show filters", with an always-rendered "0" badge inside it -
 					// WCAG 2.5.3 Label in Name, caught once the axe gate was actually
-					// running the WCAG tag sets. Our own toolbar already branches on
-					// `type` for its export items, so it was written for this.
+					// running the WCAG tag sets.
 					toolbar: ExportToolbar,
 				}}
 				slotProps={{
@@ -313,10 +318,10 @@ export default function DataGrid({
 						handleExport: onExport, // Pass the export handler
 						excelOptions: { disableToolbarButton: true },
 						allDataLoading: isExporting, // Pass the loading state
-						type: type, // Pass type to determine menu options
 						onCleanup: enableCleanup ? onCleanup : undefined, // Pass cleanup handler
-						selectionCount: selectionModel?.ids?.size || 0,
 					},
+					noRowsOverlay: { noResultsMessage: noResultsText },
+					noResultsOverlay: { noResultsMessage: noResultsText },
 					filterPanel: expandedFilterPanel
 						? {
 								sx: {
@@ -327,15 +332,10 @@ export default function DataGrid({
 				}}
 				sx={{
 					border: "0",
-					minHeight: rows.length === 0 ? "400px" : undefined, // ensures that if there's nothing there, we still see loading etc
+					// Room for the loading and no-rows overlays when there are no rows.
+					minHeight: rows.length === 0 ? (theme) => theme.spacing(50) : undefined,
 					"@media print": {
-						".MuiDataGrid-main": { color: "rgba(0, 0, 0, 0.87)" },
-					},
-					// "& .MuiDataGrid-cell--editable": {
-					// 	bgcolor: (theme.vars || theme).palette.primary.editableFieldBackground,
-					// }, // How to signal editable cells.
-					".MuiDataGrid-virtualScroller": {
-						overflow: scrollbarVisible ? "" : "hidden",
+						".MuiDataGrid-main": { color: "common.black" },
 					},
 					// both hover styles need to be added, otherwise a flashing effect appears when hovering
 					// https://stackoverflow.com/questions/76563478/disable-hover-effect-on-mui-datagrid
@@ -344,9 +344,6 @@ export default function DataGrid({
 					},
 					"& .MuiDataGrid-row:hover": {
 						backgroundColor: disableHoverInteractions ? "transparent" : "",
-					},
-					"& .MuiDataGrid-cell:focus": {
-						outline: disableHoverInteractions ? "none" : "",
 					},
 					"& .MuiDataGrid-detailPanel": {
 						overflow: "hidden", // Prevent scrollbars in the detail panel

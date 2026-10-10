@@ -119,6 +119,8 @@ const Confirmation = ({
 	};
 	const getButtonText = () => {
 		switch (action) {
+			case "deletion":
+				return t("ui.actions.delete");
 			case "gridEdit":
 			case "pageEdit":
 				return t("ui.actions.confirm_changes");
@@ -138,7 +140,6 @@ const Confirmation = ({
 			onClose={handleClose}
 			aria-labelledby="confirmation-modal"
 			fullWidth>
-			{/* // Enforcing the style of bold, centered modal or dialog headers */}
 			<DialogTitle id="confirmation-modal" variant="modalTitle">
 				{getHeaderText()}
 			</DialogTitle>
@@ -176,7 +177,6 @@ const Confirmation = ({
 											]}
 											value={field.value || null}
 											onChange={(_, newValue) => field.onChange(newValue)}
-											// disabled={doPatronRequestsExist}
 											renderInput={(params) => (
 												<TextField
 													{...params}
@@ -204,7 +204,6 @@ const Confirmation = ({
 											variant="outlined"
 											label={t("data_change_log.reason")}
 											margin="normal"
-											// disabled={doPatronRequestsExist}
 											error={!!errors.reason}
 											helperText={errors.reason?.message}
 											slotProps={{ htmlInput: { maxLength: 200 } }}
@@ -222,7 +221,6 @@ const Confirmation = ({
 											variant="outlined"
 											label={t("data_change_log.reference_url")}
 											margin="normal"
-											// disabled={doPatronRequestsExist}
 											error={!!errors.changeReferenceUrl}
 											helperText={
 												errors.changeReferenceUrl?.message ||
@@ -265,7 +263,6 @@ const Confirmation = ({
 							onClick={handleSubmit(onSubmit)}
 							disabled={
 								!isValid || !isDirty || isSubmitting
-								// || doPatronRequestsExist
 							}>
 							{getButtonText()}
 							{isSubmitting ? (

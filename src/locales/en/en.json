@@ -18,13 +18,13 @@
 		"data": "Audit data (JSON)",
 		"date": "Audit date",
 		"description": "Brief description",
-		"from_status": "fromStatus",
+		"from_status": "From status",
 		"log": "Audit log",
 		"no_data": "No audit log entries found.",
 		"no_results": "No audits found",
 		"no_rows": "Try changing your filters or search terms.",
 		"title": "Audit entry",
-		"to_status": "toStatus",
+		"to_status": "To status",
 		"uuid": "Audit UUID"
 	},
 	"bibs": {
@@ -228,6 +228,7 @@
 			"status": "Status",
 			"supplying_library": "Supplying library",
 			"time_in_state_days": "Time in state (days)",
+			"time_in_state_description": "The time the request has been in its current status, as days:hours:minutes:seconds",
 			"title": "Title",
 			"to_category": "To category",
 			"to_context": "To context",
@@ -831,6 +832,7 @@
 		"print_label": "Print label",
 		"service_point": "FOLIO service point ID",
 		"sierra": "Sierra location ID",
+		"title": "Location",
 		"type": "Location type",
 		"view_location": "View pickup location"
 	},
@@ -845,13 +847,19 @@
 	},
 	"mappings": {
 		"category": "Category",
+		"delete_failed": "The mapping was not deleted.",
+		"delete_failed_reason": "The mapping was not deleted: {{reason}}",
 		"delete_warning": "Are you sure you want to delete this mapping?",
+		"deleted": "Mapping deleted.",
 		"domain": "Domain",
 		"editing_disabled": "Editing mappings has been disabled by your consortium administrator",
 		"from_value": "From value",
 		"last_imported": "Last imported",
 		"title": "Mappings",
-		"to_value": "To value"
+		"to_value": "To value",
+		"update_failed": "The mapping was not updated.",
+		"update_failed_reason": "The mapping was not updated: {{reason}}",
+		"value_required": "{{field}} cannot be empty."
 	},
 	"nav": {
 		"bibs": {
@@ -1361,9 +1369,14 @@
 			},
 			"filters": {
 				"active_description": "{{length}} filter(s) active: {{description}}",
+				"after": "After",
+				"and": "and",
+				"applying": "Applying filter",
+				"before": "Before",
 				"between": "Between",
 				"days_from": "Days from",
 				"days_to": "Days to",
+				"does_not_contain": "Does not contain",
 				"equals": "Equals",
 				"from": "From",
 				"greater_than_exclusive": "Greater than",
@@ -1375,6 +1388,7 @@
 				"not_equal": "Does not equal",
 				"on_or_after": "On or after",
 				"on_or_before": "On or before",
+				"title": "Filters",
 				"to": "To",
 				"trigger": "Show filters",
 				"trigger_applied_one": "Show filters, {{count}} applied",
@@ -1384,6 +1398,8 @@
 			"master_detail": "Master detail",
 			"no_data": "No data available",
 			"open": "Open",
+			"results_one": "{{count}} result",
+			"results_other": "{{count}} results",
 			"search_audits": "Search by audit",
 			"search_locations": "Search by location",
 			"search_mappings": "Search by mappings",
@@ -1432,7 +1448,8 @@
 			"correct_as_of": "Status correct as of",
 			"description": "Description: {{description}}",
 			"loading": {
-				"document": "Loading {{document_type}}"
+				"document": "Loading {{document_type}}",
+				"value": "Loading"
 			},
 			"reload": "Try reloading the page",
 			"try_later": "Please try again later",

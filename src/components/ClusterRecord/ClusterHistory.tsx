@@ -72,7 +72,6 @@ export default function ClusterHistory() {
 			pagination
 			listViewEnabled={false}
 			rowModesModel={{}}
-			scrollbarVisible={false}
 			toolbarVisible={true}
 			searchText={t("ui.actions.search")}
 		/>

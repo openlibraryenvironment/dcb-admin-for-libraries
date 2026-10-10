@@ -40,6 +40,10 @@ export const getPatronRequests = gql`
 				localItemId
 				localItemStatus
 				localItemType
+				pickupRequestId
+				pickupRequestStatus
+				isExpeditedCheckout
+				renewalCount
 				patron {
 					id
 				}
