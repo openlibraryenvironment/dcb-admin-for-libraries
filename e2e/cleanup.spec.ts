@@ -184,6 +184,15 @@ test.describe("Supplier requests clean up", () => {
 		expect(calls.filter((call) => call.includes("force=true"))).toEqual([]);
 
 		// The result dialog is a surface a user reads and acts on, so it meets the floor.
+		// Scanned once its fade-in ends: mid-fade, axe measures the Close button
+		// blended with the backdrop (3.41:1) whenever the cleanup finishes first.
+		await expect
+			.poll(() =>
+				dialog.evaluate(
+					(node) => getComputedStyle(node.parentElement as Element).opacity,
+				),
+			)
+			.toBe("1");
 		await app.expectNoAccessibilityViolations();
 
 		// The keyboard half of that scan. MUI marks #root aria-hidden without
