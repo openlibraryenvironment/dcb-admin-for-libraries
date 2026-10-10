@@ -18,11 +18,6 @@ import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 const route = getRouteApi("/__authenticated/insights");
 
-export function InsightsPending() {
-	const { t } = useTranslation();
-	return <Loading title={t("insights.loading")} subtitle={t("ui.info.wait")} />;
-}
-
 export default function LibraryInsights() {
 	const view = useInsightsView(route.useSearch(), "/insights");
 	const { t } = useTranslation();

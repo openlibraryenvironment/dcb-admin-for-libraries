@@ -1,9 +1,8 @@
 import { pageTitle } from "@helpers/pageTitle";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import LibraryInsights, {
-	InsightsPending,
-} from "@components/Insights/LibraryInsights";
+import LibraryInsights from "@components/Insights/LibraryInsights";
+import InsightsPending from "@components/Insights/InsightsPending";
 
 import { isInsightsEnabled } from "@helpers/featureFlags";
 import { createRestClient } from "@helpers/createRestClient";
