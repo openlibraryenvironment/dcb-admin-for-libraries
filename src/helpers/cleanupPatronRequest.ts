@@ -14,7 +14,7 @@ export const neverCleanableStatuses = [
 export interface CleanableRequest {
 	id?: string;
 	status?: string;
-	suppliers?: { localAgency?: string | null; isActive?: boolean | null }[];
+	suppliers?: { localAgency?: string | null; isActive?: boolean | null }[] | null;
 }
 
 /** Whether one of the caller's agencies supplied this request. */

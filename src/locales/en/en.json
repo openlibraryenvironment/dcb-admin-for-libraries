@@ -1423,7 +1423,8 @@
 			"correct_as_of": "Status correct as of",
 			"description": "Description: {{description}}",
 			"loading": {
-				"document": "Loading {{document_type}}"
+				"document": "Loading {{document_type}}",
+				"value": "Loading"
 			},
 			"reload": "Try reloading the page",
 			"try_later": "Please try again later",
