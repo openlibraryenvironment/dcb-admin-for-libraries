@@ -78,7 +78,8 @@ export const checkIfFiltering = (
 };
 
 export const generateFilterDescription = (model?: GridFilterModel): string => {
-	if (!model || !model.items || model.items.length === 0) return "Filters";
+	const none = i18n.t("ui.data_grid.filters.title");
+	if (!model || !model.items || model.items.length === 0) return none;
 
 	// Only count filters that actually have a value entered
 	const validItems = model.items.filter(
@@ -86,7 +87,7 @@ export const generateFilterDescription = (model?: GridFilterModel): string => {
 			item.value !== undefined && item.value !== null && item.value !== "",
 	);
 
-	if (validItems.length === 0) return "Filters";
+	if (validItems.length === 0) return none;
 
 	const logicOperator = model.logicOperator || "AND";
 
@@ -105,19 +106,13 @@ export const generateFilterDescription = (model?: GridFilterModel): string => {
 			const formattedEnd = hasEnd ? formatTimestamp(end, currentClock()) : "";
 
 			if (hasStart && hasEnd) {
-				operator = i18n
-					.t("ui.data_grid.filters.between", { defaultValue: "between" })
-					.toLowerCase();
-				val = `${formattedStart} ${i18n.t("general.and", { defaultValue: "and" })} ${formattedEnd}`;
+				operator = i18n.t("ui.data_grid.filters.between").toLowerCase();
+				val = `${formattedStart} ${i18n.t("ui.data_grid.filters.and")} ${formattedEnd}`;
 			} else if (hasStart) {
-				operator = i18n
-					.t("ui.data_grid.filters.after", { defaultValue: "after" })
-					.toLowerCase();
+				operator = i18n.t("ui.data_grid.filters.after").toLowerCase();
 				val = `${formattedStart}`;
 			} else if (hasEnd) {
-				operator = i18n
-					.t("ui.data_grid.filters.before", { defaultValue: "before" })
-					.toLowerCase();
+				operator = i18n.t("ui.data_grid.filters.before").toLowerCase();
 				val = `${formattedEnd}`;
 			}
 		} else {

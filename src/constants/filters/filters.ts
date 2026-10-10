@@ -7,15 +7,13 @@ import {
 	GridFilterInputValue,
 	GridFilterOperator,
 } from "@mui/x-data-grid-premium";
-// Bear in mind there are also numeric operators for those columns.
+import i18n from "@/i18n";
 
-// The logic for these custom filters is actually contained in the ServerPaginatedGrid for most cases
-// buildQuery method - as they must translate queries into Lucene syntax to be processed on the server
-// As such these exist for two reasons: one to actually get these filter options presented to the user
-// and two - to filter in situations where the ClientDataGrid is used.
+// A server-filtered grid sends these to buildFilterQuery; getApplyFilterFn is
+// only used where a grid filters on the client.
 
 const doesNotEqualFilter: GridFilterOperator = {
-	label: "Does not equal",
+	label: i18n.t("ui.data_grid.filters.not_equal"),
 	value: "does not equal",
 	getApplyFilterFn: (filterItem) => {
 		if (!filterItem.field || !filterItem.value || !filterItem.operator) {
@@ -27,7 +25,7 @@ const doesNotEqualFilter: GridFilterOperator = {
 };
 
 const doesNotContainFilter: GridFilterOperator = {
-	label: "does not contain",
+	label: i18n.t("ui.data_grid.filters.does_not_contain"),
 	value: "does not contain",
 	getApplyFilterFn: (filterItem) => {
 		if (!filterItem.field || !filterItem.value) {
