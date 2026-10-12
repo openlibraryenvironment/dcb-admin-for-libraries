@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { OPTIONAL_QUERY } from "@helpers/serviceErrors";
 
 import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
 import { Item } from "@models/Item";
@@ -29,6 +30,7 @@ export const useCheckedOutDueDate = ({
 	headers,
 }: CheckedOutDueDate) => {
 	const query = useQuery({
+		meta: OPTIONAL_QUERY,
 		queryKey: [
 			"availability",
 			"checkedOut",

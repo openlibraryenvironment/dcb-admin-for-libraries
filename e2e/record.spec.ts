@@ -74,6 +74,19 @@ test("a failed availability call is reported, not shown as no items", async ({
 	await expect(page.getByText(/no items found/i)).toHaveCount(0);
 });
 
+test("availability that is down is reported on the record, not by leaving it", async ({
+	app,
+	page,
+}) => {
+	test.slow(); // a 5xx is retried with a backoff of seconds before the page gives up
+	await openRecord(app, page, `/requesting/${RECORD}/items`, { status: 503 });
+
+	await expect(
+		page.getByText(/could not load the associated items/i),
+	).toBeVisible({ timeout: 45_000 });
+	await expect(page).toHaveURL(new RegExp(`/requesting/${RECORD}/items$`));
+});
+
 test("a record id that is not a UUID is not found, and nothing is fetched", async ({
 	app,
 	page,

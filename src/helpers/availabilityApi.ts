@@ -1,3 +1,4 @@
+import { OPTIONAL_QUERY } from "@helpers/serviceErrors";
 import { queryOptions } from "@tanstack/react-query";
 import axios from "axios";
 
@@ -39,4 +40,5 @@ export const availabilityQueryOptions = (
 		queryFn: ({ signal }) =>
 			fetchClusterAvailability(apiBase, clusterId, filters, signal),
 		...AVAILABILITY_QUERY_POLICY,
+		meta: OPTIONAL_QUERY,
 	});
