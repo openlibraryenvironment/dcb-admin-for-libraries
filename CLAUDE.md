@@ -35,7 +35,7 @@ The two admin apps are on the same generation, so an API that works in one usual
 
 **Releases run from the `release` branch, not `main`.** `semantic-release` is configured with `"branches": ["release"]`, publishes to GitLab, and commits `package.json`, `CHANGELOG.md` and `release-info.json` back with `[skip ci]`. Merging to `main` releases nothing; conventional-commit format is not optional, because commit messages *are* the release notes.
 
-**GraphQL types are generated.** If you touch a `.ts` GraphQL document you MUST run `npm run codegen` and commit the regenerated types. A schema change in `dcb-service` is a full-stack change: update this consumer in the same change, or say explicitly which PR follows.
+**GraphQL documents are checked, not generated.** There is no codegen: `src/queries/schemaConformance.test.ts` validates every document under `src/queries` and `src/mutations` against `schema.graphqls` and each per-release copy, so a field a supported dcb-service lacks fails `npx vitest run`. A schema change in `dcb-service` is a full-stack change: update this consumer in the same change, or say explicitly which PR follows.
 
 **Never `autocomplete="off"` on a credential field** — barcode and PIN fields must allow paste and password managers (WCAG 2.2 SC 3.3.8). **No `dangerouslySetInnerHTML`** — sanitise through an allow-list at the boundary. **No `page.waitForTimeout()`** in e2e — use web-first auto-waiting assertions. **No bare `invalidateQueries()`** — it re-fires every mounted query; invalidate the narrowest stale key.
 

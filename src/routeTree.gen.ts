@@ -30,11 +30,9 @@ import { Route as _authenticatedPatronRequestsIndexRouteImport } from './routes/
 import { Route as _authenticatedRequestingIndexRouteImport } from './routes/__authenticated/requesting/index'
 import { Route as _authenticatedRequestingRecordIdRouteImport } from './routes/__authenticated/requesting/$recordId'
 import { Route as _authenticatedBibsIdIndexRouteImport } from './routes/__authenticated/bibs/$id/index'
-import { Route as _authenticatedIndexesIndexCodeIndexRouteImport } from './routes/__authenticated/indexes/$indexCode/index'
 import { Route as _authenticatedLocationsIdIndexRouteImport } from './routes/__authenticated/locations/$id/index'
 import { Route as _authenticatedPatronRequestsIdIndexRouteImport } from './routes/__authenticated/patronRequests/$id/index'
 import { Route as _authenticatedRequestingRecordIdIndexRouteImport } from './routes/__authenticated/requesting/$recordId/index'
-import { Route as _authenticatedIndexesIndexCodeRecordIdIndexRouteImport } from './routes/__authenticated/indexes/$indexCode/$recordId/index'
 import { Route as _authenticatedPatronRequestsAuditsAuditIdIndexRouteImport } from './routes/__authenticated/patronRequests/audits/$auditId/index'
 import { Route as _authenticatedRequestingRecordIdHistoryIndexRouteImport } from './routes/__authenticated/requesting/$recordId/history/index'
 import { Route as _authenticatedRequestingRecordIdItemsIndexRouteImport } from './routes/__authenticated/requesting/$recordId/items/index'
@@ -152,12 +150,6 @@ const _authenticatedBibsIdIndexRoute =
     path: '/bibs/$id/',
     getParentRoute: () => _authenticatedRoute,
   } as any)
-const _authenticatedIndexesIndexCodeIndexRoute =
-  _authenticatedIndexesIndexCodeIndexRouteImport.update({
-    id: '/indexes/$indexCode/',
-    path: '/indexes/$indexCode/',
-    getParentRoute: () => _authenticatedRoute,
-  } as any)
 const _authenticatedLocationsIdIndexRoute =
   _authenticatedLocationsIdIndexRouteImport.update({
     id: '/locations/$id/',
@@ -175,12 +167,6 @@ const _authenticatedRequestingRecordIdIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => _authenticatedRequestingRecordIdRoute,
-  } as any)
-const _authenticatedIndexesIndexCodeRecordIdIndexRoute =
-  _authenticatedIndexesIndexCodeRecordIdIndexRouteImport.update({
-    id: '/indexes/$indexCode/$recordId/',
-    path: '/indexes/$indexCode/$recordId/',
-    getParentRoute: () => _authenticatedRoute,
   } as any)
 const _authenticatedPatronRequestsAuditsAuditIdIndexRoute =
   _authenticatedPatronRequestsAuditsAuditIdIndexRouteImport.update({
@@ -222,11 +208,9 @@ export interface FileRoutesByFullPath {
   '/patronRequests/': typeof _authenticatedPatronRequestsIndexRoute
   '/requesting/': typeof _authenticatedRequestingIndexRoute
   '/bibs/$id/': typeof _authenticatedBibsIdIndexRoute
-  '/indexes/$indexCode/': typeof _authenticatedIndexesIndexCodeIndexRoute
   '/locations/$id/': typeof _authenticatedLocationsIdIndexRoute
   '/patronRequests/$id/': typeof _authenticatedPatronRequestsIdIndexRoute
   '/requesting/$recordId/': typeof _authenticatedRequestingRecordIdIndexRoute
-  '/indexes/$indexCode/$recordId/': typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
   '/patronRequests/audits/$auditId/': typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
   '/requesting/$recordId/history/': typeof _authenticatedRequestingRecordIdHistoryIndexRoute
   '/requesting/$recordId/items/': typeof _authenticatedRequestingRecordIdItemsIndexRoute
@@ -251,11 +235,9 @@ export interface FileRoutesByTo {
   '/patronRequests': typeof _authenticatedPatronRequestsIndexRoute
   '/requesting': typeof _authenticatedRequestingIndexRoute
   '/bibs/$id': typeof _authenticatedBibsIdIndexRoute
-  '/indexes/$indexCode': typeof _authenticatedIndexesIndexCodeIndexRoute
   '/locations/$id': typeof _authenticatedLocationsIdIndexRoute
   '/patronRequests/$id': typeof _authenticatedPatronRequestsIdIndexRoute
   '/requesting/$recordId': typeof _authenticatedRequestingRecordIdIndexRoute
-  '/indexes/$indexCode/$recordId': typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
   '/patronRequests/audits/$auditId': typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
   '/requesting/$recordId/history': typeof _authenticatedRequestingRecordIdHistoryIndexRoute
   '/requesting/$recordId/items': typeof _authenticatedRequestingRecordIdItemsIndexRoute
@@ -283,11 +265,9 @@ export interface FileRoutesById {
   '/__authenticated/patronRequests/': typeof _authenticatedPatronRequestsIndexRoute
   '/__authenticated/requesting/': typeof _authenticatedRequestingIndexRoute
   '/__authenticated/bibs/$id/': typeof _authenticatedBibsIdIndexRoute
-  '/__authenticated/indexes/$indexCode/': typeof _authenticatedIndexesIndexCodeIndexRoute
   '/__authenticated/locations/$id/': typeof _authenticatedLocationsIdIndexRoute
   '/__authenticated/patronRequests/$id/': typeof _authenticatedPatronRequestsIdIndexRoute
   '/__authenticated/requesting/$recordId/': typeof _authenticatedRequestingRecordIdIndexRoute
-  '/__authenticated/indexes/$indexCode/$recordId/': typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
   '/__authenticated/patronRequests/audits/$auditId/': typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
   '/__authenticated/requesting/$recordId/history/': typeof _authenticatedRequestingRecordIdHistoryIndexRoute
   '/__authenticated/requesting/$recordId/items/': typeof _authenticatedRequestingRecordIdItemsIndexRoute
@@ -315,11 +295,9 @@ export interface FileRouteTypes {
     | '/patronRequests/'
     | '/requesting/'
     | '/bibs/$id/'
-    | '/indexes/$indexCode/'
     | '/locations/$id/'
     | '/patronRequests/$id/'
     | '/requesting/$recordId/'
-    | '/indexes/$indexCode/$recordId/'
     | '/patronRequests/audits/$auditId/'
     | '/requesting/$recordId/history/'
     | '/requesting/$recordId/items/'
@@ -344,11 +322,9 @@ export interface FileRouteTypes {
     | '/patronRequests'
     | '/requesting'
     | '/bibs/$id'
-    | '/indexes/$indexCode'
     | '/locations/$id'
     | '/patronRequests/$id'
     | '/requesting/$recordId'
-    | '/indexes/$indexCode/$recordId'
     | '/patronRequests/audits/$auditId'
     | '/requesting/$recordId/history'
     | '/requesting/$recordId/items'
@@ -375,11 +351,9 @@ export interface FileRouteTypes {
     | '/__authenticated/patronRequests/'
     | '/__authenticated/requesting/'
     | '/__authenticated/bibs/$id/'
-    | '/__authenticated/indexes/$indexCode/'
     | '/__authenticated/locations/$id/'
     | '/__authenticated/patronRequests/$id/'
     | '/__authenticated/requesting/$recordId/'
-    | '/__authenticated/indexes/$indexCode/$recordId/'
     | '/__authenticated/patronRequests/audits/$auditId/'
     | '/__authenticated/requesting/$recordId/history/'
     | '/__authenticated/requesting/$recordId/items/'
@@ -542,13 +516,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authenticatedBibsIdIndexRouteImport
       parentRoute: typeof _authenticatedRoute
     }
-    '/__authenticated/indexes/$indexCode/': {
-      id: '/__authenticated/indexes/$indexCode/'
-      path: '/indexes/$indexCode'
-      fullPath: '/indexes/$indexCode/'
-      preLoaderRoute: typeof _authenticatedIndexesIndexCodeIndexRouteImport
-      parentRoute: typeof _authenticatedRoute
-    }
     '/__authenticated/locations/$id/': {
       id: '/__authenticated/locations/$id/'
       path: '/locations/$id'
@@ -569,13 +536,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/requesting/$recordId/'
       preLoaderRoute: typeof _authenticatedRequestingRecordIdIndexRouteImport
       parentRoute: typeof _authenticatedRequestingRecordIdRoute
-    }
-    '/__authenticated/indexes/$indexCode/$recordId/': {
-      id: '/__authenticated/indexes/$indexCode/$recordId/'
-      path: '/indexes/$indexCode/$recordId'
-      fullPath: '/indexes/$indexCode/$recordId/'
-      preLoaderRoute: typeof _authenticatedIndexesIndexCodeRecordIdIndexRouteImport
-      parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/patronRequests/audits/$auditId/': {
       id: '/__authenticated/patronRequests/audits/$auditId/'
@@ -639,10 +599,8 @@ interface _authenticatedRouteChildren {
   _authenticatedPatronRequestsIndexRoute: typeof _authenticatedPatronRequestsIndexRoute
   _authenticatedRequestingIndexRoute: typeof _authenticatedRequestingIndexRoute
   _authenticatedBibsIdIndexRoute: typeof _authenticatedBibsIdIndexRoute
-  _authenticatedIndexesIndexCodeIndexRoute: typeof _authenticatedIndexesIndexCodeIndexRoute
   _authenticatedLocationsIdIndexRoute: typeof _authenticatedLocationsIdIndexRoute
   _authenticatedPatronRequestsIdIndexRoute: typeof _authenticatedPatronRequestsIdIndexRoute
-  _authenticatedIndexesIndexCodeRecordIdIndexRoute: typeof _authenticatedIndexesIndexCodeRecordIdIndexRoute
   _authenticatedPatronRequestsAuditsAuditIdIndexRoute: typeof _authenticatedPatronRequestsAuditsAuditIdIndexRoute
 }
 
@@ -665,13 +623,9 @@ const _authenticatedRouteChildren: _authenticatedRouteChildren = {
     _authenticatedPatronRequestsIndexRoute,
   _authenticatedRequestingIndexRoute: _authenticatedRequestingIndexRoute,
   _authenticatedBibsIdIndexRoute: _authenticatedBibsIdIndexRoute,
-  _authenticatedIndexesIndexCodeIndexRoute:
-    _authenticatedIndexesIndexCodeIndexRoute,
   _authenticatedLocationsIdIndexRoute: _authenticatedLocationsIdIndexRoute,
   _authenticatedPatronRequestsIdIndexRoute:
     _authenticatedPatronRequestsIdIndexRoute,
-  _authenticatedIndexesIndexCodeRecordIdIndexRoute:
-    _authenticatedIndexesIndexCodeRecordIdIndexRoute,
   _authenticatedPatronRequestsAuditsAuditIdIndexRoute:
     _authenticatedPatronRequestsAuditsAuditIdIndexRoute,
 }

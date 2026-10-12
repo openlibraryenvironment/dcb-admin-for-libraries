@@ -61,7 +61,7 @@ export function SharedIndexV2() {
 
 	// Quick walk-up stays with consortium admins until its role gate is decided.
 	const isAdmin = roles.includes("CONSORTIUM_ADMIN");
-	// Validated by the route's requestingSearchSchema; shared with /indexes.
+	// Validated by the route's requestingSearchSchema.
 	const search: RequestingSearch = useSearch({ strict: false });
 	const queryParam = search.filters;
 	const pageno = search.pageno ?? 0;
