@@ -27,7 +27,6 @@ import { gridPage, queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
 import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
-import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
@@ -177,30 +176,13 @@ function RouteComponent() {
 
 	// No cleanup here: this grid lists what THIS library borrowed, and cleanup belongs to
 	// the library that supplied the request - see supplierRequests.tsx.
-	// The export must carry the same scope as the grid - it is the same data leaving
-	// the building in a file rather than on screen
-	const exportBaseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
-	const { exportProgress, handleExport } = usePatronRequestExport({
+	const { exportProgress, exportConfig, cancelExport } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
-		baseQuery: exportBaseQuery,
-		exportQuery: getPatronRequestsForExport,
+		baseQuery: borrowedByLibraryQuery(code, userLibraryHostLmsCode),
 		filterModel: grid.appliedFilterModel,
 		sortModel: grid.sortModel,
-		onExportSuccess: (msg, count) => {
-			setAlert({
-				open: true,
-				severity: "success",
-				text: t("ui.data_grid.export.success", { count: count }),
-			});
-		},
-		onExportError: () => {
-			setAlert({
-				open: true,
-				severity: "error",
-				text: t("ui.data_grid.export.failed"),
-			});
-		},
+		onExportResult: (result) => setAlert({ open: true, ...result }),
 		type: "patronRequests",
 	});
 	// Show loading if initial load or libraries are loading
@@ -248,7 +230,7 @@ function RouteComponent() {
 					type="patronRequests"
 					label={t("nav.patron_requests.title")}
 					identifier="patronRequestsMain"
-					checkboxSelection={false}
+					checkboxSelection={true}
 					disableAggregation={true}
 					disableHoverInteractions={true}
 					disableRowGrouping={true}
@@ -271,7 +253,7 @@ function RouteComponent() {
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
-					onExport={handleExport}
+					exportConfig={exportConfig}
 					isExporting={exportProgress.isExporting}
 				/>
 			}
@@ -279,6 +261,7 @@ function RouteComponent() {
 				open={exportProgress.isExporting}
 				progress={exportProgress.progress}
 				totalRecords={exportProgress.totalRecords}
+				onCancel={cancelExport}
 			/>
 
 			{

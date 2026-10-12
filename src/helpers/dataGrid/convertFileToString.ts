@@ -1,6 +1,6 @@
+import i18n from "@/i18n";
 import { formatDuration } from "../formatDuration";
-import { getFieldsForExport } from "./getFieldsForExport";
-import { getHeadersForExport } from "./getHeadersForExport";
+import type { ExportColumn } from "./exportOptions";
 
 // type for nested field paths
 type SimpleField = string;
@@ -126,34 +126,53 @@ const getFieldValue = (item: any, fieldMapping: FieldPath): any => {
 	return nestedValue;
 };
 
+const SUPPLIER_LEAF: Record<string, string> = {
+	supplyingAgencyCode: "localAgency",
+	canonicalItemType: "canonicalItemType",
+	itemBarcode: "localItemBarcode",
+	localItemType: "localItemType",
+};
+
+/** The dotted path, under a request, that a column's export value is read from. */
+export const exportSourceField = (field: string): string => {
+	const mapping = getFieldMapping(field);
+	if (!isNestedField(mapping)) return mapping;
+	return mapping.arrayHandler
+		? `${mapping.path.join(".")}.${SUPPLIER_LEAF[field] ?? field}`
+		: mapping.path.join(".");
+};
+
+/**
+ * Request fields an export offers that neither request grid shows as a column. A function
+ * so the headers are in the language the reader has when they export.
+ */
+export const EXPORT_ONLY_COLUMNS = (): ExportColumn[] => [
+	{ field: "pickupLocationCode", headerName: i18n.t("grid.headers.pickup_location") },
+	{ field: "patronHostlmsCode", headerName: i18n.t("grid.headers.patron_library") },
+];
+
+/** A column's value for one request, before a file format is applied. */
+export const exportValue = (item: unknown, field: string): unknown => {
+	const value = getFieldValue(item ?? {}, getFieldMapping(field));
+	return field === "elapsedTimeInCurrentStatus" && typeof value === "number"
+		? formatDuration(value)
+		: value;
+};
+
 export const convertFileToString = (
-	data: any[],
+	data: readonly unknown[],
 	delimiter: string,
-	coreType: string,
-	usefulColumns: string[] | null,
+	columns: readonly ExportColumn[],
 ) => {
-	const fieldsForExport = usefulColumns
-		? usefulColumns
-		: getFieldsForExport(coreType);
-	const formattedHeaders = usefulColumns
-		? getHeadersForExport(coreType, fieldsForExport)
-		: getHeadersForExport(coreType);
-	const fieldToHeaderMap: Record<string, string> = {};
-	fieldsForExport.forEach((field, index) => {
-		if (formattedHeaders[index]) {
-			fieldToHeaderMap[field] = formattedHeaders[index];
-		}
-	});
+	const headerRow = columns
+		.map((column) => formatCellValue(column.headerName, delimiter, ""))
+		.join(delimiter);
 
-	const headerRow = formattedHeaders.join(delimiter);
-
-	const rows = data.map((item: any) =>
-		fieldsForExport
-			.map((field: string) => {
-				const fieldMapping = getFieldMapping(field);
-				const value = getFieldValue(item, fieldMapping);
-				return formatCellValue(value, delimiter, field);
-			})
+	const rows = data.map((item) =>
+		columns
+			.map((column) =>
+				formatCellValue(exportValue(item, column.field), delimiter, ""),
+			)
 			.join(delimiter),
 	);
 

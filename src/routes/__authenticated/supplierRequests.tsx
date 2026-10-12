@@ -25,7 +25,6 @@ import { gridPage, queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
 import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
-import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
@@ -171,27 +170,13 @@ function RouteComponent() {
 				refetch();
 			},
 		});
-	const { exportProgress, handleExport } = usePatronRequestExport({
+	const { exportProgress, exportConfig, cancelExport } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
 		baseQuery: presetQuery,
-		exportQuery: getPatronRequestsForExport,
 		filterModel: grid.appliedFilterModel,
 		sortModel: grid.sortModel,
-		onExportSuccess: (msg, count) => {
-			setAlert({
-				open: true,
-				severity: "success",
-				text: t("ui.data_grid.export.success", { count: count }),
-			});
-		},
-		onExportError: () => {
-			setAlert({
-				open: true,
-				severity: "error",
-				text: t("ui.data_grid.export.failed"),
-			});
-		},
+		onExportResult: (result) => setAlert({ open: true, ...result }),
 		type: "supplierRequests",
 	});
 
@@ -262,7 +247,7 @@ function RouteComponent() {
 					onRowModesModelChange={setRowModesModel}
 					enableCleanup={true}
 					onCleanup={handleCleanup}
-					onExport={handleExport}
+					exportConfig={exportConfig}
 					isExporting={exportProgress.isExporting}
 					parentApiRef={apiRef}
 				/>
@@ -271,6 +256,7 @@ function RouteComponent() {
 				open={exportProgress.isExporting}
 				progress={exportProgress.progress}
 				totalRecords={exportProgress.totalRecords}
+				onCancel={cancelExport}
 			/>
 			<CleanupProgressDialog
 				open={cleanupState.open}

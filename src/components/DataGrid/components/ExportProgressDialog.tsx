@@ -1,5 +1,6 @@
 import {
 	Box,
+	Button,
 	Dialog,
 	DialogActions,
 	DialogContent,
@@ -7,23 +8,30 @@ import {
 	LinearProgress,
 	Typography,
 } from "@mui/material";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
 interface ExportProgressProps {
 	open: boolean;
 	progress: number;
 	totalRecords: number;
+	onCancel: () => void;
 }
+
 export const ExportProgressDialog = ({
 	open,
 	progress,
 	totalRecords,
+	onCancel,
 }: ExportProgressProps) => {
 	const { t } = useTranslation();
+	const titleId = useId();
+	// Announced in tens: a polite region read at every percent would talk over the reader.
+	const announced = Math.floor(progress / 10) * 10;
 
 	return (
-		<Dialog open={open} fullWidth aria-labelledby="export-progress-title">
-			<DialogTitle id="export-progress-title" variant="modalTitle">
+		<Dialog open={open} fullWidth aria-labelledby={titleId} onClose={onCancel}>
+			<DialogTitle id={titleId} variant="modalTitle">
 				{t("ui.data_grid.export.modal_title")}
 			</DialogTitle>
 			<DialogContent>
@@ -31,10 +39,9 @@ export const ExportProgressDialog = ({
 					<Typography
 						variant="body1"
 						align="center"
-						sx={{
-							color: "text.secondary",
-						}}>
-						{t("ui.data_grid.export.complete", { percentage: progress + "%" })}
+						role="status"
+						sx={{ color: "text.secondary" }}>
+						{t("ui.data_grid.export.complete", { percentage: announced + "%" })}
 					</Typography>
 					<LinearProgress
 						variant="determinate"
@@ -46,7 +53,9 @@ export const ExportProgressDialog = ({
 					{t("ui.data_grid.export.records", { count: totalRecords })}
 				</Typography>
 			</DialogContent>
-			<DialogActions></DialogActions>
+			<DialogActions>
+				<Button onClick={onCancel}>{t("ui.data_grid.export.cancel")}</Button>
+			</DialogActions>
 		</Dialog>
 	);
 };

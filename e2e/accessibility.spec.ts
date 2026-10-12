@@ -340,6 +340,31 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// Every control in it is a form control, in groups, with an error state.
+		name: "export wizard",
+		path: "/patronRequests",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraries: library,
+				LoadPatronRequests: patronRequests,
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("grid", { name: /patron requests/i }),
+			).toBeVisible();
+			await page.getByRole("button", { name: "Export" }).click();
+			await page.getByRole("menuitem", { name: "Export…" }).click();
+			const dialog = page.getByRole("dialog", { name: "Export requests" });
+			await expect(dialog).toBeVisible();
+			// The error state, so its contrast and its association are scanned too.
+			await dialog.getByRole("button", { name: "Clear all" }).click();
+			await expect(dialog.getByRole("alert")).toBeVisible();
+		},
+	},
+	{
 		// The library profile IN EDIT MODE, with a validation error on screen.
 		// Neither state was ever scanned, and between them they carry every
 		// form control and every error message in the application - which is

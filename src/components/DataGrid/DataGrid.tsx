@@ -26,10 +26,11 @@ import { appUrl } from "@helpers/appBase";
 import { expandedFilterPanelTypes } from "@constants/dataGrid/types";
 import { SxProps, Theme, Tooltip, TooltipProps } from "@mui/material";
 import ExportToolbar from "./components/ExportToolbar";
+import type { GridExportConfig } from "@/hooks/useExport";
 
 declare module "@mui/x-data-grid-premium" {
 	interface ToolbarPropsOverrides {
-		handleExport?: (fileType: string, exportMode: string) => Promise<void>;
+		exportConfig?: GridExportConfig;
 		allDataLoading?: boolean;
 		onCleanup?: () => void;
 	}
@@ -129,7 +130,7 @@ interface DataGridProps {
 	parentApiRef?: RefObject<GridApiPremium | null>;
 	enableCleanup?: boolean;
 	onCleanup?: () => void;
-	onExport?: (fileType: string, exportMode: string) => Promise<void>;
+	exportConfig?: GridExportConfig;
 	isExporting?: boolean;
 }
 export default function DataGrid({
@@ -153,7 +154,7 @@ export default function DataGrid({
 	noResultsText,
 	onCleanup,
 	onColumnVisibilityModelChange,
-	onExport,
+	exportConfig,
 	onFilterModelChange,
 	onPaginationModelChange,
 	onRowModesModelChange,
@@ -315,7 +316,7 @@ export default function DataGrid({
 				slotProps={{
 					toolbar: {
 						showQuickFilter: false,
-						handleExport: onExport, // Pass the export handler
+						exportConfig,
 						excelOptions: { disableToolbarButton: true },
 						allDataLoading: isExporting, // Pass the loading state
 						onCleanup: enableCleanup ? onCleanup : undefined, // Pass cleanup handler
