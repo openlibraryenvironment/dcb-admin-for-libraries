@@ -58,9 +58,12 @@ are split out with the page (`codeSplittingOptions` in `vite.config.ts`).
 the initial load from 305,377 on `main` to 258,099, with no feature removed:
 
 - `exceljs` (276 KB) and `rasterizeHTML` (27 KB) were in the build but could never load:
-  they serve Excel export and chart image export, and this app offers neither.
+  they serve Excel export and chart image export, and this app offered neither.
   `vite.config.ts` aliases them to a stub that throws (`EXCLUDED_PACKAGES`), and
   `tests/excludedFromBuild.test.ts` fails if either feature is switched on.
+  Excel export has since returned through the export wizard, so `exceljs` is built again
+  as a chunk of its own that only an Excel export loads ([export.md](export.md));
+  `rasterizeHTML` stays out.
 - Eight font subsets were inlined as base64 into the stylesheet every page blocks on
   (22 KB). Fonts are no longer inlined; a subset loads only on a page that draws its
   characters.
