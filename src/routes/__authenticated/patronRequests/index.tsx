@@ -1,3 +1,4 @@
+import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
@@ -38,7 +39,7 @@ import { useTranslation } from "react-i18next";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/")({
-	validateSearch: patronRequestsGrid.searchSchema,
+	validateSearch: gridSearchSchema,
 	head: () => ({ meta: [{ title: pageTitle("nav.patron_requests.title") }] }),
 	component: RouteComponent,
 });

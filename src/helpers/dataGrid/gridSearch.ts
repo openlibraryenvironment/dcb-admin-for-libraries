@@ -15,6 +15,7 @@ import {
 	DEFAULT_PAGE_SIZE,
 	PAGE_SIZE_OPTIONS,
 } from "@constants/dataGrid/pagination";
+import type { RouteGridSearch } from "@helpers/dataGrid/gridSearchSchema";
 
 /**
  * Filter fields whose values never go in a URL, only in the tab's history
@@ -353,11 +354,13 @@ export const serialiseGrid = (
 	};
 };
 
+/** The route checked the URL's shape only; this grid's allow-list applies here, before any query. */
 export const readFilter = (
 	grid: GridDefinition,
-	search: Pick<GridSearch, "filters" | "logic">,
+	raw: Pick<RouteGridSearch, "filters" | "logic">,
 	state: unknown,
 ): GridFilterModel => {
+	const search = grid.searchSchema.parse(raw);
 	const hidden = parsePrivateState(grid, state);
 	const items = [...(search.filters ?? [])];
 	for (const { index, item } of [...(hidden?.items ?? [])].sort(
@@ -376,8 +379,9 @@ export const readFilter = (
 
 export const readSort = (
 	grid: GridDefinition,
-	sort: GridSearch["sort"],
+	raw: RouteGridSearch["sort"],
 ): GridSortModel => {
+	const { sort } = grid.searchSchema.parse({ sort: raw });
 	if (sort === undefined) return grid.defaultSort;
 	if (sort === NO_SORT) return [];
 	const [field, direction] = sort.split(":");
@@ -386,7 +390,7 @@ export const readSort = (
 
 export const readGrid = (
 	grid: GridDefinition,
-	search: GridSearch,
+	search: RouteGridSearch,
 	state: unknown,
 ): GridModels => ({
 	filterModel: readFilter(grid, search, state),

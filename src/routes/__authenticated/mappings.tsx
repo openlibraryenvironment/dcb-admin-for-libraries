@@ -1,3 +1,4 @@
+import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
@@ -44,7 +45,7 @@ import { useTranslation } from "react-i18next";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/mappings")({
-	validateSearch: mappingsGrid.searchSchema,
+	validateSearch: gridSearchSchema,
 	head: () => ({ meta: [{ title: pageTitle("nav.mappings.title") }] }),
 	component: RouteComponent,
 });

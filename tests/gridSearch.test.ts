@@ -7,7 +7,9 @@ import type { GridFilterModel } from "@mui/x-data-grid-premium";
 
 import {
 	PRIVATE_FILTER_FIELDS,
+	readFilter,
 	readGrid,
+	readSort,
 	serialiseGrid,
 } from "@helpers/dataGrid/gridSearch";
 import { patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
@@ -192,3 +194,27 @@ describe("grid state in the URL", () => {
 		expect(back.filterModel.quickFilterValues).toEqual([QUICK]);
 	});
 });
+
+describe("a URL that passed the route's shape check", () => {
+	it("is narrowed to the grid's own fields and operators before it becomes a query", () => {
+		const model = readFilter(
+			patronRequestsGrid,
+			{
+				filters: [
+					{ id: 1, field: "notAColumn", operator: "equals", value: "x" },
+					{ id: 2, field: "status", operator: "notAnOperator", value: "x" },
+					{ id: 3, field: "status", operator: "is", value: "COMPLETED" },
+				],
+			},
+			undefined,
+		);
+		expect(model.items.map((item) => item.id)).toEqual([3]);
+	});
+
+	it("drops a sort on a field the grid cannot sort", () => {
+		expect(readSort(patronRequestsGrid, "notAColumn:asc")).toEqual(
+			patronRequestsGrid.defaultSort,
+		);
+	});
+});
+

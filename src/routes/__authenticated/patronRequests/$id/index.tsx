@@ -1,3 +1,4 @@
+import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
 import { useClock } from "@/hooks/useThemeStore";
 import { formatTimestamp } from "@helpers/formatters";
 import { Attribute } from "@components/Attribute/Attribute";
@@ -67,12 +68,11 @@ import {
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 import PatronRequestAuditLog from "@components/PatronRequestAuditLog/PatronRequestAuditLog";
-import { auditLogGrid } from "@helpers/dataGrid/gridDefinitions";
 import { z } from "zod";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
 	validateSearch: z.object({
-		audit: auditLogGrid.searchSchema.optional().catch(undefined),
+		audit: gridSearchSchema.optional().catch(undefined),
 	}),
 	head:() => ({ meta: [{ title: pageTitle("patron_request.title") }] }),
 	component: RouteComponent,

@@ -1,3 +1,4 @@
+import type { RouteGridSearch } from "@helpers/dataGrid/gridSearchSchema";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
@@ -89,7 +90,7 @@ const withoutSettled = (
  */
 export const useSyncedDataGrid = (
 	grid: GridDefinition,
-	search: GridSearch | undefined,
+	search: RouteGridSearch | undefined,
 ) => {
 	const navigate = useNavigate();
 	const hidden = useLocation({
