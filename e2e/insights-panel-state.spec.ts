@@ -147,6 +147,23 @@ test.describe("Insights panel states", () => {
 		);
 	});
 
+	test("a gateway timeout from trading partners is a failure, not a collection count", async ({
+		page,
+	}) => {
+		await page.route("**/insights/top-partners**", (route) =>
+			route.fulfill({ status: 504, body: "" }),
+		);
+
+		await page.goto("/insights?tab=partners");
+		await reveal(page, "Trading partners");
+		const panel = cardFor(page, "Trading partners");
+
+		await expect(panel).toContainText("This panel could not be loaded.", {
+			timeout: 15_000,
+		});
+		await expect(panel).not.toContainText(/collection/i);
+	});
+
 	test("a chosen date range shows as two labelled fields, and Clear returns to the preset", async ({
 		page,
 	}) => {

@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Box, Card, CardContent, Typography } from "@mui/material";
 
-import type { collectionAnalysisPolicy } from "@helpers/statsApi";
+import {
+	type collectionAnalysisPolicy,
+	isStillComputing,
+} from "@helpers/statsApi";
 import PanelState from "./PanelState";
 
 /**
@@ -53,14 +56,19 @@ export default function CollectionPanel<T>({
 				</Typography>
 				<PanelState
 					isLoading={isLoading}
-					isComputing={failureCount > 0}
+					computingKey={
+						failureCount > 0 ? "insights.collection.computing" : undefined
+					}
 					isError={isError}
-					error={error}
 					isEmpty={data === undefined || isEmpty(data)}
 					onRetry={refetch}
 					isRetrying={isFetching}
 					height={minHeight}
-					failedKey="insights.collection.failed"
+					failedKey={
+						isStillComputing(error)
+							? "insights.collection.busy"
+							: "insights.collection.failed"
+					}
 				>
 					{() => children(data as T)}
 				</PanelState>

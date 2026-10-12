@@ -41,7 +41,7 @@ export default function TradingPartnersPanel({
 	const [page, setPage] = useState(0);
 	const [size, setSize] = useState(PAGE_SIZES[0]);
 
-	const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
+	const { data, isLoading, isError, refetch, isFetching } = useQuery({
 		...topPartnersQueryOptions(client, { ...params, libraryCode, page, size }),
 		// Otherwise a page change unmounts the table into a spinner and the layout jumps.
 		placeholderData: keepPreviousData,
@@ -65,7 +65,6 @@ export default function TradingPartnersPanel({
 				<PanelState
 					isLoading={isLoading}
 					isError={isError}
-					error={error}
 					isEmpty={rows.length === 0}
 					onRetry={refetch}
 					isRetrying={isFetching}

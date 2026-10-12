@@ -2,14 +2,9 @@ import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Box, Button, Skeleton, Typography } from "@mui/material";
 
-import { isStillComputing } from "@helpers/statsApi";
-
 interface PanelStateProps {
 	isLoading: boolean;
-	/** A retry is pending because the count is still running; see isStillComputing. */
-	isComputing?: boolean;
 	isError: boolean;
-	error?: unknown;
 	isEmpty: boolean;
 	onRetry: () => void;
 	isRetrying?: boolean;
@@ -19,6 +14,8 @@ interface PanelStateProps {
 	emptyKey?: string;
 	/** Names what failed, where "this panel" is vaguer than the reader deserves. */
 	failedKey?: string;
+	/** Said in place of the skeleton while loading, when the wait is worth explaining. */
+	computingKey?: string;
 	children: () => ReactNode;
 }
 
@@ -34,15 +31,14 @@ interface PanelStateProps {
  */
 export default function PanelState({
 	isLoading,
-	isComputing = false,
 	isError,
-	error,
 	isEmpty,
 	onRetry,
 	isRetrying = false,
 	height,
 	emptyKey = "insights.no_data",
 	failedKey = "insights.panel.failed",
+	computingKey,
 	children,
 }: PanelStateProps) {
 	const { t } = useTranslation();
@@ -60,10 +56,8 @@ export default function PanelState({
 		</Box>
 	);
 
-	if (isLoading && isComputing) {
-		return centred(
-			<Alert severity="info">{t("insights.collection.computing")}</Alert>,
-		);
+	if (isLoading && computingKey) {
+		return centred(<Alert severity="info">{t(computingKey)}</Alert>);
 	}
 
 	if (isLoading) {
@@ -71,11 +65,9 @@ export default function PanelState({
 	}
 
 	if (isError) {
-		const busy = isStillComputing(error);
-
 		return centred(
 			<Alert
-				severity={busy ? "info" : "warning"}
+				severity="warning"
 				action={
 					<Button
 						color="inherit"
@@ -87,7 +79,7 @@ export default function PanelState({
 					</Button>
 				}
 			>
-				{t(busy ? "insights.collection.busy" : failedKey)}
+				{t(failedKey)}
 			</Alert>,
 		);
 	}
