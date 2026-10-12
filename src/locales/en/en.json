@@ -1244,7 +1244,7 @@
 			"errors": {
 				"cluster_deleted": "This item's catalogue entry has been removed, so it cannot be lent through a walk-up.",
 				"duplicate_request_attempt": "This patron already has a request for this title.",
-				"forbidden": "A walk-up can only be placed for an item at your own library.",
+				"forbidden": "You are not allowed to place this walk-up. Library staff can place one only for an item at their own library.",
 				"item_not_available": "This item is not available to lend right now, for example because it is on loan or on hold.",
 				"item_not_found": "No item with that barcode was found at your library. Check the barcode and try again.",
 				"item_not_in_shared_index": "This item's record is not in the shared catalogue yet, so it cannot be lent through a walk-up.",
