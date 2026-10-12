@@ -15,6 +15,7 @@ import {
 	collectionOverlapQueryOptions,
 	type CollectionOverlapStat,
 } from "@helpers/statsApi";
+import { formatNumber } from "@helpers/formatters";
 import CollectionPanel from "./CollectionPanel";
 import MetricInfo from "./MetricInfo";
 
@@ -106,7 +107,7 @@ function OverlapTable({
 						<TableRow key={partner.key} hover>
 							<TableCell>{partner.code}</TableCell>
 							<TableCell align="right">
-								{partner.sharedTitleCount.toLocaleString()}
+								{formatNumber(partner.sharedTitleCount)}
 							</TableCell>
 						</TableRow>
 					))}

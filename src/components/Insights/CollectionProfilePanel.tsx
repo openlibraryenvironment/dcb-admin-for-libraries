@@ -16,6 +16,7 @@ import {
 	type CollectionProfileStat,
 } from "@helpers/statsApi";
 import { rankedProfile, uniqueSharePct } from "@helpers/insightsCollection";
+import { formatNumber, formatPercent } from "@helpers/formatters";
 import CollectionPanel from "./CollectionPanel";
 import MetricInfo from "./MetricInfo";
 
@@ -127,13 +128,13 @@ function ProfileTable({
 									) : null}
 								</TableCell>
 								<TableCell align="right">
-									{row.clusterCount.toLocaleString()}
+									{formatNumber(row.clusterCount)}
 								</TableCell>
 								<TableCell align="right">
-									{row.uniqueTitleCount.toLocaleString()}
+									{formatNumber(row.uniqueTitleCount)}
 								</TableCell>
 								<TableCell align="right">
-									{share == null ? "—" : `${share.toFixed(1)}%`}
+									{share == null ? "—" : formatPercent(share)}
 								</TableCell>
 							</TableRow>
 						);

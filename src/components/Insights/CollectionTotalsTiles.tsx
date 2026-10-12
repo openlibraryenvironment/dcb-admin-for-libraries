@@ -7,6 +7,7 @@ import {
 	collectionTotalsQueryOptions,
 	isStillComputing,
 } from "@helpers/statsApi";
+import { formatNumber } from "@helpers/formatters";
 import KpiTile from "./KpiTile";
 import MetricInfo from "./MetricInfo";
 
@@ -41,7 +42,7 @@ export default function CollectionTotalsTiles() {
 		);
 	}
 
-	const n = (value: number | undefined) => (value ?? 0).toLocaleString();
+	const n = (value: number | undefined) => formatNumber(value ?? 0);
 	const heading = t("insights.collection.totals.heading");
 
 	return (

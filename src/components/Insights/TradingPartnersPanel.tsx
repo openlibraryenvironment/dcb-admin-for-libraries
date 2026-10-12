@@ -17,6 +17,7 @@ import {
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { StatsParams, topPartnersQueryOptions } from "@helpers/statsApi";
+import { formatNumber } from "@helpers/formatters";
 
 import MetricInfo from "./MetricInfo";
 import PanelState from "./PanelState";
@@ -107,13 +108,13 @@ export default function TradingPartnersPanel({
 													) : null}
 												</TableCell>
 												<TableCell align="right">
-													{row.borrowedFromCount.toLocaleString()}
+													{formatNumber(row.borrowedFromCount)}
 												</TableCell>
 												<TableCell align="right">
-													{row.suppliedToCount.toLocaleString()}
+													{formatNumber(row.suppliedToCount)}
 												</TableCell>
 												<TableCell align="right">
-													{row.totalCount.toLocaleString()}
+													{formatNumber(row.totalCount)}
 												</TableCell>
 											</TableRow>
 										))}

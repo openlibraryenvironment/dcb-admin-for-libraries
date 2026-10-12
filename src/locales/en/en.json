@@ -761,8 +761,8 @@
 			"cluster_quality": {
 				"title": "Clustering confidence",
 				"subtitle": "How many libraries hold each work. Read this before the figures beside it: they depend on it.",
-				"summary": "{{single}}% of {{total}} works are held by a single library. The commonest work is held by {{commonest}}.",
-				"under_clustered": "{{single}}% of works have exactly one holder. That is high enough to suggest records are not being matched to each other, in which case the unique-title figures describe the matching rather than the collection.",
+				"summary": "{{single}} of {{total}} works are held by a single library. The most common number of holders per work is {{commonest}}.",
+				"under_clustered": "{{single}} of works have exactly one holder. That is high enough to suggest records are not being matched to each other, in which case the unique-title figures describe the matching rather than the collection.",
 				"axis_holders": "Libraries holding the work",
 				"series": "Works"
 			},

@@ -441,3 +441,38 @@ test.describe("each chart's table carries its figures", () => {
 		]);
 	});
 });
+
+/**
+ * The collection figures through the shared formatters. A region that spaces its percent
+ * sign is what tells a formatter from a hand-built `${n.toFixed(1)}%`; `\s` takes either
+ * no-break space, since CLDR has moved between them.
+ */
+test.describe("collection figures are written in the reader's region", () => {
+	test.use({ locale: "fr-FR", timezoneId: "UTC" });
+
+	test("percentages and counts follow the region", async ({ app, page }) => {
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+		await page.goto("/insights?tab=collection");
+		await scrollUntilPresent(
+			page,
+			page.getByRole("heading", { name: "Who holds the same works" }),
+		);
+
+		await expect(
+			page.getByText(
+				/^46,2\s% of 4\s120\s884 works are held by a single library\. The most common number of holders per work is 1\.$/,
+			),
+		).toBeVisible();
+
+		const own = page
+			.getByRole("table")
+			.filter({ has: page.getByRole("columnheader", { name: "Unique share" }) })
+			.getByRole("row", { name: /e2e-lms/ })
+			.getByRole("cell");
+		await expect(own.nth(1)).toHaveText(/^640\s000$/);
+		await expect(own.last()).toHaveText(/^13,8\s%$/);
+	});
+});

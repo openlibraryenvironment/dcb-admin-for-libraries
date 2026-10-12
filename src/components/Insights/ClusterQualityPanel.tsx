@@ -5,7 +5,7 @@ import { BarChartPro } from "@mui/x-charts-pro";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
-import { formatNumber } from "@helpers/formatters";
+import { formatNumber, formatPercent } from "@helpers/formatters";
 import {
 	clusterSizeDistributionQueryOptions,
 	type ClusterSizeStat,
@@ -63,15 +63,18 @@ function ClusterQualityBody({ rows }: { rows: ClusterSizeStat[] }) {
 	);
 
 	const singlePct =
-		quality.singleHolderPct != null ? quality.singleHolderPct.toFixed(1) : "—";
+		quality.singleHolderPct != null ? formatPercent(quality.singleHolderPct) : "—";
 
 	return (
 		<>
 			<Typography variant="body2" gutterBottom>
 				{t("insights.collection.cluster_quality.summary", {
 					single: singlePct,
-					total: quality.totalClusters.toLocaleString(),
-					commonest: quality.commonestHolderCount ?? "—",
+					total: formatNumber(quality.totalClusters),
+					commonest:
+						quality.commonestHolderCount != null
+							? formatNumber(quality.commonestHolderCount)
+							: "—",
 				})}
 			</Typography>
 
