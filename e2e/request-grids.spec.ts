@@ -45,5 +45,6 @@ test("the supplier grid scopes its query once", async ({ app, page }) => {
 	await page.goto("/supplierRequests");
 	await expect(page.getByRole("grid")).toBeVisible();
 	await expect.poll(() => queries.length).toBeGreaterThan(0);
-	expect(queries[0]).toBe("supplyingAgencyCode:e2e-agency");
+	// Escaped like every other value in a query; dcb-service's parser unescapes it.
+	expect(queries[0]).toBe("supplyingAgencyCode:e2e\\-agency");
 });

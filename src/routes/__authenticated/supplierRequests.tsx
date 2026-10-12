@@ -1,3 +1,4 @@
+import { escapeLucene } from "@helpers/dataGrid/buildFilterQuery";
 import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/__authenticated/supplierRequests")({
 });
 
 const presetQueryFor = (agencyCode: string | undefined) =>
-	"supplyingAgencyCode:" + agencyCode;
+	"supplyingAgencyCode:" + escapeLucene(agencyCode ?? "");
 
 function RouteComponent() {
 	const { t } = useTranslation();
