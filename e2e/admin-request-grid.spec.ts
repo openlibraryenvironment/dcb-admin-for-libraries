@@ -2,29 +2,20 @@ import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 
-// A title filter left in the session by an earlier visit is what used to send an
+// A title filter carried in from an earlier visit is what used to send an
 // administrator's grid through a 100,000-row fetch, so the spec starts from one.
-const STORED_TITLE_FILTER = JSON.stringify({
-	state: {
-		filterModel: {
-			mainPatronRequests: {
-				items: [
-					{ id: 1, field: "clusterRecordTitle", operator: "contains", value: "moby" },
-				],
-			},
-		},
-	},
-	version: 0,
-});
+// Grid state is URL state now, so it arrives in a link.
+const TITLE_FILTER = encodeURIComponent(
+	JSON.stringify([
+		{ id: 1, field: "clusterRecordTitle", operator: "contains", value: "moby" },
+	]),
+);
 
 test("an administrator's borrowed-requests grid is paged by the server", async ({
 	app,
 	page,
 }) => {
 	await app.signIn({ roles: ["ADMIN"] });
-	await page.addInitScript((stored) => {
-		sessionStorage.setItem("root:grid-storage", stored);
-	}, STORED_TITLE_FILTER);
 
 	const facetRequests: string[] = [];
 	const requestQueries: { operation: string; pagesize: unknown }[] = [];
@@ -46,7 +37,7 @@ test("an administrator's borrowed-requests grid is paged by the server", async (
 		LoadPatronRequests: patronRequests,
 	});
 
-	await page.goto("/patronRequests");
+	await page.goto(`/patronRequests?filters=${TITLE_FILTER}`);
 	await expect(
 		page.getByRole("link", { name: /2026-09-01/ }).first(),
 	).toBeVisible();

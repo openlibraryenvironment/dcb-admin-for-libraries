@@ -1,5 +1,6 @@
 import { test, expect } from "../e2e/fixtures/test";
 import library from "../e2e/fixtures-data/library.json" with { type: "json" };
+import patronRequests from "../e2e/fixtures-data/patronRequests.json" with { type: "json" };
 import { RUNTIME_CONFIG } from "../e2e/fixtures/runtime-config";
 
 /**
@@ -80,6 +81,36 @@ test.describe("Navigation under a deployment base path", () => {
 		await expect(
 			page.getByRole("tab", { name: "Requesting", exact: true }),
 		).toHaveAttribute("aria-selected", "true");
+	});
+
+	test("a grid's state is written to the URL under the base, once", async ({
+		app,
+		page,
+	}) => {
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraries: library,
+			LoadPatronRequests: {
+				patronRequests: {
+					...patronRequests.patronRequests,
+					totalSize: 60,
+				},
+			},
+		});
+		await page.goto(`${BASE}/patronRequests`);
+		await expect(page.getByRole("grid")).toBeVisible();
+
+		await page.getByRole("button", { name: "Go to next page" }).click();
+		await expect(page).toHaveURL(`${BASE}/patronRequests?page=1`);
+
+		await page.reload();
+		await expect(page.getByText(/26–50 of 60/)).toBeVisible();
+		const href = await page
+			.getByRole("link", { name: /2026-09-01/ })
+			.first()
+			.getAttribute("href");
+		expect(href).toMatch(new RegExp(`^${BASE}/patronRequests/`));
+		expect(href!.slice(BASE.length)).not.toContain(BASE);
 	});
 
 	test("not found routes home to the app, not to the origin root", async ({

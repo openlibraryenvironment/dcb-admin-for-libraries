@@ -4,42 +4,27 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestQueries } from "@/hooks/usePatronRequestQueries";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
-import { defaultPatronRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/patronRequestColumnVisibility";
+import { recordHistoryGrid } from "@helpers/dataGrid/gridDefinitions";
 
 const route = getRouteApi("/__authenticated/requesting/$recordId/history/");
-
-// One id for every record: an id per record grew the persisted grid store by
-// one entry for each record ever opened. The record is in the query, not the id.
-const HISTORY_GRID = "requestingHistory";
 
 export default function ClusterHistory() {
 	const { recordId } = route.useParams();
 	const { t } = useTranslation();
 	const { cfg } = useRouter().options.context as { cfg: any };
 
-	const grid = useSyncedDataGrid({
-		gridId: HISTORY_GRID,
-		defaultSort: [{ field: "dateCreated", sort: "desc" }],
-		defaultColumnVisibility: defaultPatronRequestColumnVisibility,
-		defaultPagination: { page: 0, pageSize: 100 },
-	});
+	const grid = useSyncedDataGrid(recordHistoryGrid, route.useSearch());
 
 	const query = usePatronRequestQueries({
 		apiBase: cfg?.VITE_DCB_API_BASE,
-		filterModel: grid.debouncedFilterModel,
+		filterModel: grid.appliedFilterModel,
 		paginationModel: grid.paginationModel,
 		sortModel: grid.sortModel,
 		mode: "borrowing",
 		additionalQuery: `(bibClusterId:${recordId})`,
 	});
 
-	useDataGridErrorSafely(
-		HISTORY_GRID,
-		query.isError,
-		query.error,
-		grid.setLocalFilterModel,
-		grid.setLocalSortModel,
-	);
+	useDataGridErrorSafely(grid, query.isError, query.error);
 
 	return (
 		<DataGrid
@@ -52,9 +37,8 @@ export default function ClusterHistory() {
 			rows={query.rows}
 			rowCount={query.rowCount}
 			columns={query.columns}
-			columnVisibilityModel={
-				grid.columnVisibilityModel ?? defaultPatronRequestColumnVisibility
-			}
+			columnVisibilityModel={grid.columnVisibilityModel}
+			onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
 			loading={query.isLoading || grid.isFiltering}
 			type="patronRequests"
 			label={t("requesting.history_label")}
