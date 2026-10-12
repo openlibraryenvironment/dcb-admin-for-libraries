@@ -11,8 +11,6 @@ test("the borrowed-requests grid asks the shared index for nothing", async ({
 	app,
 	page,
 }) => {
-	// The publisher facets feed a column only administrators get; fetched for
-	// everyone, they also held the grid's loading overlay until they returned.
 	const facetRequests: string[] = [];
 	page.on("request", (request) => {
 		if (request.url().includes("/search/instances/facets")) {
