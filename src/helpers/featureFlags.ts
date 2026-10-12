@@ -92,8 +92,8 @@ export const isAgencyScopedRequestsEnabled = (): boolean =>
 export const isCapabilityEnabled = (flag: string): boolean => readFlag(flag);
 
 /**
- * Percentile trends - `/insights/trend`, on dcb-service branch `insights-improvements`
- * and in NO release, not 8.71.0 and not the 9.0.0 tag.
+ * Percentile trends - `/insights/trend`, first released in dcb-service 9.1.0; not in
+ * 8.71.0 or 9.0.0.
  *
  * Separate from VITE_FEATURE_INSIGHTS because the thresholds differ: a deployment on
  * 9.0.0 has the Insights surface and answers 404 to this one endpoint, and a 404 through
