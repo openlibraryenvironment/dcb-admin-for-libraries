@@ -619,13 +619,14 @@ const PAGES: Surface[] = [
 			await app.mockGraphQL({
 				LoadLibrary: library,
 				GetAuditById: audit,
-				GetAuditsByPatronRequest: audit,
+				GetAuditNeighbours: { older: audit.audits, newer: { content: [] } },
 			});
 		},
 		ready: async (page) => {
 			await expect(
 				page.getByRole("heading", { level: 1, name: audit.audits.content[0].id }),
 			).toBeVisible();
+			await expect(page.getByRole("button", { name: "Older" })).toBeEnabled();
 		},
 	},
 	{
