@@ -656,7 +656,12 @@ export default function InsightsDashboard({
 					titleKey="insights.sections.partners"
 				>
 					<LazyPanel minHeight={360}>
-						<TradingPartnersPanel params={params} libraryCode={libraryCode} />
+						{/* Keyed on the range so its page starts over: the old page may not exist in the new one. */}
+						<TradingPartnersPanel
+							key={`${params.startDate ?? ""}|${params.endDate ?? ""}`}
+							params={params}
+							libraryCode={libraryCode}
+						/>
 					</LazyPanel>
 
 					{/* Reciprocity / value */}

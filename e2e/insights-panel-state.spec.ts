@@ -164,6 +164,47 @@ test.describe("Insights panel states", () => {
 		await expect(panel).not.toContainText(/collection/i);
 	});
 
+	test("trading partners returns to its first page when the range has fewer partners", async ({
+		page,
+	}) => {
+		const partner = (n: number) => ({
+			partnerCode: `lms-${n}`,
+			partnerName: n === 0 ? "Peer Test Library" : `Partner ${n}`,
+			borrowedFromCount: 1,
+			suppliedToCount: 1,
+			totalCount: 2,
+		});
+		let narrowRange = false;
+		await page.route("**/insights/top-partners**", async (route) => {
+			const pageIndex = Number(new URL(route.request().url()).searchParams.get("page"));
+			if (!narrowRange) {
+				await route.fulfill({
+					json: {
+						content: Array.from({ length: 10 }, (_, i) => partner(pageIndex * 10 + i)),
+						totalSize: 25,
+					},
+				});
+				return;
+			}
+			await route.fulfill({
+				json: { content: pageIndex === 0 ? [partner(0)] : [], totalSize: 1 },
+			});
+		});
+
+		await page.goto("/insights?tab=partners");
+		await reveal(page, "Trading partners");
+		const panel = cardFor(page, "Trading partners");
+
+		await panel.getByRole("button", { name: "Go to next page" }).click();
+		await expect(panel.getByRole("row", { name: /Partner 10/ })).toBeVisible();
+
+		narrowRange = true;
+		await page.getByRole("button", { name: "7 days" }).click();
+
+		await expect(panel.getByRole("row", { name: /Peer Test Library/ })).toBeVisible();
+		await expect(panel).not.toContainText("No data for the selected period.");
+	});
+
 	test("a chosen date range shows as two labelled fields, and Clear returns to the preset", async ({
 		page,
 	}) => {
