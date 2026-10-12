@@ -47,7 +47,8 @@ const EXPORT_ROWS = {
 	},
 };
 
-const GUARD = `(supplyingAgencyCode:"${AGENCY_CODE}" OR pickupLocationCode:"${PICKUP}")`;
+// 8.71.0, the e2e default: the patron's library is its Host LMS, as the borrowed grid has it.
+const GUARD = `(patronHostlmsCode:"e2e-lms" OR supplyingAgencyCode:"${AGENCY_CODE}" OR pickupLocationCode:"${PICKUP}")`;
 
 const mockExport = async (
 	app: AppFixture,
@@ -60,7 +61,9 @@ const mockExport = async (
 		LoadAgencyLocationsForExport: {
 			agencies: {
 				totalSize: 1,
-				content: [{ code: AGENCY_CODE, locations: [{ id: PICKUP }] }],
+				content: [
+					{ code: AGENCY_CODE, hostLms: { code: "e2e-lms" }, locations: [{ id: PICKUP }] },
+				],
 			},
 		},
 		LoadLocation: { locations: { totalSize: 0, content: [] } },
@@ -114,6 +117,7 @@ test("the downloaded file holds only requests one of the user's libraries is par
 	app,
 	page,
 }) => {
+	await app.enableFeatures(["VITE_FEATURE_AGENCY_SCOPED_REQUESTS"]);
 	await mockExport(app);
 	await page.goto("/patronRequests");
 	await openWizard(page);
@@ -123,7 +127,24 @@ test("the downloaded file holds only requests one of the user's libraries is par
 	const csv = await contentOf(download);
 	expect(csv).toContain(IN_SCOPE);
 	expect(csv).not.toContain(OUT_OF_SCOPE);
-	await expect(page.getByText("Exported 1 request.")).toBeVisible();
+	await expect(page.getByRole("alert")).toContainText(
+		"Exported 1 request. 1 request was left out: none of your libraries",
+	);
+});
+
+test("on 8.71.0 the export holds what the borrowed grid shows: its libraries' Host LMS", async ({
+	app,
+	page,
+}) => {
+	await mockExport(app);
+	await page.goto("/patronRequests");
+	await openWizard(page);
+
+	const csv = await contentOf(await exportFrom(page, "CSV"));
+	expect(csv).toContain(IN_SCOPE);
+	expect(csv).toContain(OUT_OF_SCOPE);
+	await expect(page.getByRole("alert")).toContainText("Exported 2 requests.");
+	await expect(page.getByRole("alert")).not.toContainText("left out");
 });
 
 test("every export request carries the library guard ahead of the grid's query", async ({

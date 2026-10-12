@@ -45,24 +45,34 @@ Values are quoted and escaped, and every join is an explicit `OR`, because
 | dcb-service | Guard |
 |---|---|
 | 9.0.0 and later (`VITE_FEATURE_AGENCY_SCOPED_REQUESTS` on) | `patronAgencyCode:"A" OR … OR supplyingAgencyCode:"A" OR … OR pickupLocationCode:"<location id>" OR …` |
-| 8.71.0 (flag off) | `supplyingAgencyCode:"A" OR … OR pickupLocationCode:"<location id>" OR …` |
+| 8.71.0 (flag off) | `patronHostlmsCode:"<their Host LMS>" OR … OR supplyingAgencyCode:"A" OR … OR pickupLocationCode:"<location id>" OR …` |
 
 `pickupLocationCode` holds a Location id. The ids are every location of the user's
-agencies, from one `agencies(query: code:"A" OR …)` request with `locations { id }`,
-which is the one path to an agency's locations on 8.71.0 as well as 9.x. A guard is
+agencies, and the Host LMS codes are each agency's `hostLms`, both from one
+`agencies(query: code:"A" OR …)` request, which is the one path to them on 8.71.0 as
+well as 9.x. Only agencies whose code is in the claim are read from the response. A guard is
 refused rather than sent with more than 1,000 locations.
 
 **On every row.** Each returned row must prove (a), (b) or (c) from its own fields,
 or it is dropped: `requestingIdentity.resolvedAgency.code` (selected only where the
-flag is on), any `suppliers[].localAgency`, or `pickupLocationCode`. A missing field
+flag is on; `patronHostlmsCode` where it is off), any `suppliers[].localAgency`, or
+`pickupLocationCode`. A missing field
 proves nothing. Codes match exactly, as `dcb-service` matches them. A request that
 matches through two suppliers is returned twice by the server and exported once.
 
-**8.71.0 cannot express (a).** It has no `patronAgencyCode` filter and no
-`resolvedAgency`, and `patronHostlmsCode` names the Host LMS, which every co-tenant
-library on a shared system has in common. The guard narrows rather than widens: on
-8.71.0 a borrowed request appears in an export only if one of the user's libraries
-supplied it or owns its pickup location.
+**On 8.71.0, (a) is the patron's Host LMS.** That release has no `patronAgencyCode`
+filter and no `resolvedAgency`, so the guard does what the borrowed-requests grid does
+there: a request whose patron is on the Host LMS of one of the user's libraries counts
+as borrowed by them. A Host LMS shared by several libraries is common to all of them,
+so on a shared system the export, like the grid, includes the other libraries'
+borrowed requests. That is the existing 8.71.0 behaviour, kept deliberately; once
+`VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is on, the patron's agency replaces it and the
+Host LMS counts for nothing.
+
+**Rows the guard leaves out are counted.** The success message says how many: "Exported
+180 requests. 60 requests were left out: none of your libraries borrowed, supplied or
+collects them." Only the count is shown. Requests the server's own scope removes never
+reach the client and are not counted.
 
 ### What dcb-service already enforces
 

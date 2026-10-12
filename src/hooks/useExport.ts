@@ -120,26 +120,37 @@ export const usePatronRequestExport = ({
 			signal,
 		});
 
-	// One request: as many agencies as the claim names, each with its own location list.
-	const pickupLocationIdsOf = async (
+	// One request: as many agencies as the claim names, each with its Host LMS and locations.
+	const ownAgenciesOf = async (
 		agencyCodes: string[],
 		signal: AbortSignal,
-	): Promise<string[]> => {
-		if (agencyCodes.length === 0) return [];
+	): Promise<{ pickupLocationIds: string[]; patronHostLmsCodes: string[] }> => {
+		if (agencyCodes.length === 0) return { pickupLocationIds: [], patronHostLmsCodes: [] };
 		const data = await graphql<{
 			agencies?: {
-				content?: ({ code?: string; locations?: ({ id?: string } | null)[] } | null)[];
+				content?: ({
+					code?: string;
+					hostLms?: { code?: string | null } | null;
+					locations?: ({ id?: string } | null)[];
+				} | null)[];
 			};
 		}>(
 			getAgencyLocationsForExport,
 			{ query: agencyLocationsQuery(agencyCodes), pageno: 0, pagesize: agencyCodes.length },
 			signal,
 		);
-		return (data.agencies?.content ?? [])
-			.filter((agency) => !!agency?.code && agencyCodes.includes(agency.code))
-			.flatMap((agency) => agency?.locations ?? [])
-			.map((location) => location?.id)
-			.filter((id): id is string => !!id);
+		const own = (data.agencies?.content ?? []).filter(
+			(agency) => !!agency?.code && agencyCodes.includes(agency.code),
+		);
+		return {
+			pickupLocationIds: own
+				.flatMap((agency) => agency?.locations ?? [])
+				.map((location) => location?.id)
+				.filter((id): id is string => !!id),
+			patronHostLmsCodes: own
+				.map((agency) => agency?.hostLms?.code)
+				.filter((code): code is string => !!code),
+		};
 	};
 
 	// Display only, after the guard has run: a name the lookup cannot find stays a code.
@@ -204,9 +215,11 @@ export const usePatronRequestExport = ({
 
 		try {
 			const agencyCodes = await claimedAgencyCodes();
+			const own = await ownAgenciesOf(agencyCodes, signal);
 			const guard = exportGuard(
 				agencyCodes,
-				await pickupLocationIdsOf(agencyCodes, signal),
+				own.pickupLocationIds,
+				own.patronHostLmsCodes,
 			);
 			const query = guardedQuery(guard, gridQueryFor(options));
 			const document = getPatronRequestsForExport();
@@ -215,6 +228,7 @@ export const usePatronRequestExport = ({
 
 			// A request matched through two suppliers comes back twice; it is exported once.
 			const seen = new Set<string>();
+			let leftOut = 0;
 			const rows = await fetchExportPages<ExportedRequest>({
 				fetchPage: async (pageno) => {
 					const data = await graphql<{ patronRequests?: ExportPage<ExportedRequest> }>(
@@ -225,7 +239,10 @@ export const usePatronRequestExport = ({
 					return data.patronRequests ?? { totalSize: 0, content: [] };
 				},
 				keep: (row) => {
-					if (!isRequestInExportScope(row, guard)) return false;
+					if (!isRequestInExportScope(row, guard)) {
+						leftOut += 1;
+						return false;
+					}
 					if (!row.id || seen.has(row.id)) return false;
 					seen.add(row.id);
 					return true;
@@ -263,7 +280,10 @@ export const usePatronRequestExport = ({
 			download(blob, exportFileName(options.fileName, options.format));
 			onExportResult({
 				severity: "success",
-				text: t("ui.data_grid.export.success", { count: named.length }),
+				text: [
+					t("ui.data_grid.export.success", { count: named.length }),
+					...(leftOut > 0 ? [t("ui.data_grid.export.left_out", { count: leftOut })] : []),
+				].join(" "),
 			});
 		} catch (error) {
 			if (signal.aborted) {

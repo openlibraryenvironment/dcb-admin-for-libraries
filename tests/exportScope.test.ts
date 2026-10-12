@@ -52,13 +52,20 @@ describe("guardQuery", () => {
 
 	// 8.71.0 has no patronAgencyCode, and patronHostlmsCode names every co-tenant on a
 	// shared system: the guard narrows to what it can prove, it never widens.
-	it("never falls back to the Host LMS where the patron's agency cannot be asked for", () => {
+	// 8.71.0 cannot ask for the patron's agency, so borrowed requests are those of the
+	// libraries' Host LMS: what the borrowed-requests grid itself shows there.
+	it("asks for the libraries' patron Host LMS where the patron's agency cannot be asked for", () => {
 		withAgencyScope(false);
-		const query = guardQuery(exportGuard(["AB1"], [PICKUP]));
+		const query = guardQuery(exportGuard(["AB1"], [PICKUP], ["SYS1"]));
 		expect(query).toBe(
-			`supplyingAgencyCode:"AB1" OR pickupLocationCode:"${PICKUP}"`,
+			`patronHostlmsCode:"SYS1" OR supplyingAgencyCode:"AB1" OR pickupLocationCode:"${PICKUP}"`,
 		);
-		expect(query).not.toMatch(/patronHostlmsCode|patronAgencyCode/);
+		expect(query).not.toMatch(/patronAgencyCode/);
+	});
+
+	it("uses the patron's agency, never the Host LMS, where it can be asked for", () => {
+		withAgencyScope(true);
+		expect(guardQuery(exportGuard(["AB1"], [], ["SYS1"]))).not.toMatch(/patronHostlmsCode/);
 	});
 
 	it("refuses to build a guard with no library", () => {
@@ -121,7 +128,7 @@ describe("exportGuard", () => {
 });
 
 describe("isRequestInExportScope", () => {
-	const guard = () => exportGuard(["AB1", "ab-2"], [PICKUP]);
+	const guard = () => exportGuard(["AB1", "ab-2"], [PICKUP], ["SYS1"]);
 
 	it("keeps a request borrowed by one of the user's libraries", () => {
 		withAgencyScope(true);
@@ -157,12 +164,12 @@ describe("isRequestInExportScope", () => {
 		).toBe(true);
 	});
 
-	// A Host LMS code is shared by every co-tenant library, so it proves nothing.
+	// Where the patron's agency can be asked for, the shared Host LMS proves nothing.
 	it("drops a request that matches none", () => {
 		withAgencyScope(true);
 		const sharedSystemOnly = {
 			pickupLocationCode: OTHER_PICKUP,
-			patronHostlmsCode: "AB1",
+			patronHostlmsCode: "SYS1",
 			requestingIdentity: { resolvedAgency: { code: "ZZ9" } },
 			suppliers: [{ localAgency: "ZZ9" }],
 		};
@@ -202,5 +209,11 @@ describe("isRequestInExportScope", () => {
 				guard(),
 			),
 		).toBe(false);
+	});
+
+	it("keeps a request of the libraries' Host LMS on 8.71.0, as the borrowed grid does", () => {
+		withAgencyScope(false);
+		expect(isRequestInExportScope({ patronHostlmsCode: "SYS1" }, guard())).toBe(true);
+		expect(isRequestInExportScope({ patronHostlmsCode: "SYS2" }, guard())).toBe(false);
 	});
 });

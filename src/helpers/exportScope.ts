@@ -29,6 +29,12 @@ export interface ExportGuard {
 	pickupLocationIds: readonly string[];
 	/** Whether this dcb-service can filter on, and return, the patron's agency. */
 	patronAgency: boolean;
+	/**
+	 * The Host LMS of each of those agencies, standing for the patron's library where
+	 * patronAgency is false (8.71.0), as the borrowed-requests grid does there. Shared
+	 * by every library on that system, so empty wherever the agency can be asked for.
+	 */
+	patronHostLmsCodes: readonly string[];
 }
 
 /**
@@ -41,6 +47,7 @@ export const MAX_GUARD_LOCATIONS = 1000;
 export const exportGuard = (
 	agencyCodes: readonly string[],
 	pickupLocationIds: readonly string[],
+	patronHostLmsCodes: readonly string[] = [],
 ): ExportGuard => {
 	const codes = agencyCodes.map((code) => code.trim()).filter(Boolean);
 	if (codes.length === 0) {
@@ -49,10 +56,14 @@ export const exportGuard = (
 	if (pickupLocationIds.length > MAX_GUARD_LOCATIONS) {
 		throw new ExportScopeError("Too many locations to scope the export by");
 	}
+	const patronAgency = isAgencyScopedRequestsEnabled();
 	return {
 		agencyCodes: codes,
 		pickupLocationIds: pickupLocationIds.filter(isUuidShaped),
-		patronAgency: isAgencyScopedRequestsEnabled(),
+		patronAgency,
+		patronHostLmsCodes: patronAgency
+			? []
+			: [...new Set(patronHostLmsCodes.map((code) => code.trim()).filter(Boolean))],
 	};
 };
 
@@ -65,7 +76,9 @@ const anyOf = (field: string, values: readonly string[]): string[] =>
 
 export const guardQuery = (guard: ExportGuard): string =>
 	[
-		...(guard.patronAgency ? anyOf("patronAgencyCode", guard.agencyCodes) : []),
+		...(guard.patronAgency
+			? anyOf("patronAgencyCode", guard.agencyCodes)
+			: anyOf("patronHostlmsCode", guard.patronHostLmsCodes)),
 		...anyOf("supplyingAgencyCode", guard.agencyCodes),
 		...anyOf("pickupLocationCode", guard.pickupLocationIds),
 	].join(" OR ");
@@ -90,6 +103,7 @@ export const agencyLocationsQuery = (agencyCodes: readonly string[]): string =>
 	anyOf("code", agencyCodes).join(" OR ");
 
 export interface ScopedRequestFields {
+	patronHostlmsCode?: string | null;
 	pickupLocationCode?: string | null;
 	requestingIdentity?: { resolvedAgency?: { code?: string | null } | null } | null;
 	suppliers?: ({ localAgency?: string | null } | null)[] | null;
@@ -104,8 +118,10 @@ export const isRequestInExportScope = (
 	const ours = (code: string | null | undefined): boolean =>
 		!!code && guard.agencyCodes.includes(code);
 
-	const borrowed =
-		guard.patronAgency && ours(request.requestingIdentity?.resolvedAgency?.code);
+	const borrowed = guard.patronAgency
+		? ours(request.requestingIdentity?.resolvedAgency?.code)
+		: !!request.patronHostlmsCode &&
+			guard.patronHostLmsCodes.includes(request.patronHostlmsCode);
 	const supplied = (request.suppliers ?? []).some((supplier) =>
 		ours(supplier?.localAgency),
 	);

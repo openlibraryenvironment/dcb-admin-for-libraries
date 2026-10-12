@@ -12,6 +12,9 @@ export const getAgencyLocationsForExport = gql`
 			totalSize
 			content {
 				code
+				hostLms {
+					code
+				}
 				locations {
 					id
 				}
