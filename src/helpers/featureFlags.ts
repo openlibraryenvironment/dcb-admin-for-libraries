@@ -92,8 +92,8 @@ export const isAgencyScopedRequestsEnabled = (): boolean =>
 export const isCapabilityEnabled = (flag: string): boolean => readFlag(flag);
 
 /**
- * Percentile trends - `/insights/trend`, on dcb-service branch `insights-improvements`
- * and in NO release, not 8.71.0 and not the 9.0.0 tag.
+ * Percentile trends - `/insights/trend`, first released in dcb-service 9.1.0; not in
+ * 8.71.0 or 9.0.0.
  *
  * Separate from VITE_FEATURE_INSIGHTS because the thresholds differ: a deployment on
  * 9.0.0 has the Insights surface and answers 404 to this one endpoint, and a 404 through
@@ -102,6 +102,16 @@ export const isCapabilityEnabled = (flag: string): boolean => readFlag(flag);
  */
 export const isInsightsTrendsEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_INSIGHTS_TRENDS");
+
+/**
+ * Walk-up against shipped - `/insights/library-breakdown`, on dcb-service branch
+ * `feat/discovery-service-support` and in no release.
+ *
+ * Separate from VITE_FEATURE_INSIGHTS for the trends flag's reason: every released
+ * dcb-service answers this one endpoint 404, which the panel would report as a fault.
+ */
+export const isInsightsWalkUpEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_INSIGHTS_WALK_UP");
 
 /**
  * Whether a discovery front end is deployed beside us — docs/DEPLOYMENT.md §2b.

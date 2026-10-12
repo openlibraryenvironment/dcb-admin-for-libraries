@@ -4,6 +4,28 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 /// <reference types="vitest/config" />
 
+// Loaded only by features this app does not offer, so never by a browser. Excel export is
+// offered, through the export wizard only. tests/excludedFromBuild.test.ts fails if either changes.
+const EXCLUDED_PACKAGES = [
+	// Chart image export: no chart renders a toolbar or calls exportAsImage.
+	"rasterizehtml",
+];
+
+// The commit, not the version: the build job runs before semantic-release bumps package.json.
+function buildStampPlugin(): Plugin {
+	const build = process.env.CI_COMMIT_SHORT_SHA || "local";
+	return {
+		name: "build-stamp",
+		transformIndexHtml: () => [
+			{
+				tag: "meta",
+				attrs: { name: "dcb-admin-for-libraries-build", content: build },
+				injectTo: "head",
+			},
+		],
+	};
+}
+
 function kiBootstrapCssPlugin(): Plugin {
 	return {
 		name: "ki-bootstrap-css",
@@ -58,9 +80,19 @@ export default defineConfig(({ mode }) => {
 			tanstackRouter({
 				target: "react",
 				autoCodeSplitting: true,
+				// The loader rides with its component: a loader in the eager route tree put
+				// what it imports (Insights' statistics client, axios) on every page.
+				codeSplittingOptions: {
+					defaultBehavior: [
+						["loader", "component"],
+						["errorComponent"],
+						["notFoundComponent"],
+					],
+				},
 			}),
 			react(),
 			kiBootstrapCssPlugin(),
+			buildStampPlugin(),
 		],
 		// An ABSOLUTE base, never a relative "./" one: a relative base resolves assets
 		// against the current page path, and an SPA fallback serves index.html AT the
@@ -73,8 +105,12 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		build: {
-			// think about other ways of addressing bundle size
-			// ultimately if we can't because of the DGrid it's fine
+			// Never inline a font: each subset is fetched only for a page that draws its
+			// characters, and inlined they were 27.6 KB of base64 in CSS every page blocks on.
+			// For scripts/check-bundle-budget.mjs, which budgets what every page loads first.
+			manifest: true,
+			assetsInlineLimit: (filePath) =>
+				/\.(woff2?|ttf|otf)$/.test(filePath) ? false : undefined,
 			rollupOptions: {
 				preserveEntrySignatures: "strict",
 				input: {
@@ -113,11 +149,17 @@ export default defineConfig(({ mode }) => {
 		},
 
 		test: {
-			include: ["**/*.test.ts"],
-			exclude: ["node_modules", "dist", "coverage", "playwright", "**/*.d.ts"],
+			// Named directories only: checkouts under .worktrees/ hold test files that are not ours.
+			include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
 		},
 		resolve: {
 			alias: {
+				...Object.fromEntries(
+					EXCLUDED_PACKAGES.map((name) => [
+						name,
+						path.resolve(import.meta.dirname, "src/helpers/excludedFromBuild.ts"),
+					]),
+				),
 				"@components": path.resolve(import.meta.dirname, "src/components"),
 				"@constants": path.resolve(import.meta.dirname, "src/constants"),
 				"@forms": path.resolve(import.meta.dirname, "src/forms"),

@@ -45,20 +45,20 @@ export default function DetailPanelHeader() {
 					? t("ui.actions.expand_all")
 					: t("ui.actions.collapse_all")
 			}>
-			<span>
-				<IconButton
-					size="small"
-					tabIndex={-1}
-					onClick={expandOrCollapseAll}
-					// The accessible name matches the tooltip: WCAG 2.5.3 Label in Name
-					aria-label={
-						noDetailPanelsOpen
-							? t("ui.actions.expand_all")
-							: t("ui.actions.collapse_all")
-					}>
-					<Icon fontSize="inherit" />
-				</IconButton>
-			</span>
+			{/* No wrapping span: the button is never disabled, and a span is where
+			    Tooltip would put an aria-label that a span may not carry. */}
+			<IconButton
+				size="small"
+				tabIndex={-1}
+				onClick={expandOrCollapseAll}
+				// The accessible name matches the tooltip: WCAG 2.5.3 Label in Name
+				aria-label={
+					noDetailPanelsOpen
+						? t("ui.actions.expand_all")
+						: t("ui.actions.collapse_all")
+				}>
+				<Icon fontSize="inherit" />
+			</IconButton>
 		</Tooltip>
 	);
 }

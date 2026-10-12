@@ -5,6 +5,20 @@ import {
 } from "@constants/dataGrid/fields";
 import dayjs from "dayjs";
 
+const LUCENE_SPECIAL = /[+\-&|!(){}[\]^"~*?:\\/]/g;
+
+/**
+ * A user's text as one Lucene term. Unescaped, `(`, `:`, `"` or `||` in a filter
+ * either fails to parse - which the grid reports as "could not process" and
+ * resets - or changes which records the query matches.
+ */
+export const escapeLucene = (value: string): string =>
+	value.replace(LUCENE_SPECIAL, "\\$&");
+
+/** Spaces become the single-character wildcard, so a phrase stays one term. */
+const asTerm = (value: unknown): string =>
+	escapeLucene(String(value)).replaceAll(" ", "?");
+
 export const buildFilterQuery = (
 	field: string,
 	operator: string,
@@ -36,7 +50,9 @@ export const buildFilterQuery = (
 		if (Array.isArray(value) && value.length > 0) {
 			// Lucene syntax: field:("Val1" OR "Val2" OR "Val3")
 			// We quote values to handle spaces/special chars safely
-			const options = value.map((v) => `"${v}"`).join(" OR ");
+			const options = value
+				.map((v) => `"${String(v).replace(/["\\]/g, "\\$&")}"`)
+				.join(" OR ");
 			return `${field}:(${options})`;
 		}
 		return null; // Empty array -> no filter
@@ -122,15 +138,16 @@ export const buildFilterQuery = (
 		}
 	}
 
-	const replacedValue = numericOperators.includes(operator)
-		? value
-		: value.replaceAll(" ", "?");
+	const replacedValue =
+		numericOperators.includes(operator) && typeof value === "number"
+			? value
+			: asTerm(value);
 	// Question marks are used to replace spaces in search terms- see Lucene docs https://lucene.apache.org/core/9_9_1/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description
 	// Lucene powers our server-side querying so we need to get expressions into the right syntax.
 	// We're currently only supporting contains and equals, but other operators are possible - see docs.
 	// We will also need to introduce type handling - i.e. for UUIDs, numbers etc - based on the field.
 
-	const convertedValue = replacedValue * conversionFieldFactor;
+	const convertedValue = Number(value) * conversionFieldFactor;
 	const containsQuery = `${field}:*${replacedValue}*`;
 	const doesNotContainQuery = `*:* AND NOT (${containsQuery})`;
 	const equalsQuery = isConversionField

@@ -36,7 +36,7 @@ export default function PrivateData({
 
 	return (
 		<Box sx={{ display: "flex", flexWrap: "wrap" }}>
-			<Stack>
+			<Stack sx={{ width: "100%", minWidth: 0 }}>
 				<Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
 					<InputLabel
 						htmlFor={id}

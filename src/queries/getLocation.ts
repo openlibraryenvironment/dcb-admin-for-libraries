@@ -37,7 +37,6 @@ export const getLocation = gql`
 						code
 						name
 						lmsClientClass
-						clientConfig
 					}
 				}
 				hostSystem {
@@ -45,7 +44,6 @@ export const getLocation = gql`
 					code
 					name
 					lmsClientClass
-					clientConfig
 				}
 				printLabel
 				deliveryStops

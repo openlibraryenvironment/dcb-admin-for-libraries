@@ -23,6 +23,7 @@ const openCheckout = async (
 	app: import("./fixtures/test").AppFixture,
 	page: import("@playwright/test").Page,
 	availability: { status?: number; itemList?: unknown[] } = {},
+	beforeOpening?: () => Promise<void>,
 ) => {
 	await app.signIn();
 	await app.mockGraphQL({
@@ -46,7 +47,8 @@ const openCheckout = async (
 
 	// EVERY search card fetches its own availability, and the Place request
 	// button is disabled without it - so only calls for this record are counted,
-	// and a refusal starts from the second of those, which is the dialog's.
+	// and a refusal starts from the second of those, which can only be the
+	// dialog's, because it shares the card's cache entry.
 	const calls: string[] = [];
 	await page.route("**/items/availability**", (route) => {
 		const url = new URL(route.request().url());
@@ -68,10 +70,10 @@ const openCheckout = async (
 		page.getByRole("list", { name: /search results/i }),
 	).toBeVisible();
 
-	await page
-		.getByRole("button", { name: /place request/i })
-		.first()
-		.click();
+	const place = page.getByRole("button", { name: /place request/i }).first();
+	await expect(place).toBeEnabled({ timeout: 15_000 });
+	await beforeOpening?.();
+	await place.click();
 	await page.getByRole("radio", { name: /walk-up/i }).check();
 	await page.getByRole("button", { name: /continue/i }).click();
 
@@ -91,11 +93,10 @@ test("reaches the item step and asks for availability once", async ({
 	await page.getByRole("button", { name: /validate|next|continue/i }).first().click();
 
 	await expect(
-		page.getByRole("textbox", { name: /item/i }).first(),
+		page.getByRole("combobox", { name: /item local id/i }),
 	).toBeVisible({ timeout: 15_000 });
-	// The card asked, then the dialog asked. Repeatedly re-firing the fan-out is
-	// the failure this count exists to catch.
-	await expect.poll(() => calls.length, { timeout: 15_000 }).toBe(2);
+	// The card asked, and the dialog was served the card's answer from cache.
+	await expect.poll(() => calls.length, { timeout: 15_000 }).toBe(1);
 });
 
 /**
@@ -107,7 +108,12 @@ test("reports a refused availability call instead of hanging", async ({
 	app,
 	page,
 }) => {
-	const calls = await openCheckout(app, page, { status: 404 });
+	await page.clock.install();
+	// Past the staleTime, so the dialog has to ask again rather than reuse the
+	// card's answer: that second ask is the one refused.
+	const calls = await openCheckout(app, page, { status: 404 }, () =>
+		page.clock.fastForward("06:00"),
+	);
 
 	await page
 		.getByRole("textbox", { name: /barcode/i })
@@ -115,7 +121,7 @@ test("reports a refused availability call instead of hanging", async ({
 		.fill("12345");
 	await page.getByRole("button", { name: /validate|next|continue/i }).first().click();
 
-	// One for this record's search card, one for the dialog, and no more. That
+	// One for this record's search card, one for the dialog once stale, and no more. That
 	// it is not retried LATER is proven in tests/availabilityRetry.test.ts: the
 	// first retry delay is two seconds and up, so a count taken here could not
 	// tell a policy that refuses to retry from one that has not got round to it.

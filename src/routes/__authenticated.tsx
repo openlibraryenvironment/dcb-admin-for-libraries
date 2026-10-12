@@ -1,5 +1,11 @@
-import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
-import { useAuth, withAuthenticationRequired } from "react-oidc-context";
+import { useEffect, useRef } from "react";
+import {
+	Outlet,
+	createFileRoute,
+	redirect,
+	useNavigate,
+} from "@tanstack/react-router";
+import { hasAuthParams, useAuth } from "react-oidc-context";
 import { Layout } from "@components/Layout/Layout";
 import Loading from "@components/Loading/Loading";
 import { useTranslation } from "react-i18next";
@@ -10,11 +16,44 @@ import {
 	READ_ONLY_HOME,
 } from "@helpers/readOnlyAccess";
 
+/**
+ * Owns the sign-in redirect rather than using withAuthenticationRequired, which
+ * re-calls signinRedirect after every failure and never reads `auth.error`:
+ * docs/routing.md, "Starting sign-in".
+ */
 const AuthenticatedLayout = () => {
 	const auth = useAuth();
+	const navigate = useNavigate();
 	const { t } = useTranslation();
+	const signinRequested = useRef(false);
+	const { signinRedirect } = auth;
 
-	if (auth.isLoading) {
+	const signInFailed = Boolean(auth.error) && !auth.isAuthenticated;
+	const mustSignIn =
+		!hasAuthParams() &&
+		!auth.isLoading &&
+		!auth.activeNavigator &&
+		!auth.isAuthenticated &&
+		!auth.error;
+
+	useEffect(() => {
+		if (!mustSignIn || signinRequested.current) return;
+		signinRequested.current = true;
+		// Namespaced: sibling apps share one sessionStorage on this origin. The value
+		// stays browser-absolute (it includes the base), because it is handed
+		// straight to window.location.replace() after the callback.
+		sessionStorage.setItem(
+			storageKey("afterLoginRedirectPath"),
+			window.location.pathname + window.location.search + window.location.hash,
+		);
+		void signinRedirect();
+	}, [mustSignIn, signinRedirect]);
+
+	useEffect(() => {
+		if (signInFailed) void navigate({ to: "/login", replace: true });
+	}, [signInFailed, navigate]);
+
+	if (!auth.isAuthenticated) {
 		return (
 			<Loading title={t("login.authenticating")} subtitle={t("ui.info.wait")} />
 		);
@@ -41,17 +80,7 @@ export const Route = createFileRoute("/__authenticated")({
 
 		throw redirect({ to: READ_ONLY_HOME, replace: true });
 	},
-	component: withAuthenticationRequired(AuthenticatedLayout, {
-		onBeforeSignin: () => {
-			// Namespaced: sibling apps share one sessionStorage on this origin.
-			// The value stays browser-absolute (it includes the base), because it is
-			// handed straight to window.location.replace() after the callback.
-			sessionStorage.setItem(
-				storageKey("afterLoginRedirectPath"),
-				window.location.pathname + window.location.search + window.location.hash,
-			);
-		},
-	}),
+	component: AuthenticatedLayout,
 });
 
 interface AuthLike {

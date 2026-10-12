@@ -62,3 +62,9 @@ export const useInsightsCostStore = create<InsightsCostState>()(
 		},
 	),
 );
+
+/** Forget the cost assumption, in memory and in storage. */
+export const clearInsightsCost = (): void => {
+	useInsightsCostStore.setState({ illUnitCost: null, currency: DEFAULT_CURRENCY });
+	useInsightsCostStore.persist.clearStorage();
+};

@@ -13,6 +13,10 @@ vi.mock("axios", () => ({
 	},
 }));
 
+vi.mock("@helpers/auth", () => ({
+	authHeaders: async () => ({ Authorization: "Bearer current" }),
+}));
+
 const post = axios.post as unknown as ReturnType<typeof vi.fn>;
 
 const httpError = (status: number, data?: unknown) => ({
@@ -78,7 +82,6 @@ describe("cleaning up one request", () => {
 	it("checks for updates first, then cleans up", async () => {
 		const outcome = await cleanupPatronRequest(
 			"/api",
-			{},
 			{ id: "pr-1", status: "REQUEST_PLACED_AT_SUPPLYING_AGENCY" },
 			{ refreshFirst: true },
 		);
@@ -93,7 +96,6 @@ describe("cleaning up one request", () => {
 	it("does not poll a status dcb-service will not track", async () => {
 		await cleanupPatronRequest(
 			"/api",
-			{},
 			{ id: "pr-1", status: "ERROR" },
 			{ refreshFirst: true },
 		);
@@ -102,9 +104,12 @@ describe("cleaning up one request", () => {
 	});
 
 	it("never sends the override: this app has none", async () => {
-		await cleanupPatronRequest("/api", {}, { id: "pr-1", status: "ERROR" });
+		await cleanupPatronRequest("/api", { id: "pr-1", status: "ERROR" });
 
 		expect(post.mock.calls[0][2]).not.toHaveProperty("params");
+		expect(post.mock.calls[0][2]).toEqual({
+			headers: { Authorization: "Bearer current" },
+		});
 	});
 
 	it("reports a refusal, a refusal of access, and a failure apart", async () => {
@@ -115,7 +120,7 @@ describe("cleaning up one request", () => {
 			}),
 		);
 		expect(
-			await cleanupPatronRequest("/api", {}, { id: "pr-1", status: "ERROR" }),
+			await cleanupPatronRequest("/api", { id: "pr-1", status: "ERROR" }),
 		).toEqual({
 			kind: "refused",
 			status: "PICKUP_TRANSIT",
@@ -124,12 +129,12 @@ describe("cleaning up one request", () => {
 
 		post.mockRejectedValueOnce(httpError(403));
 		expect(
-			await cleanupPatronRequest("/api", {}, { id: "pr-1", status: "ERROR" }),
+			await cleanupPatronRequest("/api", { id: "pr-1", status: "ERROR" }),
 		).toEqual({ kind: "forbidden" });
 
 		post.mockRejectedValueOnce(httpError(500, { detail: "Cleanup failed" }));
 		expect(
-			await cleanupPatronRequest("/api", {}, { id: "pr-1", status: "ERROR" }),
+			await cleanupPatronRequest("/api", { id: "pr-1", status: "ERROR" }),
 		).toEqual({ kind: "failed", detail: "Cleanup failed" });
 	});
 });

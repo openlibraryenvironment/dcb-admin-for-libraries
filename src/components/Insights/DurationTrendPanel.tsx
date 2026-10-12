@@ -13,6 +13,7 @@ import { LineChartPro } from "@mui/x-charts-pro";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
+import ChartDataTable from "./ChartDataTable";
 import MetricInfo from "./MetricInfo";
 import PanelState from "./PanelState";
 import { formatTurnaround } from "@helpers/insightsRange";
@@ -144,34 +145,53 @@ export default function DurationTrendPanel({
 					height={CHART_HEIGHT}
 				>
 					{() => (
-						<LineChartPro
-							height={CHART_HEIGHT}
-							xAxis={[{ data: buckets, scaleType: "time" }]}
-							yAxis={[
-								{ valueFormatter: (value: number) => formatTurnaround(value, t) },
-							]}
-							series={[
-								{
-									data: p50,
-									label: t("insights.trends.durations.p50"),
-									color: categorical[0],
-									// connectNulls is deliberately OFF: a missing bucket is a
-									// period with no observations, and joining across it would
-									// draw a measurement nobody took.
-									valueFormatter: (value: number | null) =>
-										formatTurnaround(value, t),
-									showMark: true,
-								},
-								{
-									data: p95,
-									label: t("insights.trends.durations.p95"),
-									color: categorical[1],
-									valueFormatter: (value: number | null) =>
-										formatTurnaround(value, t),
-									showMark: true,
-								},
-							]}
-						/>
+						<>
+							<LineChartPro
+								height={CHART_HEIGHT}
+								xAxis={[{ data: buckets, scaleType: "time" }]}
+								yAxis={[
+									{ valueFormatter: (value: number) => formatTurnaround(value, t) },
+								]}
+								series={[
+									{
+										data: p50,
+										label: t("insights.trends.durations.p50"),
+										color: categorical[0],
+										// A shape per series, so the legend and the line are not told
+										// apart by colour alone. WCAG 1.4.1.
+										shape: "circle",
+										// connectNulls is deliberately OFF: a missing bucket is a
+										// period with no observations, and joining across it would
+										// draw a measurement nobody took.
+										valueFormatter: (value: number | null) =>
+											formatTurnaround(value, t),
+										showMark: true,
+									},
+									{
+										data: p95,
+										label: t("insights.trends.durations.p95"),
+										color: categorical[1],
+										shape: "square",
+										valueFormatter: (value: number | null) =>
+											formatTurnaround(value, t),
+										showMark: true,
+									},
+								]}
+							/>
+							<ChartDataTable
+								caption={title}
+								columns={[
+									t("insights.trends.durations.period"),
+									t("insights.trends.durations.p50"),
+									t("insights.trends.durations.p95"),
+								]}
+								rows={buckets.map((bucket, index) => [
+									bucket.toISOString().slice(0, 10),
+									formatTurnaround(p50[index], t),
+									formatTurnaround(p95[index], t),
+								])}
+							/>
+						</>
 					)}
 				</PanelState>
 			</CardContent>

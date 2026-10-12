@@ -3,8 +3,8 @@ export interface ConfirmationType {
 	onClose: any;
 	onConfirm: (
 		reason: string,
-		changeReferenceUrl: string,
-		changeCategory: string
+		changeCategory: string,
+		changeReferenceUrl: string
 	) => void;
 	editInformation?: any;
 	action: string;

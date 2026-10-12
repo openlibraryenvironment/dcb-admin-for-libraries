@@ -112,7 +112,7 @@ describe("brand translations", () => {
 	});
 });
 
-// --- R-17e: one column, two ways to fill it ----------------------------------
+// --- One column, two ways to fill it ----------------------------------
 
 describe("an uploaded asset path", () => {
 	const key = "a".repeat(64);
@@ -147,7 +147,7 @@ describe("an uploaded asset path", () => {
 });
 
 /**
- * Whether the upload control is offered at all — R-17b.
+ * Whether the upload control is offered at all.
  *
  * dcb-service publishes `dcb.branding.assets.store` on /info precisely so this decision can
  * be made, and its BrandingCapabilityInfoTests pins the shape. These cases are the other

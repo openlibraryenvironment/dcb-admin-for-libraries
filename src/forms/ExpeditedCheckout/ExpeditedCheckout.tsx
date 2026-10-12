@@ -1,6 +1,13 @@
-import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
+import { availabilityQueryOptions } from "@helpers/availabilityApi";
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	FormEvent,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
@@ -16,9 +23,7 @@ import {
 } from "@mui/material";
 import { getPatronRequestEssentials } from "@queries/getPatronRequestEssentials";
 import { getLocations } from "@queries/getLocations";
-import { getLibraries } from "@queries/getLibraries";
 import axios from "axios";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { getRequestError } from "@helpers/getRequestError";
 import { Agency } from "../../models/Agency";
@@ -36,29 +41,31 @@ import DCBStepIcon from "@components/DCBStepIcon/DCBStepIcon";
 import { PatronValidationStep } from "./steps/PatronValidationStep";
 import { RequestCreationStep } from "./steps/RequestCreationStep";
 import { CheckoutStep } from "./steps/CheckoutStep";
-import { successfulExpeditedCheckoutStatuses } from "@constants/statuses/successfulExpeditedCheckoutStatuses";
+import { checkoutOutcome, nextCheckoutPoll } from "@helpers/checkoutPolling";
+import { useCheckedOutDueDate } from "@/hooks/useCheckedOutDueDate";
+import StepAnnouncement from "@components/StepAnnouncement/StepAnnouncement";
 import { StatusStepConnector } from "../../components/StatusStepConnector/StatusStepConnector";
 import request from "graphql-request";
 import { Library } from "@models/Library";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { AutocompleteOption } from "@models/AutocompleteOption";
-import { getLibrary } from "@queries/getLibrary";
+import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
 import {
-	LibrariesQueryData,
-	PatronRequestQueryData,
-} from "@models/ReactQueryHelperTypes";
+	allLibrariesQueryOptions,
+	libraryQueryOptions,
+} from "@helpers/sharedQueries";
 import {
 	getStepColors,
 	getStepLabelFontWeight,
 } from "@helpers/getStepLabelStyles";
 
 export default function ExpeditedCheckout({
-	// show,
 	onClose,
 	bibClusterId,
 }: PatronRequestFormType) {
 	const { t } = useTranslation();
-	const auth = useAuth();
 	// The library the staff member is acting for - see useAgencyCodes
 	const { agencyCode: selectedAgencyCode } = useAgencyCodes();
 	const staffAgencyCode = selectedAgencyCode ?? "";
@@ -66,12 +73,6 @@ export default function ExpeditedCheckout({
 	const { cfg } = useRouter().options.context;
 
 	const navigate = useNavigate();
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${auth.user?.access_token}`,
-		}),
-		[auth.user?.access_token],
-	);
 
 	const [alert, setAlert] = useState<{
 		open: boolean;
@@ -99,54 +100,18 @@ export default function ExpeditedCheckout({
 	const [patronRequestId, setPatronRequestId] = useState<string | null>(null);
 	const [patronRequestWaiting, setPatronRequestWaiting] = useState(false);
 	const [checkoutCompleted, setCheckoutCompleted] = useState(false);
+	const [checkoutFailed, setCheckoutFailed] = useState(false);
 	const [stepError, setStepError] = useState<number | null>(null);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-	// The library ID of the staff user and item is known. Now we fetch its data
-
-	const {
-		data: staffLibraryData,
-		// isError: errorFetchingStaffLibrary,
-		// isLoading: staffLibraryLoading,
-	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", staffAgencyCode, headers, cfg.VITE_DCB_API_BASE],
-		queryFn: async () =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibrary(),
-				{
-					query: "agencyCode:" + staffAgencyCode,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
-				headers,
-			),
-		// do the on success here
-	});
+	const { data: staffLibraryData } = useQuery(
+		libraryQueryOptions(cfg.VITE_DCB_API_BASE, staffAgencyCode),
+	);
 
 	const staffLibrary = staffLibraryData?.libraries?.content?.[0];
 
-	const {
-		data: patronLibrariesData,
-		isLoading: patronLibrariesLoading,
-		// isError: patronLibrariesError,
-	} = useQuery<LibrariesQueryData>({
-		queryKey: ["librariesInfo", headers, cfg.VITE_DCB_API_BASE],
-		queryFn: () =>
-			request(
-				`${cfg.VITE_DCB_API_BASE}/graphql`,
-				getLibraries,
-				{
-					order: "fullName",
-					orderBy: "ASC",
-					pageno: 0,
-					pagesize: REFERENCE_LIST_PAGE_SIZE,
-					query: "",
-				},
-				headers,
-			),
-	});
+	const { data: patronLibrariesData, isLoading: patronLibrariesLoading } =
+		useQuery(allLibrariesQueryOptions(cfg.VITE_DCB_API_BASE));
 
 	// Memoised because `?? []` allocates a new array on every render, which made
 	// every memo keyed on it recompute every render.
@@ -183,34 +148,38 @@ export default function ExpeditedCheckout({
 	// The locations list is limited only to locations associated with the library of the staff user / item.
 
 	const { data: patronRequestData } = useQuery<PatronRequestQueryData>({
-		queryKey: [
-			"patronRequestEssentials",
-			patronRequestId,
-			headers,
+		queryKey: queryKeys.patronRequests.essentials(
 			cfg.VITE_DCB_API_BASE,
-		],
-		queryFn: () =>
+			patronRequestId,
+		),
+		queryFn: async () =>
 			request(
 				`${cfg.VITE_DCB_API_BASE}/graphql`,
 				getPatronRequestEssentials,
 				{ query: `id:${patronRequestId}` },
-				headers,
+				await authHeaders(),
 			),
 		enabled: patronRequestWaiting && !!patronRequestId,
-		refetchInterval: 10000,
+		refetchInterval: (query) =>
+			nextCheckoutPoll(
+				query.state.data?.patronRequests?.content?.[0]?.status,
+				stepError === 2,
+			),
 	});
 
 	useEffect(() => {
-		if (patronRequestData) {
-			const status = patronRequestData?.patronRequests?.content?.[0]?.status;
-			if (
-				successfulExpeditedCheckoutStatuses.includes(status ?? "") &&
-				patronRequestWaiting
-			) {
-				setPatronRequestWaiting(false);
-				setCheckoutCompleted(true);
-				setStepError(null);
-			}
+		if (!patronRequestData || !patronRequestWaiting) return;
+		const outcome = checkoutOutcome(
+			patronRequestData?.patronRequests?.content?.[0]?.status,
+		);
+		if (outcome === "completed") {
+			setPatronRequestWaiting(false);
+			setCheckoutCompleted(true);
+			setStepError(null);
+		} else if (outcome === "failed") {
+			setPatronRequestWaiting(false);
+			setCheckoutFailed(true);
+			setStepError(2);
 		}
 	}, [patronRequestData, patronRequestWaiting]);
 
@@ -264,8 +233,11 @@ export default function ExpeditedCheckout({
 
 	const { data: pickupLocations, isLoading: pickupLocationsLoading } = useQuery(
 		{
-			queryKey: ["locations", locationQuery, headers, cfg.VITE_DCB_API_BASE],
-			queryFn: () =>
+			queryKey: queryKeys.locations.reference(
+				cfg.VITE_DCB_API_BASE,
+				locationQuery,
+			),
+			queryFn: async () =>
 				request(
 					`${cfg.VITE_DCB_API_BASE}/graphql`,
 					getLocations,
@@ -276,7 +248,7 @@ export default function ExpeditedCheckout({
 						pagesize: REFERENCE_LIST_PAGE_SIZE,
 						query: locationQuery,
 					},
-					headers,
+					await authHeaders(),
 				),
 			enabled: !!staffLibrary?.agency?.id,
 		},
@@ -294,21 +266,8 @@ export default function ExpeditedCheckout({
 		isFetching: itemsLoading,
 		isError: itemsError,
 	} = useQuery({
-		queryKey: [
-			"availability",
-			bibClusterId,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-		],
-		queryFn: async () => {
-			const response = await axios.get(
-				`${cfg.VITE_DCB_API_BASE}/items/availability`,
-				{ headers, params: { clusteredBibId: bibClusterId } },
-			);
-			return response.data;
-		},
-		...AVAILABILITY_QUERY_POLICY,
-		enabled: (activeStep === 1 || checkoutCompleted) && !!bibClusterId,
+		...availabilityQueryOptions(cfg.VITE_DCB_API_BASE, bibClusterId),
+		enabled: activeStep === 1 && !!bibClusterId,
 	});
 
 	// The step marker is local state, so a failed fetch still has to be told to
@@ -364,8 +323,13 @@ export default function ExpeditedCheckout({
 			}),
 		) || [];
 
-
-	const rawSelectedItem = itemsData.find((item) => item.id === itemLocalId);
+	const { dueDate, dueDateUnavailable } = useCheckedOutDueDate({
+		patronRequestId,
+		bibClusterId,
+		checkoutCompleted,
+		isCheckedOutItem: (item) => item.id === itemLocalId,
+		apiBase: cfg.VITE_DCB_API_BASE,
+	});
 
 	useEffect(() => {
 		if (timeoutRef.current) {
@@ -391,10 +355,10 @@ export default function ExpeditedCheckout({
 		unknown,
 		{ patronPrinciple: string; agencyCode: string }
 	>({
-		mutationFn: (payload) =>
+		mutationFn: async (payload) =>
 			axios
 				.post(`${cfg.VITE_DCB_API_BASE}/patron/auth/lookup`, payload, {
-					headers,
+					headers: await authHeaders(),
 				})
 				.then((res) => res.data),
 		onSuccess: (data) => {
@@ -459,7 +423,7 @@ export default function ExpeditedCheckout({
 			const response = await axios.post(
 				`${cfg.VITE_DCB_API_BASE}/patrons/requests/place/expeditedCheckout`,
 				payload,
-				{ headers },
+				{ headers: await authHeaders() },
 			);
 			return response.data;
 		},
@@ -478,16 +442,14 @@ export default function ExpeditedCheckout({
 			setAlert({
 				open: true,
 				severity: "error",
-				text: t(getRequestError(error.response?.data?.failedChecks), {
-					code: error?.response?.data?.failedChecks?.[0]?.code,
-					description: error?.response?.data?.failedChecks?.[0]?.description,
-				}),
+				text: getRequestError(error?.response?.data?.failedChecks, t),
 			});
 			setStepError(1);
 		},
 	});
 
 	const validatePatron = () => {
+		if (!patronBarcode || !agencyCode) return;
 		validatePatronMutation.mutate({
 			patronPrinciple: patronBarcode,
 			agencyCode: agencyCode,
@@ -506,6 +468,15 @@ export default function ExpeditedCheckout({
 		placeRequestMutation.mutate(data);
 	};
 
+	const submitStep = (event: FormEvent<HTMLFormElement>) => {
+		if (activeStep === 0) {
+			event.preventDefault();
+			validatePatron();
+			return;
+		}
+		return handleSubmit(onSubmit)(event);
+	};
+
 	const handleClose = () => {
 		if (timeoutRef.current) {
 			clearTimeout(timeoutRef.current);
@@ -516,6 +487,7 @@ export default function ExpeditedCheckout({
 		setPatronData(null);
 		setPatronRequestWaiting(false);
 		setCheckoutCompleted(false);
+		setCheckoutFailed(false);
 		setStepError(null);
 		setPatronRequestId(null);
 		onClose();
@@ -523,13 +495,15 @@ export default function ExpeditedCheckout({
 
 	const handleViewRequest = () => {
 		if (patronRequest?.id) {
-			navigate({ to: `/patronRequests/${patronRequest.id}` });
+			navigate({ to: "/patronRequests/$id", params: { id: patronRequest.id } });
 		}
 	};
 
-	// For read only users who are not allowed to look at patron requests
+	// For read-only users, who may not look at patron requests. Closes the dialog
+	// as well: on the requesting page itself the navigation alone changes nothing.
 	const handleReadOnlyReturn = () => {
-		navigate({ to: `/requesting` });
+		handleClose();
+		navigate({ to: "/requesting" });
 	};
 
 	const handleAlertClose = useCallback(() => {
@@ -545,7 +519,6 @@ export default function ExpeditedCheckout({
 						patronValidated={patronValidated}
 						isValidatingPatron={validatePatronMutation.isPending}
 						handleClose={handleClose}
-						validatePatron={validatePatron}
 						patronBarcode={patronBarcode}
 						agencyCode={agencyCode}
 						libraryOptions={patronLibraryOptions}
@@ -558,8 +531,6 @@ export default function ExpeditedCheckout({
 					<RequestCreationStep
 						control={control}
 						errors={errors}
-						// itemLibraryOptions={itemLibraryOptions}
-						// itemLibrariesLoading={librariesLoading}
 						setValue={setValue}
 						pickupLocationOptions={pickupLocationOptions}
 						pickupLocationsLoading={pickupLocationsLoading}
@@ -580,26 +551,15 @@ export default function ExpeditedCheckout({
 						handleViewRequest={handleViewRequest}
 						handleReadOnlyReturn={handleReadOnlyReturn}
 						checkoutCompleted={checkoutCompleted}
+						checkoutFailed={checkoutFailed}
 						stepError={stepError}
 						t={t}
-						dueDate={rawSelectedItem?.dueDate ?? ""}
+						dueDate={dueDate}
+						dueDateUnavailable={dueDateUnavailable}
 					/>
 				);
 			default:
-				return (
-					<PatronValidationStep
-						control={control}
-						patronValidated={patronValidated}
-						isValidatingPatron={validatePatronMutation.isPending}
-						handleClose={handleClose}
-						validatePatron={validatePatron}
-						patronBarcode={patronBarcode}
-						agencyCode={agencyCode}
-						libraryOptions={patronLibraryOptions}
-						librariesLoading={patronLibrariesLoading}
-						t={t}
-					/>
-				); // This should never happen - but putting this in place ensures that the process would reset gracefully.
+				return null;
 		}
 	};
 
@@ -660,7 +620,8 @@ export default function ExpeditedCheckout({
                         );
 					})}
 				</Stepper>
-				<form onSubmit={handleSubmit(onSubmit)}>
+				<StepAnnouncement activeStep={activeStep} steps={steps} />
+				<form onSubmit={submitStep}>
 					{getStepContent(activeStep)}
 				</form>
 			</DialogContent>

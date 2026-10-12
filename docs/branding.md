@@ -1,6 +1,6 @@
 # The patron-facing library brand
 
-R-17. A library supplies a logo, alt text and a theme name, and discovery
+A library supplies a logo, alt text and a theme name, and discovery
 renders them. This is where they are typed in.
 
 ## Two ways to supply an image, and neither is the fallback
@@ -49,7 +49,7 @@ type, enforces byte and dimension caps from the image header before any decode,
 and re-encodes what it stores. Nothing a browser says is evidence about the
 bytes.
 
-## Whether to offer the upload at all — R-17b
+## Whether to offer the upload at all
 
 A deployment with `dcb.branding.assets.store=none` has no upload route:
 dcb-service's controller is `@Requires(beans = BrandAssetStore.class)`, so

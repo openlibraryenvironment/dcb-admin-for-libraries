@@ -1,55 +1,51 @@
+import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
-import { useGridStore } from "@/hooks/useDataGridStore";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import Confirmation from "@components/Confirmation/Confirmation";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import { standardRefValueMappingColumns } from "@helpers/dataGrid/columns/referenceValueMappingColumns";
-import { referenceValueMappingColumnVisibility } from "@helpers/dataGrid/columnVisibility/referenceValueMappingColumnVisibilityModel";
 import { computeMutation } from "@helpers/dataGrid/computeMutation";
 import {
 	getSortOrderForServer,
-	checkIfFiltering,
 	processGridFilterModel,
 } from "@helpers/dataGrid/utilities";
+import { mappingsGrid } from "@helpers/dataGrid/gridDefinitions";
 import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
 import { FunctionalSettingStatus } from "@models/FunctionalSetting";
-import {
-	LibrariesQueryData,
-	ReferenceValueMappingsQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { ReferenceValueMappingsQueryData } from "@models/ReactQueryHelperTypes";
 import { Cancel, Delete, Edit, Save } from "@mui/icons-material";
 import {
 	GridActionsCellItem,
 	GridColDef,
-	GridColumnVisibilityModel,
-	GridFilterModel,
-	GridPaginationModel,
 	GridRowId,
 	GridRowModel,
 	GridRowModes,
 	GridRowModesModel,
-	GridSortModel,
 	GridValidRowModel,
 } from "@mui/x-data-grid-premium";
 import { deleteReferenceValueMapping } from "@mutations/deleteReferenceValueMapping";
 import { updateReferenceValueMapping } from "@mutations/updateReferenceValueMapping";
-import { getLibrary } from "@queries/getLibrary";
+import { gridPage, queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { libraryQueryOptions } from "@helpers/sharedQueries";
 import { getMappings } from "@queries/getMappings";
+import { UserFacingError, userFacingReason } from "@helpers/userFacingReason";
+import { useAnnounce } from "@/hooks/useAnnouncer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/mappings")({
+	validateSearch: gridSearchSchema,
 	head: () => ({ meta: [{ title: pageTitle("nav.mappings.title") }] }),
 	component: RouteComponent,
 });
@@ -58,58 +54,31 @@ interface UpdateMappingResponse {
 	updateReferenceValueMapping: GridValidRowModel;
 }
 
+interface DeleteMappingInput {
+	id: GridRowId;
+	reason: string;
+	changeCategory: string;
+	changeReferenceUrl: string;
+}
+
+interface DeleteMappingResponse {
+	deleteReferenceValueMapping: { success: boolean; message: string | null };
+}
+
 function RouteComponent() {
-	const auth = useAuth();
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token]
-	);
 
-	const gridId = "referenceValueMappings";
-	const {
-		sortModel: storedSortModel,
-		filterModel: storedFilterModel,
-		paginationModel: storedPaginationModel,
-		columnVisibilityModel: storedColumnVisibilityModel,
-		setSortModel,
-		setFilterModel,
-		setPaginationModel,
-		setColumnVisibilityModel,
-	} = useGridStore();
-
-	const storedState = {
-		sort: storedSortModel[gridId],
-		filter: storedFilterModel[gridId],
-		pagination: storedPaginationModel[gridId],
-		columnVisibility: storedColumnVisibilityModel[gridId],
-	};
-
-	const [paginationModel, setLocalPaginationModel] =
-		useState<GridPaginationModel>(
-			storedState.pagination ?? { page: 0, pageSize: 25 }
-		);
-	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
-		storedState.filter ?? { items: [] }
-	);
-	const debouncedFilterModel = useDebounce(filterModel, 500);
-
-	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
-		storedState.sort ?? [{ field: "lastImported", sort: "desc" }]
-	);
+	const grid = useSyncedDataGrid(mappingsGrid, Route.useSearch());
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [promiseArguments, setPromiseArguments] = useState<any>(null);
 	const [editRecord, setEditRecord] = useState<string | null>(null);
 	const [deleteConfirmationId, setDeleteConfirmationId] =
 		useState<GridRowId | null>(null);
-	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? referenceValueMappingColumnVisibility
-	);
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
-	// An inline edit that did not save. The grid used to build this message and
-	// throw it away, so a failed save reverted the row and said nothing.
+	// An edit or a deletion that did not save. The grid used to build this message
+	// and throw it away, so a failed save reverted the row and said nothing.
 	const [rowUpdateError, setRowUpdateError] = useState<string | null>(null);
 
 	const handleSnackbarClose = (
@@ -122,40 +91,17 @@ function RouteComponent() {
 		setSnackbarOpen(false);
 	};
 
-	// Add state to track if we're filtering
-	const [isFiltering, setIsFiltering] = useState(false);
-
-	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
+	const apiBase = cfg.VITE_DCB_API_BASE;
+	const DCB_URL = apiBase + "/graphql";
 	const { agencyCode: code } = useAgencyCodes();
 
-	// Track when filter is being applied
-	useEffect(() => {
-		setIsFiltering(checkIfFiltering(filterModel, debouncedFilterModel));
-	}, [filterModel, debouncedFilterModel]);
-
-	// Library query
 	const {
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", headers, code, DCB_URL],
-		queryFn: async () =>
-			request(
-				DCB_URL,
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
-				headers
-			),
-	});
+	} = useQuery(libraryQueryOptions(apiBase, code ?? ""));
 	const libraryHostLmsCode =
-		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.code;
+		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.code ?? "";
 
 	// If the DENY_LIBRARY_MAPPING_EDIT setting is not explicitly disabled, library users cannot edit their mappings.
 	// As such, for editing to be enabled here, DENY_LIBRARY_MAPPING_EDIT must be disabled
@@ -165,7 +111,11 @@ function RouteComponent() {
 			"DENY_LIBRARY_MAPPING_EDIT"
 		) == FunctionalSettingStatus.DISABLED;
 
-	// Mappings query - using debounced filter model
+	const page = gridPage(
+		grid.appliedFilterModel,
+		grid.paginationModel,
+		grid.sortModel
+	);
 	const {
 		data: mappingsData,
 		isLoading: mappingsLoading,
@@ -173,34 +123,29 @@ function RouteComponent() {
 		error,
 		isError: mappingsError,
 	} = useQuery<ReferenceValueMappingsQueryData>({
-		queryKey: [
-			gridId,
-			libraryHostLmsCode,
-			paginationModel,
-			debouncedFilterModel, // Use debounced filter model
-			sortModel,
-			headers,
-			DCB_URL,
-			sortModel[0]?.field,
-			sortModel[0]?.sort,
-		],
+		queryKey: queryKeys.mappings.list(apiBase, libraryHostLmsCode, page),
 		queryFn: async () => {
 			const baseQuery = `(toContext:"${libraryHostLmsCode}" OR fromContext:${libraryHostLmsCode}) AND NOT deleted:true`;
 			// Second Host LMS to come.
 			const queryVariables = {
 				query:
-					processGridFilterModel(debouncedFilterModel, baseQuery, [
+					processGridFilterModel(page.filterModel, baseQuery, [
 						"fromValue",
 						"toValue",
 						"fromCategory",
 						"toCategory",
 					]) ?? "",
-				pagesize: clampPageSize(paginationModel.pageSize),
-				pageno: paginationModel.page ?? 0,
-				order: sortModel[0]?.field ?? "lastImported",
-				orderBy: getSortOrderForServer(sortModel[0]?.sort) ?? "DESC",
+				pagesize: clampPageSize(page.pageSize),
+				pageno: page.page ?? 0,
+				order: page.sortField ?? "lastImported",
+				orderBy: getSortOrderForServer(page.sortDirection) ?? "DESC",
 			};
-			return request(DCB_URL, getMappings, queryVariables, headers);
+			return request(
+				apiBase + "/graphql",
+				getMappings,
+				queryVariables,
+				await authHeaders()
+			);
 		},
 		enabled: !!libraryHostLmsCode,
 		refetchOnWindowFocus: true,
@@ -214,66 +159,54 @@ function RouteComponent() {
 		Error,
 		{ input: any }
 	>({
-		mutationFn: (variables: { input: any }) =>
+		mutationFn: async (variables: { input: any }) =>
 			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+				DCB_URL,
 				updateReferenceValueMapping,
 				variables,
-				headers
+				await authHeaders()
 			),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [gridId] });
-		},
-		onError: () => {
-			// Set alerts
-			// Catch "Library mapping editing has been disabled by your consortium administrator" too just in case
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.mappings.forHostLms(apiBase, libraryHostLmsCode),
+			});
 		},
 	});
 
-	const { mutate: deleteMapping } = useMutation({
-		mutationFn: (idToDelete: GridRowId) =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+	const announce = useAnnounce();
+	const { mutate: deleteMapping } = useMutation<
+		DeleteMappingResponse,
+		unknown,
+		DeleteMappingInput
+	>({
+		mutationFn: async (input) => {
+			const result = await request<DeleteMappingResponse>(
+				DCB_URL,
 				deleteReferenceValueMapping,
-				{ id: idToDelete },
-				headers
-			),
+				{ input },
+				await authHeaders()
+			);
+			// A refusal can come back as success:false with a 200, not only as an error.
+			if (!result.deleteReferenceValueMapping?.success) {
+				throw new UserFacingError(result.deleteReferenceValueMapping?.message);
+			}
+			return result;
+		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [gridId] });
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.mappings.forHostLms(apiBase, libraryHostLmsCode),
+			});
+			announce(t("mappings.deleted"));
+		},
+		onError: (error) => {
+			const reason = userFacingReason(error);
+			setRowUpdateError(
+				reason
+					? t("mappings.delete_failed_reason", { reason })
+					: t("mappings.delete_failed")
+			);
 		},
 	});
-
-	const handlePaginationChange = useCallback(
-		(model: GridPaginationModel) => {
-			setLocalPaginationModel(model);
-			setPaginationModel(gridId, model);
-		},
-		[gridId, setPaginationModel]
-	);
-
-	const handleFilterChange = useCallback(
-		(model: GridFilterModel) => {
-			setLocalFilterModel(model);
-			setFilterModel(gridId, model);
-		},
-		[gridId, setFilterModel]
-	);
-
-	const handleSortChange = useCallback(
-		(model: GridSortModel) => {
-			setLocalSortModel(model);
-			setSortModel(gridId, model);
-		},
-		[gridId, setSortModel]
-	);
-
-	const handleColumnVisibilityChange = useCallback(
-		(model: GridColumnVisibilityModel) => {
-			setLocalColumnVisibilityModel(model);
-			setColumnVisibilityModel(gridId, model);
-		},
-		[gridId, setColumnVisibilityModel]
-	);
 
 	const handleEditClick = useCallback(
 		(id: GridRowId) => () => {
@@ -303,9 +236,18 @@ function RouteComponent() {
 		setDeleteConfirmationId(id);
 	};
 
-	const handleConfirmDelete = () => {
+	const handleConfirmDelete = (
+		reason: string,
+		changeCategory: string,
+		changeReferenceUrl: string
+	) => {
 		if (deleteConfirmationId) {
-			deleteMapping(deleteConfirmationId);
+			deleteMapping({
+				id: deleteConfirmationId,
+				reason,
+				changeCategory,
+				changeReferenceUrl,
+			});
 			setDeleteConfirmationId(null);
 		}
 	};
@@ -318,10 +260,36 @@ function RouteComponent() {
 					resolve(oldRow);
 					return;
 				}
+				const blank = standardRefValueMappingColumns.find(
+					(column) =>
+						column.editable &&
+						newRow[column.field] !== oldRow[column.field] &&
+						String(newRow[column.field] ?? "").trim() === ""
+				);
+				if (blank) {
+					reject(
+						new UserFacingError(
+							t("mappings.value_required", { field: blank.headerName })
+						)
+					);
+					return;
+				}
 				setEditRecord(changes);
 				setPromiseArguments({ resolve, reject, newRow, oldRow });
 			}),
-		[]
+		[t]
+	);
+
+	const handleRowUpdateError = useCallback(
+		(error: unknown) => {
+			const reason = userFacingReason(error);
+			setRowUpdateError(
+				reason
+					? t("mappings.update_failed_reason", { reason })
+					: t("mappings.update_failed")
+			);
+		},
+		[t]
 	);
 
 	const handleModalConfirm = async (
@@ -345,8 +313,10 @@ function RouteComponent() {
 		});
 
 		try {
-			const result = await updateMapping({ input });
-			resolve(result.updateReferenceValueMapping);
+			await updateMapping({ input });
+			// The mutation returns only id and toValue; resolving with that would
+			// blank every other cell of the row until the refetch lands.
+			resolve(newRow);
 		} catch (error) {
 			reject(error);
 		} finally {
@@ -424,17 +394,21 @@ function RouteComponent() {
 		]
 	);
 
-	const refValueColumns = editingEnabled
-		? [...standardRefValueMappingColumns, ...actionsColumn]
-		: standardRefValueMappingColumns;
+	// Without editing, the cells must not be editable either: Enter or typing on a
+	// focused cell starts row editing whether or not there is an Edit button.
+	const refValueColumns = useMemo(
+		() =>
+			editingEnabled
+				? [...standardRefValueMappingColumns, ...actionsColumn]
+				: standardRefValueMappingColumns.map((column) => ({
+						...column,
+						editable: false,
+					})),
+		[editingEnabled, actionsColumn]
+	);
 
-	useDataGridErrorSafely(
-		gridId,
-		mappingsError,
-		error,
-		setLocalFilterModel,
-		setLocalSortModel,
-		() => setSnackbarOpen(true)
+	useDataGridErrorSafely(grid, mappingsError, error, () =>
+		setSnackbarOpen(true)
 	);
 	// Show loading if initial load or libraries are loading
 	if ((mappingsLoading && !mappingsData) || librariesLoading) {
@@ -464,7 +438,7 @@ function RouteComponent() {
 
 	// Determine if we should show loading state
 	const shouldShowLoading =
-		isFiltering || mappingsLoading || (isFetching && !!mappingsData);
+		grid.isFiltering || mappingsLoading || (isFetching && !!mappingsData);
 
 	return (
 		<>
@@ -473,28 +447,28 @@ function RouteComponent() {
 				<DataGrid
 					disablePivoting
 					label={t("nav.mappings.title")}
-					identifier={gridId}
+					identifier={mappingsGrid.id}
 					type="referenceValueMappings"
 					columns={refValueColumns}
 					rows={mappingsData?.referenceValueMappings?.content ?? []}
 					rowCount={mappingsData?.referenceValueMappings?.totalSize ?? 0}
 					loading={shouldShowLoading} // Show loading when filtering or fetching
 					paginationMode="server"
-					paginationModel={paginationModel}
-					onPaginationModelChange={handlePaginationChange}
+					paginationModel={grid.paginationModel}
+					onPaginationModelChange={grid.handlePaginationChange}
 					filterMode="server"
-					filterModel={filterModel} // Use immediate filter model for UI
-					onFilterModelChange={handleFilterChange}
+					filterModel={grid.filterModel}
+					onFilterModelChange={grid.handleFilterChange}
 					sortingMode="server"
-					sortModel={sortModel}
-					onSortModelChange={handleSortChange}
-					columnVisibilityModel={columnVisibilityModel}
-					onColumnVisibilityModelChange={handleColumnVisibilityChange}
+					sortModel={grid.sortModel}
+					onSortModelChange={grid.handleSortChange}
+					columnVisibilityModel={grid.columnVisibilityModel}
+					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
 					editMode="row"
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
 					processRowUpdate={processRowUpdate}
-					onRowUpdateError={setRowUpdateError}
+					onRowUpdateError={handleRowUpdateError}
 					checkboxSelection={false}
 					disableAggregation
 					disableHoverInteractions
@@ -505,7 +479,6 @@ function RouteComponent() {
 					toolbarVisible
 					noResultsText={t("audit.no_results")}
 					searchText={t("ui.data_grid.search_mappings")}
-					scrollbarVisible={false}
 				/>
 			}
 			{
@@ -540,11 +513,8 @@ function RouteComponent() {
 					open={snackbarOpen}
 					onCloseFunc={handleSnackbarClose}
 					severityType="warning"
-					// variant="filled"
-					// sx={{ width: "100%" }}
 					alertText={
-						t("ui.feedback.error.cannot_process") ||
-						"We could not process that operation, so we have reset the data grid options."
+						t("ui.feedback.error.cannot_process")
 					}></TimedAlert>
 			}
 		</>

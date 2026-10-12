@@ -31,7 +31,7 @@ export const defaultLocationColumns: GridColDef[] = [
 		headerName: i18n.t("grid.headers.location_name"),
 		minWidth: 150,
 		flex: 0.6,
-		editable: true,
+		editable: false,
 		filterOperators: standardFilters,
 	},
 	{
@@ -39,7 +39,7 @@ export const defaultLocationColumns: GridColDef[] = [
 		headerName: i18n.t("grid.headers.print_label"),
 		minWidth: 150,
 		flex: 0.6,
-		editable: true,
+		editable: false,
 		filterOperators: standardFilters,
 	},
 	{
@@ -73,7 +73,7 @@ export const defaultLocationColumns: GridColDef[] = [
 		flex: 0.8,
 		filterOperators: equalsOnly,
 		sortable: false,
-		editable: true,
+		editable: false,
 	},
 	{
 		field: "id",

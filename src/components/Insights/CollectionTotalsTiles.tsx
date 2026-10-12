@@ -1,0 +1,90 @@
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { Alert, Box, Stack, Typography } from "@mui/material";
+
+import { useDcbRestClient } from "@/hooks/useDcbRestClient";
+import {
+	collectionTotalsQueryOptions,
+	isStillComputing,
+} from "@helpers/statsApi";
+import { formatNumber } from "@helpers/formatters";
+import KpiTile from "./KpiTile";
+import MetricInfo from "./MetricInfo";
+
+/**
+ * The consortium's catalogue in four numbers.
+ *
+ * Deliberately a KPI row rather than a card, so it reads as the header of the collection
+ * section the way the fill-rate row heads the page. No date window: these count what is
+ * catalogued, not what has been requested, so the range picker does not apply.
+ */
+export default function CollectionTotalsTiles() {
+	const { t } = useTranslation();
+	const client = useDcbRestClient();
+
+	const { data, isLoading, isError, error, failureCount } = useQuery(
+		collectionTotalsQueryOptions(client),
+	);
+
+	if (isLoading && failureCount > 0) {
+		return <Alert severity="info">{t("insights.collection.computing")}</Alert>;
+	}
+
+	if (isError) {
+		return (
+			<Alert severity={isStillComputing(error) ? "info" : "warning"}>
+				{t(
+					isStillComputing(error)
+						? "insights.collection.busy"
+						: "insights.collection.failed",
+				)}
+			</Alert>
+		);
+	}
+
+	const n = (value: number | undefined) => formatNumber(value ?? 0);
+	const heading = t("insights.collection.totals.heading");
+
+	return (
+		<Stack spacing={1}>
+			<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+				<Typography variant="subtitle1" component="h3">
+					{heading}
+				</Typography>
+				<MetricInfo metric="collection_totals" label={heading} />
+			</Box>
+			<Box
+				sx={{
+					display: "grid",
+					gap: 2,
+					gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+				}}
+			>
+				<KpiTile
+					title={t("insights.collection.totals.distinct_titles")}
+					value={n(data?.distinctTitles)}
+					subtitle={t("insights.collection.totals.distinct_titles_sub")}
+					loading={isLoading}
+				/>
+				<KpiTile
+					title={t("insights.collection.totals.singly_held")}
+					value={n(data?.singlyHeldTitles)}
+					subtitle={t("insights.collection.totals.singly_held_sub")}
+					loading={isLoading}
+				/>
+				<KpiTile
+					title={t("insights.collection.totals.holdings")}
+					value={n(data?.holdings)}
+					subtitle={t("insights.collection.totals.holdings_sub")}
+					loading={isLoading}
+				/>
+				<KpiTile
+					title={t("insights.collection.totals.sources")}
+					value={n(data?.contributingSources)}
+					subtitle={t("insights.collection.totals.sources_sub")}
+					loading={isLoading}
+				/>
+			</Box>
+		</Stack>
+	);
+}

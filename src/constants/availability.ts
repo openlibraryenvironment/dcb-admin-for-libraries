@@ -39,10 +39,9 @@ export const availabilityRetryDelay = (attemptIndex: number): number =>
 	Math.random() * JITTER_MS;
 
 /**
- * `staleTime` matches the five minutes useClusterDetail already chose rather
- * than introducing a second number. It does not make the data stale to a user
- * who asks: an explicit refetch() ignores it, and every call site here is
- * triggered by one.
+ * `staleTime` is the five minutes useClusterDetail already chose, not a second
+ * number. An explicit refetch() ignores it, so the search card's one is guarded
+ * to fire once per card, and every other call site is driven by `enabled`.
  */
 export const AVAILABILITY_QUERY_POLICY = {
 	retry: retryAvailability,

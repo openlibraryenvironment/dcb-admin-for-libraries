@@ -1,5 +1,5 @@
 /**
- * Uploading staged brand images at save time - R-17e.
+ * Uploading staged brand images at save time.
  *
  * Uploading at pick time left an orphan behind every time somebody changed
  * their mind; waiting for Save narrows that to the gap between two calls in

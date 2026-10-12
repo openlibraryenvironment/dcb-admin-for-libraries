@@ -1,10 +1,11 @@
-import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
+import { availabilityQueryOptions } from "@helpers/availabilityApi";
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
-import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { FormEvent, useMemo, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { staffRequestSchema } from "@/schemas/staffRequest";
 import {
+	Alert,
 	DialogContent,
 	Step,
 	StepLabel,
@@ -14,11 +15,14 @@ import {
 import { CustomLink } from "@components/CustomLink";
 import { Trans, useTranslation } from "react-i18next";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import { getLibraries } from "@queries/getLibraries";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
 import { getLocations } from "@queries/getLocations";
 import axios, { AxiosError } from "axios";
 import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
+import StepAnnouncement from "@components/StepAnnouncement/StepAnnouncement";
 import { getRequestError } from "@helpers/getRequestError";
 import { Agency } from "@models/Agency";
 import { LibraryGroupMember } from "@models/LibraryGroupMember";
@@ -32,10 +36,7 @@ import { PlaceRequestResponse } from "@models/PlaceRequestResponse";
 import { StaffRequestFormData } from "@models/StaffRequestFormData";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import request from "graphql-request";
-import {
-	LibrariesQueryData,
-	LocationsQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { LocationsQueryData } from "@models/ReactQueryHelperTypes";
 import { StaffRequestDetailsStep } from "@forms/ExpeditedCheckout/steps/StaffRequestDetailsStep";
 import { PatronValidationStep } from "@forms/ExpeditedCheckout/steps/PatronValidationStep";
 import { useRouter } from "@tanstack/react-router";
@@ -52,12 +53,6 @@ export default function StaffRequest({
 }: PatronRequestFormType) {
 	const { t } = useTranslation();
 	const auth = useAuth();
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${auth.user?.access_token}`,
-		}),
-		[auth.user?.access_token],
-	);
 	const router = useRouter();
 	const { cfg } = router.options.context;
 	// The library this request is placed on behalf of. Read through useAgencyCodes
@@ -69,13 +64,11 @@ export default function StaffRequest({
 	const [alert, setAlert] = useState<{
 		open: boolean;
 		severity: "success" | "error";
-		text: string | null;
-		patronRequestId?: string;
+		text: string;
 	}>({
 		open: false,
 		severity: "success",
-		text: null,
-		patronRequestId: "",
+		text: "",
 	});
 
 	const [activeStep, setActiveStep] = useState(0);
@@ -96,7 +89,6 @@ export default function StaffRequest({
 		control,
 		handleSubmit,
 		reset,
-		watch,
 		setValue,
 		formState: { errors, isValid },
 	} = useForm<StaffRequestFormData>({
@@ -114,28 +106,14 @@ export default function StaffRequest({
 		mode: "onChange",
 	});
 
-	const selectionType = watch("selectionType");
-	const patronAgencyCode = watch("agencyCode");
-	const itemAgencyCode = watch("itemAgencyCode");
-	const patronBarcode = watch("patronBarcode");
+	const [selectionType, patronAgencyCode, itemAgencyCode, patronBarcode] =
+		useWatch({
+			control,
+			name: ["selectionType", "agencyCode", "itemAgencyCode", "patronBarcode"],
+		});
 
 	const { data: librariesData, isLoading: librariesDataLoading } =
-		useQuery<LibrariesQueryData>({
-			queryKey: ["librariesInfo", headers, cfg.VITE_DCB_API_BASE],
-			queryFn: () =>
-				request(
-					`${cfg.VITE_DCB_API_BASE}/graphql`,
-					getLibraries,
-					{
-						order: "fullName",
-						orderBy: "ASC",
-						pageno: 0,
-						pagesize: REFERENCE_LIST_PAGE_SIZE,
-						query: "",
-					},
-					headers,
-				),
-		});
+		useQuery(allLibrariesQueryOptions(cfg.VITE_DCB_API_BASE));
 
 	const libraryOptions: PatronRequestAutocompleteOption[] =
 		librariesData?.libraries?.content?.map(
@@ -161,26 +139,23 @@ export default function StaffRequest({
 	const isPickupAnywhere = !!selectedLibrary?.functionalSettings?.some(
 		(setting) => setting.name === "PICKUP_ANYWHERE" && setting.enabled === true,
 	); // This still matters in the context of staff requesting. However, pickup locations from the user's agency should be prioritised.
+	const pickupLocationQuery = isPickupAnywhere
+		? "agency:" +
+			selectedLibrary?.agencyId +
+			" OR isEnabledForPickupAnywhere:true"
+		: "agency:" + selectedLibrary?.agencyId;
 
 	const {
 		data: pickupLocations,
 		isLoading: pickupLocationsLoading,
 		refetch: getPickupLocations,
 	} = useQuery<LocationsQueryData>({
-		queryKey: [
-			"pickupLocations",
-			selectedLibrary?.agencyId,
-			isPickupAnywhere,
-			headers,
+		queryKey: queryKeys.locations.reference(
 			cfg.VITE_DCB_API_BASE,
-		],
-		queryFn: () => {
-			const locationQuery = isPickupAnywhere
-				? "agency:" +
-					selectedLibrary?.agencyId +
-					" OR isEnabledForPickupAnywhere:true"
-				: "agency:" + selectedLibrary?.agencyId;
-			return request(
+			pickupLocationQuery,
+		),
+		queryFn: async () =>
+			request(
 				`${cfg.VITE_DCB_API_BASE}/graphql`,
 				getLocations,
 				{
@@ -188,34 +163,23 @@ export default function StaffRequest({
 					orderBy: "ASC",
 					pageno: 0,
 					pagesize: REFERENCE_LIST_PAGE_SIZE,
-					query: locationQuery,
+					query: pickupLocationQuery,
 				},
-				headers,
-			);
-		},
+				await authHeaders(),
+			),
 		enabled: false,
 	});
 
+	// Asked once, when manual selection is chosen, and usually not even then: the
+	// record page and the search card hold the same cache entry. Never refetch():
+	// it ignores staleTime and fans out to every member LMS.
 	const {
 		data: availabilityResults,
 		isLoading: itemsLoading,
 		isError: itemsError,
-		refetch: fetchItems,
-	} = useQuery<any>({
-		queryKey: [
-			"itemAvailability",
-			bibClusterId,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-		],
-		queryFn: () =>
-			axios.get(`${cfg.VITE_DCB_API_BASE}/items/availability`, {
-				headers,
-				params: { clusteredBibId: bibClusterId },
-			}),
-		...AVAILABILITY_QUERY_POLICY,
-		enabled: false,
-		select: (response) => response.data,
+	} = useQuery({
+		...availabilityQueryOptions(cfg.VITE_DCB_API_BASE, bibClusterId),
+		enabled: activeStep === 1 && selectionType === "manual" && !!bibClusterId,
 	});
 
 	const itemsData: Item[] = availabilityResults?.itemList || [];
@@ -249,7 +213,6 @@ export default function StaffRequest({
 				agencyCode: item?.agency?.code,
 			}),
 		);
-		// Sort the array of options
 		return options.sort((a: any, b: any) => {
 			const isAUserAgency = a.agencyCode === agencyCode;
 			const isBUserAgency = b.agencyCode === agencyCode;
@@ -300,13 +263,12 @@ export default function StaffRequest({
 			}),
 		) || [];
 
-	// This handles loading state, errors, and success callbacks cleanly.
 	const validatePatronMutation = useMutation<
 		PatronLookupResponse,
 		unknown,
 		{ patronBarcode: string; agencyCode: string }
 	>({
-		mutationFn: (variables) =>
+		mutationFn: async (variables) =>
 			axios
 				.post(
 					`${cfg.VITE_DCB_API_BASE}/patron/auth/lookup`,
@@ -314,20 +276,20 @@ export default function StaffRequest({
 						patronPrinciple: variables.patronBarcode,
 						agencyCode: variables.agencyCode,
 					},
-					{ headers },
+					{ headers: await authHeaders() },
 				)
 				.then((res) => res.data),
-		onSuccess: (data) => {
+		onSuccess: (data, variables) => {
 			if (data.status === "VALID") {
 				setPatronData(data);
 				setActiveStep(1);
-				setStepError(null); // Clear error on success
+				setStepError(null);
 				setAlert({
 					open: true,
 					severity: "success",
 					text: t("requesting.staff_request.patron.success.lookup", {
-						barcode: patronBarcode,
-						library: agencyCode,
+						barcode: variables.patronBarcode,
+						library: selectedLibrary?.label ?? variables.agencyCode,
 					}),
 				});
 			} else {
@@ -336,7 +298,7 @@ export default function StaffRequest({
 					severity: "error",
 					text: t("requesting.staff_request.patron.error.validation_failure"),
 				});
-				setStepError(0); // Set error on step 0
+				setStepError(0);
 			}
 		},
 		onError: () => {
@@ -345,7 +307,7 @@ export default function StaffRequest({
 				severity: "error",
 				text: t("requesting.staff_request.patron.error.validation_failure"),
 			});
-			setStepError(0); // Set error on step 0
+			setStepError(0);
 		},
 	});
 
@@ -354,43 +316,33 @@ export default function StaffRequest({
 		AxiosError,
 		any
 	>({
-		mutationFn: (payload) =>
+		mutationFn: async (payload) =>
 			axios
 				.post(`${cfg.VITE_DCB_API_BASE}/patrons/requests/place`, payload, {
-					headers,
+					headers: await authHeaders(),
 				})
 				.then((res) => res.data),
-		onSuccess: (data) => {
-			setStepError(null); // Clear error on success
-			setAlert({
-				open: true,
-				severity: "success",
-				text: isReadOnly
-					? t("requesting.staff_request.patron.success.request_requesting_only")
-					: t("requesting.staff_request.patron.success.request"),
-				patronRequestId: data.id,
-			});
-			setTimeout(() => {
-				handleClose();
-			}, 6000);
+		onSuccess: () => {
+			setStepError(null);
 		},
 		onError: (error: any) => {
 			setAlert({
 				open: true,
 				severity: "error",
-				text: t(getRequestError(error.response?.data?.failedChecks), {
-					code: error?.response?.data?.failedChecks[0].code,
-					description: error?.response?.data?.failedChecks[0].description,
-				}),
+				text: getRequestError(error?.response?.data?.failedChecks, t),
 			});
-			setStepError(1); // Set error on step 1
+			setStepError(1);
 		},
 	});
 
+	// The patron's own library, never the staff member's: with the patron library
+	// cleared, the lookup used to fall back to the staff member's and validate the
+	// barcode against the wrong library. The button is disabled without one.
 	const validatePatron = () => {
+		if (!patronBarcode || !patronAgencyCode) return;
 		validatePatronMutation.mutate({
 			patronBarcode,
-			agencyCode: selectedLibrary?.value ?? agencyCode,
+			agencyCode: patronAgencyCode,
 		});
 	};
 
@@ -441,15 +393,31 @@ export default function StaffRequest({
 		placeRequestMutation.mutate(finalPayload);
 	};
 
+	const submitStep = (event: FormEvent<HTMLFormElement>) => {
+		if (activeStep === 0) {
+			event.preventDefault();
+			validatePatron();
+			return;
+		}
+		// Placed once: the same submission twice is a duplicate request.
+		if (placeRequestMutation.isSuccess) {
+			event.preventDefault();
+			return;
+		}
+		return handleSubmit(onSubmit)(event);
+	};
+
 	const handleClose = () => {
 		reset();
 		setActiveStep(0);
 		setPatronData(null);
 		placeRequestMutation.reset();
 		validatePatronMutation.reset();
-		setStepError(null); // Reset step error
+		setStepError(null);
 		onClose();
 	};
+
+	const placedRequestId = placeRequestMutation.data?.id;
 
 	const getStepContent = (step: number) => {
 		switch (step) {
@@ -460,9 +428,8 @@ export default function StaffRequest({
 						patronValidated={activeStep !== 0}
 						isValidatingPatron={validatePatronMutation.isPending}
 						handleClose={handleClose}
-						validatePatron={validatePatron}
 						patronBarcode={patronBarcode}
-						agencyCode={agencyCode}
+						agencyCode={patronAgencyCode}
 						libraryOptions={libraryOptions}
 						librariesLoading={librariesDataLoading}
 						t={t}
@@ -482,22 +449,21 @@ export default function StaffRequest({
 						itemOptions={itemOptions}
 						itemsLoading={itemsLoading}
 						itemsError={itemsError}
-						fetchItems={fetchItems}
 						handleClose={handleClose}
 						isSubmitting={placeRequestMutation.isPending}
+						isPlaced={placeRequestMutation.isSuccess}
 						isValid={isValid}
 						t={t}
 					/>
 				);
 			default:
-				return "Unknown step";
+				return null;
 		}
 	};
 
 	return (
-        <>
-            <DialogContent>
-				{/* Same style as Expedited Checkout */}
+		<>
+			<DialogContent>
 				<Stepper
 					activeStep={activeStep}
 					alternativeLabel
@@ -525,46 +491,54 @@ export default function StaffRequest({
 						}
 
 						return (
-                            <Step key={label} {...stepProps}>
-                                <StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
+							<Step key={label} {...stepProps}>
+								<StepLabel {...labelProps} slots={{ stepIcon: DCBStepIcon }}>
 									<Typography
 										color={getStepColors(isActive, hasError, isCompleted)}
 										sx={{
-                                            fontWeight: getStepLabelFontWeight(isActive)
-                                        }}>
+											fontWeight: getStepLabelFontWeight(isActive),
+										}}>
 										{label}
 									</Typography>
 								</StepLabel>
-                            </Step>
-                        );
+							</Step>
+						);
 					})}
 				</Stepper>
-				<form onSubmit={handleSubmit(onSubmit)}>
-					{getStepContent(activeStep)}
-				</form>
+				<StepAnnouncement activeStep={activeStep} steps={steps} />
+				<form onSubmit={submitStep}>{getStepContent(activeStep)}</form>
+				{/* In the dialog rather than a toast, so the link stays until the user
+				    closes it: WCAG 2.2.1. */}
+				{placedRequestId ? (
+					<Alert severity="success" sx={{ mt: 2 }}>
+						{isReadOnly ? (
+							t("requesting.staff_request.patron.success.request_requesting_only")
+						) : (
+							<Trans
+								i18nKey="requesting.staff_request.patron.success.request"
+								components={{
+									linkComponent: (
+										<CustomLink
+											key="patron-request-link"
+											to="/patronRequests/$id"
+											params={{ id: placedRequestId }}
+											target="_blank"
+											rel="noopener noreferrer"
+										/>
+									),
+								}}
+							/>
+						)}
+					</Alert>
+				) : null}
 			</DialogContent>
-            <TimedAlert
+			<TimedAlert
 				severityType={alert.severity}
 				open={alert.open}
 				onCloseFunc={() => setAlert({ ...alert, open: false })}
-				alertText={
-					<Trans
-						i18nKey={alert.text || ""}
-						components={{
-							linkComponent: (
-								<CustomLink
-									key="patron-request-link"
-									to="/patronRequests/$id"
-									params={{ id: alert.patronRequestId ?? "" }}
-									target="_blank"
-									rel="noopener noreferrer"
-								/>
-							),
-						}}
-					/>
-				}
+				alertText={alert.text}
 				key="staff-request-alert"
 			/>
-        </>
-    );
+		</>
+	);
 }

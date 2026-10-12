@@ -1,100 +1,55 @@
-import {
-	clampPageSize,
-	REFERENCE_LIST_PAGE_SIZE,
-} from "@constants/dataGrid/pagination";
+import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
+import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
-import { useGridStore } from "@/hooks/useDataGridStore";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestExport } from "@/hooks/useExport";
 import DataGrid from "@components/DataGrid/DataGrid";
 import { ExportProgressDialog } from "@components/DataGrid/components/ExportProgressDialog";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import { standardFilters } from "@constants/filters/filters";
-import { defaultPatronRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/patronRequestColumnVisibility";
-import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
+import { patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import {
 	borrowedByLibraryQuery,
 	hasBorrowingScope,
 } from "@helpers/patronRequestScope";
 import { Library } from "@models/Library";
-import {
-	LibrariesQueryData,
-	PatronRequestQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import {
 	GridColDef,
-	GridColumnVisibilityModel,
-	GridFilterModel,
-	GridPaginationModel,
 	GridRowModesModel,
-	GridSortModel,
 	useGridApiRef,
 } from "@mui/x-data-grid-premium";
-import { getLibraries } from "@queries/getLibraries";
-import { getLibraryBibClusterIds } from "@queries/getLibraryBibClusterIds";
+import { gridPage, queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
-import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
-	// useNavigate,
 	useRouter,
 } from "@tanstack/react-router";
-import axios from "axios";
 import request from "graphql-request";
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/")({
+	validateSearch: gridSearchSchema,
 	head: () => ({ meta: [{ title: pageTitle("nav.patron_requests.title") }] }),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	const auth = useAuth();
 	const apiRef = useGridApiRef();
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
-	const searchApiBase = cfg?.VITE_DCB_SEARCH_BASE;
-	const token = auth?.user?.access_token;
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${token}`,
-		}),
-		[token],
-	);
-	const gridId = "mainPatronRequests";
-	const {
-		sortModel: storedSortModel,
-		filterModel: storedFilterModel,
-		paginationModel: storedPaginationModel,
-		columnVisibilityModel: storedColumnVisibilityModel,
-		setSortModel,
-		setFilterModel,
-		setPaginationModel,
-		setColumnVisibilityModel,
-	} = useGridStore();
-
-	const storedState = {
-		sort: storedSortModel[gridId],
-		filter: storedFilterModel[gridId],
-		pagination: storedPaginationModel[gridId],
-		columnVisibility: storedColumnVisibilityModel[gridId],
-	};
-
-	const [paginationModel, setLocalPaginationModel] =
-		useState<GridPaginationModel>(
-			storedState.pagination ?? { page: 0, pageSize: 25 },
-		);
+	const grid = useSyncedDataGrid(patronRequestsGrid, Route.useSearch());
 
 	const [alert, setAlert] = useState<{
 		open: boolean;
@@ -106,7 +61,6 @@ function RouteComponent() {
 		text: null,
 	});
 
-
 	const handleSnackbarClose = (
 		event?: React.SyntheticEvent | Event,
 		reason?: string,
@@ -116,124 +70,16 @@ function RouteComponent() {
 		}
 		setAlert({ open: false, severity: "success", text: null });
 	};
-	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
-		storedState.filter ?? { items: [] },
-	);
-	const debouncedFilterModel = useDebounce(filterModel, 500);
-
-	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
-		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }],
-	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? defaultPatronRequestColumnVisibility,
-	);
-
-	// Add state to track if we're filtering
-	const [isFiltering, setIsFiltering] = useState(false);
-
-	// Track when filter is being applied
-	useEffect(() => {
-		const hasActiveFilters =
-			filterModel.items.some(
-				(item) => item.value && item.value !== "" && item.value !== null,
-			) ||
-			(filterModel.quickFilterValues &&
-				filterModel.quickFilterValues.length > 0);
-
-		// We're filtering if there are active filters but they don't match debounced filters
-		const isDifferent =
-			JSON.stringify(filterModel) !== JSON.stringify(debouncedFilterModel);
-		setIsFiltering(!!hasActiveFilters && isDifferent);
-	}, [filterModel, debouncedFilterModel]);
-
-	const handlePaginationChange = useCallback(
-		(model: GridPaginationModel) => {
-			setLocalPaginationModel(model);
-			setPaginationModel(gridId, model);
-		},
-		[gridId, setPaginationModel],
-	);
-
-	const handleFilterChange = useCallback(
-		(model: GridFilterModel) => {
-			setLocalFilterModel(model);
-			setFilterModel(gridId, model);
-		},
-		[gridId, setFilterModel],
-	);
-
-	const handleSortChange = useCallback(
-		(model: GridSortModel) => {
-			setLocalSortModel(model);
-			setSortModel(gridId, model);
-		},
-		[gridId, setSortModel],
-	);
-
-	const handleColumnVisibilityChange = useCallback(
-		(model: GridColumnVisibilityModel) => {
-			setLocalColumnVisibilityModel(model);
-			setColumnVisibilityModel(gridId, model);
-		},
-		[gridId, setColumnVisibilityModel],
-	);
 
 	const { agencyCode: code } = useAgencyCodes();
-	const roles = auth?.user?.profile?.roles ? auth?.user?.profile?.roles : [];
-
-	const isAdmin = roles.includes("ADMIN");
-	// facets for options
-	const { data: publisherOptions = [], isLoading: isPublishersLoading } =
-		useQuery({
-			queryKey: ["publisherFacets", searchApiBase, headers],
-			queryFn: async () => {
-				if (!searchApiBase) return [];
-				try {
-					const res = await axios.get(
-						`${searchApiBase}/search/instances/facets`,
-						{
-							headers,
-							params: {
-								query: "cql.allRecords = 1",
-								facet: "instancePublishers:500",
-							},
-						},
-					);
-
-					const buckets = res.data?.facets?.instancePublishers?.values || [];
-					return buckets.map((bucket: any) => ({
-						value: bucket.id,
-						label: `${bucket.id} (${bucket.totalRecords})`,
-					}));
-				} catch {
-					return [];
-				}
-			},
-			enabled: !!searchApiBase && !!token,
-		});
 
 	// Library query
 	const {
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery<LibrariesQueryData>({
-		queryKey: ["allLibraries", headers, code, dcbApiBase],
-		queryFn: async () =>
-			request(
-				`${dcbApiBase}/graphql`,
-				getLibraries,
-				{
-					query: "",
-					pagesize: REFERENCE_LIST_PAGE_SIZE,
-					pageno: 0,
-					order: "fullName",
-					orderBy: "ASC",
-				},
-				headers,
-			),
-	});
+	} = useQuery(allLibrariesQueryOptions(dcbApiBase));
 
 	// All libraries, supplied to the filters. Memoised because `?? []` allocates
 	// a new array on every render, which made every memo keyed on it recompute
@@ -258,8 +104,7 @@ function RouteComponent() {
 	// Columns that have dynamic options for their filters
 	const dynamicPatronRequestColumns = useMemo(() => {
 		const supplyingAgencyField = "supplyingAgencyCode";
-		const titleField = "clusterRecordTitle";
-		const modifiedColumns = standardPatronRequestColumns.map((col) => {
+		return patronRequestsGrid.columns.map((col) => {
 			if (col.field === supplyingAgencyField) {
 				const { ...baseColProps } = col;
 				const selectCol: GridColDef = {
@@ -269,40 +114,15 @@ function RouteComponent() {
 				};
 				return selectCol;
 			}
-			if (col.field === titleField) {
-				return {
-					...col,
-					filterable: isAdmin, // Only filterable if user is admin
-					filterOperators: isAdmin ? standardFilters : undefined,
-				};
-			}
 			return col;
 		});
-		if (isAdmin) {
-			// Not ready for prime time, just about good enough for demos
-			modifiedColumns.push({
-				field: "publisher",
-				headerName: t("patron_requests.publisher", "Publisher"),
-				filterable: true,
-				sortable: false,
-				type: "singleSelect",
-				valueOptions: publisherOptions,
-				valueGetter: (value, row) => {
-					const members = row?.clusterRecord?.members;
-					if (!Array.isArray(members) || members.length === 0) return "";
+	}, [libraryFilterOptions]);
 
-					const firstMemberWithPublisher = members.find(
-						(member) => member?.publisher && member.publisher.trim() !== "",
-					);
-
-					return firstMemberWithPublisher?.publisher || "";
-				},
-			});
-		}
-		return modifiedColumns;
-	}, [libraryFilterOptions, t, publisherOptions, isAdmin]);
-
-	// Patron requests query - using debounced filter model
+	const page = gridPage(
+		grid.appliedFilterModel,
+		grid.paginationModel,
+		grid.sortModel,
+	);
 	const {
 		data: patronRequestData,
 		isLoading: isPatronRequestLoading,
@@ -310,182 +130,59 @@ function RouteComponent() {
 		error,
 		isFetching,
 	} = useQuery<PatronRequestQueryData>({
-		queryKey: [
-			"getPatronRequests",
+		// Both the agency and the Host LMS feed the scope this query runs under.
+		queryKey: queryKeys.patronRequests.list(
 			dcbApiBase,
-			headers,
-			userLibraryHostLmsCode,
-			// Both feed the scope this query runs under, so a change to either has to
-			// invalidate what was cached against the previous one
-			code,
-			debouncedFilterModel, // Use debounced filter model
-			paginationModel.pageSize,
-			paginationModel.page,
-			sortModel[0]?.field,
-			sortModel[0]?.sort,
-		],
-		// HIGHLY EXPERIMENTAL PUBLISHER FILTER
-		// this is cursed but will have to do until the backend changes are in
+			{ agencyCode: code ?? "", hostLmsCode: userLibraryHostLmsCode },
+			page,
+		),
 		queryFn: async () => {
 			const baseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
-			let finalBaseQuery = baseQuery;
-
-			const publisherFilter = debouncedFilterModel?.items?.find(
-				(item) => item.field === "publisher" && item.value,
-			);
-			const titleFilter = debouncedFilterModel?.items?.find(
-				(item) => item.field === "clusterRecordTitle" && item.value,
-			);
-
-			if (publisherFilter || titleFilter) {
-				try {
-					const prVariables = {
-						query: baseQuery,
-						pagesize: 100000,
-						pageno: 0,
-					};
-
-					// Fetch ALL requests for this library AND their publishers/titles
-					const prRes: any = await request(
-						`${dcbApiBase}/graphql`,
-						getLibraryBibClusterIds,
-						prVariables,
-						headers,
-					);
-
-					const matchedIdsRaw = prRes?.patronRequests?.content
-						?.filter((pr: any) => {
-							let matchesPublisher = true;
-							let matchesTitle = true;
-
-							if (publisherFilter) {
-								const members = pr?.clusterRecord?.members;
-								if (!Array.isArray(members)) {
-									matchesPublisher = false;
-								} else {
-									matchesPublisher = members.some(
-										(member: any) =>
-											member?.publisher === publisherFilter.value,
-									);
-								}
-							}
-
-							if (titleFilter) {
-								const title = pr?.clusterRecord?.title || "";
-								const searchTerm = titleFilter.value.toLowerCase();
-
-								if (titleFilter.operator === "equals") {
-									matchesTitle = title.toLowerCase() === searchTerm;
-								} else {
-									// Fallback to 'contains' which is now perfectly safe and fast in JS!
-									matchesTitle = title.toLowerCase().includes(searchTerm);
-								}
-							}
-
-							// Must match both conditions (if both are applied)
-							return matchesPublisher && matchesTitle;
-						})
-						?.map((pr: any) => pr.bibClusterId)
-						.filter(Boolean);
-
-					const uniqueMatchedIds = [...new Set(matchedIdsRaw)];
-
-					if (uniqueMatchedIds.length > 0) {
-						// slicing
-						const uuidChain = uniqueMatchedIds
-							.slice(0, 100)
-							.map((id: unknown) => `bibClusterId:${id}`)
-							.join(" OR ");
-						finalBaseQuery += ` AND (${uuidChain})`;
-					} else {
-						finalBaseQuery += ` AND (bibClusterId:00000000-0000-0000-0000-000000000000)`;
-					}
-				} catch {
-					finalBaseQuery += ` AND (bibClusterId:00000000-0000-0000-0000-000000000000)`;
-				}
-			}
-
-			// Strip out custom fields so standard grid utilities ignore them
-			const cleanedFilterModel = {
-				...debouncedFilterModel,
-				items: debouncedFilterModel.items.filter(
-					(item) =>
-						item.field !== "publisher" && item.field !== "clusterRecordTitle",
-				),
-			};
-
 			const queryVariables = {
 				query:
-					processGridFilterModel(cleanedFilterModel, finalBaseQuery, [
+					processGridFilterModel(page.filterModel, baseQuery, [
 						"status",
 						"description",
 					]) ?? "",
-				pagesize: clampPageSize(paginationModel.pageSize),
-				pageno: paginationModel.page ?? 0,
-				order: sortModel[0]?.field ?? "dateCreated",
-				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+				pagesize: clampPageSize(page.pageSize),
+				pageno: page.page ?? 0,
+				order: page.sortField ?? "dateCreated",
+				orderBy: page.sortDirection?.toUpperCase() ?? "DESC",
 			};
 			return request(
 				`${dcbApiBase}/graphql`,
 				getPatronRequests,
 				queryVariables,
-				headers,
+				await authHeaders(),
 			);
 		},
 		// Gated on whatever the scope is actually built from. Under the v9 filter that is
 		// the agency claim, which is available immediately; waiting on the Host LMS would
 		// hold the grid behind a lookup it no longer needs, and strand a library whose
 		// agency has no Host LMS recorded.
-		enabled:
-			!!token &&
-			!!dcbApiBase &&
-			hasBorrowingScope(code, userLibraryHostLmsCode),
+		enabled: !!dcbApiBase && hasBorrowingScope(code, userLibraryHostLmsCode),
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
 	});
 
-	useDataGridErrorSafely(
-		gridId,
-		isPatronRequestError,
-		error,
-		setLocalFilterModel,
-		setLocalSortModel,
-		() =>
-			setAlert({
-				open: true,
-				severity: "warning",
-				text: t("ui.feedback.error.cannot_process"),
-			}),
+	useDataGridErrorSafely(grid, isPatronRequestError, error, () =>
+		setAlert({
+			open: true,
+			severity: "warning",
+			text: t("ui.feedback.error.cannot_process"),
+		}),
 	);
 
 	// No cleanup here: this grid lists what THIS library borrowed, and cleanup belongs to
 	// the library that supplied the request - see supplierRequests.tsx.
-	// The export must carry the same scope as the grid - it is the same data leaving
-	// the building in a file rather than on screen
-	const exportBaseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
-	const { exportProgress, handleExport } = usePatronRequestExport({
+	const { exportProgress, exportConfig, cancelExport } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
-		headers,
-		baseQuery: exportBaseQuery,
-		exportQuery: getPatronRequestsForExport,
-		filterModel: debouncedFilterModel,
-		sortModel,
-		onExportSuccess: (msg, count) => {
-			setAlert({
-				open: true,
-				severity: "success",
-				text: t("ui.data_grid.export.success", { count: count }),
-			});
-		},
-		onExportError: () => {
-			setAlert({
-				open: true,
-				severity: "error",
-				text: t("ui.data_grid.export.failed"),
-			});
-		},
+		baseQuery: borrowedByLibraryQuery(code, userLibraryHostLmsCode),
+		filterModel: grid.appliedFilterModel,
+		sortModel: grid.sortModel,
+		onExportResult: (result) => setAlert({ open: true, ...result }),
 		type: "patronRequests",
 	});
 	// Show loading if initial load or libraries are loading
@@ -513,9 +210,8 @@ function RouteComponent() {
 
 	// Determine if we should show loading state
 	const shouldShowLoading =
-		isFiltering ||
+		grid.isFiltering ||
 		isPatronRequestLoading ||
-		isPublishersLoading ||
 		(isFetching && !!patronRequestData);
 
 	return (
@@ -529,8 +225,8 @@ function RouteComponent() {
 					disablePivoting
 					rows={patronRequestData?.patronRequests?.content ?? []}
 					columns={dynamicPatronRequestColumns}
-					columnVisibilityModel={columnVisibilityModel}
-					onColumnVisibilityModelChange={handleColumnVisibilityChange}
+					columnVisibilityModel={grid.columnVisibilityModel}
+					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
 					type="patronRequests"
 					label={t("nav.patron_requests.title")}
 					identifier="patronRequestsMain"
@@ -545,20 +241,19 @@ function RouteComponent() {
 					pivotingEnabled={false}
 					toolbarVisible
 					searchText={t("ui.actions.search")}
-					scrollbarVisible={false}
 					paginationMode="server"
-					paginationModel={paginationModel}
-					onPaginationModelChange={handlePaginationChange}
+					paginationModel={grid.paginationModel}
+					onPaginationModelChange={grid.handlePaginationChange}
 					filterMode="server"
-					filterModel={filterModel} // Use immediate filter model for UI
-					onFilterModelChange={handleFilterChange}
+					filterModel={grid.filterModel}
+					onFilterModelChange={grid.handleFilterChange}
 					sortingMode="server"
-					sortModel={sortModel}
-					onSortModelChange={handleSortChange}
+					sortModel={grid.sortModel}
+					onSortModelChange={grid.handleSortChange}
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
-					onExport={handleExport}
+					exportConfig={exportConfig}
 					isExporting={exportProgress.isExporting}
 				/>
 			}
@@ -566,6 +261,7 @@ function RouteComponent() {
 				open={exportProgress.isExporting}
 				progress={exportProgress.progress}
 				totalRecords={exportProgress.totalRecords}
+				onCancel={cancelExport}
 			/>
 
 			{
@@ -573,8 +269,6 @@ function RouteComponent() {
 					open={alert.open}
 					onCloseFunc={handleSnackbarClose}
 					severityType={alert.severity}
-					// variant="filled"
-					// sx={{ width: "100%" }}
 					alertText={alert.text}></TimedAlert>
 			}
 		</>

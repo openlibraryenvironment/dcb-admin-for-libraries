@@ -1,15 +1,13 @@
-import { currentClock, useClock } from "@/hooks/useThemeStore";
+import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
+import { useClock } from "@/hooks/useThemeStore";
 import { formatTimestamp } from "@helpers/formatters";
 import { Attribute } from "@components/Attribute/Attribute";
-import i18n from "@/i18n";
 import { pageTitle } from "@helpers/pageTitle";
 import Error from "@components/Error/Error";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import {
 	AgencyQueryData,
 	HostLmsQueryData,
-	LibrariesQueryData,
-	LocationsQueryData,
 	PatronIdentitiesQueryData,
 	PatronRequestQueryData,
 } from "@models/ReactQueryHelperTypes";
@@ -20,6 +18,7 @@ import {
 	Accordion,
 	AccordionDetails,
 	AccordionSummary,
+	Box,
 	Button,
 	CircularProgress,
 	Divider,
@@ -34,27 +33,27 @@ import {
 	isAgencyScopedRequestsEnabled,
 	isGuardedCleanupEnabled,
 } from "@helpers/featureFlags";
-import { getLocation } from "@queries/getLocation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import axios from "axios";
 import request from "graphql-request";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
-import dayjs from "dayjs";
-import DataGrid from "@components/DataGrid/DataGrid";
+import { isUuidShaped } from "@helpers/isUuidShaped";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import { formatDuration } from "@helpers/formatDuration";
 import Loading from "@components/Loading/Loading";
-import {
-	GridPaginationModel,
-	GridRowModesModel,
-} from "@mui/x-data-grid-premium";
+import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
 import { CustomLink } from "@components/CustomLink";
 import { SourceRecord } from "@models/SourceRecord";
-import { getLibraryBasics } from "@queries/getLibraryBasics";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import {
+	libraryBasicsQueryOptions,
+	locationQueryOptions,
+} from "@helpers/sharedQueries";
 import { Library } from "@models/Library";
 import { getILS } from "@helpers/getILS";
 import { findPrimaryContacts } from "@helpers/findPrimaryContacts";
@@ -68,10 +67,14 @@ import {
 } from "@helpers/cleanupPatronRequest";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
-import { useGridStore } from "@/hooks/useDataGridStore";
+import PatronRequestAuditLog from "@components/PatronRequestAuditLog/PatronRequestAuditLog";
+import { z } from "zod";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
-	head: () => ({ meta: [{ title: pageTitle("patron_request.title") }] }),
+	validateSearch: z.object({
+		audit: gridSearchSchema.optional().catch(undefined),
+	}),
+	head:() => ({ meta: [{ title: pageTitle("patron_request.title") }] }),
 	component: RouteComponent,
 });
 
@@ -92,41 +95,19 @@ function RouteComponent() {
 	const [cleanupRefusal, setCleanupRefusal] = useState<string | null>(null);
 	const { agencyCodes } = useAgencyCodes();
 	const guardedCleanup = isGuardedCleanupEnabled();
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${auth.user?.access_token}`,
-		}),
-		[auth.user?.access_token],
-	);
-	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-	const auditGridId = `audit-log-${id}`; // Unique ID for each request
-	const {
-		paginationModel: auditPaginationModel,
-		setPaginationModel: setAuditPaginationModel,
-		filterModel: auditFilterModel,
-		setFilterModel: setAuditFilterModel,
-		sortModel: auditSortModel,
-		setSortModel: setAuditSortModel,
-	} = useGridStore();
-	const currentPagination = auditPaginationModel[auditGridId] ?? {
-		page: 0,
-		pageSize: 25,
-	};
-	const currentFilter = auditFilterModel[auditGridId] ?? { items: [] };
-	const currentSort = auditSortModel[auditGridId] ?? [
-		{ field: "auditDate", sort: "desc" },
-	];
+	const apiBase: string = cfg.VITE_DCB_API_BASE;
+	const isValidId = isUuidShaped(id);
 
 	const {
 		data,
 		isError,
 		isLoading: patronRequestLoading,
 	} = useQuery<PatronRequestQueryData>({
-		// The dependencies are now restored in the queryKey
-		queryKey: ["patronRequest", id, headers, cfg.VITE_DCB_API_BASE],
+		queryKey: queryKeys.patronRequests.detail(apiBase, id),
+		enabled: isValidId,
 		queryFn: async () =>
 			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+				apiBase + "/graphql",
 				getPatronRequest(),
 				{
 					query: "id:" + id,
@@ -135,7 +116,7 @@ function RouteComponent() {
 					orderBy: "dateUpdated",
 					order: "DESC",
 				},
-				headers,
+				await authHeaders(),
 			),
 	});
 	const patronRequest = data?.patronRequests?.content?.[0];
@@ -144,42 +125,20 @@ function RouteComponent() {
 		agencyCodes,
 	});
 	const members = patronRequest?.clusterRecord?.members;
+	const untracked = untrackedStatuses.includes(patronRequest?.status ?? "");
+	const supplier = patronRequest?.suppliers?.[0];
 	const queryClient = useQueryClient();
 
-	// URLs for our various operations
-	const bibClusterRecordUrl = cfg.VITE_DCB_SEARCH_BASE // This needs fixing
-		? "/requesting/" + patronRequest?.bibClusterId
-		: "";
+	const linkToCluster = !!cfg.VITE_DCB_SEARCH_BASE && !!patronRequest?.bibClusterId;
 	const updateUrl =
 		cfg.VITE_DCB_API_BASE + "/patrons/requests/" + id + "/update";
 
 	const {
 		data: supplierLibraryData,
 		isLoading: supplierLibraryLoading,
-	} = useQuery<LibrariesQueryData>({
-		// The dependencies are now restored in the queryKey
-		queryKey: [
-			"patronRequestSupplierLibrary",
-			id,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-			patronRequest?.suppliers[0]?.localAgency,
-		],
-		enabled: !!patronRequest?.suppliers[0]?.localAgency,
-
-		queryFn: async () =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibraryBasics,
-				{
-					query: "agencyCode:" + patronRequest?.suppliers[0]?.localAgency,
-					pageno: 0,
-					pagesize: 10,
-					order: "agencyCode",
-					orderBy: "ASC",
-				},
-				headers,
-			),
+	} = useQuery({
+		...libraryBasicsQueryOptions(apiBase, supplier?.localAgency ?? ""),
+		enabled: !!supplier?.localAgency,
 	});
 
 	const supplierLibraries: Library[] =
@@ -191,18 +150,16 @@ function RouteComponent() {
 		isError: patronIdentitiesError,
 		isLoading: patronIdentitiesLoading,
 	} = useQuery<PatronIdentitiesQueryData>({
-		queryKey: [
-			"patronIdentities",
-			patronRequest?.pickupPatronId,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-		],
+		queryKey: queryKeys.patronIdentities.byLocalId(
+			apiBase,
+			patronRequest?.pickupPatronId ?? "",
+		),
 		enabled:
 			patronRequest?.pickupPatronId != null &&
 			patronRequest?.pickupPatronId != undefined,
 		queryFn: async () =>
 			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+				apiBase + "/graphql",
 				getPatronIdentities,
 				{
 					query: "localId:" + patronRequest?.pickupPatronId,
@@ -211,7 +168,7 @@ function RouteComponent() {
 					order: "localId",
 					orderBy: "ASC",
 				},
-				headers,
+				await authHeaders(),
 			),
 	});
 
@@ -222,59 +179,21 @@ function RouteComponent() {
 		data: pickupLocationData,
 		isError: pickupLocationDataError,
 		isLoading: pickupLocationDataLoading,
-	} = useQuery<LocationsQueryData>({
-		queryKey: [
-			"patronRequestPickupLocation",
-			patronRequest?.pickupLocationCode,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-		],
+	} = useQuery({
+		// pickupLocationCode is the location's id (a UUID), not its code.
+		...locationQueryOptions(apiBase, patronRequest?.pickupLocationCode ?? ""),
 		enabled:
 			patronRequest?.pickupLocationCode != null &&
 			patronRequest?.pickupLocationCode != undefined,
-		queryFn: async () =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLocation,
-				{
-					// Note: pickupLocationCode is expected to be the location id (UUID)
-					query: "id:" + patronRequest?.pickupLocationCode,
-					pageno: 0,
-					pagesize: 10,
-					order: "id",
-					orderBy: "ASC",
-				},
-				headers,
-			),
 	});
 
 	const pickupLocation = pickupLocationData?.locations?.content?.[0];
 	const {
 		data: pickupLibraryData,
 		isLoading: pickupLibraryLoading,
-	} = useQuery<LibrariesQueryData>({
-		// The dependencies are now restored in the queryKey
-		queryKey: [
-			"patronRequestPickupLibrary",
-			id,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-			pickupLocation?.agency?.code,
-		],
+	} = useQuery({
+		...libraryBasicsQueryOptions(apiBase, pickupLocation?.agency?.code ?? ""),
 		enabled: !!pickupLocation?.agency?.code,
-		queryFn: async () =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibraryBasics,
-				{
-					query: "agencyCode:" + pickupLocation?.agency?.code,
-					pageno: 0,
-					pagesize: 10,
-					order: "agencyCode",
-					orderBy: "ASC",
-				},
-				headers,
-			),
 	});
 
 	const pickupLibraries: Library[] =
@@ -302,18 +221,14 @@ function RouteComponent() {
 		data: patronLmsData,
 		isLoading: patronLmsLoading,
 	} = useQuery<HostLmsQueryData>({
-		// The dependencies are now restored in the queryKey
-		queryKey: [
-			"patronRequestPatronLms",
-			id,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-			patronRequest?.patronHostlmsCode,
-		],
+		queryKey: queryKeys.hostLms.byCode(
+			apiBase,
+			patronRequest?.patronHostlmsCode ?? "",
+		),
 		enabled: !agencyScoped && !!patronRequest?.patronHostlmsCode,
 		queryFn: async () =>
 			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+				apiBase + "/graphql",
 				getHostLms,
 				{
 					query: "code:" + patronRequest?.patronHostlmsCode,
@@ -322,7 +237,7 @@ function RouteComponent() {
 					order: "name",
 					orderBy: "ASC",
 				},
-				headers,
+				await authHeaders(),
 			),
 	});
 	const patronHostLmss: HostLMS[] = patronLmsData?.hostLms?.content ?? [];
@@ -333,18 +248,11 @@ function RouteComponent() {
 		data: patronAgencyData,
 		isLoading: patronAgencyLoading,
 	} = useQuery<AgencyQueryData>({
-		// The dependencies are now restored in the queryKey
-		queryKey: [
-			"patronRequestAgency",
-			id,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-			patronHostLms?.id,
-		],
+		queryKey: queryKeys.agencies.byHostLms(apiBase, patronHostLms?.id ?? ""),
 		enabled: !agencyScoped && !!patronHostLms?.id,
 		queryFn: async () =>
 			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+				apiBase + "/graphql",
 				getAgency,
 				{
 					query: "hostLms:" + patronHostLms?.id,
@@ -353,7 +261,7 @@ function RouteComponent() {
 					order: "name",
 					orderBy: "ASC",
 				},
-				headers,
+				await authHeaders(),
 			),
 	});
 
@@ -366,42 +274,31 @@ function RouteComponent() {
 	const {
 		data: patronLibraryData,
 		isLoading: patronLibraryLoading,
-	} = useQuery<LibrariesQueryData>({
-		// The dependencies are now restored in the queryKey
-		queryKey: [
-			"patronRequestLibrary",
-			id,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-			patronAgency?.code,
-		],
+	} = useQuery({
+		...libraryBasicsQueryOptions(apiBase, patronAgency?.code ?? ""),
 		enabled: !!patronAgency?.code,
-		queryFn: async () =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibraryBasics,
-				{
-					query: "agencyCode:" + patronAgency?.code,
-					pageno: 0,
-					pagesize: 10,
-					order: "agencyCode",
-					orderBy: "ASC",
-				},
-				headers,
-			),
 	});
 
 	const patronLibraries: Library[] =
 		patronLibraryData?.libraries?.content ?? [];
 	const patronLibrary = patronLibraries?.[0];
 
+	// The request and the grids that list it: both request grids key on these.
+	const invalidateRequest = () => {
+		queryClient.invalidateQueries({
+			queryKey: queryKeys.patronRequests.detail(apiBase, id),
+		});
+		queryClient.invalidateQueries({ queryKey: queryKeys.patronRequests.lists() });
+		queryClient.invalidateQueries({ queryKey: queryKeys.supplierRequests.lists() });
+	};
+
 	// Mutation for updating the patron request
 	const updateMutation = useMutation({
 		// axios rather than fetch: fetch resolves on a 4xx/5xx, which reported every refusal as success.
-		mutationFn: () => axios.post(updateUrl, {}, { headers }),
+		mutationFn: async () =>
+			axios.post(updateUrl, {}, { headers: await authHeaders() }),
 		onSuccess: () => {
-			// When the mutation is successful, invalidate the query to refetch the data
-			queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
+			invalidateRequest();
 			setUpdateSuccessAlertVisibility(true);
 		},
 		onError: () => {
@@ -412,13 +309,13 @@ function RouteComponent() {
 	// Mutation for cleaning up the patron request
 	const cleanupMutation = useMutation({
 		mutationFn: () =>
-			cleanupPatronRequest(cfg.VITE_DCB_API_BASE, headers, patronRequest, {
+			cleanupPatronRequest(apiBase, patronRequest, {
 				refreshFirst: guardedCleanup,
 			}),
 		// A refusal is the server declining, not a transport failure, so it arrives here.
 		onSuccess: (outcome) => {
 			if (outcome.kind === "cleaned") {
-				queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
+				invalidateRequest();
 				setCleanupSuccessAlertVisibility(true);
 				return;
 			}
@@ -479,7 +376,7 @@ function RouteComponent() {
                     mb: 3,
                     mt: 3
                 }}>
-				{patronRequest?.clusterRecord?.title}
+				{patronRequest?.clusterRecord?.title || t("patron_request.title")}
 			</Typography>
 			<TabContext value={activeTab}>
 				<TabList
@@ -490,20 +387,20 @@ function RouteComponent() {
 					{/** The tabs are a little frustrating with variants because they use functional variants.
 					 * So style variants like those we prefer to use everywhere else don't get a look in.
 					 */}
-					<Tab label={t("patron_request.general")} />
-					<Tab label={t("requesting.bib_record")} />
-					<Tab label={t("patron_request.supplying")} />
-					<Tab label={t("patron_request.borrowing")} />
-					<Tab label={t("patron_request.pickup")} />
-					<Tab label={t("audit.log")} />
+					<Tab value={0} label={t("patron_request.general")} />
+					<Tab value={1} label={t("requesting.bib_record")} />
+					<Tab value={2} label={t("patron_request.supplying")} />
+					<Tab value={3} label={t("patron_request.borrowing")} />
+					<Tab value={4} label={t("patron_request.pickup")} />
+					<Tab value={5} label={t("audit.log")} />
 				</TabList>
 
 				<TabPanel value={0}>
 					<Grid
 						container
 						spacing={{ xs: 2, md: 3 }}
-						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
+						columns={DETAIL_COLUMNS}>
+						<Grid size={FULL_ROW}>
 							<Typography variant="accordionSummary">
 								{t("patron_request.general")}
 							</Typography>
@@ -529,7 +426,7 @@ function RouteComponent() {
 						) : patronLibraryLoading ||
 					  patronLmsLoading ||
 					  patronAgencyLoading ? (
-							<CircularProgress size="1rem" />
+							<CircularProgress size="1rem" aria-label={t("ui.info.loading.value")} />
 						) : null}
 						{supplierLibrary?.fullName ? (
 							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
@@ -550,7 +447,7 @@ function RouteComponent() {
 								</Attribute>
 							</Grid>
 						) : supplierLibraryLoading ? (
-							<CircularProgress size="1rem" />
+							<CircularProgress size="1rem" aria-label={t("ui.info.loading.value")} />
 						) : null}
 						{pickupLibrary?.fullName ? (
 							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
@@ -571,7 +468,7 @@ function RouteComponent() {
 								</Attribute>
 							</Grid>
 						) : pickupLibraryLoading ? (
-							<CircularProgress size="1rem" />
+							<CircularProgress size="1rem" aria-label={t("ui.info.loading.value")} />
 						) : null}
 
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
@@ -589,7 +486,7 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.supplying_agency_code")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.localAgency}
+									attribute={supplier?.localAgency}
 								/>
 							</Attribute>
 						</Grid>
@@ -599,7 +496,8 @@ function RouteComponent() {
 									<CircularProgress
 										color="inherit"
 										size={13}
-										sx={{ marginLeft: "10px" }}
+										sx={{ ml: 1 }}
+										aria-label={t("ui.info.loading.value")}
 									/>
 								) : (
 									<RenderAttribute
@@ -618,7 +516,8 @@ function RouteComponent() {
 									<CircularProgress
 										color="inherit"
 										size={13}
-										sx={{ marginLeft: "10px" }}
+										sx={{ ml: 1 }}
+										aria-label={t("ui.info.loading.value")}
 									/>
 								) : (
 									<RenderAttribute
@@ -637,14 +536,18 @@ function RouteComponent() {
 									<CircularProgress
 										color="inherit"
 										size={13}
-										sx={{ marginLeft: "10px" }}
+										sx={{ ml: 1 }}
+										aria-label={t("ui.info.loading.value")}
 									/>
 								) : pickupLocationDataError ? (
 									t("patron_request.error_pickup")
-								) : auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
+								) : pickupLocation?.id &&
+								  auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
 									<Tooltip title={t("location.view_location")}>
-										<CustomLink to={`/locations/${pickupLocation?.id}`}>
-											{pickupLocation?.name}
+										<CustomLink
+											to="/locations/$id"
+											params={{ id: pickupLocation.id }}>
+											{pickupLocation.name}
 										</CustomLink>
 									</Tooltip>
 								) : (
@@ -672,38 +575,30 @@ function RouteComponent() {
 									attribute={formatTimestamp(patronRequest?.nextScheduledPoll, clock)}
 								/>
 							</Attribute>
-							<Tooltip
-								title={
-									!untrackedStatuses.includes(patronRequest?.status)
-										? ""
-										: t("patron_request.check_for_updates_disabled", {
-												status: patronRequest?.status,
-											}) // Tooltip text when disabled
-								}>
-								<span>
-									<Button
-										variant="outlined"
-										color="primary"
-										sx={{ marginTop: 1 }}
-										onClick={() => updateMutation.mutate()}
-										aria-disabled={updateMutation.isPending ? true : false}
-										disabled={
-											updateMutation.isPending ||
-											untrackedStatuses.includes(patronRequest?.status)
-												? true
-												: false
-										}>
-										{t("patron_request.check_for_updates")}
-										{updateMutation.isPending ? (
-											<CircularProgress
-												color="inherit"
-												size={13}
-												sx={{ marginLeft: "10px" }}
-											/>
-										) : null}
-									</Button>
-								</span>
-							</Tooltip>
+							<Button
+								variant="outlined"
+								color="primary"
+								sx={{ marginTop: 1 }}
+								onClick={() => updateMutation.mutate()}
+								aria-describedby={untracked ? "check-for-updates-reason" : undefined}
+								disabled={updateMutation.isPending || untracked}>
+								{t("patron_request.check_for_updates")}
+								{updateMutation.isPending ? (
+									<CircularProgress
+										color="inherit"
+										size={13}
+										sx={{ ml: 1 }}
+										aria-label={t("ui.info.loading.value")}
+									/>
+								) : null}
+							</Button>
+							{untracked ? (
+								<Typography variant="body2" id="check-for-updates-reason">
+									{t("patron_request.check_for_updates_disabled", {
+										status: patronRequest?.status,
+									})}
+								</Typography>
+							) : null}
 							<TimedAlert
 								open={
 									updateSuccessAlertVisibility || cleanupSuccessAlertVisibility
@@ -755,31 +650,30 @@ function RouteComponent() {
 								<RenderAttribute attribute={patronRequest?.status} />
 							</Attribute>
 							{auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
-								<Tooltip
-									title={
-										canCleanup
+								<>
+									<Button
+										variant="outlined"
+										color="primary"
+										sx={{ marginTop: 1 }}
+										onClick={() => cleanupMutation.mutate()}
+										aria-describedby="cleanup-reason"
+										disabled={cleanupMutation.isPending || !canCleanup}>
+										{t("patron_request.cleanup")}
+										{cleanupMutation.isPending ? (
+											<CircularProgress
+												color="inherit"
+												size={13}
+												sx={{ ml: 1 }}
+												aria-label={t("ui.info.loading.value")}
+											/>
+										) : null}
+									</Button>
+									<Typography variant="body2" id="cleanup-reason">
+										{canCleanup
 											? t("patron_request.cleanup_info")
-											: t("patron_request.cleanup_disabled") // Tooltip text when disabled
-									}>
-									<span>
-										<Button
-											variant="outlined"
-											color="primary"
-											sx={{ marginTop: 1 }}
-											onClick={() => cleanupMutation.mutate()}
-											aria-disabled={cleanupMutation.isPending ? true : false}
-											disabled={cleanupMutation.isPending || !canCleanup}>
-											{t("patron_request.cleanup")}
-											{cleanupMutation.isPending ? (
-												<CircularProgress
-													color="inherit"
-													size={13}
-													sx={{ marginLeft: "10px" }}
-												/>
-											) : null}
-										</Button>
-									</span>
-								</Tooltip>
+											: t("patron_request.cleanup_disabled")}
+									</Typography>
+								</>
 							) : null}
 							<TimedAlert
 								open={cleanupRefusal !== null}
@@ -802,9 +696,9 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.status_changed")}>
 								<RenderAttribute
-									attribute={dayjs(
-										patronRequest?.currentStatusTimestamp,
-									).format("YYYY-MM-DD HH:mm:ss.SSS")}
+									attribute={formatTimestamp(patronRequest?.currentStatusTimestamp, clock, {
+										precise: true,
+									})}
 								/>
 							</Attribute>
 						</Grid>
@@ -889,8 +783,8 @@ function RouteComponent() {
 					<Grid
 						container
 						spacing={{ xs: 2, md: 3 }}
-						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
+						columns={DETAIL_COLUMNS}>
+						<Grid size={FULL_ROW}>
 							<Typography variant="accordionSummary">
 								{t("requesting.bib_record")}
 							</Typography>
@@ -905,41 +799,36 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("bibs.record_created")}>
 								<RenderAttribute
-									attribute={dayjs(
-										patronRequest?.clusterRecord?.dateCreated,
-									).format("YYYY-MM-DD HH:mm")}
+									attribute={formatTimestamp(patronRequest?.clusterRecord?.dateCreated, clock)}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("bibs.record_updated")}>
 								<RenderAttribute
-									attribute={dayjs(
-										patronRequest?.clusterRecord?.dateUpdated,
-									).format("YYYY-MM-DD HH:mm")}
+									attribute={formatTimestamp(patronRequest?.clusterRecord?.dateUpdated, clock)}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("bibs.cluster_uuid")}>
-								{bibClusterRecordUrl == "" ? (
-									<RenderAttribute attribute={patronRequest?.bibClusterId} />
-								) : (
+								{linkToCluster ? (
 									<Tooltip
 										title={t("bibs.view_cluster_record", {
 											id: patronRequest?.bibClusterId,
 											title: patronRequest?.clusterRecord?.title,
 										})}>
 										<CustomLink
-											to={bibClusterRecordUrl}
-											href={bibClusterRecordUrl}
-											key="bibClusterRecordLink"
+											to="/requesting/$recordId"
+											params={{ recordId: patronRequest.bibClusterId }}
 											title={t("common.discovery")}>
 											<RenderAttribute
 												attribute={patronRequest?.bibClusterId}
 											/>
 										</CustomLink>
 									</Tooltip>
+								) : (
+									<RenderAttribute attribute={patronRequest?.bibClusterId} />
 								)}
 							</Attribute>
 						</Grid>
@@ -954,7 +843,7 @@ function RouteComponent() {
 							<Attribute label={t("bibs.source_record_id")}>
 								<RenderAttribute
 									attribute={
-										patronRequest?.clusterRecord?.members[0]?.sourceRecordId
+										members?.[0]?.sourceRecordId
 									}
 								/>
 							</Attribute>
@@ -963,7 +852,7 @@ function RouteComponent() {
 							<Attribute label={t("bibs.source_system_id")}>
 								<RenderAttribute
 									attribute={
-										patronRequest?.clusterRecord?.members[0]?.sourceSystemId
+										members?.[0]?.sourceSystemId
 									}
 								/>
 							</Attribute>
@@ -971,7 +860,6 @@ function RouteComponent() {
 					</Grid>
 					<Accordion variant="sub" disableGutters>
 						<AccordionSummary
-							// variant="sub" // To be restored once issue with accordion summary variants is resolved
 							sx={{
 								backgroundColor: "transparent",
 								"&.Mui-focusVisible": {
@@ -994,9 +882,9 @@ function RouteComponent() {
 								members.map(
 									(member: { sourceRecord: SourceRecord }, index: number) =>
 										member.sourceRecord && (
-											<pre key={index}>
+											<Box component="pre" key={index} sx={WRAPPED_PRE}>
 												{JSON.stringify(member.sourceRecord, null, 2)}
-											</pre>
+											</Box>
 										),
 								)
 							) : (
@@ -1013,8 +901,8 @@ function RouteComponent() {
 					<Grid
 						container
 						spacing={{ xs: 2, md: 3 }}
-						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
+						columns={DETAIL_COLUMNS}>
+						<Grid size={FULL_ROW}>
 							<Typography variant="accordionSummary">
 								{t("patron_request.supplying")}
 							</Typography>
@@ -1022,72 +910,68 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.supplying_agency_code")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.localAgency}
+									attribute={supplier?.localAgency}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("hostlms.code")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.hostLmsCode}
+									attribute={supplier?.hostLmsCode}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.active")}>
 								<RenderAttribute
-									attribute={String(patronRequest?.suppliers[0]?.isActive)}
+									attribute={String(supplier?.isActive)}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.date_created")}>
 								<RenderAttribute
-									attribute={dayjs(
-										patronRequest?.suppliers[0]?.dateCreated,
-									).format("YYYY-MM-DD HH:mm")}
+									attribute={formatTimestamp(supplier?.dateCreated, clock)}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.date_updated")}>
 								<RenderAttribute
-									attribute={dayjs(
-										patronRequest?.suppliers[0]?.dateUpdated,
-									).format("YYYY-MM-DD HH:mm")}
+									attribute={formatTimestamp(supplier?.dateUpdated, clock)}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.local_request_status")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.localStatus}
+									attribute={supplier?.localStatus}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.local_request_status_raw")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.rawLocalStatus}
+									attribute={supplier?.rawLocalStatus}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.supplier_uuid")}>
-								<RenderAttribute attribute={patronRequest?.suppliers[0]?.id} />
+								<RenderAttribute attribute={supplier?.id} />
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.local_bib_id")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.localBibId}
+									attribute={supplier?.localBibId}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.local_supplier_id")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.localId}
+									attribute={supplier?.localId}
 								/>
 							</Attribute>
 						</Grid>
@@ -1096,16 +980,16 @@ function RouteComponent() {
 					<Grid
 						container
 						spacing={{ xs: 2, md: 3 }}
-						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
+						columns={DETAIL_COLUMNS}>
 						<Grid
-                            size={{ xs: 4, sm: 8, md: 12, lg: 16 }}
+                            size={FULL_ROW}
                             sx={{
                                 mb: 1,
                                 mt: 1
                             }}>
 							<Divider aria-hidden="true"></Divider>
 						</Grid>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
+						<Grid size={FULL_ROW}>
 							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
 								{t("patron_request.item")}
 							</Typography>
@@ -1113,63 +997,63 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.local_item_barcode")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.localItemBarcode}
+									attribute={supplier?.localItemBarcode}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.local_item_loc")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.localItemLocationCode}
+									attribute={supplier?.localItemLocationCode}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.local_item_status")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.localItemStatus}
+									attribute={supplier?.localItemStatus}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.local_item_status_raw")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.rawLocalItemStatus}
+									attribute={supplier?.rawLocalItemStatus}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.renewal_count_supplier")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.localRenewalCount?.toString()}
+									attribute={supplier?.localRenewalCount?.toString()}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.local_item_type")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.localItemType}
+									attribute={supplier?.localItemType}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.supplier_ctype")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.canonicalItemType}
+									attribute={supplier?.canonicalItemType}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.local_item_id")}>
 								<RenderAttribute
-									attribute={patronRequest?.suppliers[0]?.localItemId}
+									attribute={supplier?.localItemId}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.item_manually_selected")}>
 								<RenderAttribute
-									attribute={patronRequest.isManuallySelectedItem?.toString()}
+									attribute={patronRequest?.isManuallySelectedItem?.toString()}
 								/>
 							</Attribute>
 						</Grid>
@@ -1192,16 +1076,16 @@ function RouteComponent() {
 					<Grid
 						container
 						spacing={{ xs: 2, md: 3 }}
-						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
+						columns={DETAIL_COLUMNS}>
 						<Grid
-                            size={{ xs: 4, sm: 8, md: 12, lg: 16 }}
+                            size={FULL_ROW}
                             sx={{
                                 mb: 1,
                                 mt: 1
                             }}>
 							<Divider aria-hidden="true"></Divider>
 						</Grid>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
+						<Grid size={FULL_ROW}>
 							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
 								{t("patron_request.virtual_patron")}
 							</Typography>
@@ -1210,7 +1094,7 @@ function RouteComponent() {
 							<Attribute label={t("patron_request.local_id")}>
 								<RenderAttribute
 									attribute={
-										patronRequest?.suppliers[0]?.virtualPatron?.localId
+										supplier?.virtualPatron?.localId
 									}
 								/>
 							</Attribute>
@@ -1219,7 +1103,7 @@ function RouteComponent() {
 							<Attribute label={t("patron_request.local_barcode")}>
 								<RenderAttribute
 									attribute={
-										patronRequest?.suppliers[0]?.virtualPatron?.localBarcode
+										supplier?.virtualPatron?.localBarcode
 									}
 								/>
 							</Attribute>
@@ -1228,16 +1112,16 @@ function RouteComponent() {
 							<Attribute label={t("patron_request.borrowing_patron_type")}>
 								<RenderAttribute
 									attribute={
-										patronRequest?.suppliers[0]?.virtualPatron?.localPtype
+										supplier?.virtualPatron?.localPtype
 									}
 								/>
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
-							<Attribute label={"DCB patron type"}>
+							<Attribute label={t("patron_request.patron_type_dcb")}>
 								<RenderAttribute
 									attribute={
-										patronRequest?.suppliers[0]?.virtualPatron?.canonicalPtype
+										supplier?.virtualPatron?.canonicalPtype
 									}
 								/>
 							</Attribute>
@@ -1248,8 +1132,8 @@ function RouteComponent() {
 					<Grid
 						container
 						spacing={{ xs: 2, md: 3 }}
-						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
+						columns={DETAIL_COLUMNS}>
+						<Grid size={FULL_ROW}>
 							<Typography variant="accordionSummary">
 								{t("patron_request.borrowing", "Borrowing")}
 							</Typography>
@@ -1321,14 +1205,14 @@ function RouteComponent() {
 						</Grid>
 
 						<Grid
-                            size={{ xs: 4, sm: 8, md: 12, lg: 16 }}
+                            size={FULL_ROW}
                             sx={{
                                 mb: 1,
                                 mt: 1
                             }}>
 							<Divider aria-hidden="true"></Divider>
 						</Grid>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
+						<Grid size={FULL_ROW}>
 							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
 								{t("patron_request.virtual_item")}
 							</Typography>
@@ -1373,8 +1257,8 @@ function RouteComponent() {
 					<Grid
 						container
 						spacing={{ xs: 2, md: 3 }}
-						columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
+						columns={DETAIL_COLUMNS}>
+						<Grid size={FULL_ROW}>
 							<Typography variant="accordionSummary">
 								{t("patron_request.pickup")}
 							</Typography>
@@ -1385,14 +1269,18 @@ function RouteComponent() {
 									<CircularProgress
 										color="inherit"
 										size={13}
-										sx={{ marginLeft: "10px" }}
+										sx={{ ml: 1 }}
+										aria-label={t("ui.info.loading.value")}
 									/>
 								) : pickupLocationDataError ? (
 									t("patron_request.error_pickup")
-								) : auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
+								) : pickupLocation?.id &&
+								  auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
 									<Tooltip title={t("location.view_location")}>
-										<CustomLink to={`/locations/${pickupLocation?.id}`}>
-											{pickupLocation?.name}
+										<CustomLink
+											to="/locations/$id"
+											params={{ id: pickupLocation.id }}>
+											{pickupLocation.name}
 										</CustomLink>
 									</Tooltip>
 								) : (
@@ -1420,14 +1308,14 @@ function RouteComponent() {
 							</Attribute>
 						</Grid>
 						<Grid
-                            size={{ xs: 4, sm: 8, md: 12, lg: 16 }}
+                            size={FULL_ROW}
                             sx={{
                                 mb: 1,
                                 mt: 1
                             }}>
 							<Divider aria-hidden="true"></Divider>
 						</Grid>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
+						<Grid size={FULL_ROW}>
 							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
 								{t("patron_request.virtual_patron")}
 							</Typography>
@@ -1444,7 +1332,8 @@ function RouteComponent() {
 									<CircularProgress
 										color="inherit"
 										size={13}
-										sx={{ marginLeft: "10px" }}
+										sx={{ ml: 1 }}
+										aria-label={t("ui.info.loading.value")}
 									/>
 								) : (
 									<RenderAttribute
@@ -1463,7 +1352,8 @@ function RouteComponent() {
 									<CircularProgress
 										color="inherit"
 										size={13}
-										sx={{ marginLeft: "10px" }}
+										sx={{ ml: 1 }}
+										aria-label={t("ui.info.loading.value")}
 									/>
 								) : (
 									<RenderAttribute
@@ -1482,7 +1372,8 @@ function RouteComponent() {
 									<CircularProgress
 										color="inherit"
 										size={13}
-										sx={{ marginLeft: "10px" }}
+										sx={{ ml: 1 }}
+										aria-label={t("ui.info.loading.value")}
 									/>
 								) : (
 									<RenderAttribute
@@ -1496,14 +1387,14 @@ function RouteComponent() {
 							</Attribute>
 						</Grid>
 						<Grid
-                            size={{ xs: 4, sm: 8, md: 12, lg: 16 }}
+                            size={FULL_ROW}
                             sx={{
                                 mb: 1,
                                 mt: 1
                             }}>
 							<Divider aria-hidden="true"></Divider>
 						</Grid>
-						<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
+						<Grid size={FULL_ROW}>
 							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
 								{t("patron_request.virtual_item")}
 							</Typography>
@@ -1543,79 +1434,9 @@ function RouteComponent() {
 					<Typography id="auditlog" variant="accordionSummary">
 						{t("audit.log")}
 					</Typography>
-					<DataGrid
-						disablePivoting
-						rows={patronRequest?.audit ?? []}
-						columns={[
-							{
-								field: "auditDate",
-								headerName: i18n.t("grid.headers.audit_date"),
-								minWidth: 60,
-								flex: 0.2,
-								editable: false,
-								filterable: true,
-								sortable: true,
-								valueGetter: (value: string, row: { auditDate: string }) => {
-									const auditDate = row.auditDate;
-									return formatTimestamp(auditDate, currentClock(), { precise: true });
-								},
-							},
-							{
-								field: "briefDescription",
-								headerName: i18n.t("grid.headers.description"),
-								minWidth: 100,
-								flex: 0.4,
-							},
-							{
-								field: "fromStatus",
-								headerName: i18n.t("grid.headers.fromstatus"),
-								minWidth: 50,
-								flex: 0.25,
-							},
-							{
-								field: "toStatus",
-								headerName: i18n.t("grid.headers.tostatus"),
-								minWidth: 50,
-								flex: 0.25,
-							},
-						]}
-						type="audits"
-						label={t("patron_request.audit_log")}
-						identifier="AuditPatronRequestDetails"
-						// This grid could show click-through details of its own for each audit log entry
-						checkboxSelection={false}
-						// noDataTitle={t("patron_request.audit_log_no_data")}
-						// noDataMessage={t("patron_request.audit_log_no_rows")}
-						// sortModel={[{ field: "auditDate", sort: "desc" }]}
-						// operationDataType="Audit"
-						filterMode="client"
-						filterModel={currentFilter}
-						onFilterModelChange={(newModel) =>
-							setAuditFilterModel(auditGridId, newModel)
-						}
-						disableAggregation={true}
-						disableHoverInteractions={true}
-						disableRowGrouping={true}
-						loading={patronRequestLoading}
-						listViewEnabled={false}
-						noResultsText={t("audit.no_results")}
-						pagination
-						paginationMode="client"
-						paginationModel={currentPagination}
-						onPaginationModelChange={(newModel: GridPaginationModel) =>
-							setAuditPaginationModel(auditGridId, newModel)
-						}
-						pivotingEnabled={false}
-						onRowModesModelChange={setRowModesModel}
-						toolbarVisible
-						rowModesModel={rowModesModel}
-						searchText={t("ui.data_grid.search_audits")}
-						scrollbarVisible={false}
-						sortingMode="client"
-						sortModel={currentSort}
-						onSortModelChange={(newModel) =>
-							setAuditSortModel(auditGridId, newModel)
-						}
+					<PatronRequestAuditLog
+						apiBase={cfg.VITE_DCB_API_BASE}
+						patronRequestId={patronRequest.id}
 					/>
 				</TabPanel>
 			</TabContext>

@@ -35,3 +35,6 @@ user.json
 
 /typedocs
 .project
+.worktrees/
+/reports/
+/coverage/

@@ -70,9 +70,9 @@ module.exports = {
 				// where the machine is quiet, rather than here.
 				"total-blocking-time": ["warn", { maxNumericValue: 500 }],
 
-				// A warning: the byte budget above already gates its cause. 4869ms
-				// measured, and it moves with the same work TBT does.
-				"largest-contentful-paint": ["warn", { maxNumericValue: 5200 }],
+				// An error: the byte budget did not catch the Insights dashboard joining
+				// /login's initial load, and this did (6.5s, three runs of three). 4.6s after the fix.
+				"largest-contentful-paint": ["error", { maxNumericValue: 5200 }],
 			},
 		},
 

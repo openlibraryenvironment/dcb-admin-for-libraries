@@ -1,7 +1,13 @@
-import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import {
+	FormEvent,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -15,12 +21,13 @@ import {
 	Typography,
 } from "@mui/material";
 import axios from "axios";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
 
-import { getLibraries } from "@queries/getLibraries";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
 import { getLocations } from "@queries/getLocations";
 import { getPatronRequestEssentials } from "@queries/getPatronRequestEssentials";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
@@ -29,13 +36,12 @@ import { StatusStepConnector } from "@components/StatusStepConnector/StatusStepC
 import { PatronValidationStep } from "@forms/ExpeditedCheckout/steps/PatronValidationStep";
 import { CheckoutStep } from "@forms/ExpeditedCheckout/steps/CheckoutStep";
 import { QuickWalkUpRequestStep } from "@forms/ExpeditedCheckout/steps/QuickWalkUpStep";
-import { successfulExpeditedCheckoutStatuses } from "@constants/statuses/successfulExpeditedCheckoutStatuses";
+import { checkoutOutcome, nextCheckoutPoll } from "@helpers/checkoutPolling";
+import { useCheckedOutDueDate } from "@/hooks/useCheckedOutDueDate";
+import StepAnnouncement from "@components/StepAnnouncement/StepAnnouncement";
 import { AutocompleteOption } from "@models/AutocompleteOption";
 import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocompleteOption";
-import {
-	LibrariesQueryData,
-	PatronRequestQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import { Library } from "@models/Library";
 import { Agency } from "@models/Agency";
 import { LibraryGroupMember } from "@models/LibraryGroupMember";
@@ -54,17 +60,12 @@ export default function QuickWalkUpRequest({
 	onClose: () => void;
 }) {
 	const { t } = useTranslation();
-	const auth = useAuth();
 	const navigate = useNavigate();
 	const { cfg } = useRouter().options.context;
 	// The library the staff member is acting for - see useAgencyCodes
 	const { agencyCode: selectedAgencyCode } = useAgencyCodes();
 	const staffAgencyCode = selectedAgencyCode ?? "";
 
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token],
-	);
 
 	const [alert, setAlert] = useState<{
 		open: boolean;
@@ -79,6 +80,7 @@ export default function QuickWalkUpRequest({
 	const [patronRequestId, setPatronRequestId] = useState<string | null>(null);
 	const [patronRequestWaiting, setPatronRequestWaiting] = useState(false);
 	const [checkoutCompleted, setCheckoutCompleted] = useState(false);
+	const [checkoutFailed, setCheckoutFailed] = useState(false);
 	const [stepError, setStepError] = useState<number | null>(null);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const [resolvedBibClusterId, setResolvedBibClusterId] = useState<
@@ -87,7 +89,7 @@ export default function QuickWalkUpRequest({
 
 	const steps = [
 		t("requesting.expedited_checkout.steps.patron_validation"),
-		t("requesting.quick_walk_up.steps.request_creation", "Scan Item"),
+		t("requesting.quick_walk_up.steps.request_creation"),
 		t("requesting.expedited_checkout.steps.checkout"),
 	];
 
@@ -97,7 +99,6 @@ export default function QuickWalkUpRequest({
 		control,
 		handleSubmit,
 		getValues,
-		watch,
 		setValue,
 		reset,
 		formState: { errors, isValid },
@@ -112,27 +113,14 @@ export default function QuickWalkUpRequest({
 		mode: "onChange",
 	});
 
-	const patronBarcode = watch("patronBarcode");
-	const agencyCode = watch("agencyCode");
-	const itemBarcode = watch("itemBarcode");
+	const [patronBarcode, agencyCode, itemBarcode] = useWatch({
+		control,
+		name: ["patronBarcode", "agencyCode", "itemBarcode"],
+	});
 
-	const { data: librariesData, isLoading: librariesLoading } =
-		useQuery<LibrariesQueryData>({
-			queryKey: ["librariesInfo", headers, cfg.VITE_DCB_API_BASE],
-			queryFn: () =>
-				request(
-					`${cfg.VITE_DCB_API_BASE}/graphql`,
-					getLibraries,
-					{
-						pageno: 0,
-						pagesize: REFERENCE_LIST_PAGE_SIZE,
-						order: "fullName",
-						orderBy: "ASC",
-						query: "",
-					},
-					headers,
-				),
-		});
+	const { data: librariesData, isLoading: librariesLoading } = useQuery(
+		allLibrariesQueryOptions(cfg.VITE_DCB_API_BASE),
+	);
 
 	// Memoised because `?? []` allocates a new array on every render, which made
 	// every memo keyed on it recompute every render.
@@ -172,8 +160,11 @@ export default function QuickWalkUpRequest({
 		: "";
 	const { data: pickupLocations, isLoading: pickupLocationsLoading } = useQuery(
 		{
-			queryKey: ["locations", locationQuery, headers, cfg.VITE_DCB_API_BASE],
-			queryFn: () =>
+			queryKey: queryKeys.locations.reference(
+				cfg.VITE_DCB_API_BASE,
+				locationQuery,
+			),
+			queryFn: async () =>
 				request(
 					`${cfg.VITE_DCB_API_BASE}/graphql`,
 					getLocations,
@@ -184,7 +175,7 @@ export default function QuickWalkUpRequest({
 						order: "name",
 						orderBy: "ASC",
 					},
-					headers,
+					await authHeaders(),
 				),
 			enabled: !!staffLibraryOption?.agencyId,
 		},
@@ -203,66 +194,46 @@ export default function QuickWalkUpRequest({
 	);
 
 	const { data: patronRequestData } = useQuery<PatronRequestQueryData>({
-		queryKey: [
-			"patronRequestEssentials",
-			patronRequestId,
-			headers,
+		queryKey: queryKeys.patronRequests.essentials(
 			cfg.VITE_DCB_API_BASE,
-		],
-		queryFn: () =>
+			patronRequestId,
+		),
+		queryFn: async () =>
 			request(
 				`${cfg.VITE_DCB_API_BASE}/graphql`,
 				getPatronRequestEssentials,
 				{ query: `id:${patronRequestId}` },
-				headers,
+				await authHeaders(),
 			),
 		enabled: patronRequestWaiting && !!patronRequestId,
-		refetchInterval: 10000,
+		refetchInterval: (query) =>
+			nextCheckoutPoll(
+				query.state.data?.patronRequests?.content?.[0]?.status,
+				stepError === 2,
+			),
 	});
 
-	const { data: availabilityData } = useQuery({
-		queryKey: [
-			"availability",
-			resolvedBibClusterId,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-		],
-		queryFn: async () => {
-			const response = await axios.get(
-				`${cfg.VITE_DCB_API_BASE}/items/availability`,
-				{
-					headers,
-					params: { clusteredBibId: resolvedBibClusterId },
-				},
-			);
-			return response.data;
-		},
-		...AVAILABILITY_QUERY_POLICY,
-		// Only once the checkout has succeeded and we have the id.
-		enabled: checkoutCompleted && !!resolvedBibClusterId,
+	const { dueDate, dueDateUnavailable } = useCheckedOutDueDate({
+		patronRequestId,
+		bibClusterId: resolvedBibClusterId,
+		checkoutCompleted,
+		isCheckedOutItem: (item) => item.barcode === itemBarcode,
+		apiBase: cfg.VITE_DCB_API_BASE,
 	});
-
-	const postCheckoutDueDate = useMemo(() => {
-		if (!availabilityData?.itemList) return "";
-
-		const checkedOutItem = availabilityData.itemList.find(
-			(item: any) => item.barcode === itemBarcode,
-		);
-
-		return checkedOutItem?.dueDate || "";
-	}, [availabilityData, itemBarcode]);
 
 	useEffect(() => {
-		if (patronRequestData) {
-			const status = patronRequestData?.patronRequests?.content?.[0]?.status;
-			if (
-				successfulExpeditedCheckoutStatuses.includes(status ?? "") &&
-				patronRequestWaiting
-			) {
-				setPatronRequestWaiting(false);
-				setCheckoutCompleted(true);
-				setStepError(null);
-			}
+		if (!patronRequestData || !patronRequestWaiting) return;
+		const outcome = checkoutOutcome(
+			patronRequestData?.patronRequests?.content?.[0]?.status,
+		);
+		if (outcome === "completed") {
+			setPatronRequestWaiting(false);
+			setCheckoutCompleted(true);
+			setStepError(null);
+		} else if (outcome === "failed") {
+			setPatronRequestWaiting(false);
+			setCheckoutFailed(true);
+			setStepError(2);
 		}
 	}, [patronRequestData, patronRequestWaiting]);
 
@@ -288,10 +259,10 @@ export default function QuickWalkUpRequest({
 		unknown,
 		{ patronPrinciple: string; agencyCode: string }
 	>({
-		mutationFn: (payload) =>
+		mutationFn: async (payload) =>
 			axios
 				.post(`${cfg.VITE_DCB_API_BASE}/patron/auth/lookup`, payload, {
-					headers,
+					headers: await authHeaders(),
 				})
 				.then((res) => res.data),
 		onSuccess: (data) => {
@@ -319,11 +290,13 @@ export default function QuickWalkUpRequest({
 		},
 	});
 
-	const validatePatron = () =>
+	const validatePatron = () => {
+		if (!patronBarcode || !agencyCode) return;
 		validatePatronMutation.mutate({
 			patronPrinciple: patronBarcode,
 			agencyCode: agencyCode,
 		});
+	};
 
 	const placeRequestMutation = useMutation({
 		mutationFn: async (data: any) => {
@@ -346,7 +319,7 @@ export default function QuickWalkUpRequest({
 			const response = await axios.post(
 				`${cfg.VITE_DCB_API_BASE}/patrons/requests/place/walkup`,
 				payload,
-				{ headers },
+				{ headers: await authHeaders() },
 			);
 			return response.data;
 		},
@@ -366,10 +339,7 @@ export default function QuickWalkUpRequest({
 			setAlert({
 				open: true,
 				severity: "error",
-				text: t(getRequestError(error.response?.data?.failedChecks), {
-					code: error?.response?.data?.failedChecks?.[0]?.code,
-					description: error?.response?.data?.failedChecks?.[0]?.description,
-				}),
+				text: getRequestError(error?.response?.data?.failedChecks, t),
 			});
 			setStepError(1);
 		},
@@ -377,6 +347,15 @@ export default function QuickWalkUpRequest({
 
 	const onSubmit = (data: any) => {
 		if (activeStep === 1) placeRequestMutation.mutate(data);
+	};
+
+	const submitStep = (event: FormEvent<HTMLFormElement>) => {
+		if (activeStep === 0) {
+			event.preventDefault();
+			validatePatron();
+			return;
+		}
+		return handleSubmit(onSubmit)(event);
 	};
 
 	const handleClose = () => {
@@ -387,6 +366,7 @@ export default function QuickWalkUpRequest({
 		setPatronData(null);
 		setPatronRequestWaiting(false);
 		setCheckoutCompleted(false);
+		setCheckoutFailed(false);
 		setStepError(null);
 		setPatronRequestId(null);
 		onClose();
@@ -394,9 +374,13 @@ export default function QuickWalkUpRequest({
 
 	const handleViewRequest = () => {
 		if (patronRequest?.id)
-			navigate({ to: `/patronRequests/${patronRequest.id}` });
+			navigate({ to: "/patronRequests/$id", params: { id: patronRequest.id } });
 	};
-	const handleReadOnlyReturn = () => navigate({ to: `/requesting` });
+	// This dialog opens on the requesting page, so navigating there alone left it open.
+	const handleReadOnlyReturn = () => {
+		handleClose();
+		navigate({ to: "/requesting" });
+	};
 	const handleAlertClose = useCallback(
 		() => setAlert((prev) => ({ ...prev, open: false })),
 		[],
@@ -411,7 +395,6 @@ export default function QuickWalkUpRequest({
 						patronValidated={patronValidated}
 						isValidatingPatron={validatePatronMutation.isPending}
 						handleClose={handleClose}
-						validatePatron={validatePatron}
 						patronBarcode={patronBarcode}
 						agencyCode={agencyCode}
 						libraryOptions={
@@ -442,9 +425,11 @@ export default function QuickWalkUpRequest({
 						handleViewRequest={handleViewRequest}
 						handleReadOnlyReturn={handleReadOnlyReturn}
 						checkoutCompleted={checkoutCompleted}
+						checkoutFailed={checkoutFailed}
 						stepError={stepError}
 						t={t}
-						dueDate={postCheckoutDueDate}
+						dueDate={dueDate}
+						dueDateUnavailable={dueDateUnavailable}
 					/>
 				);
 			default:
@@ -506,7 +491,8 @@ export default function QuickWalkUpRequest({
                         );
 					})}
 				</Stepper>
-				<form onSubmit={handleSubmit(onSubmit)}>
+				<StepAnnouncement activeStep={activeStep} steps={steps} />
+				<form onSubmit={submitStep}>
 					{getStepContent(activeStep)}
 				</form>
 			</DialogContent>

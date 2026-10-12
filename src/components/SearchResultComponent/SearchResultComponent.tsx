@@ -146,7 +146,6 @@ export const SearchResult = ({ record }: SearchResultProps) => {
 								color="inherit"
 								to="/requesting/$recordId"
 								params={{ recordId: record.id }}>
-								{/* params={{ indexCode: indexCode, recordId: record.id }}> */}
 								{record.title}
 							</CustomLink>
 						</Typography>

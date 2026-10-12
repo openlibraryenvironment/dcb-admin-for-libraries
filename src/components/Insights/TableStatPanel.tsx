@@ -1,7 +1,9 @@
-import { ReactNode } from "react";
+import { ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 
+import type { MetricId } from "@helpers/insightsMetrics";
+import MetricInfo from "./MetricInfo";
 import PanelState from "./PanelState";
 import PanelExport from "./PanelExport";
 import {
@@ -43,6 +45,8 @@ interface TableStatPanelProps<T> {
 	columns: StatColumn<T>[];
 	getRowKey: (row: T) => string;
 	limit?: number;
+	/** The panel's methodology, beside its title. */
+	metric?: MetricId;
 }
 
 // Generic ranked-table panel - the right form when identity of the rows matters more
@@ -54,8 +58,10 @@ export default function TableStatPanel<T>({
 	columns,
 	getRowKey,
 	limit = 20,
+	metric,
 }: TableStatPanelProps<T>) {
 	const { t } = useTranslation();
+	const titleId = useId();
 	const { data, isLoading, isError, refetch, isFetching } =
 		useQuery(queryOptions);
 
@@ -65,9 +71,10 @@ export default function TableStatPanel<T>({
 		<Card variant="outlined">
 			<CardContent>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-					<Typography variant="h6" component="h3" gutterBottom>
+					<Typography id={titleId} variant="h6" component="h3" gutterBottom>
 						{t(titleKey)}
 					</Typography>
+					{metric && <MetricInfo metric={metric} label={t(titleKey)} />}
 					<PanelExport
 						rows={rows}
 						panel={t(titleKey)}
@@ -93,7 +100,7 @@ export default function TableStatPanel<T>({
 				>
 					{() => (
 						<TableContainer sx={{ maxHeight: 420 }}>
-							<Table size="small" stickyHeader>
+							<Table size="small" stickyHeader aria-labelledby={titleId}>
 								<TableHead>
 									<TableRow>
 										{columns.map((col) => (

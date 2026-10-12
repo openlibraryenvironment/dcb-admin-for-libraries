@@ -32,7 +32,7 @@ export interface PatronRequest {
 	errorMessage: string;
 	activeWorkflow: string;
 	requesterNote: string;
-	suppliers: [SupplierRequest];
+	suppliers: SupplierRequest[] | null;
 	audit: AuditItem[];
 	clusterRecord: ClusterRecord;
 	previousStatus: string;

@@ -1,11 +1,12 @@
-import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
-import { useMemo, useCallback } from "react";
+import { availabilityQueryOptions } from "@helpers/availabilityApi";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "@tanstack/react-router";
 import { ClusterDetailResponse } from "@models/ClusterDetailResponse";
-import { ItemAvailabilityResponse } from "@models/ItemAvailabilityResponse";
+import { authHeaders } from "@helpers/auth";
+import { queryKeys } from "@helpers/queryKeys";
 
 // Gets the stuff we need on the various cluster record / items pages to make them cleaner
 // Choose which mode you need
@@ -15,11 +16,6 @@ interface UseClusterRecordOptions {
 	mode?: ClusterRecordMode;
 }
 
-interface CombinedItemsData {
-	availability: ItemAvailabilityResponse;
-	comparisonItems: ItemAvailabilityResponse;
-}
-
 export const useClusterDetail = (
 	recordId: string,
 	{ mode = "all" }: UseClusterRecordOptions = {},
@@ -27,7 +23,6 @@ export const useClusterDetail = (
 	const auth = useAuth();
 	const { cfg } = useRouter().options.context as { cfg: any };
 
-	const token = auth.user?.access_token;
 	const apiBase = cfg?.VITE_DCB_API_BASE;
 	const searchBase = cfg?.VITE_DCB_SEARCH_BASE;
 
@@ -35,89 +30,58 @@ export const useClusterDetail = (
 	const shouldFetchItems = mode === "items" || mode === "all";
 
 	const detailQuery = useQuery<ClusterDetailResponse>({
-		queryKey: ["clusterDetail", recordId, searchBase, token],
+		queryKey: queryKeys.search.clusterDetail(searchBase, recordId),
 		queryFn: async () => {
 			const { data } = await axios.get(
 				`${searchBase}/public/opac-inventory/instances/${recordId}`,
-				{ headers: { Authorization: `Bearer ${token}` } },
+				{ headers: await authHeaders() },
 			);
 			return data;
 		},
-		enabled: shouldFetchInfo && !!token && !!searchBase && !!recordId,
+		enabled:
+			shouldFetchInfo && auth.isAuthenticated && !!searchBase && !!recordId,
 		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 
-	const fetchCombinedItems =
-		useCallback(async (): Promise<CombinedItemsData> => {
-			// We fetch this first to see if we even need to fetch the other one
-			const { data: comparisonItems } = await axios.get(
-				`${apiBase}/items/availability`,
-				{
-					headers: { Authorization: `Bearer ${token}` },
-					params: { clusteredBibId: recordId, filters: "none" },
-				},
-			);
+	const itemsEnabled = shouldFetchItems && !!apiBase && !!recordId;
 
-			let availability: ItemAvailabilityResponse;
-			// If there are "items not shown", we need to then fetch the standard list to compare
-
-			if (comparisonItems?.itemList && comparisonItems.itemList.length > 0) {
-				const { data: liveData } = await axios.get(
-					`${apiBase}/items/availability`,
-					{
-						headers: { Authorization: `Bearer ${token}` },
-						params: { clusteredBibId: recordId },
-					},
-				);
-				availability = liveData;
-			} else {
-				// If no items are returned in our "comparisonItems", proceed to return the response
-				availability = {
-					itemList: [],
-					timings: comparisonItems?.timings ?? 0,
-					bibClusterId: recordId,
-					errors: comparisonItems?.errors || [],
-				} as ItemAvailabilityResponse;
-			}
-
-			return { availability, comparisonItems };
-		}, [apiBase, recordId, token]);
-
-	const itemsQuery = useQuery<CombinedItemsData>({
-		queryKey: ["combinedItems", recordId],
-		queryFn: fetchCombinedItems,
-		// Up to TWO fan-outs per attempt, so the retry ceiling matters twice over.
-		...AVAILABILITY_QUERY_POLICY,
-		enabled: shouldFetchItems && !!token && !!apiBase && !!recordId,
+	const unfilteredQuery = useQuery({
+		...availabilityQueryOptions(apiBase, recordId, "none"),
+		enabled: itemsEnabled,
 	});
+	// The filtered list can only be a subset, so it is asked for only when the
+	// unfiltered one has anything in it.
+	const hasAnyItems = (unfilteredQuery.data?.itemList?.length ?? 0) > 0;
+	const shownQuery = useQuery({
+		...availabilityQueryOptions(apiBase, recordId),
+		enabled: itemsEnabled && hasAnyItems,
+	});
+	const shownItems = hasAnyItems ? shownQuery.data?.itemList : undefined;
+	// The search card shares this entry, so it can hold an error this page never asked for.
+	const shownError = hasAnyItems ? shownQuery.error : null;
 
 	const itemsNotShown = useMemo(() => {
-		if (!itemsQuery.data) return [];
-
-		const { availability, comparisonItems } = itemsQuery.data;
-		if (!availability?.itemList || !comparisonItems?.itemList) {
-			return comparisonItems?.itemList ?? [];
-		}
-
-		const availabilityIds = new Set(availability.itemList.map((i) => i.id));
-		return comparisonItems.itemList.filter((i) => !availabilityIds.has(i.id));
-	}, [itemsQuery.data]);
+		const shownIds = new Set((shownItems ?? []).map((i) => i.id));
+		return (unfilteredQuery.data?.itemList ?? []).filter(
+			(i) => !shownIds.has(i.id),
+		);
+	}, [unfilteredQuery.data, shownItems]);
 
 	return {
 		// Data Access
 		clusterDetail: detailQuery.data,
-		items: itemsQuery.data?.availability?.itemList ?? [],
+		items: shownItems ?? [],
 		itemsNotShown,
 
 		// Useful indicators
-		totalItemsCount: itemsQuery.data?.comparisonItems?.itemList?.length ?? 0,
-		responseErrors: itemsQuery.data?.comparisonItems?.errors || [],
+		totalItemsCount: unfilteredQuery.data?.itemList?.length ?? 0,
+		responseErrors: unfilteredQuery.data?.errors || [],
 
 		// Statuses
 		isLoading:
 			(shouldFetchInfo && detailQuery.isLoading) ||
-			(shouldFetchItems && itemsQuery.isLoading),
-		isError: detailQuery.isError || itemsQuery.isError,
-		error: detailQuery.error || itemsQuery.error,
+			(shouldFetchItems && (unfilteredQuery.isLoading || shownQuery.isLoading)),
+		isError: detailQuery.isError || unfilteredQuery.isError || !!shownError,
+		error: detailQuery.error || unfilteredQuery.error || shownError,
 	};
 };

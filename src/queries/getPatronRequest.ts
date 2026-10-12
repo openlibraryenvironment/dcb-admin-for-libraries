@@ -2,7 +2,7 @@ import { gql } from "graphql-request";
 
 import { capabilitySelection } from "@helpers/capabilityFields";
 
-// A FUNCTION, not a constant - R-19. Part of the selection depends on the deployment's
+// A FUNCTION, not a constant. Part of the selection depends on the deployment's
 // dcb-service release, and the flag that decides is read from window.__APP_ENV__, which
 // application.tsx assigns only after awaiting inject_env.json. This module is in the
 // static import graph and evaluates first, so a constant would read every flag as off in
@@ -69,14 +69,6 @@ export const getPatronRequest = () => gql`
 					# to, and this query drives the patron request detail page, so an
 					# older deployment must select none of it rather than fail the page.
 					${capabilitySelection("agency_scoped_requests", "PatronIdentity")}
-				}
-				audit {
-					id
-					auditDate
-					briefDescription
-					fromStatus
-					toStatus
-					auditData
 				}
 				clusterRecord {
 					id

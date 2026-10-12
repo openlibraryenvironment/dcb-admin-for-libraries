@@ -12,7 +12,6 @@ import { isGuardedCleanupEnabled } from "@helpers/featureFlags";
 interface UsePatronRequestCleanupProps {
 	apiRef: RefObject<GridApiPremium | null>;
 	dcbApiBase: string;
-	headers: Record<string, string>;
 	/** The agencies this user administers; only requests they supplied are eligible. */
 	agencyCodes: readonly string[];
 	onSuccess?: () => void;
@@ -51,7 +50,6 @@ const INITIAL_STATE: CleanupState = {
 export const usePatronRequestCleanup = ({
 	apiRef,
 	dcbApiBase,
-	headers,
 	agencyCodes,
 	onSuccess,
 }: UsePatronRequestCleanupProps) => {
@@ -103,7 +101,6 @@ export const usePatronRequestCleanup = ({
 				batch.map(async (row) => {
 					const outcome = await cleanupPatronRequest(
 						dcbApiBase,
-						headers,
 						row,
 						{ refreshFirst: guarded },
 					);

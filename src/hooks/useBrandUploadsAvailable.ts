@@ -1,3 +1,4 @@
+import { OPTIONAL_QUERY } from "@helpers/serviceErrors";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import axios from "axios";
@@ -7,9 +8,10 @@ import {
 	brandAssetStoreFrom,
 } from "@constants/discoveryBranding";
 import { isDiscoveryActive } from "@helpers/featureFlags";
+import { queryKeys } from "@helpers/queryKeys";
 
 /**
- * Whether to offer the brand image upload control - R-17b.
+ * Whether to offer the brand image upload control.
  *
  * UNKNOWN IS AVAILABLE: anything short of an explicit "none" resolves to true,
  * because hiding the control when /info is briefly unreachable removes a
@@ -32,7 +34,8 @@ export function useBrandUploadsAvailable(): boolean {
 	const discoveryActive = isDiscoveryActive();
 
 	const { data } = useQuery({
-		queryKey: ["dcbServiceInfo", "brandAssetStore", apiBase],
+		queryKey: queryKeys.serviceInfo.brandAssetStore(apiBase ?? ""),
+		meta: OPTIONAL_QUERY,
 		queryFn: async () => {
 			const response = await axios.get(apiBase + "/info");
 			return brandAssetStoreFrom(response.data);

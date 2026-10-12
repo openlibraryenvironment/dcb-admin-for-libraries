@@ -1,9 +1,10 @@
-import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
+import { escapeLucene } from "@helpers/dataGrid/buildFilterQuery";
+import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
+import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
-import { useGridStore } from "@/hooks/useDataGridStore";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestExport } from "@/hooks/useExport";
 import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
 import { CleanupProgressDialog } from "@components/DataGrid/components/CleanupProgressDialog";
@@ -12,138 +13,44 @@ import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import { standardSupplierRequestColumns } from "@helpers/dataGrid/columns/supplierRequestColumns";
-import { defaultSupplierRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/supplierRequestColumnVisibility";
+import { supplierRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
-import { Library } from "@models/Library";
-import {
-	LibrariesQueryData,
-	PatronRequestQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { hostLmsLibraryOptions } from "@helpers/hostLmsLibraryOptions";
+import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import {
 	GridColDef,
-	GridColumnVisibilityModel,
-	GridFilterModel,
-	GridPaginationModel,
 	GridRowModesModel,
-	GridSortModel,
 	useGridApiRef,
 } from "@mui/x-data-grid-premium";
-import { getLibraries } from "@queries/getLibraries";
+import { gridPage, queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
-import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/supplierRequests")({
+	validateSearch: gridSearchSchema,
 	head: () => ({ meta: [{ title: pageTitle("nav.supplier_requests.title") }] }),
 	component: RouteComponent,
 });
 
+const presetQueryFor = (agencyCode: string | undefined) =>
+	"supplyingAgencyCode:" + escapeLucene(agencyCode ?? "");
+
 function RouteComponent() {
 	const { t } = useTranslation();
-	const auth = useAuth();
-
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
-	const token = auth?.user?.access_token;
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${token}`,
-		}),
-		[token],
-	);
 	const apiRef = useGridApiRef();
 
-	const gridId = "supplierPatronRequests";
-	const {
-		sortModel: storedSortModel,
-		filterModel: storedFilterModel,
-		paginationModel: storedPaginationModel,
-		columnVisibilityModel: storedColumnVisibilityModel,
-		setSortModel,
-		setFilterModel,
-		setPaginationModel,
-		setColumnVisibilityModel,
-	} = useGridStore();
-
-	const storedState = {
-		sort: storedSortModel[gridId],
-		filter: storedFilterModel[gridId],
-		pagination: storedPaginationModel[gridId],
-		columnVisibility: storedColumnVisibilityModel[gridId],
-	};
-
-	const [paginationModel, setLocalPaginationModel] =
-		useState<GridPaginationModel>(
-			storedState.pagination ?? { page: 0, pageSize: 25 },
-		);
-	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
-		storedState.filter ?? { items: [] },
-	);
-	const debouncedFilterModel = useDebounce(filterModel, 500);
-
-	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
-		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }],
-	);
+	const grid = useSyncedDataGrid(supplierRequestsGrid, Route.useSearch());
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? defaultSupplierRequestColumnVisibility,
-	);
-
-	const [isFiltering, setIsFiltering] = useState(false);
-
-	useEffect(() => {
-		const hasActiveFilters =
-			filterModel.items.some(
-				(item) => item.value && item.value !== "" && item.value !== null,
-			) ||
-			(filterModel.quickFilterValues &&
-				filterModel.quickFilterValues.length > 0);
-
-
-		const isDifferent =
-			JSON.stringify(filterModel) !== JSON.stringify(debouncedFilterModel);
-		setIsFiltering(!!hasActiveFilters && isDifferent);
-	}, [filterModel, debouncedFilterModel]);
-
-	const handlePaginationChange = useCallback(
-		(model: GridPaginationModel) => {
-			setLocalPaginationModel(model);
-			setPaginationModel(gridId, model);
-		},
-		[gridId, setPaginationModel],
-	);
-
-	const handleFilterChange = useCallback(
-		(model: GridFilterModel) => {
-			setLocalFilterModel(model);
-			setFilterModel(gridId, model);
-		},
-		[gridId, setFilterModel],
-	);
-
-	const handleSortChange = useCallback(
-		(model: GridSortModel) => {
-			setLocalSortModel(model);
-			setSortModel(gridId, model);
-		},
-		[gridId, setSortModel],
-	);
-
-	const handleColumnVisibilityChange = useCallback(
-		(model: GridColumnVisibilityModel) => {
-			setLocalColumnVisibilityModel(model);
-			setColumnVisibilityModel(gridId, model);
-		},
-		[gridId, setColumnVisibilityModel],
-	);
 
 	const [alert, setAlert] = useState<{
 		open: boolean;
@@ -171,7 +78,12 @@ function RouteComponent() {
 
 	const { agencyCode: code, agencyCodes } = useAgencyCodes();
 
-	const presetQuery = "supplyingAgencyCode:" + code;
+	const presetQuery = presetQueryFor(code);
+	const page = gridPage(
+		grid.appliedFilterModel,
+		grid.paginationModel,
+		grid.sortModel,
+	);
 
 	const {
 		data: patronRequestData,
@@ -181,64 +93,36 @@ function RouteComponent() {
 		isFetching,
 		refetch,
 	} = useQuery<PatronRequestQueryData>({
-		queryKey: [
-			"getSupplierRequestsByIds",
-			dcbApiBase,
-			headers,
-			debouncedFilterModel,
-			paginationModel.pageSize,
-			paginationModel.page,
-			sortModel[0]?.field,
-			sortModel[0]?.sort,
-			presetQuery,
-		],
+		queryKey: queryKeys.supplierRequests.list(dcbApiBase, code ?? "", page),
 		queryFn: async () => {
-			const additionalFilters = processGridFilterModel(
-				debouncedFilterModel,
-				presetQuery,
-				["status", "description"],
-			);
-			const finalQuery = additionalFilters
-				? `(${presetQuery}) AND (${additionalFilters})`
-				: presetQuery;
-
 			const queryVariables = {
-				query: finalQuery,
-				pagesize: paginationModel.pageSize,
-				pageno: paginationModel.page, // Use actual page number now
-				order: sortModel[0]?.field ?? "dateCreated",
-				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+				// Already scoped: processGridFilterModel puts the preset query first.
+				query: processGridFilterModel(page.filterModel, presetQueryFor(code), [
+					"status",
+					"description",
+				]),
+				pagesize: clampPageSize(page.pageSize),
+				pageno: page.page ?? 0,
+				order: page.sortField ?? "dateCreated",
+				orderBy: page.sortDirection?.toUpperCase() ?? "DESC",
 			};
 
 			return request(
 				`${dcbApiBase}/graphql`,
 				getPatronRequests,
 				queryVariables,
-				headers,
+				await authHeaders(),
 			);
 		},
-		enabled: !!token && !!dcbApiBase && !!code,
+		enabled: !!dcbApiBase && !!code,
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
 	});
 
-	const { data: librariesData } = useQuery<LibrariesQueryData>({
-		queryKey: ["allLibraries", headers, dcbApiBase],
-		queryFn: async () =>
-			request(
-				`${dcbApiBase}/graphql`,
-				getLibraries,
-				{
-					query: "",
-					pagesize: REFERENCE_LIST_PAGE_SIZE,
-					pageno: 0,
-					orderBy: "DESC",
-					order: "fullName",
-				},
-				headers,
-			),
-		enabled: !!token && !!dcbApiBase,
+	const { data: librariesData } = useQuery({
+		...allLibrariesQueryOptions(dcbApiBase),
+		enabled: !!dcbApiBase,
 		refetchOnWindowFocus: false,
 	});
 
@@ -249,28 +133,20 @@ function RouteComponent() {
 		[librariesData],
 	);
 
-	const libraryHostLmsOptions = useMemo(() => {
-		if (!libraries) return [];
-		return libraries
-			.filter((lib: Library) => lib?.agency?.hostLms?.code) // Libraries must have a Host LMS code
-			.map((lib: Library) => ({
-				value: lib.agency.hostLms.code,
-				label: lib.fullName,
-			}));
-	}, [libraries]);
+	const libraryHostLmsOptions = useMemo(
+		() => hostLmsLibraryOptions(libraries),
+		[libraries],
+	);
 
 	const dynamicColumns = useMemo(() => {
 		const targetField = "patronHostlmsCode";
 
-		return standardSupplierRequestColumns.map((col) => {
+		return supplierRequestsGrid.columns.map((col) => {
 			if (col.field === targetField) {
-				const { ...baseColProps } = col;
-
 				const selectCol: GridColDef = {
-					...baseColProps,
+					...col,
 					type: "singleSelect",
 					valueOptions: libraryHostLmsOptions,
-					filterOperators: undefined, // Reset operators to allow singleSelect defaults
 				};
 				return selectCol;
 			}
@@ -278,52 +154,30 @@ function RouteComponent() {
 		});
 	}, [libraryHostLmsOptions]);
 
-	useDataGridErrorSafely(
-		gridId,
-		isPatronRequestError,
-		error,
-		setLocalFilterModel,
-		setLocalSortModel,
-		() =>
-			setAlert({
-				open: true,
-				severity: "warning",
-				text: t("ui.feedback.error.cannot_process"),
-			}),
+	useDataGridErrorSafely(grid, isPatronRequestError, error, () =>
+		setAlert({
+			open: true,
+			severity: "warning",
+			text: t("ui.feedback.error.cannot_process"),
+		}),
 	);
 
 	const { cleanupState, handleCleanup, handleCloseCleanup } =
 		usePatronRequestCleanup({
 			apiRef,
 			dcbApiBase,
-			headers,
 			agencyCodes,
 			onSuccess: () => {
 				refetch();
 			},
 		});
-	const { exportProgress, handleExport } = usePatronRequestExport({
+	const { exportProgress, exportConfig, cancelExport } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
-		headers,
 		baseQuery: presetQuery,
-		exportQuery: getPatronRequestsForExport,
-		filterModel: debouncedFilterModel,
-		sortModel,
-		onExportSuccess: (msg, count) => {
-			setAlert({
-				open: true,
-				severity: "success",
-				text: t("ui.data_grid.export.success", { count: count }),
-			});
-		},
-		onExportError: () => {
-			setAlert({
-				open: true,
-				severity: "error",
-				text: t("ui.data_grid.export.failed"),
-			});
-		},
+		filterModel: grid.appliedFilterModel,
+		sortModel: grid.sortModel,
+		onExportResult: (result) => setAlert({ open: true, ...result }),
 		type: "supplierRequests",
 	});
 
@@ -351,7 +205,7 @@ function RouteComponent() {
 	}
 
 	const shouldShowLoading =
-		isFiltering ||
+		grid.isFiltering ||
 		isPatronRequestLoading ||
 		(isFetching && !!patronRequestData);
 	return (
@@ -364,9 +218,9 @@ function RouteComponent() {
 					disablePivoting
 					rows={patronRequestData?.patronRequests?.content ?? []}
 					columns={dynamicColumns}
-					columnVisibilityModel={columnVisibilityModel}
+					columnVisibilityModel={grid.columnVisibilityModel}
 					checkboxSelection={true}
-					onColumnVisibilityModelChange={handleColumnVisibilityChange}
+					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
 					type="patronRequests"
 					label={t("nav.supplier_requests.title")}
 					identifier="supplierPatronRequests"
@@ -380,22 +234,21 @@ function RouteComponent() {
 					pivotingEnabled={false}
 					toolbarVisible
 					searchText={t("ui.data_grid.search_supplier_requests")}
-					scrollbarVisible={false}
 					paginationMode="server"
-					paginationModel={paginationModel}
-					onPaginationModelChange={handlePaginationChange}
+					paginationModel={grid.paginationModel}
+					onPaginationModelChange={grid.handlePaginationChange}
 					filterMode="server"
-					filterModel={filterModel}
-					onFilterModelChange={handleFilterChange}
+					filterModel={grid.filterModel}
+					onFilterModelChange={grid.handleFilterChange}
 					sortingMode="server"
-					sortModel={sortModel}
-					onSortModelChange={handleSortChange}
+					sortModel={grid.sortModel}
+					onSortModelChange={grid.handleSortChange}
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
 					enableCleanup={true}
 					onCleanup={handleCleanup}
-					onExport={handleExport}
+					exportConfig={exportConfig}
 					isExporting={exportProgress.isExporting}
 					parentApiRef={apiRef}
 				/>
@@ -404,6 +257,7 @@ function RouteComponent() {
 				open={exportProgress.isExporting}
 				progress={exportProgress.progress}
 				totalRecords={exportProgress.totalRecords}
+				onCancel={cancelExport}
 			/>
 			<CleanupProgressDialog
 				open={cleanupState.open}
@@ -427,8 +281,6 @@ function RouteComponent() {
 					open={alert.open}
 					onCloseFunc={handleSnackbarClose}
 					severityType={alert.severity}
-					// variant="filled"
-					// sx={{ width: "100%" }}
 					alertText={alert.text}></TimedAlert>
 			}
 		</>

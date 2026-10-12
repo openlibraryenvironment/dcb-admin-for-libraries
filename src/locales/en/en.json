@@ -18,13 +18,13 @@
 		"data": "Audit data (JSON)",
 		"date": "Audit date",
 		"description": "Brief description",
-		"from_status": "fromStatus",
+		"from_status": "From status",
 		"log": "Audit log",
 		"no_data": "No audit log entries found.",
 		"no_results": "No audits found",
 		"no_rows": "Try changing your filters or search terms.",
 		"title": "Audit entry",
-		"to_status": "toStatus",
+		"to_status": "To status",
 		"uuid": "Audit UUID"
 	},
 	"bibs": {
@@ -228,20 +228,24 @@
 			"status": "Status",
 			"supplying_library": "Supplying library",
 			"time_in_state_days": "Time in state (days)",
+			"time_in_state_description": "The time the request has been in its current status, as days:hours:minutes:seconds",
 			"title": "Title",
 			"to_category": "To category",
 			"to_context": "To context",
 			"to_value": "To value",
 			"tostatus": "toStatus",
 			"upper_bound": "Upper bound",
-			"walk_up_request": "Walk-up request?"
+			"walk_up_request": "Walk-up request?",
+			"pickup_location": "Pickup location"
 		}
 	},
 	"header": {
 		"title": "DCB Admin for {{library}}",
 		"title_requesting": "DCB Admin for {{library}} - requesting only mode",
 		"user": "Welcome, {{user}}",
+		"user_fallback": "User",
 		"welcome": "Welcome to DCB Admin for {{name}}",
+		"library_fallback": "Libraries",
 		"library_selector": "Library"
 	},
 	"hostlms": {
@@ -399,16 +403,19 @@
 			"demand_by_patron_group": {
 				"title": "Demand by patron group",
 				"subtitle": "Which patron categories drive requesting.",
-				"series": "Requests"
+				"series": "Requests",
+				"category": "Patron group"
 			},
 			"demand_by_pickup": {
 				"title": "Demand by pickup location",
 				"subtitle": "Where patrons collect their requests.",
-				"series": "Requests"
+				"series": "Requests",
+				"category": "Pickup location"
 			},
 			"demand_heatmap": {
 				"title": "When requests arrive",
-				"subtitle": "Request volume by day of week and hour of day (server time zone)."
+				"subtitle": "Request volume by day of week and hour of day (server time zone).",
+				"day": "Day"
 			},
 			"failure_taxonomy": {
 				"reason": "Reason",
@@ -481,6 +488,19 @@
 				"title": "Unmet local demand",
 				"subtitle": "Titles your own patrons requested but you do not hold.",
 				"col_supplied": "Supplied"
+			},
+			"trading_partners": {
+				"title": "Trading partners",
+				"subtitle": "Who this library trades with most, in both directions, ranked on the total.",
+				"col_partner": "Partner",
+				"col_borrowed": "Borrowed from",
+				"col_supplied": "Supplied to",
+				"col_total": "Total",
+				"rows_per_page": "Partners per page"
+			},
+			"unfillable_demand": {
+				"title": "Demand nothing could supply",
+				"subtitle": "Titles this library's patrons requested that no library in the consortium holds. Unlike a failed request, these never had a supplier to lose."
 			}
 		},
 		"export": {
@@ -516,7 +536,8 @@
 				"supplier_response": "Supplier response",
 				"transit": "Time in transit",
 				"p50": "Median",
-				"p95": "95th percentile"
+				"p95": "95th percentile",
+				"period": "Period starting"
 			}
 		},
 		"sections": {
@@ -525,7 +546,8 @@
 			"performance": "Service performance",
 			"demand": "Demand",
 			"partners": "Trading partners",
-			"gaps": "Collection gaps and supply value"
+			"gaps": "Collection gaps and supply value",
+			"collection": "Collection analysis"
 		},
 		"subjects": {
 			"label": "Insights subjects",
@@ -533,6 +555,7 @@
 			"service": "Service",
 			"demand": "Demand",
 			"partners": "Partners",
+			"collection": "Collection",
 			"gaps": "Gaps"
 		},
 		"panel": {
@@ -692,6 +715,80 @@
 				"what": "How many requests the reader collected in person at the supplying library, and how many travelled to their own.",
 				"how": "dcb-service splits each library’s requests by whether the item moved and writes both counts, so they sum to the total and nothing here has to interpret an unset expedited-checkout flag.",
 				"not": "Volume, not money. A per-van cost would be a confident number nobody could source, which is why the saving beside it multiplies a figure the librarian types in."
+			},
+			"collection_totals": {
+				"what": "The consortium's shared catalogue in four numbers: distinct works, works only one library holds, holdings, and the libraries contributing records.",
+				"how": "Bib records grouped into clusters, one per work. Each library is counted once per work however many records it contributes, and deleted clusters are left out.",
+				"not": "Distinct titles is not the sum of each library's works: a work three libraries hold is one title and three holdings. Records not yet clustered are not counted."
+			},
+			"clustering_confidence": {
+				"what": "How many libraries hold each work.",
+				"how": "Clusters grouped by the number of different libraries contributing a record to them.",
+				"not": "It measures the record matching as much as the collection: if most works have a single holder, records may not be matched to each other, and every unique-title figure is inflated."
+			},
+			"collection_profile": {
+				"what": "Each library's works in the shared catalogue, and how many of them no other library holds.",
+				"how": "Per library, the distinct clusters it contributes a record to, and of those the ones with exactly one contributing library. Deleted clusters are left out.",
+				"not": "A record that is not in a cluster is not counted as unique: with nothing to match it against, there is no way to say nobody else holds it."
+			},
+			"format_mix": {
+				"what": "This library's works by format.",
+				"how": "Distinct works per format, from each record's derived type. A work held in two formats counts once in each.",
+				"not": "Records with no derived type are shown as Not recorded rather than dropped. Because a work can be held in more than one format, the formats can add up to more than the number of works."
+			},
+			"collection_overlap": {
+				"what": "The other libraries that hold the same works as this one.",
+				"how": "For each work this library contributes a record to, every other library that also contributes a record to it, counted once per work.",
+				"not": "It is this library against each other one, never every pair in the consortium, and it does not say which copy would be supplied."
+			}
+		},
+		"collection": {
+			"section_subtitle": "The catalogue as ingested, rather than the traffic over it. These figures count works held, not requests made, so the date range does not apply to them.",
+			"busy": "The collection figures are still being counted. Try again in a minute.",
+			"computing": "Counting across the whole catalogue. The first count can take several minutes, and this panel will check again on its own.",
+			"failed": "The collection figures could not be loaded.",
+			"totals": {
+				"heading": "The consortium's shared catalogue",
+				"distinct_titles": "Distinct titles",
+				"distinct_titles_sub": "Works across the consortium, after clustering",
+				"singly_held": "Singly held titles",
+				"singly_held_sub": "Works only one library holds",
+				"holdings": "Holdings",
+				"holdings_sub": "Work and library pairs, duplicates included",
+				"sources": "Contributing libraries",
+				"sources_sub": "Systems with at least one clustered record"
+			},
+			"cluster_quality": {
+				"title": "Clustering confidence",
+				"subtitle": "How many libraries hold each work. Read this before the figures beside it: they depend on it.",
+				"summary": "{{single}} of {{total}} works are held by a single library. The most common number of holders per work is {{commonest}}.",
+				"under_clustered": "{{single}} of works have exactly one holder. That is high enough to suggest records are not being matched to each other, in which case the unique-title figures describe the matching rather than the collection.",
+				"axis_holders": "Libraries holding the work",
+				"series": "Works"
+			},
+			"profile": {
+				"title": "What each library contributes",
+				"subtitle": "Works contributed to the shared catalogue, and how many of them nobody else holds. This library is highlighted.",
+				"col_library": "Library",
+				"col_works": "Works",
+				"col_unique": "Unique",
+				"col_unique_share": "Unique share",
+				"caption": "Showing {{shown}} of {{total}} libraries."
+			},
+			"format_mix": {
+				"title": "Format mix of the catalogue",
+				"subtitle": "Works by format across the consortium.",
+				"subtitle_library": "Works by format that this library holds. Compare with demand by format: what is held and what is asked for need not match.",
+				"series": "Works",
+				"unknown": "Not recorded",
+				"col_format": "Format"
+			},
+			"overlap": {
+				"title": "Who holds the same works",
+				"subtitle": "Works this library holds that another library also holds. High overlap means a partner can usually supply; low overlap means this library is the only route to those titles.",
+				"col_library": "Library",
+				"col_shared": "Shared works",
+				"caption": "Showing {{shown}} of {{total}} libraries."
 			}
 		},
 		"walk_up": {
@@ -714,7 +811,7 @@
 			"standard_heading": "The standard we aim for",
 			"standard_body": "WCAG 2.2 level AA on every screen. The high-contrast setting aims higher, at level AAA for text contrast.",
 			"tested_heading": "How that is checked",
-			"tested_body": "Automated checks run on every change and block a release if they fail: an axe scan of ten screens in light and dark, arithmetic over every colour pair in each of the three schemes, and a check that every field label is still attached to its value. Automated testing finds roughly a third of accessibility problems, so it is a floor rather than a guarantee.",
+			"tested_body": "Automated checks run on every change and block a release if they fail: an axe scan of every screen and dialog in the accessibility gate, in light and dark and at a 320-pixel width, arithmetic over every colour pair in each of the three schemes, and a check that every field label is still attached to its value. Automated testing finds roughly a third of accessibility problems, so it is a floor rather than a guarantee.",
 			"limits_heading": "Where we know we fall short",
 			"limits_body": "Data grids are wide, and reading one on a narrow screen still means scrolling sideways. Some charts convey trends by shape; each carries its figures as a table for screen readers, but the shape itself is not described in words. We have not yet had this interface tested by an external auditor.",
 			"settings_heading": "Settings you can change",
@@ -787,6 +884,8 @@
 				"polaris_username": "Polaris staff account: Username"
 			},
 			"hostlms_title": "Host LMS - {{name}}",
+			"load_failed": "Your library's service details could not be loaded. Try reloading the page.",
+			"loading": "Loading service details",
 			"systems": {
 				"discovery": "Discovery system/PAC(s)",
 				"ils": "ILS",
@@ -796,8 +895,9 @@
 			"title": "Service for {{name}}"
 		},
 		"short_name": "Short name",
-		"site_designation": "Site designation",
+		"load_failed": "Your library's details could not be loaded. Try reloading the page.",
 		"statistics": {
+			"loading": "Loading",
 			"no_requesters": "No requesters this month",
 			"no_titles": "No titles requested this month",
 			"requests_made": "Requests made",
@@ -825,6 +925,7 @@
 		"print_label": "Print label",
 		"service_point": "FOLIO service point ID",
 		"sierra": "Sierra location ID",
+		"title": "Location",
 		"type": "Location type",
 		"view_location": "View pickup location"
 	},
@@ -839,13 +940,19 @@
 	},
 	"mappings": {
 		"category": "Category",
+		"delete_failed": "The mapping was not deleted.",
+		"delete_failed_reason": "The mapping was not deleted: {{reason}}",
 		"delete_warning": "Are you sure you want to delete this mapping?",
+		"deleted": "Mapping deleted.",
 		"domain": "Domain",
 		"editing_disabled": "Editing mappings has been disabled by your consortium administrator",
 		"from_value": "From value",
 		"last_imported": "Last imported",
 		"title": "Mappings",
-		"to_value": "To value"
+		"to_value": "To value",
+		"update_failed": "The mapping was not updated.",
+		"update_failed_reason": "The mapping was not updated: {{reason}}",
+		"value_required": "{{field}} cannot be empty."
 	},
 	"nav": {
 		"bibs": {
@@ -1087,7 +1194,10 @@
 					"instructions": "Scan the item barcode and select a pickup location for this request"
 				},
 				"request_creation": "Request creation",
-				"request_creation_instruction": "The patron barcode is valid. Please now provide the remaining details."
+				"request_creation_instruction": "The patron barcode is valid. Please now provide the remaining details.",
+				"due_date_loading": "still loading",
+				"due_date_unavailable": "not known yet - view the request to see it",
+				"checkout_error": "The checkout failed. Please view the request for details."
 			},
 			"title_on_site": "Walk-up request",
 			"view_request": "View request"
@@ -1196,7 +1306,9 @@
 			"items_unavailable": "No items are available for this cluster",
 			"return": "Return to shared index",
 			"title": "Shared index",
-			"title_details": "Title details for {{title}}"
+			"title_details": "Title details for {{title}}",
+			"loading_results": "Loading results",
+			"invalid_cluster_id": "A cluster record ID looks like 1b4e28ba-2fa1-41d2-883f-0016d3cca427."
 		},
 		"shared_index_unavailable_message": "Please set a valid DCB_SEARCH_BASE environment variable for this deployment.",
 		"shared_index_unavailable_title": "Shared index is not configured on this system",
@@ -1215,7 +1327,8 @@
 					"no_brackets": "Please remove any brackets from the barcode.",
 					"request": {
 						"duplicate": "A request already exists for this patron at this library within the time window of 900 seconds.",
-						"generic": "Error: {{code}}. More info: {{description}}"
+						"generic": "Error: {{code}}. More info: {{description}}",
+						"failed": "The request could not be placed. Please try again, and contact your administrator if this keeps happening."
 					},
 					"validation_failure": "We were unable to validate this patron. Please correct the barcode and/or affiliated institution, and try again.",
 					"validate_first": "You must validate a patron before attempting to make a staff request on their behalf."
@@ -1251,7 +1364,18 @@
 		"suppressed": "Suppressed",
 		"titles_found": "{{number}} titles found",
 		"volume_parsed": "Parsed volume statement",
-		"volume_raw": "Raw volume statement"
+		"volume_raw": "Raw volume statement",
+		"quick_walk_up": {
+			"button": "Quick walk-up request",
+			"title": "Quick walk-up request",
+			"steps": {
+				"request_creation": "Scan item"
+			}
+		},
+		"steps": {
+			"announce": "Step {{number}} of {{total}}: {{label}}"
+		},
+		"record_sections": "Record sections"
 	},
 	"settings": {
 		"customisation": "Customisation",
@@ -1294,7 +1418,8 @@
 			"show_hidden": "Show hidden",
 			"submit": "Submit",
 			"submitting": "Submitting",
-			"title": "Actions"
+			"title": "Actions",
+			"remove_filter": "Remove filter"
 		},
 		"common": {
 			"author": "Author",
@@ -1323,23 +1448,52 @@
 			"edit_summary": "Edit {{entity}}",
 			"edit_url": "Enter a valid URL",
 			"export": {
-				"all": "Export all",
-				"all_csv": "Export all as CSV",
-				"all_tsv": "Export all as TSV",
 				"complete": "{{percentage}} complete",
 				"current": "Export current page as CSV",
 				"failed": "The data grid export has failed. Please try again.",
-				"success": "Successfully exported {{count}} records from the data grid.",
-				"filtered": "Export filtered",
 				"modal_title": "Exporting data",
 				"print": "Print current page",
-				"records": "Exporting {{count}} records from the data grid."
+				"wizard": "Export…",
+				"wizard_title": "Export requests",
+				"columns": "Columns",
+				"select_all": "Select all",
+				"clear_all": "Clear all",
+				"no_columns": "Choose at least one column to export.",
+				"file_name": "File name",
+				"file_name_help": "The extension is added for you.",
+				"file_name_required": "Enter a file name.",
+				"file_name_invalid": "A file name cannot start with a dot or contain / \\ : * ? \" < > | or control characters.",
+				"file_name_too_long": "A file name can be at most 120 characters.",
+				"scope": "Rows",
+				"scope_filtered": "Rows matching the current filters",
+				"scope_all": "All rows, ignoring the filters",
+				"scope_selected_one": "The selected row ({{count}})",
+				"scope_selected_other": "The selected rows ({{count}})",
+				"scope_selected_none": "Select rows in the grid to export only those.",
+				"format": "Format",
+				"export_button": "Export",
+				"cancel": "Cancel export",
+				"cancelled": "The export was cancelled.",
+				"too_large": "This export would include {{count}} requests, more than the {{max}} one export can hold. Narrow the filters and try again.",
+				"scope_failed": "The export could not be limited to your libraries, so nothing was exported.",
+				"success_one": "Exported {{count}} request.",
+				"success_other": "Exported {{count}} requests.",
+				"left_out_one": "{{count}} request was left out: none of your libraries borrowed it, supplied it or collects it.",
+				"left_out_other": "{{count}} requests were left out: none of your libraries borrowed, supplied or collects them.",
+				"records_one": "Exporting {{count}} request.",
+				"records_other": "Exporting {{count}} requests.",
+				"no_filters": "No filters are applied, so this is every row."
 			},
 			"filters": {
 				"active_description": "{{length}} filter(s) active: {{description}}",
+				"after": "After",
+				"and": "and",
+				"applying": "Applying filter",
+				"before": "Before",
 				"between": "Between",
 				"days_from": "Days from",
 				"days_to": "Days to",
+				"does_not_contain": "Does not contain",
 				"equals": "Equals",
 				"from": "From",
 				"greater_than_exclusive": "Greater than",
@@ -1351,6 +1505,7 @@
 				"not_equal": "Does not equal",
 				"on_or_after": "On or after",
 				"on_or_before": "On or before",
+				"title": "Filters",
 				"to": "To",
 				"trigger": "Show filters",
 				"trigger_applied_one": "Show filters, {{count}} applied",
@@ -1360,6 +1515,8 @@
 			"master_detail": "Master detail",
 			"no_data": "No data available",
 			"open": "Open",
+			"results_one": "{{count}} result",
+			"results_other": "{{count}} results",
 			"search_audits": "Search by audit",
 			"search_locations": "Search by location",
 			"search_mappings": "Search by mappings",
@@ -1408,7 +1565,8 @@
 			"correct_as_of": "Status correct as of",
 			"description": "Description: {{description}}",
 			"loading": {
-				"document": "Loading {{document_type}}"
+				"document": "Loading {{document_type}}",
+				"value": "Loading"
 			},
 			"reload": "Try reloading the page",
 			"try_later": "Please try again later",
@@ -1423,13 +1581,17 @@
 			"out": "Logged out",
 			"out_current": "Logging you out",
 			"out_progress": "Please wait while we sign you out securely...",
+			"retry": "Try again",
 			"success": "You have successfully logged out from DCB Admin for Libraries. We hope to see you again soon!"
 		},
 		"tooltips": {
 			"logo": "Click this logo to go to the home page"
 		},
 		"unsaved_changes": {
-			"keep_editing": "Keep editing"
+			"keep_editing": "Keep editing",
+			"title": "Leave without saving?",
+			"body": "Your changes to {{name}} have not been saved. If you leave now, they will be lost.",
+			"leave": "Leave without saving"
 		},
 		"validation": {
 			"locations": {
@@ -1472,6 +1634,13 @@
 		"expired": "Finished",
 		"until": "Shows until {{date}}",
 		"withdraw": "Take down",
+		"withdraw_named": "Take down: {{headline}}",
+		"published": "Notice published",
+		"withdrawn": "Notice taken down",
+		"loading": "Loading your notices",
+		"load_failed": "Your notices could not be loaded.",
+		"publish_failed": "The notice could not be published.",
+		"withdraw_failed": "The notice could not be taken down.",
 		"unavailable": "Announcements are not available on this deployment yet. They need a newer DCB service."
 	}
 }

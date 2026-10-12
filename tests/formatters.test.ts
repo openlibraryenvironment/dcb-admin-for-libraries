@@ -4,6 +4,7 @@ import {
 	currencySymbol,
 	formatCurrency,
 	formatDate,
+	formatHourOfDay,
 	formatLongDateTime,
 	formatNumber,
 	formatPercent,
@@ -85,5 +86,17 @@ describe("dates", () => {
 		// "dddd, MMMM D, YYYY h:mm A" was hardcoded, so every reader got this one.
 		expect(formatLongDateTime(when, "en-US")).toContain("September 22, 2026");
 		expect(formatLongDateTime(when, "en-GB")).toContain("22 September 2026");
+	});
+});
+
+describe("hours of the day", () => {
+	it("writes the hour on the clock the region uses", () => {
+		expect(formatHourOfDay(14, "en-GB")).toBe("14:00");
+		expect(formatHourOfDay(14, "en-US").replace(/\s/g, " ")).toBe("2:00 PM");
+	});
+
+	it("does not shift the hour by the machine's time zone", () => {
+		expect(formatHourOfDay(0, "en-GB")).toBe("0:00");
+		expect(formatHourOfDay(23, "en-GB")).toBe("23:00");
 	});
 });

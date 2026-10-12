@@ -7,15 +7,25 @@ import Loading from "@components/Loading/Loading";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import { BibsQueryData } from "@models/ReactQueryHelperTypes";
 import { ExpandMoreOutlined } from "@mui/icons-material";
-import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
+import {
+	Accordion,
+	AccordionDetails,
+	AccordionSummary,
+	Box,
+	CircularProgress,
+} from "@mui/material";
+import { isUuidShaped } from "@helpers/isUuidShaped";
+import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { getBibMainDetails } from "@queries/getBib";
 import { getBibSourceRecord } from "@queries/getBibSourceRecord";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 
@@ -30,13 +40,10 @@ function RouteComponent() {
 	const auth = useAuth();
 
 	const { id } = Route.useParams();
+	const isValidId = isUuidShaped(id);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const DCB_API_BASE = cfg.VITE_DCB_API_BASE + "/graphql";
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token]
-	);
+	const apiBase = cfg.VITE_DCB_API_BASE;
 	const [isSourceExpanded, setIsSourceExpanded] = useState(false);
 	const [isCanonicalExpanded, setIsCanonicalExpanded] = useState(false);
 
@@ -45,10 +52,10 @@ function RouteComponent() {
 		isLoading: bibDataLoading,
 		isError: bibDataError,
 	} = useQuery<BibsQueryData>({
-		queryKey: ["bibRecord", id, headers, DCB_API_BASE],
+		queryKey: queryKeys.bibs.detail(apiBase, id),
 		queryFn: async () =>
 			request(
-				DCB_API_BASE,
+				apiBase + "/graphql",
 				getBibMainDetails,
 				{
 					query: "id:" + id,
@@ -57,9 +64,9 @@ function RouteComponent() {
 					orderBy: "lastUpdated",
 					order: "ASC",
 				},
-				headers
+				await authHeaders()
 			),
-		enabled: !!auth.user,
+		enabled: !!auth.user && isValidId,
 	});
 
 	const {
@@ -67,10 +74,15 @@ function RouteComponent() {
 		isLoading: isSourceLoading,
 		isError: isSourceError,
 	} = useQuery<BibsQueryData>({
-		queryKey: ["bib", "sourceRecord", id, DCB_API_BASE, headers],
+		queryKey: queryKeys.bibs.sourceRecord(apiBase, id),
 		queryFn: async () =>
-			request(DCB_API_BASE, getBibSourceRecord, { query: "id:" + id }, headers),
-		enabled: !!auth.user && !!id && isSourceExpanded,
+			request(
+				apiBase + "/graphql",
+				getBibSourceRecord,
+				{ query: "id:" + id },
+				await authHeaders()
+			),
+		enabled: !!auth.user && isValidId && isSourceExpanded,
 	});
 	const bibRecord = bibData?.sourceBibs?.content?.[0];
 
@@ -101,7 +113,7 @@ function RouteComponent() {
 		);
 	}
 
-	if (bibDataError || !bibData) {
+	if (bibDataError || !bibRecord) {
 		return (
 			<Error
 				title={
@@ -124,9 +136,9 @@ function RouteComponent() {
 		<Grid
 			container
 			spacing={{ xs: 2, md: 3 }}
-			columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h1">{bibRecord?.title}</Typography>
+			columns={DETAIL_COLUMNS}>
+			<Grid size={FULL_ROW}>
+				<Typography variant="h1">{bibRecord.title || t("bibs.title")}</Typography>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("bibs.author")}>
@@ -159,9 +171,7 @@ function RouteComponent() {
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("bibs.date_of_publication")}>
-					<RenderAttribute
-						attribute={formatTimestamp(bibRecord?.dateOfPublication, clock)}
-					/>
+					<RenderAttribute attribute={bibRecord?.dateOfPublication} />
 				</Attribute>
 			</Grid>
 			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
@@ -204,36 +214,40 @@ function RouteComponent() {
 					<RenderAttribute attribute={bibRecord?.contributesTo?.id} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+			<Grid size={FULL_ROW}>
 				<Accordion
 					expanded={isCanonicalExpanded}
 					onChange={handleCanonicalAccordionChange}
 					disableGutters
-					variant="outlined">
+					variant="outlined"
+					slotProps={{ heading: { component: "h2" } }}>
 					<AccordionSummary
 						expandIcon={<ExpandMoreOutlined />}
 						aria-controls="canonical-metadata-content"
 						id="canonical-metadata-header">
-						<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+						<Typography variant="h3" component="span" sx={{ fontWeight: "bold" }}>
 							{t("bibs.canonical_metadata")}
 						</Typography>
 					</AccordionSummary>
 					<AccordionDetails>
-						<pre>{JSON.stringify(bibRecord?.canonicalMetadata, null, 2)}</pre>
+						<Box component="pre" sx={WRAPPED_PRE}>
+							{JSON.stringify(bibRecord?.canonicalMetadata, null, 2)}
+						</Box>
 					</AccordionDetails>
 				</Accordion>
 			</Grid>
-			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+			<Grid size={FULL_ROW}>
 				<Accordion
 					expanded={isSourceExpanded}
 					onChange={handleAccordionChange}
 					disableGutters
-					variant="outlined">
+					variant="outlined"
+					slotProps={{ heading: { component: "h2" } }}>
 					<AccordionSummary
 						expandIcon={<ExpandMoreOutlined />}
 						aria-controls="source-record-content"
 						id="source-record-header">
-						<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+						<Typography variant="h3" component="span" sx={{ fontWeight: "bold" }}>
 							{t("bibs.source_record")}
 						</Typography>
 					</AccordionSummary>
@@ -241,14 +255,16 @@ function RouteComponent() {
 						{isSourceError ? (
 							t("bibs.source_error")
 						) : isSourceLoading ? (
-							<Loading
-								title={t("ui.info.loading.document", {
+							<CircularProgress
+								size="1.5rem"
+								aria-label={t("ui.info.loading.document", {
 									document_type: t("bibs.source_record").toLowerCase(),
 								})}
-								subtitle={t("ui.info.wait")}
 							/>
 						) : (
-							<pre>{JSON.stringify(sourceRecord, null, 2)}</pre>
+							<Box component="pre" sx={WRAPPED_PRE}>
+								{JSON.stringify(sourceRecord, null, 2)}
+							</Box>
 						)}
 					</AccordionDetails>
 				</Accordion>

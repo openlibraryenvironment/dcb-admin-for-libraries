@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
 	rangeToParams,
+	dayRangeToParams,
+	localDay,
 	intervalForRange,
 	formatTurnaround,
 } from "@helpers/insightsRange";
@@ -11,6 +13,30 @@ describe("intervalForRange", () => {
 		expect(intervalForRange("30d")).toBe("day");
 		expect(intervalForRange("90d")).toBe("week");
 		expect(intervalForRange("365d")).toBe("month");
+	});
+});
+
+describe("dayRangeToParams", () => {
+	it("sends instants covering whole local days", () => {
+		const { startDate, endDate } = dayRangeToParams({
+			startDate: "2026-08-01",
+			endDate: "2026-08-31",
+		});
+		// The API binds an Instant: a bare date does not parse.
+		expect(startDate).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+		expect(endDate).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+
+		const start = new Date(startDate);
+		const end = new Date(endDate);
+		expect([start.getFullYear(), start.getMonth(), start.getDate()]).toEqual([
+			2026, 7, 1,
+		]);
+		expect(start.getHours()).toBe(0);
+		expect([end.getMonth(), end.getDate(), end.getHours()]).toEqual([7, 31, 23]);
+	});
+
+	it("reads a day as local, not UTC", () => {
+		expect(localDay("2026-08-01").getDate()).toBe(1);
 	});
 });
 

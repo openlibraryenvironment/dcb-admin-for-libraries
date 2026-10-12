@@ -3,20 +3,20 @@ import { pageTitle } from "@helpers/pageTitle";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import Grid from "@mui/material/Grid";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
-import { getLibrary } from "@queries/getLibrary";
+import { getLibraryServiceConfig } from "@queries/getLibraryServiceConfig";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
 import { Library } from "@models/Library";
 import { HostLMS } from "@models/HostLMS";
 import { getILS } from "@helpers/getILS";
 import Typography from "@mui/material/Typography";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
-import { Divider } from "@mui/material";
+import { Alert, CircularProgress, Divider } from "@mui/material";
 import FormatArrayAsList from "@components/FormatArrayAsList/FormatArrayAsList";
 import PrivateData from "@components/PrivateData/PrivateData";
-import { useMemo } from "react";
 
 export const Route = createFileRoute("/__authenticated/service")({
 	head: () => ({ meta: [{ title: pageTitle("nav.library.service") }] }),
@@ -24,43 +24,43 @@ export const Route = createFileRoute("/__authenticated/service")({
 });
 
 function ServiceComponent() {
-	const auth = useAuth();
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const { t } = useTranslation();
-
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${auth.user?.access_token}`,
-		}),
-		[auth.user?.access_token]
-	);
 	const { agencyCode: code } = useAgencyCodes();
 
-	// does this need a different key
-	const { data } = useQuery({
-		queryKey: ["libraryInfo", headers, code, cfg.VITE_DCB_API_BASE],
+	const { data, isLoading, isError } = useQuery({
+		queryKey: queryKeys.library.serviceConfig(cfg.VITE_DCB_API_BASE, code ?? ""),
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
-				headers
+				getLibraryServiceConfig,
+				{ query: "agencyCode:" + code },
+				await authHeaders()
 			),
-		// do the on success here
 	});
 	const library: Library = data?.libraries?.content?.[0];
 	const firstHostLms: HostLMS = library?.agency?.hostLms;
 	const secondHostLms: HostLMS = library?.secondHostLms;
 	const ils: string = getILS(library?.agency?.hostLms?.lmsClientClass);
 
-	// all pages will need error and loading states too!
-	// do we want to do tabs for first, second host lms?
+	if (isLoading || isError) {
+		return (
+			<>
+				<Typography variant="h1">{t("nav.library.service")}</Typography>
+				{isError ? (
+					<Alert severity="error" sx={{ mt: 2 }}>
+						{t("library.service.load_failed")}
+					</Alert>
+				) : (
+					<CircularProgress
+						aria-label={t("library.service.loading")}
+						sx={{ mt: 2 }}
+					/>
+				)}
+			</>
+		);
+	}
+
 	return (
         <Grid
 			container
@@ -92,7 +92,7 @@ function ServiceComponent() {
 				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Typography variant="h3" sx={{
+				<Typography variant="h3" component="h2" sx={{
                     fontWeight: "bold"
                 }}>
 					{t("library.config.patronAuth.title")}
@@ -107,13 +107,13 @@ function ServiceComponent() {
 				</Attribute>
 			</Grid>
             {firstHostLms ? (
-				<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
+				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 					<Divider aria-hidden="true"></Divider>
 				</Grid>
 			) : null}
             {firstHostLms ? (
-				<Grid size={{ xs: 4, sm: 8, md: 12, lg: 16 }}>
-					<Typography variant="h3" sx={{
+				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+					<Typography variant="h3" component="h2" sx={{
                         fontWeight: "bold"
                     }}>
 						{t("library.service.hostlms_title", {
@@ -146,7 +146,7 @@ function ServiceComponent() {
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("hostlms.client_config.ingest")}>
 					<RenderAttribute
-						attribute={String(firstHostLms?.clientConfig?.ingest)}
+						attribute={firstHostLms?.clientConfig?.ingest}
 					/>
 				</Attribute>
 			</Grid>
@@ -194,7 +194,7 @@ function ServiceComponent() {
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
 						hiddenTextValue={firstHostLms?.clientConfig?.apikey}
-						id="lib-prod-env-api-key-1"
+						id="lib-1-apikey"
 					/>
 				</Grid>
 			) : null}
@@ -204,7 +204,7 @@ function ServiceComponent() {
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
 						hiddenTextValue={firstHostLms?.clientConfig?.["access-key"]}
-						id="lib-prod-env-api-key-1"
+						id="lib-1-access-key"
 					/>
 				</Grid>
 			) : null}
@@ -214,7 +214,7 @@ function ServiceComponent() {
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
 						hiddenTextValue={firstHostLms?.clientConfig?.key}
-						id="lib-prod-env-api-key-1"
+						id="lib-1-key"
 					/>
 				</Grid>
 			) : null}
@@ -223,7 +223,7 @@ function ServiceComponent() {
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_secret")}
 						hiddenTextValue={firstHostLms?.clientConfig?.secret}
-						id="lib-prod-env-api-secret-1"
+						id="lib-1-secret"
 					/>
 				</Grid>
 			) : null}
@@ -265,7 +265,7 @@ function ServiceComponent() {
 					</Attribute>
 				</Grid>
 			) : null}
-            {firstHostLms?.clientConfig?.["domain-id"] ? (
+            {firstHostLms?.clientConfig?.["staff-username"] ? (
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Attribute label={t("library.service.environments.polaris_username")}>
 						<RenderAttribute
@@ -281,7 +281,7 @@ function ServiceComponent() {
 							"library.service.environments.polaris_password"
 						)}
 						hiddenTextValue={firstHostLms?.clientConfig?.["staff-password"]}
-						id="lib-prod-env-api-polaris-password"
+						id="lib-1-staff-password"
 					/>
 				</Grid>
 			) : null}
@@ -342,7 +342,7 @@ function ServiceComponent() {
 			) : null}
             {secondHostLms ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-					<Typography variant="h3" sx={{
+					<Typography variant="h3" component="h2" sx={{
                         fontWeight: "bold"
                     }}>
 						{t("library.service.hostlms_title", {
@@ -385,7 +385,7 @@ function ServiceComponent() {
 				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 					<Attribute label={t("hostlms.client_config.ingest")}>
 						<RenderAttribute
-							attribute={String(secondHostLms?.clientConfig?.ingest)}
+							attribute={secondHostLms?.clientConfig?.ingest}
 						/>
 					</Attribute>
 				</Grid>
@@ -415,7 +415,7 @@ function ServiceComponent() {
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
 						hiddenTextValue={secondHostLms?.clientConfig?.apikey}
-						id="lib-prod-env-api-key-2"
+						id="lib-2-apikey"
 					/>
 				</Grid>
 			) : null}
@@ -425,7 +425,7 @@ function ServiceComponent() {
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
 						hiddenTextValue={secondHostLms?.clientConfig?.["access-key"]}
-						id="lib-prod-env-api-key-2"
+						id="lib-2-access-key"
 					/>
 				</Grid>
 			) : null}
@@ -435,7 +435,7 @@ function ServiceComponent() {
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_key")}
 						hiddenTextValue={secondHostLms?.clientConfig?.key}
-						id="lib-prod-env-api-key-2"
+						id="lib-2-key"
 					/>
 				</Grid>
 			) : null}
@@ -444,7 +444,7 @@ function ServiceComponent() {
 					<PrivateData
 						clientConfigType={t("library.service.environments.api_secret")}
 						hiddenTextValue={secondHostLms?.clientConfig?.secret}
-						id="lib-test-env-api-secret"
+						id="lib-2-secret"
 					/>
 				</Grid>
 			) : null}
@@ -474,7 +474,7 @@ function ServiceComponent() {
 							"library.service.environments.polaris_password"
 						)}
 						hiddenTextValue={secondHostLms?.clientConfig?.["staff-password"]}
-						id="lib-test-env-polaris-password"
+						id="lib-2-staff-password"
 					/>
 				</Grid>
 			) : null}

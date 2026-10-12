@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageTitle } from "@helpers/pageTitle";
 import Box from "@mui/material/Box";
 import Error from "@components/Error/Error";
 import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/networkError")({
+	head: () => ({ meta: [{ title: pageTitle("ui.feedback.network_error") }] }),
 	component: NetworkError,
 });
 
@@ -12,6 +14,7 @@ function NetworkError() {
 
 	return (
 		<Box
+			component="main"
 			sx={{
 				display: "flex",
 				justifyContent: "center",

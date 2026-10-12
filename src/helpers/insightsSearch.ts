@@ -55,8 +55,9 @@ export type InsightsSearch = z.infer<typeof insightsSearchSchema>;
 
 /** The view a bare `/insights` shows, so callers never have to spell the defaults out. */
 export function resolveSearch(search: InsightsSearch) {
+	// Calendar days, inclusive. A window that ends before it starts is not one.
 	const custom =
-		search.from && search.to
+		search.from && search.to && search.from <= search.to
 			? { startDate: search.from, endDate: search.to }
 			: null;
 

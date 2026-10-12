@@ -144,10 +144,20 @@ const lookup = (key: string): unknown =>
  */
 const PLURAL_SUFFIXES = ["_one", "_other", "_zero", "_two", "_few", "_many"];
 
-function resolves(key: string): boolean {
-	if (lookup(key) !== undefined) return true;
+/**
+ * A key resolves only to TEXT. One naming a branch of the tree - `ui.info.loading`,
+ * which holds `document` - renders i18next's "returned an object instead of string",
+ * which reached a progress bar's accessible name. `returnObjects` is how a caller
+ * asks for the branch on purpose.
+ */
+function resolves(key: string, args = ""): boolean {
+	const value = lookup(key);
+	if (typeof value === "string") return true;
+	if (value !== undefined && args.includes("returnObjects")) return true;
 
-	return PLURAL_SUFFIXES.some((suffix) => lookup(`${key}${suffix}`) !== undefined);
+	return PLURAL_SUFFIXES.some(
+		(suffix) => typeof lookup(`${key}${suffix}`) === "string",
+	);
 }
 
 interface Finding {
@@ -165,9 +175,9 @@ function findMissingKeys(): Finding[] {
 		const source = stripComments(fs.readFileSync(file, "utf8"));
 		for (const match of source.matchAll(call)) {
 			const key = match[2];
-			if (resolves(key)) continue;
 			const args = callArguments(source, source.indexOf("(", match.index));
-			if (hasInlineDefault(args)) continue;
+			if (resolves(key, args)) continue;
+			if (lookup(key) === undefined && hasInlineDefault(args)) continue;
 			findings.push({
 				key,
 				file: path.relative(path.dirname(SRC), file).split(path.sep).join("/"),
@@ -237,6 +247,9 @@ ${report}`
 		expect(hasInlineDefault(`"a.key", { count: 2 }`)).toBe(false);
 		expect(resolves("ui.actions.save")).toBe(true);
 		expect(resolves("definitely.not.a.key")).toBe(false);
+		// A branch is not text, and an inline default does not rescue one.
+		expect(resolves("ui.info.loading")).toBe(false);
+		expect(resolves("ui.info.loading", "{ returnObjects: true }")).toBe(true);
 		// Stored as insights.trends.buckets_counted_one / _other, never under the base.
 		expect(resolves("insights.trends.buckets_counted")).toBe(true);
 	});

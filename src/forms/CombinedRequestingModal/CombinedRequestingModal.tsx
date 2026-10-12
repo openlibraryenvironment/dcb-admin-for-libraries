@@ -151,13 +151,17 @@ export default function CombinedRequestingModal({
 		<>
 			<Dialog
 				open={show}
-				onClose={handleClose}
+				onClose={(_event, reason) => {
+					// A stray click outside must not discard a validated patron mid-request.
+					// Escape and the close button still close it.
+					if (reason === "backdropClick" && requestType !== null) return;
+					handleClose();
+				}}
 				aria-labelledby="form-dialog-title"
 				fullWidth
 				maxWidth="sm">
 				<DialogTitle id="form-dialog-title" variant="modalTitle">
 					{t("requesting.place_title", { title: title })}
-					{/** We will need to do the same thing here and cut off the title after a certain point, but offer the option to expand  */}
 				</DialogTitle>
 				<IconButton
 					aria-label={t("ui.actions.close")}
