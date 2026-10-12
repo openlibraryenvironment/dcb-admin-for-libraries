@@ -10,6 +10,8 @@ export const AGENCY_CODE = "e2e-agency";
 export interface FakeUserOptions {
 	roles?: string[];
 	agencyCode?: string;
+	/** Seconds until the access token expires; a year when omitted. */
+	expiresInSeconds?: number;
 }
 
 /**
@@ -32,6 +34,7 @@ export function getAuthStorageKey(): string {
 function buildFakeUser({
 	roles = LIBRARY_ADMIN_ROLES,
 	agencyCode = AGENCY_CODE,
+	expiresInSeconds = 60 * 60 * 24 * 365,
 }: FakeUserOptions = {}) {
 	return {
 		id_token: "e2e-fake-id-token",
@@ -50,7 +53,7 @@ function buildFakeUser({
 		// Far enough out that automaticSilentRenew's timer, which is scheduled
 		// relative to expires_at, never fires mid-run against a host that does
 		// not resolve.
-		expires_at: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365,
+		expires_at: Math.floor(Date.now() / 1000) + expiresInSeconds,
 	};
 }
 

@@ -1,3 +1,4 @@
+import { OPTIONAL_QUERY } from "@helpers/serviceErrors";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import axios from "axios";
@@ -33,6 +34,7 @@ export function useBrandUploadsAvailable(): boolean {
 
 	const { data } = useQuery({
 		queryKey: ["dcbServiceInfo", "brandAssetStore", apiBase],
+		meta: OPTIONAL_QUERY,
 		queryFn: async () => {
 			const response = await axios.get(apiBase + "/info");
 			return brandAssetStoreFrom(response.data);

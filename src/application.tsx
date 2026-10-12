@@ -5,12 +5,13 @@ import { createRouter, type AnyRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { LicenseInfo } from "@mui/x-license";
 import { AuthProvider } from "react-oidc-context";
-import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import App from "@components/App/App";
+import { classifyServiceError } from "@helpers/serviceErrors";
 import NotFound from "@components/Error/NotFound";
 import RouteError from "@components/Error/RouteError";
 import { User } from "oidc-client-ts";
@@ -80,23 +81,11 @@ export async function getStandaloneConfig() {
 
 let router: AnyRouter;
 
-const handleServiceErrors = (error: any) => {
-	const isNetworkError =
-		error.message?.includes("Failed to fetch") ||
-		error.message?.includes("Network request failed") ||
-		error.message?.includes("NetworkError");
-	const isServiceUnavailable = error?.response?.status === 503;
-
-	if (toRoutePath() === "/maintenance") {
-		return;
-	}
-
-	if (isServiceUnavailable) {
-		window.location.href = appPath("maintenance");
-	}
-	if (isNetworkError) {
-		window.location.href = appPath("networkError");
-	}
+const handleServiceErrors = (error: unknown) => {
+	if (toRoutePath() === "/maintenance") return;
+	const failure = classifyServiceError(error);
+	if (failure === "maintenance") window.location.href = appPath("maintenance");
+	if (failure === "network") window.location.href = appPath("networkError");
 };
 
 const queryClient = new QueryClient({
@@ -106,11 +95,13 @@ const queryClient = new QueryClient({
 			retry: 1,
 		},
 	},
+	// Mutations are absent on purpose: a user's action reports its own failure where it was
+	// taken, and leaving the page would lose the form and the answer to "did it go through?".
 	queryCache: new QueryCache({
-		onError: (error) => handleServiceErrors(error),
-	}),
-	mutationCache: new MutationCache({
-		onError: (error) => handleServiceErrors(error),
+		onError: (error, query) => {
+			if (query.meta?.optional) return;
+			handleServiceErrors(error);
+		},
 	}),
 });
 
@@ -193,6 +184,12 @@ export async function mountDcbAdminForLibraries(
 				</AuthProvider>
 			</React.StrictMode>,
 		);
+	}
+}
+
+declare module "@tanstack/react-query" {
+	interface Register {
+		queryMeta: { optional?: boolean };
 	}
 }
 

@@ -1,3 +1,4 @@
+import { OPTIONAL_QUERY } from "@helpers/serviceErrors";
 import { useQuery } from "@tanstack/react-query";
 import {
 	Typography,
@@ -30,6 +31,7 @@ export default function TopTitlesSummary({
 
 	const { data, isLoading, isError } = useQuery({
 		queryKey: ["TopRequestedTitlesSummary", libraryCode, DCB_API_BASE, headers],
+		meta: OPTIONAL_QUERY,
 		queryFn: async () => {
 			const startDate = dayjs()
 				.subtract(1, "month")

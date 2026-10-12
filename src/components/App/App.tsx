@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 
 import { DisplayThemeProvider } from "@components/App/DisplayThemeProvider";
+import { storageKey } from "@helpers/appBase";
 
 interface AppProps {
 	queryClient: QueryClient;
@@ -26,6 +27,21 @@ export default function App({ queryClient, router }: AppProps) {
 		if (auth.isLoading) return;
 		void router.invalidate();
 	}, [auth.isLoading, auth.isAuthenticated, auth.user, router]);
+
+	// Raised only once silent renewal has failed (an SSO session past its maximum, a tab left
+	// overnight). Every request would now be refused, so sign in again and come back here.
+	const { events, signinRedirect } = auth;
+	useEffect(
+		() =>
+			events.addAccessTokenExpired(() => {
+				sessionStorage.setItem(
+					storageKey("afterLoginRedirectPath"),
+					window.location.pathname + window.location.search + window.location.hash,
+				);
+				void signinRedirect();
+			}),
+		[events, signinRedirect],
+	);
 
 	return (
 		<QueryClientProvider client={queryClient}>
