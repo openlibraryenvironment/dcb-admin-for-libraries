@@ -66,6 +66,7 @@ does not show the feature.
 | `VITE_FEATURE_LIBRARY_BRANDING` | **9.0.0** or later | The "How your library appears to patrons" block on the library profile: logo, logo description and discovery theme |
 | `VITE_FEATURE_INSIGHTS` | **9.0.0** or later | The Insights page, and the top-titles / top-requesters panels on the library profile (all of them call `/insights/**`) |
 | `VITE_FEATURE_LIBRARY_SUPPORT_URL` | **after 9.0.0** (`V9_0_008`, on main) | The "Report a problem URL" field in the "Links for patrons" block |
+| `VITE_FEATURE_INSIGHTS_WALK_UP` | **after 9.1.0**: the release carrying `/insights/library-breakdown` | The "Collected in person, or sent" panel under Insights, Service. Needs `VITE_FEATURE_INSIGHTS` too |
 | `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | **9.0.0** or later | Scoping the request grids by agency code rather than by Host LMS code, and the library column that needs it |
 | `VITE_FEATURE_GUARDED_CLEANUP` | **9.0.0** or later | Request cleanup that the service refuses, with a reason, while the item is still out |
 | `VITE_FEATURE_INSIGHTS_TRENDS` | **9.1.0** or later (`/insights/trend`) | The duration trend panel on Insights → Trends. Needs `VITE_FEATURE_INSIGHTS` as well |
@@ -281,7 +282,7 @@ through them before the release pipeline runs, and the checks after it.
    | --- | --- |
    | `VITE_FEATURE_INSIGHTS`, `VITE_FEATURE_LIBRARY_BRANDING`, `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`, `VITE_FEATURE_GUARDED_CLEANUP` | 9.0.0 |
    | `VITE_FEATURE_INSIGHTS_TRENDS` | 9.1.0 |
-   | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS` | none yet: must resolve to off |
+   | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP` | none yet: must resolve to off |
 
    A flag that is absent from the table is off on every host, which is the safe failure for
    the last row and the wrong one for the others. `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`

@@ -6,7 +6,6 @@ import {
 	Box,
 	Card,
 	CardContent,
-	Skeleton,
 	Table,
 	TableBody,
 	TableCell,
@@ -20,6 +19,7 @@ import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { libraryBreakdownQueryOptions, StatsParams } from "@helpers/statsApi";
 
 import MetricInfo from "./MetricInfo";
+import PanelState from "./PanelState";
 
 const PANEL_MIN_HEIGHT = 300;
 
@@ -39,7 +39,9 @@ export default function WalkUpDiversionPanel({ params }: { params: StatsParams }
 	const client = useDcbRestClient();
 	const headingId = useId();
 
-	const { data, isLoading } = useQuery(libraryBreakdownQueryOptions(client, params));
+	const { data, isLoading, isError, refetch, isFetching } = useQuery(
+		libraryBreakdownQueryOptions(client, params),
+	);
 
 	const rows = useMemo(
 		() =>
@@ -82,74 +84,76 @@ export default function WalkUpDiversionPanel({ params }: { params: StatsParams }
 					{t("insights.walk_up.explainer")}
 				</Typography>
 
-				{isLoading ? (
-					// Matched to the table it replaces: layout shift is the one metric a
-					// reviewer cannot see in a diff.
-					<Skeleton variant="rounded" height={PANEL_MIN_HEIGHT - 80} />
-				) : rows.length === 0 ? (
-					<Typography color="text.secondary">
-						{t("insights.walk_up.no_requests")}
-					</Typography>
-				) : (
-					<Box>
-						{/* Zero walk-ups is a real and common answer while walk-up is not
-						    switched on, and a table of zeroes reads as a broken panel. Saying
-						    so is the difference between "no data" and "nothing yet". */}
-						{!anyWalkUp && (
-							<Alert severity="info" sx={{ mb: 2 }}>
-								{t("insights.walk_up.none_yet")}
-							</Alert>
-						)}
+				<PanelState
+					isLoading={isLoading}
+					isError={isError}
+					isEmpty={rows.length === 0}
+					onRetry={refetch}
+					isRetrying={isFetching}
+					height={PANEL_MIN_HEIGHT - 80}
+					emptyKey="insights.walk_up.no_requests"
+				>
+					{() => (
+						<Box>
+							{/* Zero walk-ups is a real and common answer while walk-up is not
+							    switched on, and a table of zeroes reads as a broken panel. Saying
+							    so is the difference between "no data" and "nothing yet". */}
+							{!anyWalkUp && (
+								<Alert severity="info" sx={{ mb: 2 }}>
+									{t("insights.walk_up.none_yet")}
+								</Alert>
+							)}
 
-						<TableContainer sx={{ overflowX: "auto" }}>
-							<Table size="small">
-								<TableHead>
-									<TableRow>
-										<TableCell>{t("insights.walk_up.library")}</TableCell>
-										<TableCell align="right">
-											{t("insights.walk_up.total")}
-										</TableCell>
-										<TableCell align="right">
-											{t("insights.walk_up.collected")}
-										</TableCell>
-										<TableCell align="right">
-											{t("insights.walk_up.shipped")}
-										</TableCell>
-										<TableCell align="right">
-											{t("insights.walk_up.share")}
-										</TableCell>
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{rows.map((row) => (
-										<TableRow key={row.libraryCode}>
-											<TableCell component="th" scope="row">
-												{row.libraryName}
+							<TableContainer sx={{ overflowX: "auto" }}>
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>{t("insights.walk_up.library")}</TableCell>
+											<TableCell align="right">
+												{t("insights.walk_up.total")}
 											</TableCell>
 											<TableCell align="right">
-												{row.totalRequests.toLocaleString()}
+												{t("insights.walk_up.collected")}
 											</TableCell>
 											<TableCell align="right">
-												{row.walkUpRequests.toLocaleString()}
+												{t("insights.walk_up.shipped")}
 											</TableCell>
 											<TableCell align="right">
-												{row.shippedRequests.toLocaleString()}
-											</TableCell>
-											<TableCell align="right">
-												{/* An em dash, not 0%. A library with no requests has
-												    no share, and printing zero would read as "nobody
-												    walks up here" rather than "nothing to divide by". */}
-												{row.walkUpShare == null
-													? "—"
-													: `${row.walkUpShare.toFixed(1)}%`}
+												{t("insights.walk_up.share")}
 											</TableCell>
 										</TableRow>
-									))}
-								</TableBody>
-							</Table>
-						</TableContainer>
-					</Box>
-				)}
+									</TableHead>
+									<TableBody>
+										{rows.map((row) => (
+											<TableRow key={row.libraryCode}>
+												<TableCell component="th" scope="row">
+													{row.libraryName}
+												</TableCell>
+												<TableCell align="right">
+													{row.totalRequests.toLocaleString()}
+												</TableCell>
+												<TableCell align="right">
+													{row.walkUpRequests.toLocaleString()}
+												</TableCell>
+												<TableCell align="right">
+													{row.shippedRequests.toLocaleString()}
+												</TableCell>
+												<TableCell align="right">
+													{/* An em dash, not 0%. A library with no requests has
+													    no share, and printing zero would read as "nobody
+													    walks up here" rather than "nothing to divide by". */}
+													{row.walkUpShare == null
+														? "—"
+														: `${row.walkUpShare.toFixed(1)}%`}
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						</Box>
+					)}
+				</PanelState>
 			</CardContent>
 		</Card>
 	);

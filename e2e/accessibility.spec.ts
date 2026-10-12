@@ -240,7 +240,10 @@ const PAGES: Surface[] = [
 			name: `insights - ${subject}`,
 			path: `/insights?tab=${subject}`,
 			prepare: async (app) => {
-				await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+				await app.enableFeatures([
+					"VITE_FEATURE_INSIGHTS",
+					"VITE_FEATURE_INSIGHTS_WALK_UP",
+				]);
 				await app.signIn();
 				await app.mockGraphQL({
 					LoadLibrary: library,

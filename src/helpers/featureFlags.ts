@@ -104,6 +104,16 @@ export const isInsightsTrendsEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_INSIGHTS_TRENDS");
 
 /**
+ * Walk-up against shipped - `/insights/library-breakdown`, on dcb-service branch
+ * `feat/discovery-service-support` and in no release.
+ *
+ * Separate from VITE_FEATURE_INSIGHTS for the trends flag's reason: every released
+ * dcb-service answers this one endpoint 404, which the panel would report as a fault.
+ */
+export const isInsightsWalkUpEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_INSIGHTS_WALK_UP");
+
+/**
  * Whether a discovery front end is deployed beside us — docs/DEPLOYMENT.md §2b.
  *
  * NOT a `VITE_FEATURE_*` and not a SERVICE_CAPABILITIES row: those say whether this

@@ -197,7 +197,10 @@ test.describe("Library insights", () => {
 		// two numbers, and the call that fetches them must narrow like every other one -
 		// this panel sits beside peer benchmarking, which is deliberately consortium-wide,
 		// and the two must not be confused.
-		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.enableFeatures([
+			"VITE_FEATURE_INSIGHTS",
+			"VITE_FEATURE_INSIGHTS_WALK_UP",
+		]);
 		await app.signIn();
 		await app.mockGraphQL(mocks);
 		await app.mockStats();
@@ -234,7 +237,10 @@ test.describe("Library insights", () => {
 	}) => {
 		// Degrade honestly where there are no libraries rather than reporting zero.
 		// A blank cell reads as a rendering fault; the code reads as a configuration fact.
-		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.enableFeatures([
+			"VITE_FEATURE_INSIGHTS",
+			"VITE_FEATURE_INSIGHTS_WALK_UP",
+		]);
 		await app.signIn();
 		await app.mockGraphQL(mocks);
 		await app.mockStats();
@@ -260,7 +266,10 @@ test.describe("Library insights", () => {
 	}) => {
 		// A table of zeroes reads as a broken panel. While walk-up is not switched on,
 		// zero is the correct and expected answer and the page has to say which it is.
-		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.enableFeatures([
+			"VITE_FEATURE_INSIGHTS",
+			"VITE_FEATURE_INSIGHTS_WALK_UP",
+		]);
 		await app.signIn();
 		await app.mockGraphQL(mocks);
 		await app.mockStats({
@@ -283,6 +292,56 @@ test.describe("Library insights", () => {
 		await expect(
 			page.getByText("Walk-up collection may not be switched on yet."),
 		).toBeVisible();
+	});
+
+	test("leaves walk-up out, without asking, where the endpoint is not released", async ({
+		page,
+		app,
+	}) => {
+		// Every released dcb-service answers /insights/library-breakdown 404. Through the
+		// panel contract that would read as a fault; without one it read as "walk-up is off".
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+
+		const statsRequests = trackStatsRequests(page);
+
+		await page.goto("/insights?tab=service");
+		await scrollUntilPresent(
+			page, page.getByRole("heading", { name: "Supplier responsiveness" }));
+
+		await expect(page.getByRole("heading", { name: WALK_UP_PANEL })).toHaveCount(0);
+		expect(
+			statsRequests.filter((url) =>
+				url.pathname.endsWith("/insights/library-breakdown")),
+		).toEqual([]);
+	});
+
+	test("reports a walk-up failure as a failure, not as walk-up being off", async ({
+		page,
+		app,
+	}) => {
+		await app.enableFeatures([
+			"VITE_FEATURE_INSIGHTS",
+			"VITE_FEATURE_INSIGHTS_WALK_UP",
+		]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+		await page.route("**/insights/library-breakdown*", (route) =>
+			route.fulfill({ status: 404, body: "" }),
+		);
+
+		await page.goto("/insights?tab=service");
+		await scrollUntilPresent(
+			page, page.getByRole("heading", { name: WALK_UP_PANEL }));
+
+		const panel = page.getByRole("region", { name: WALK_UP_PANEL });
+		await expect(panel.getByText("This panel could not be loaded")).toBeVisible();
+		await expect(panel.getByRole("button", { name: "Retry" })).toBeVisible();
+		await expect(panel.getByText(/may not be switched on/)).toHaveCount(0);
+		await expect(panel.getByText("No requests in this period.")).toHaveCount(0);
 	});
 
 	test("does not take the library from the URL", async ({ page, app }) => {

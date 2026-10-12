@@ -78,7 +78,10 @@ import { ExpandMore } from "@mui/icons-material";
 import type { InsightsView } from "@/hooks/useInsightsView";
 import type { RangePreset } from "@helpers/insightsSearch";
 import { Subject, resolveSubject } from "@helpers/insightsSubjects";
-import { isInsightsTrendsEnabled } from "@helpers/featureFlags";
+import {
+	isInsightsTrendsEnabled,
+	isInsightsWalkUpEnabled,
+} from "@helpers/featureFlags";
 
 const RANGE_PRESETS: RangePreset[] = ["7d", "30d", "90d", "365d"];
 
@@ -506,9 +509,11 @@ export default function InsightsDashboard({
 					{/* Walk-up versus shipped, so the courier saving is evidence and not a
 					    slide. Beside peer benchmarking because both answer "how are we
 					    doing" rather than "what happened". */}
-					<LazyPanel minHeight={320}>
-						<WalkUpDiversionPanel params={params} />
-					</LazyPanel>
+					{isInsightsWalkUpEnabled() ? (
+						<LazyPanel minHeight={320}>
+							<WalkUpDiversionPanel params={params} />
+						</LazyPanel>
+					) : null}
 
 					{/* Operational breakdowns */}
 					<LazyPanel minHeight={360}>
