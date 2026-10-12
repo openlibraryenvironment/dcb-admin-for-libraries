@@ -3,7 +3,7 @@ import { pageTitle } from "@helpers/pageTitle";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useBlocker, useRouter } from "@tanstack/react-router";
 import axios from "axios";
 import {
 	BrandUploadError,
@@ -155,7 +155,6 @@ function HomeComponent() {
 	// Refactor into common functionality
 	// Handling the edits, saves, info
 	// then the confirm save
-	// and then also the unsaved changes warning - this will probably be very different in tanstack router
 	const handleEdit = () => {
 		setEditMode(true);
 		setTimeout(() => {
@@ -356,6 +355,14 @@ function HomeComponent() {
 		//@ts-expect-error Until we figure this type mismatch out
 		resolver: yupResolver(validationSchema),
 		mode: "onChange",
+	});
+
+	const hasUnsavedEdits = editMode && (isDirty || !!stagedLogo);
+	const leaveGuard = useBlocker({
+		shouldBlockFn: () => hasUnsavedEdits,
+		enableBeforeUnload: hasUnsavedEdits,
+		disabled: !hasUnsavedEdits,
+		withResolver: true,
 	});
 
 	useEffect(() => {
@@ -1014,6 +1021,17 @@ function HomeComponent() {
 					onConfirm={handleConfirmSave}
 					action="pageEdit"
 					editInformation={formatChangedFields(changedFields, library)}
+					entityName={library?.fullName}
+					entityType={t("entities.library")}
+					gridEdit={false}
+				/>
+			)}
+            {leaveGuard.status === "blocked" && (
+				<Confirmation
+					open
+					onClose={leaveGuard.reset}
+					onConfirm={() => leaveGuard.proceed()}
+					action="unsavedChanges"
 					entityName={library?.fullName}
 					entityType={t("entities.library")}
 					gridEdit={false}

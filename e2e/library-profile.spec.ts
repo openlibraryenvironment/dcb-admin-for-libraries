@@ -23,6 +23,30 @@ const signedInOnProfile = async (
 	await expect(page.getByText("E2E Test Library").first()).toBeVisible();
 };
 
+const LIBRARY_ID = library.libraries.content[0].id;
+
+/** Answers UpdateLibrary and keeps every set of variables it was sent. */
+const recordUpdates = () => {
+	const sent: Record<string, unknown>[] = [];
+	const responder = (variables: Record<string, unknown>) => {
+		sent.push(variables);
+		return { updateLibrary: { id: LIBRARY_ID } };
+	};
+	return { sent, responder };
+};
+
+/** Fills the change-log form the Save confirmation asks for, and confirms. */
+const confirmChange = async (
+	page: import("@playwright/test").Page,
+	reason: string,
+) => {
+	const dialog = page.getByRole("dialog", { name: "Edit E2E Test Library" });
+	await dialog.getByRole("combobox", { name: /Change category/ }).click();
+	await page.getByRole("option", { name: "Details changed" }).click();
+	await dialog.getByRole("textbox", { name: /Reason for change/ }).fill(reason);
+	await dialog.getByRole("button", { name: "Confirm changes" }).click();
+};
+
 /**
  * Fields whose edit control carries its own visible label. Each must contribute
  * exactly ONE visible name in edit mode - the control's - rather than a heading
@@ -97,12 +121,14 @@ test.describe("a library with no coordinates", () => {
 	};
 
 	test("can still save the rest of its profile", async ({ app, page }) => {
+		const updates = recordUpdates();
 		await app.signIn();
 		await app.mockGraphQL({
 			LoadLibrary: withoutCoordinates,
 			LoadLibraryBasics: withoutCoordinates,
 			LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
 			LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
+			UpdateLibrary: updates.responder,
 		});
 		await page.goto("/");
 		await page.getByRole("button", { name: /^edit$/i }).click();
@@ -118,8 +144,21 @@ test.describe("a library with no coordinates", () => {
 
 		await expect(page.getByText(/cannot be null/i)).toHaveCount(0);
 
-		// The save went through, so the form left edit mode. Without the fix it
-		// stays open with the Latitude field red and Save doing nothing.
+		// Without the fix Save does nothing and this dialog never opens. Once it is
+		// open the page behind it is aria-hidden, so asserting on the Save button
+		// here would pass whether or not anything was saved.
+		await confirmChange(page, "Name corrected");
+
+		await expect.poll(() => updates.sent.length).toBe(1);
+		expect(updates.sent[0]).toEqual({
+			input: {
+				id: LIBRARY_ID,
+				fullName: "Anytown Public Library",
+				reason: "Name corrected",
+				changeCategory: "Details changed",
+				changeReferenceUrl: "",
+			},
+		});
 		await expect(page.getByRole("button", { name: /^save$/i })).toHaveCount(0);
 	});
 
@@ -262,6 +301,146 @@ test.describe("editing the profile", () => {
 		await page.locator('input[type="file"]').setInputFiles(logo);
 		await save.click();
 		await expect(page.getByRole("dialog")).toBeVisible();
+	});
+
+	test("saves an edit with its reason, says so, and returns focus to Edit", async ({
+		app,
+		page,
+	}) => {
+		const updates = recordUpdates();
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			...STATS_MOCKS,
+			UpdateLibrary: updates.responder,
+		});
+
+		await page.goto("/");
+		await page.getByRole("button", { name: /^edit$/i }).click();
+		await page
+			.getByRole("textbox", { name: /support hours/i })
+			.fill("Mon-Sat, 9-6");
+		await page.getByRole("button", { name: /^save$/i }).click();
+		await confirmChange(page, "Saturday opening");
+
+		await expect.poll(() => updates.sent.length).toBe(1);
+		expect(updates.sent[0]).toEqual({
+			input: {
+				id: LIBRARY_ID,
+				supportHours: "Mon-Sat, 9-6",
+				reason: "Saturday opening",
+				changeCategory: "Details changed",
+				changeReferenceUrl: "",
+			},
+		});
+
+		await expect(page.getByRole("alert")).toContainText(
+			"The library E2E Test Library was updated successfully",
+		);
+		await expect(page.getByRole("button", { name: /^save$/i })).toHaveCount(0);
+		await expect(page.getByRole("button", { name: /^edit$/i })).toBeFocused();
+	});
+});
+
+test.describe("leaving the profile with unsaved edits", () => {
+	const settingsTab = (page: import("@playwright/test").Page) =>
+		page.getByRole("tab", { name: /^settings$/i });
+	const leaveDialog = (page: import("@playwright/test").Page) =>
+		page.getByRole("dialog", { name: "Leave without saving?" });
+
+	const editFullName = async (
+		app: import("./fixtures/test").AppFixture,
+		page: import("@playwright/test").Page,
+	) => {
+		await signedInOnProfile(app, page);
+		await page.getByRole("button", { name: /^edit$/i }).click();
+		const fullName = page.getByRole("textbox", { name: /full name/i }).first();
+		await fullName.fill("Typed but not saved");
+		return fullName;
+	};
+
+	test("asks first, and staying keeps what was typed", async ({ app, page }) => {
+		const fullName = await editFullName(app, page);
+
+		await settingsTab(page).click();
+
+		const dialog = leaveDialog(page);
+		await expect(dialog).toBeVisible();
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() => !!document.activeElement?.closest('[role="dialog"]'),
+				),
+			)
+			.toBe(true);
+
+		await dialog.getByRole("button", { name: "Keep editing" }).click();
+
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL(/\/$/);
+		await expect(fullName).toHaveValue("Typed but not saved");
+		await expect(settingsTab(page)).toBeFocused();
+	});
+
+	test("leaving goes where it was asked to", async ({ app, page }) => {
+		await editFullName(app, page);
+
+		await settingsTab(page).click();
+		await leaveDialog(page)
+			.getByRole("button", { name: "Leave without saving" })
+			.click();
+
+		await expect(page).toHaveURL(/\/settings$/);
+		await expect(leaveDialog(page)).toHaveCount(0);
+	});
+
+	test("the browser's back button asks too", async ({ app, page }) => {
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			...STATS_MOCKS,
+		});
+		await page.goto("/settings");
+		await page.getByRole("tab", { name: /^home$/i }).click();
+		await page.getByRole("button", { name: /^edit$/i }).click();
+		await page
+			.getByRole("textbox", { name: /full name/i })
+			.first()
+			.fill("Typed but not saved");
+
+		await page.goBack();
+
+		await expect(leaveDialog(page)).toBeVisible();
+		await leaveDialog(page)
+			.getByRole("button", { name: "Leave without saving" })
+			.click();
+		await expect(page).toHaveURL(/\/settings$/);
+	});
+
+	test("closing the tab asks the browser to confirm", async ({ app, page }) => {
+		await editFullName(app, page);
+
+		const prompt = page.waitForEvent("dialog");
+		await page.close({ runBeforeUnload: true });
+		const dialog = await prompt;
+
+		expect(dialog.type()).toBe("beforeunload");
+		await dialog.accept();
+	});
+
+	test("with nothing changed, navigating away asks nothing", async ({
+		app,
+		page,
+	}) => {
+		await signedInOnProfile(app, page);
+		await page.getByRole("button", { name: /^edit$/i }).click();
+
+		await settingsTab(page).click();
+
+		await expect(page).toHaveURL(/\/settings$/);
+		await expect(page.getByRole("dialog")).toHaveCount(0);
 	});
 });
 
