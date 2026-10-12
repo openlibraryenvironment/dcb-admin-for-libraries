@@ -321,9 +321,10 @@ test("Excel exports under a strict Content-Security-Policy", async ({ app, page 
 
 	await page.goto("/patronRequests");
 	await openWizard(page);
-	// Counted from here: zod probes `Function("")` once at start-up, in a try, and falls
-	// back when it is refused. docs/export.md.
-	const before = (await violations()).length;
+	// Only the test's own unhashed inline script is refused at start-up; zod runs jitless.
+	const startup = await violations();
+	expect(startup.filter((violation) => !violation.includes(" inline "))).toEqual([]);
+	const before = startup.length;
 	const download = await exportFrom(page, "Excel (.xlsx)");
 
 	expect(download.suggestedFilename()).toBe("patronRequests_export.xlsx");
