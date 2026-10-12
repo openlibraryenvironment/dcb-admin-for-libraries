@@ -1,10 +1,7 @@
-// Per-chunk byte budgets over dist/, run after a build — see
-// docs/modules/developer/pages/performance-budget.adoc, "Two budgets, and why neither is enough".
-//
-// Lighthouse measures pages; this measures CHUNKS. It exists because Lighthouse structurally
-// cannot see a route behind a sign-in, and `/requests` — the heaviest route in the app — is
-// one. Its grid chunk grew to 190 KiB gzipped without any gate noticing.
-import { readdirSync, readFileSync } from "node:fs";
+// Gzipped byte budgets over dist/, run after a build: what every page loads first, the whole
+// build, and each named chunk. What each measures and why: docs/testing.md, "What the bundle
+// budget measures". Lighthouse cannot reach a route behind sign-in; this reaches every chunk.
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { join } from "node:path";
 
@@ -63,6 +60,35 @@ for (const name of Object.keys(BUDGET.chunks)) {
 	}
 }
 
+// What every page loads before its own route code: the entry, the app shell it boots, and
+// their static imports. Both regressions this budget missed in 2.0 landed here.
+const manifestPath = join("dist", ".vite", "manifest.json");
+if (!existsSync(manifestPath)) {
+	console.error(`${manifestPath} is missing: the build must emit its manifest (vite.config.ts).`);
+	process.exit(1);
+}
+const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+const initialFiles = new Set();
+const follow = (key) => {
+	const entry = manifest[key];
+	if (!entry || initialFiles.has(entry.file)) return;
+	initialFiles.add(entry.file);
+	for (const css of entry.css ?? []) initialFiles.add(css);
+	for (const dep of entry.imports ?? []) follow(dep);
+};
+follow("index.html");
+for (const shell of manifest["index.html"]?.dynamicImports ?? []) follow(shell);
+const initial = measured
+	.filter((chunk) => initialFiles.has(`assets/${chunk.file}`))
+	.reduce((sum, chunk) => sum + chunk.gz, 0);
+if (initial > BUDGET.initialBytes) {
+	problems.push(
+		`What every page loads first is ${initial} bytes gzipped, over its budget of ` +
+			`${BUDGET.initialBytes} (+${initial - BUDGET.initialBytes}). Find what moved into ` +
+			`the route tree or the app shell; a route file's loader and validateSearch load eagerly.`,
+	);
+}
+
 if (total > BUDGET.totalBytes) {
 	problems.push(
 		`Everything in dist/assets is ${total} bytes gzipped, over the total budget of ` +
@@ -76,6 +102,7 @@ for (const chunk of measured.filter((c) => c.gz > NAME_ABOVE)) {
 	const room = budget === undefined ? "unbudgeted" : `${budget - chunk.gz} to spare`;
 	console.log(`  ${chunk.name.padEnd(widest)}  ${String(chunk.gz).padStart(7)} gz   ${room}`);
 }
+console.log(`  ${"INITIAL LOAD".padEnd(widest)}  ${String(initial).padStart(7)} gz   ${BUDGET.initialBytes - initial} to spare`);
 console.log(`  ${"TOTAL".padEnd(widest)}  ${String(total).padStart(7)} gz   ${BUDGET.totalBytes - total} to spare`);
 
 if (problems.length > 0) {

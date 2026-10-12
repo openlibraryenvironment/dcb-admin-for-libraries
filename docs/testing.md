@@ -11,7 +11,7 @@ What the gates are, and the two ways each of them can lie to you.
 | Unit | `npx vitest run` | **not** `npm run test`, which is watch mode |
 | E2E | `npx playwright test` | the production build under `vite preview` |
 | Accessibility | `npx playwright test e2e/accessibility.spec.ts` | zero axe violations on every surface, both schemes |
-| Bundle | `node scripts/check-bundle-budget.mjs` | per-chunk gzipped budgets, after a build |
+| Bundle | `node scripts/check-bundle-budget.mjs` | gzipped budgets for what every page loads first, the whole build, and each named chunk, after a build |
 | Lighthouse | `npx lhci autorun` | transfer, CLS and the category scores |
 | Naming | `npm run naming` | no name that only means something inside this workspace |
 | Secrets | `npm run gates -- --only secrets` | gitleaks over the whole history; needs a binary or Docker |
@@ -31,6 +31,46 @@ Three of them are `react-hook-form`'s `watch()` being flagged as
 compiler-incompatible, which has no fix short of changing the form
 architecture. **A gate that can only be satisfied with suppressions is not a
 gate**, so that family stays off until it can be turned on and left green.
+
+## What the bundle budget measures
+
+`bundle-budget.json` holds three kinds of number, all gzipped, all checked by
+`scripts/check-bundle-budget.mjs` against the build in `dist/`:
+
+| Budget | Measures | Why it exists |
+|---|---|---|
+| `initialBytes` | what every page loads before its own route code: the entry, the app shell it boots, and their static imports, read from the build manifest | the cost every user pays, `/login` included |
+| `totalBytes` | every script and stylesheet the build emits | growth anywhere, including code only some users load |
+| `chunks` | each chunk over `nameChunksAboveBytes` | which chunk grew, by name |
+
+Each is what was measured plus 2%, unless its note in the file argues for more. Never raise
+one to make a build pass: cut the weight, or bring a written argument in the same change.
+
+**`initialBytes` was added after both 2.0 regressions slipped past a total-only budget.**
+The Insights dashboard joined `/login`'s initial load (+190 KB) through a pending component
+that shared its module, and every grid's column definitions joined it (+40 KB) through
+`validateSearch`. The total barely moved in either case, because the code moved rather than
+grew. Lighthouse caught the first one only as a slower LCP. A route file's options, its
+`validateSearch` and `beforeLoad`, load with the route tree. Its `loader` and its components
+are split out with the page (`codeSplittingOptions` in `vite.config.ts`).
+
+**The 2.0 evaluation, 12 October 2026.** The total fell from 1,252,000 bytes to 931,176, and
+the initial load from 305,377 on `main` to 258,099, with no feature removed:
+
+- `exceljs` (276 KB) and `rasterizeHTML` (27 KB) were in the build but could never load:
+  they serve Excel export and chart image export, and this app offers neither.
+  `vite.config.ts` aliases them to a stub that throws (`EXCLUDED_PACKAGES`), and
+  `tests/excludedFromBuild.test.ts` fails if either feature is switched on.
+- Eight font subsets were inlined as base64 into the stylesheet every page blocks on
+  (22 KB). Fonts are no longer inlined; a subset loads only on a page that draws its
+  characters.
+- Route loaders loaded with the route tree, which put `axios` and the Insights statistics
+  client on every page (36 KB). They now load with their page.
+
+The total is set for the 2.0 release rather than for this branch alone: it adds what the two
+pending feature branches measured against their base (insights-collection +4,440,
+deployment-locale +22,225). Weight that remains and could go later: `axios` (18.6 KB, could be
+`fetch`), and `yup` beside `zod` (24.5 KB, two validation libraries).
 
 ## Readiness is not the assertion
 
