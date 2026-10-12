@@ -4,6 +4,15 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 /// <reference types="vitest/config" />
 
+// Loaded only by features this app does not offer, so never by a browser; left in, they were
+// 303 KB gzipped of a 1,260 KB build. tests/excludedFromBuild.test.ts fails if a feature returns.
+const EXCLUDED_PACKAGES = [
+	// Excel export: DataGrid sets excelOptions.disableToolbarButton and nothing calls exportDataAsExcel.
+	"@mui/x-internal-exceljs-fork",
+	// Chart image export: no chart renders a toolbar or calls exportAsImage.
+	"rasterizehtml",
+];
+
 // The commit, not the version: the build job runs before semantic-release bumps package.json.
 function buildStampPlugin(): Plugin {
 	const build = process.env.CI_COMMIT_SHORT_SHA || "local";
@@ -73,6 +82,15 @@ export default defineConfig(({ mode }) => {
 			tanstackRouter({
 				target: "react",
 				autoCodeSplitting: true,
+				// The loader rides with its component: a loader in the eager route tree put
+				// what it imports (Insights' statistics client, axios) on every page.
+				codeSplittingOptions: {
+					defaultBehavior: [
+						["loader", "component"],
+						["errorComponent"],
+						["notFoundComponent"],
+					],
+				},
 			}),
 			react(),
 			kiBootstrapCssPlugin(),
@@ -89,8 +107,12 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		build: {
-			// think about other ways of addressing bundle size
-			// ultimately if we can't because of the DGrid it's fine
+			// Never inline a font: each subset is fetched only for a page that draws its
+			// characters, and inlined they were 27.6 KB of base64 in CSS every page blocks on.
+			// For scripts/check-bundle-budget.mjs, which budgets what every page loads first.
+			manifest: true,
+			assetsInlineLimit: (filePath) =>
+				/\.(woff2?|ttf|otf)$/.test(filePath) ? false : undefined,
 			rollupOptions: {
 				preserveEntrySignatures: "strict",
 				input: {
@@ -134,6 +156,12 @@ export default defineConfig(({ mode }) => {
 		},
 		resolve: {
 			alias: {
+				...Object.fromEntries(
+					EXCLUDED_PACKAGES.map((name) => [
+						name,
+						path.resolve(import.meta.dirname, "src/helpers/excludedFromBuild.ts"),
+					]),
+				),
 				"@components": path.resolve(import.meta.dirname, "src/components"),
 				"@constants": path.resolve(import.meta.dirname, "src/constants"),
 				"@forms": path.resolve(import.meta.dirname, "src/forms"),
