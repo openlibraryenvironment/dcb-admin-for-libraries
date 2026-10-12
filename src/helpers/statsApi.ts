@@ -830,6 +830,7 @@ export function unfillableDemandQueryOptions(
 ) {
 	return {
 		queryKey: ["stats", "unfillable-demand", params] as const,
+		meta: OPTIONAL_QUERY,
 		queryFn: async (): Promise<UnfillableDemandStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/unfillable-demand`, {
 				params: cleanParams(params),
@@ -875,6 +876,7 @@ export function collectionTotalsQueryOptions(client: AxiosInstance) {
 	return {
 		...collectionAnalysisPolicy,
 		queryKey: ["stats", "collection-totals"] as const,
+		meta: OPTIONAL_QUERY,
 		queryFn: async (): Promise<CollectionTotalsStat> => {
 			const { data } = await client.get(`${STATS_BASE}/collection-totals`);
 			return data;
@@ -886,6 +888,7 @@ export function collectionProfileQueryOptions(client: AxiosInstance) {
 	return {
 		...collectionAnalysisPolicy,
 		queryKey: ["stats", "collection-profile"] as const,
+		meta: OPTIONAL_QUERY,
 		queryFn: async (): Promise<CollectionProfileStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/collection-profile`);
 			return data;
@@ -897,6 +900,7 @@ export function clusterSizeDistributionQueryOptions(client: AxiosInstance) {
 	return {
 		...collectionAnalysisPolicy,
 		queryKey: ["stats", "cluster-size-distribution"] as const,
+		meta: OPTIONAL_QUERY,
 		queryFn: async (): Promise<ClusterSizeStat[]> => {
 			const { data } = await client.get(
 				`${STATS_BASE}/cluster-size-distribution`,
@@ -910,6 +914,7 @@ export function formatProfileQueryOptions(client: AxiosInstance) {
 	return {
 		...collectionAnalysisPolicy,
 		queryKey: ["stats", "format-profile"] as const,
+		meta: OPTIONAL_QUERY,
 		queryFn: async (): Promise<SourceFormatStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/format-profile`);
 			return data;
@@ -928,6 +933,7 @@ export function collectionOverlapQueryOptions(
 	return {
 		...collectionAnalysisPolicy,
 		queryKey: ["stats", "collection-overlap", libraryCode] as const,
+		meta: OPTIONAL_QUERY,
 		queryFn: async (): Promise<CollectionOverlapStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/collection-overlap`, {
 				params: cleanParams({ libraryCode }),

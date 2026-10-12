@@ -33,6 +33,42 @@ test("a 503 from one Insights panel leaves the reader on Insights", async ({ app
 	await expect(page).toHaveURL(/\/insights/);
 });
 
+test("a 503 from one collection panel leaves the reader on Insights", async ({ app, page }) => {
+	await app.signIn();
+	await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+	await app.mockStats();
+	await page.route("**/insights/collection-profile**", (route) =>
+		route.fulfill({ status: 503, json: { message: "busy" } }),
+	);
+
+	await page.goto("/insights?tab=collection");
+	await reveal(page, "What each library contributes");
+
+	await expect(page.getByText("The collection figures could not be loaded.")).toBeVisible({
+		timeout: 15_000,
+	});
+	await expect(page).toHaveURL(/\/insights/);
+});
+
+test("a 503 from unfillable demand leaves the reader on Insights", async ({ app, page }) => {
+	await app.signIn();
+	await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+	await app.mockStats();
+	await page.route("**/insights/unfillable-demand**", (route) =>
+		route.fulfill({ status: 503, json: { message: "busy" } }),
+	);
+
+	await page.goto("/insights?tab=demand");
+	await reveal(page, "Demand nothing could supply");
+
+	await expect(page.getByText("This panel could not be loaded.").first()).toBeVisible({
+		timeout: 15_000,
+	});
+	await expect(page).toHaveURL(/\/insights/);
+});
+
 test("a publish that cannot reach the service is reported where it was made", async ({
 	app,
 	page,
