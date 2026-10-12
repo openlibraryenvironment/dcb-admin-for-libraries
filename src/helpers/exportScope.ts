@@ -1,5 +1,7 @@
+import { signedInProfile } from "@helpers/auth";
 import { isAgencyScopedRequestsEnabled } from "@helpers/featureFlags";
 import { isUuidShaped } from "@helpers/isUuidShaped";
+import { agencyCodesFrom } from "@/hooks/useAgencyCodes";
 
 /**
  * Which requests an export may contain, enforced in the query and again on every row.
@@ -12,6 +14,13 @@ export class ExportScopeError extends Error {
 		this.name = "ExportScopeError";
 	}
 }
+
+/**
+ * Every library the signed-in user's `code` claim names, read when the export starts:
+ * not the one chosen in the header, which is a view, and empty with nobody signed in.
+ */
+export const claimedAgencyCodes = async (): Promise<string[]> =>
+	agencyCodesFrom((await signedInProfile())?.code);
 
 export interface ExportGuard {
 	/** From the signed-in user's claim, never from anything the user typed or chose. */

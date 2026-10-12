@@ -2,9 +2,9 @@ import {
 	UserManager,
 	type UserManagerEvents,
 	type UserManagerSettings,
+	type UserProfile,
 } from "oidc-client-ts";
 import type { QueryClient } from "@tanstack/react-query";
-import { agencyCodesFrom } from "@/hooks/useAgencyCodes";
 
 /** Where the access token lives, and why nothing else holds it: docs/auth.md. */
 let userManager: UserManager | undefined;
@@ -21,9 +21,9 @@ export async function authHeaders(): Promise<{ Authorization: string }> {
 	return { Authorization: `Bearer ${token}` };
 }
 
-/** Every library the signed-in user's `code` claim names, read when called; empty with nobody signed in. */
-export async function claimedAgencyCodes(): Promise<string[]> {
-	return agencyCodesFrom((await userManager?.getUser())?.profile?.code);
+/** The signed-in user's claims, read when called; undefined with nobody signed in. */
+export async function signedInProfile(): Promise<UserProfile | undefined> {
+	return (await userManager?.getUser())?.profile;
 }
 
 /** A renewal keeps the cache; only the user going away clears it. */

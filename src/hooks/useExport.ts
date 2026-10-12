@@ -31,6 +31,7 @@ import {
 	ExportScopeError,
 	type ScopedRequestFields,
 	agencyLocationsQuery,
+	claimedAgencyCodes,
 	exportGuard,
 	guardedQuery,
 	isRequestInExportScope,
@@ -39,7 +40,7 @@ import {
 import { getAgencyLocationsForExport } from "@queries/getAgencyLocationsForExport";
 import { getLocationForPatronRequestGrid } from "@queries/getLocationForPatronRequestGrid";
 import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
-import { authHeaders, claimedAgencyCodes } from "@helpers/auth";
+import { authHeaders } from "@helpers/auth";
 
 /** Whole percent of an export fetched; an empty result is a finished one. */
 export const exportProgressPercent = (loaded: number, total: number): number =>

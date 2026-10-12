@@ -6,12 +6,8 @@ import {
 } from "oidc-client-ts";
 import { describe, expect, it } from "vitest";
 
-import {
-	authHeaders,
-	claimedAgencyCodes,
-	clearCacheOnSignOut,
-	createUserManager,
-} from "./auth";
+import { authHeaders, clearCacheOnSignOut, createUserManager } from "./auth";
+import { claimedAgencyCodes } from "./exportScope";
 
 const signedInAs = (access_token: string, sub = "librarian") =>
 	new User({
