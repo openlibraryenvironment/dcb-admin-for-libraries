@@ -9,6 +9,7 @@ import { getFileNameForExport } from "@helpers/dataGrid/getFileNameForExport";
 import { convertFileToString } from "@helpers/dataGrid/convertFileToString";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import { getLocations } from "@queries/getLocations";
+import { authHeaders } from "@helpers/auth";
 
 /** Whole percent of an export fetched; an empty result is a finished one. */
 export const exportProgressPercent = (loaded: number, total: number): number =>
@@ -17,7 +18,6 @@ export const exportProgressPercent = (loaded: number, total: number): number =>
 interface UsePatronRequestExportProps {
 	apiRef: RefObject<GridApiPremium | null>;
 	dcbApiBase: string;
-	headers: Record<string, string>;
 	baseQuery: string;
 	exportQuery: string;
 	filterModel: any;
@@ -30,7 +30,6 @@ interface UsePatronRequestExportProps {
 export const usePatronRequestExport = ({
 	apiRef,
 	dcbApiBase,
-	headers,
 	baseQuery,
 	exportQuery,
 	filterModel,
@@ -69,7 +68,7 @@ export const usePatronRequestExport = ({
 				order: sortModel[0]?.field ?? "dateCreated",
 				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
 			},
-			headers,
+			await authHeaders(),
 		);
 
 		const totalSize = initialData?.patronRequests?.totalSize || 0;
@@ -94,7 +93,7 @@ export const usePatronRequestExport = ({
 					order: sortModel[0]?.field ?? "dateCreated",
 					orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
 				},
-				headers,
+				await authHeaders(),
 			);
 
 			if (nextPageData?.patronRequests?.content) {
@@ -132,7 +131,7 @@ export const usePatronRequestExport = ({
 						order: "name",
 						orderBy: "ASC",
 					},
-					headers,
+					await authHeaders(),
 				);
 
 				const locationMap = new Map(

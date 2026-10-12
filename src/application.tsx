@@ -15,6 +15,7 @@ import { classifyServiceError } from "@helpers/serviceErrors";
 import NotFound from "@components/Error/NotFound";
 import RouteError from "@components/Error/RouteError";
 import { User } from "oidc-client-ts";
+import { createUserManager } from "@helpers/auth";
 import {
 	appPath,
 	appUrl,
@@ -145,41 +146,44 @@ export async function mountDcbAdminForLibraries(
 		LicenseInfo.setLicenseKey(cfg.VITE_MUI_X_LICENSE_KEY);
 	}
 
-	const oidcConfig = {
-		authority: cfg.VITE_KEYCLOAK_URL,
-		client_id: cfg.VITE_KEYCLOAK_ID,
+	const userManager = createUserManager({
+		authority: cfg.VITE_KEYCLOAK_URL ?? "",
+		client_id: cfg.VITE_KEYCLOAK_ID ?? "",
 		redirect_uri: appUrl(),
 		post_logout_redirect_uri: appUrl(),
 		response_type: "code",
 		scope: "openid profile email",
 		loadUserInfo: true,
 		automaticSilentRenew: true,
-		onSigninCallback: (_user: User | void): void => {
-			const isReadOnly = _user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
-			const afterLoginRedirectPath = sessionStorage.getItem(
-				storageKey("afterLoginRedirectPath"),
+	});
+
+	const onSigninCallback = (_user: User | void): void => {
+		const isReadOnly = _user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
+		const afterLoginRedirectPath = sessionStorage.getItem(
+			storageKey("afterLoginRedirectPath"),
+		);
+		if (isReadOnly) {
+			window.location.replace(appPath("requesting"));
+			return;
+		}
+		if (afterLoginRedirectPath) {
+			sessionStorage.removeItem(storageKey("afterLoginRedirectPath"));
+			window.location.replace(afterLoginRedirectPath);
+		} else {
+			window.history.replaceState(
+				{},
+				document.title,
+				window.location.pathname,
 			);
-			if (isReadOnly) {
-				window.location.replace(appPath("requesting"));
-				return;
-			}
-			if (afterLoginRedirectPath) {
-				sessionStorage.removeItem(storageKey("afterLoginRedirectPath"));
-				window.location.replace(afterLoginRedirectPath);
-			} else {
-				window.history.replaceState(
-					{},
-					document.title,
-					window.location.pathname,
-				);
-			}
-		},
+		}
 	};
 
 	if (!rootElement.innerHTML) {
 		ReactDOM.createRoot(rootElement).render(
 			<React.StrictMode>
-				<AuthProvider {...oidcConfig}>
+				<AuthProvider
+					userManager={userManager}
+					onSigninCallback={onSigninCallback}>
 					<App queryClient={queryClient} router={router} />
 				</AuthProvider>
 			</React.StrictMode>,

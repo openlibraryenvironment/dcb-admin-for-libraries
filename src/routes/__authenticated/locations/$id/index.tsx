@@ -5,15 +5,12 @@ import Loading from "@components/Loading/Loading";
 import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import { getILS } from "@helpers/getILS";
 import { getLocalId } from "@helpers/getLocalId";
-import { LocationsQueryData } from "@models/ReactQueryHelperTypes";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getLocation } from "@queries/getLocation";
+import { locationQueryOptions } from "@helpers/sharedQueries";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import request from "graphql-request";
-import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { isUuidShaped } from "@helpers/isUuidShaped";
@@ -30,31 +27,13 @@ function RouteComponent() {
 	const { id } = Route.useParams();
 
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token]
-	);
 
 	const {
 		data: pickupLocationData,
 		isLoading: pickupLocationLoading,
 		isError: isLocationError,
-	} = useQuery<LocationsQueryData>({
-		queryKey: ["pickupLocation", id, headers, DCB_URL],
-		queryFn: async () =>
-			request(
-				DCB_URL,
-				getLocation,
-				{
-					query: "id:" + id,
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "name",
-					order: "ASC",
-				},
-				headers
-			),
+	} = useQuery({
+		...locationQueryOptions(cfg.VITE_DCB_API_BASE, id),
 		enabled: !!auth.user && isUuidShaped(id),
 	});
 	const location = pickupLocationData?.locations?.content?.[0];

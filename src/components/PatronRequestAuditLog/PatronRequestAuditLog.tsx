@@ -1,8 +1,8 @@
-import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
+import { authHeaders } from "@helpers/auth";
+import { gridPage, queryKeys } from "@helpers/queryKeys";
 import DataGrid from "@components/DataGrid/DataGrid";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { auditColumns } from "@helpers/dataGrid/columns/auditColumns";
@@ -26,11 +26,6 @@ export default function PatronRequestAuditLog({
 	patronRequestId,
 }: PatronRequestAuditLogProps) {
 	const { t } = useTranslation();
-	const auth = useAuth();
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token],
-	);
 
 	const grid = useSyncedDataGrid({
 		gridId: AUDIT_GRID,
@@ -39,35 +34,30 @@ export default function PatronRequestAuditLog({
 		defaultPagination: { page: 0, pageSize: 25 },
 	});
 
+	const page = gridPage(
+		grid.debouncedFilterModel,
+		grid.paginationModel,
+		grid.sortModel,
+	);
 	const { data, isLoading, isFetching, isError, error } =
 		useQuery<AuditQueryData>({
-			queryKey: [
-				"patronRequestAuditLog",
-				patronRequestId,
-				grid.debouncedFilterModel,
-				grid.paginationModel.pageSize,
-				grid.paginationModel.page,
-				grid.sortModel[0]?.field,
-				grid.sortModel[0]?.sort,
-				headers,
-				apiBase,
-			],
+			queryKey: queryKeys.audits.forPatronRequest(apiBase, patronRequestId, page),
 			queryFn: async () =>
 				request(
 					`${apiBase}/graphql`,
 					getAuditsByPatronRequest,
 					{
 						query: processGridFilterModel(
-							grid.debouncedFilterModel,
+							page.filterModel,
 							`patronRequest:${patronRequestId}`,
 							["briefDescription"],
 						),
-						pagesize: clampPageSize(grid.paginationModel.pageSize),
-						pageno: grid.paginationModel.page ?? 0,
-						order: grid.sortModel[0]?.field ?? "auditDate",
-						orderBy: grid.sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+						pagesize: clampPageSize(page.pageSize),
+						pageno: page.page ?? 0,
+						order: page.sortField ?? "auditDate",
+						orderBy: page.sortDirection?.toUpperCase() ?? "DESC",
 					},
-					headers,
+					await authHeaders(),
 				),
 			placeholderData: (previousData) => previousData,
 		});

@@ -14,10 +14,7 @@ import {
 	checkIfFiltering,
 	processGridFilterModel,
 } from "@helpers/dataGrid/utilities";
-import {
-	LibrariesQueryData,
-	LocationsQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { LocationsQueryData } from "@models/ReactQueryHelperTypes";
 import {
 	GridColumnVisibilityModel,
 	GridFilterModel,
@@ -25,7 +22,9 @@ import {
 	GridRowModesModel,
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
-import { getLibrary } from "@queries/getLibrary";
+import { gridPage, queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { libraryQueryOptions } from "@helpers/sharedQueries";
 import { getLocations } from "@queries/getLocations";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -33,9 +32,8 @@ import {
 	useRouter,
 } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/locations/")({
@@ -45,18 +43,9 @@ export const Route = createFileRoute("/__authenticated/locations/")({
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	const auth = useAuth();
-
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
-	const token = auth?.user?.access_token;
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${token}`,
-		}),
-		[token]
-	);
 	const gridId = "locations";
 	const storedState = {
 		sort: useGridStore((state) => state.sortModel[gridId]),
@@ -142,23 +131,9 @@ function RouteComponent() {
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", headers, code, dcbApiBase],
-		queryFn: async () =>
-			request(
-				`${dcbApiBase}/graphql`,
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
-				headers
-			),
-	});
-	const agencyId = librariesData?.libraries?.content?.[0]?.agency?.id;
+	} = useQuery(libraryQueryOptions(dcbApiBase, code ?? ""));
+	const agencyId = librariesData?.libraries?.content?.[0]?.agency?.id ?? "";
+	const grid = gridPage(debouncedFilterModel, paginationModel, sortModel);
 
 	const {
 		data: locationsData,
@@ -167,38 +142,28 @@ function RouteComponent() {
 		error,
 		isFetching,
 	} = useQuery<LocationsQueryData>({
-		queryKey: [
-			"getLocations",
-			dcbApiBase,
-			headers,
-			agencyId,
-			debouncedFilterModel,
-			paginationModel.pageSize,
-			paginationModel.page,
-			sortModel[0]?.field,
-			sortModel[0]?.sort,
-		],
+		queryKey: queryKeys.locations.list(dcbApiBase, agencyId, grid),
 		queryFn: async () => {
 			const baseQuery = `agency:${agencyId}`;
 			const queryVariables = {
 				query:
-					processGridFilterModel(debouncedFilterModel, baseQuery, [
+					processGridFilterModel(grid.filterModel, baseQuery, [
 						"name",
 						"code",
 					]) ?? "",
-				pagesize: clampPageSize(paginationModel.pageSize),
-				pageno: paginationModel.page ?? 0,
-				order: sortModel[0]?.field ?? "name",
-				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+				pagesize: clampPageSize(grid.pageSize),
+				pageno: grid.page ?? 0,
+				order: grid.sortField ?? "name",
+				orderBy: grid.sortDirection?.toUpperCase() ?? "DESC",
 			};
 			return request(
 				`${dcbApiBase}/graphql`,
 				getLocations,
 				queryVariables,
-				headers
+				await authHeaders()
 			);
 		},
-		enabled: !!token && !!dcbApiBase && !!agencyId,
+		enabled: !!dcbApiBase && !!agencyId,
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,

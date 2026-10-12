@@ -5,6 +5,8 @@ import axios from "axios";
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "@tanstack/react-router";
 import { ClusterDetailResponse } from "@models/ClusterDetailResponse";
+import { authHeaders } from "@helpers/auth";
+import { queryKeys } from "@helpers/queryKeys";
 
 // Gets the stuff we need on the various cluster record / items pages to make them cleaner
 // Choose which mode you need
@@ -21,7 +23,6 @@ export const useClusterDetail = (
 	const auth = useAuth();
 	const { cfg } = useRouter().options.context as { cfg: any };
 
-	const token = auth.user?.access_token;
 	const apiBase = cfg?.VITE_DCB_API_BASE;
 	const searchBase = cfg?.VITE_DCB_SEARCH_BASE;
 
@@ -29,15 +30,16 @@ export const useClusterDetail = (
 	const shouldFetchItems = mode === "items" || mode === "all";
 
 	const detailQuery = useQuery<ClusterDetailResponse>({
-		queryKey: ["clusterDetail", recordId, searchBase, token],
+		queryKey: queryKeys.search.clusterDetail(searchBase, recordId),
 		queryFn: async () => {
 			const { data } = await axios.get(
 				`${searchBase}/public/opac-inventory/instances/${recordId}`,
-				{ headers: { Authorization: `Bearer ${token}` } },
+				{ headers: await authHeaders() },
 			);
 			return data;
 		},
-		enabled: shouldFetchInfo && !!token && !!searchBase && !!recordId,
+		enabled:
+			shouldFetchInfo && auth.isAuthenticated && !!searchBase && !!recordId,
 		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 

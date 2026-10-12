@@ -8,6 +8,7 @@ import {
 	brandAssetStoreFrom,
 } from "@constants/discoveryBranding";
 import { isDiscoveryActive } from "@helpers/featureFlags";
+import { queryKeys } from "@helpers/queryKeys";
 
 /**
  * Whether to offer the brand image upload control.
@@ -33,7 +34,7 @@ export function useBrandUploadsAvailable(): boolean {
 	const discoveryActive = isDiscoveryActive();
 
 	const { data } = useQuery({
-		queryKey: ["dcbServiceInfo", "brandAssetStore", apiBase],
+		queryKey: queryKeys.serviceInfo.brandAssetStore(apiBase ?? ""),
 		meta: OPTIONAL_QUERY,
 		queryFn: async () => {
 			const response = await axios.get(apiBase + "/info");

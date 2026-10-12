@@ -15,7 +15,9 @@ import {
 import { CustomLink } from "@components/CustomLink";
 import { Trans, useTranslation } from "react-i18next";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import { getLibraries } from "@queries/getLibraries";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
 import { getLocations } from "@queries/getLocations";
 import axios, { AxiosError } from "axios";
 import { useAuth } from "react-oidc-context";
@@ -34,10 +36,7 @@ import { PlaceRequestResponse } from "@models/PlaceRequestResponse";
 import { StaffRequestFormData } from "@models/StaffRequestFormData";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import request from "graphql-request";
-import {
-	LibrariesQueryData,
-	LocationsQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { LocationsQueryData } from "@models/ReactQueryHelperTypes";
 import { StaffRequestDetailsStep } from "@forms/ExpeditedCheckout/steps/StaffRequestDetailsStep";
 import { PatronValidationStep } from "@forms/ExpeditedCheckout/steps/PatronValidationStep";
 import { useRouter } from "@tanstack/react-router";
@@ -54,12 +53,6 @@ export default function StaffRequest({
 }: PatronRequestFormType) {
 	const { t } = useTranslation();
 	const auth = useAuth();
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${auth.user?.access_token}`,
-		}),
-		[auth.user?.access_token],
-	);
 	const router = useRouter();
 	const { cfg } = router.options.context;
 	// The library this request is placed on behalf of. Read through useAgencyCodes
@@ -120,22 +113,7 @@ export default function StaffRequest({
 		});
 
 	const { data: librariesData, isLoading: librariesDataLoading } =
-		useQuery<LibrariesQueryData>({
-			queryKey: ["librariesInfo", headers, cfg.VITE_DCB_API_BASE],
-			queryFn: () =>
-				request(
-					`${cfg.VITE_DCB_API_BASE}/graphql`,
-					getLibraries,
-					{
-						order: "fullName",
-						orderBy: "ASC",
-						pageno: 0,
-						pagesize: REFERENCE_LIST_PAGE_SIZE,
-						query: "",
-					},
-					headers,
-				),
-		});
+		useQuery(allLibrariesQueryOptions(cfg.VITE_DCB_API_BASE));
 
 	const libraryOptions: PatronRequestAutocompleteOption[] =
 		librariesData?.libraries?.content?.map(
@@ -161,26 +139,23 @@ export default function StaffRequest({
 	const isPickupAnywhere = !!selectedLibrary?.functionalSettings?.some(
 		(setting) => setting.name === "PICKUP_ANYWHERE" && setting.enabled === true,
 	); // This still matters in the context of staff requesting. However, pickup locations from the user's agency should be prioritised.
+	const pickupLocationQuery = isPickupAnywhere
+		? "agency:" +
+			selectedLibrary?.agencyId +
+			" OR isEnabledForPickupAnywhere:true"
+		: "agency:" + selectedLibrary?.agencyId;
 
 	const {
 		data: pickupLocations,
 		isLoading: pickupLocationsLoading,
 		refetch: getPickupLocations,
 	} = useQuery<LocationsQueryData>({
-		queryKey: [
-			"pickupLocations",
-			selectedLibrary?.agencyId,
-			isPickupAnywhere,
-			headers,
+		queryKey: queryKeys.locations.reference(
 			cfg.VITE_DCB_API_BASE,
-		],
-		queryFn: () => {
-			const locationQuery = isPickupAnywhere
-				? "agency:" +
-					selectedLibrary?.agencyId +
-					" OR isEnabledForPickupAnywhere:true"
-				: "agency:" + selectedLibrary?.agencyId;
-			return request(
+			pickupLocationQuery,
+		),
+		queryFn: async () =>
+			request(
 				`${cfg.VITE_DCB_API_BASE}/graphql`,
 				getLocations,
 				{
@@ -188,11 +163,10 @@ export default function StaffRequest({
 					orderBy: "ASC",
 					pageno: 0,
 					pagesize: REFERENCE_LIST_PAGE_SIZE,
-					query: locationQuery,
+					query: pickupLocationQuery,
 				},
-				headers,
-			);
-		},
+				await authHeaders(),
+			),
 		enabled: false,
 	});
 
@@ -294,7 +268,7 @@ export default function StaffRequest({
 		unknown,
 		{ patronBarcode: string; agencyCode: string }
 	>({
-		mutationFn: (variables) =>
+		mutationFn: async (variables) =>
 			axios
 				.post(
 					`${cfg.VITE_DCB_API_BASE}/patron/auth/lookup`,
@@ -302,7 +276,7 @@ export default function StaffRequest({
 						patronPrinciple: variables.patronBarcode,
 						agencyCode: variables.agencyCode,
 					},
-					{ headers },
+					{ headers: await authHeaders() },
 				)
 				.then((res) => res.data),
 		onSuccess: (data, variables) => {
@@ -342,10 +316,10 @@ export default function StaffRequest({
 		AxiosError,
 		any
 	>({
-		mutationFn: (payload) =>
+		mutationFn: async (payload) =>
 			axios
 				.post(`${cfg.VITE_DCB_API_BASE}/patrons/requests/place`, payload, {
-					headers,
+					headers: await authHeaders(),
 				})
 				.then((res) => res.data),
 		onSuccess: () => {

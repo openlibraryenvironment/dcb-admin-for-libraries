@@ -14,14 +14,14 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 import { useRouter } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { LIBRARY_CODE_PARAM } from "@helpers/statsApi";
+import { authHeaders } from "@helpers/auth";
+import { queryKeys } from "@helpers/queryKeys";
 
 interface TopRequestorsSummaryProps {
-	headers: Record<string, string>;
 	libraryCode: string;
 }
 
 export default function TopRequestorsSummary({
-	headers,
 	libraryCode,
 }: TopRequestorsSummaryProps) {
 	const { t } = useTranslation();
@@ -30,7 +30,7 @@ export default function TopRequestorsSummary({
 	const DCB_API_BASE = cfg.VITE_DCB_API_BASE;
 
 	const { data, isLoading, isError } = useQuery({
-		queryKey: ["TopRequestorsSummary", libraryCode, DCB_API_BASE, headers],
+		queryKey: queryKeys.insights.topRequestors(DCB_API_BASE, libraryCode),
 		meta: OPTIONAL_QUERY,
 		queryFn: async () => {
 			const startDate = dayjs()
@@ -52,7 +52,7 @@ export default function TopRequestorsSummary({
 			const response = await fetch(
 				`${DCB_API_BASE}/insights/top-requestors?${params}`,
 				{
-					headers,
+					headers: await authHeaders(),
 				},
 			);
 			if (!response.ok) {
@@ -60,7 +60,7 @@ export default function TopRequestorsSummary({
 			}
 			return response.json();
 		},
-		enabled: !!libraryCode && !!headers,
+		enabled: !!libraryCode,
 	});
 	if (!libraryCode || isLoading) {
 		return (

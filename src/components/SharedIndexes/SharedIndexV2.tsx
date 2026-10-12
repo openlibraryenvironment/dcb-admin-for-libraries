@@ -7,6 +7,8 @@ import {
 	type QueryFunctionContext,
 } from "@tanstack/react-query";
 import { useAuth } from "react-oidc-context";
+import { authHeaders } from "@helpers/auth";
+import { queryKeys } from "@helpers/queryKeys";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -49,7 +51,52 @@ const createDefaultFilter = (): SearchFilter => ({
 	value: "",
 });
 
-type SearchKey = readonly [string, string, number, number];
+type SearchKey = ReturnType<typeof queryKeys.search.results>;
+
+const fetchSearchResults = async ({
+	queryKey,
+	signal,
+}: QueryFunctionContext<SearchKey>) => {
+	const [, , searchBase, query, pageno, pagesize] = queryKey;
+	const isUUID = query.length === 36 ? validate(query) : false;
+
+	if (!query) {
+		return { instances: [], totalRecords: 0 };
+	}
+
+	let url: string;
+	let params: Record<string, any>;
+
+	if (isUUID) {
+		url = `${searchBase}/public/opac-inventory/instances/${query}`;
+		params = {};
+	} else {
+		url = `${searchBase}/search/instances`;
+		params = {
+			query: query,
+			offset: pageno * pagesize,
+			limit: pagesize,
+		};
+	}
+	// The signal cancels a search the user has already replaced with another.
+	const response = await axios.get(url, {
+		headers: await authHeaders(),
+		params: params,
+		signal,
+	});
+
+	if (isUUID && response.data) {
+		return {
+			instances: [response.data],
+			totalRecords: 1,
+		};
+	} else {
+		return {
+			instances: response.data.instances || [],
+			totalRecords: response.data.totalRecords || 0,
+		};
+	}
+};
 
 export function SharedIndexV2() {
 	const auth = useAuth();
@@ -176,62 +223,20 @@ export function SharedIndexV2() {
 		});
 	};
 
-	const fetchSearchResults = useCallback(
-		async ({ queryKey, signal }: QueryFunctionContext<SearchKey>) => {
-			const [, query, pageno, pagesize] = queryKey;
-			const isUUID = query.length === 36 ? validate(query) : false;
-
-			if (!query) {
-				return { instances: [], totalRecords: 0 };
-			}
-
-			let url: string;
-			let params: Record<string, any>;
-
-			if (isUUID) {
-				url = `${cfg.VITE_DCB_SEARCH_BASE}/public/opac-inventory/instances/${query}`;
-				params = {};
-			} else {
-				url = `${cfg.VITE_DCB_SEARCH_BASE}/search/instances`;
-				params = {
-					query: query,
-					offset: pageno * pagesize,
-					limit: pagesize,
-				};
-			}
-			// The signal cancels a search the user has already replaced with another.
-			const response = await axios.get(url, {
-				headers: {
-					Authorization: `Bearer ${auth.user?.access_token}`,
-				},
-				params: params,
-				signal,
-			});
-
-			if (isUUID && response.data) {
-				return {
-					instances: [response.data],
-					totalRecords: 1,
-				};
-			} else {
-				return {
-					instances: response.data.instances || [],
-					totalRecords: response.data.totalRecords || 0,
-				};
-			}
-		},
-		[auth.user?.access_token, cfg.VITE_DCB_SEARCH_BASE],
-	);
-
 	const {
 		data: searchResults,
 		isLoading,
 		isFetching,
 		isError,
 	} = useQuery({
-		queryKey: ["searchResults", queryParam ?? "", pageno, pagesize] as const,
+		queryKey: queryKeys.search.results(
+			cfg.VITE_DCB_SEARCH_BASE,
+			queryParam ?? "",
+			pageno,
+			pagesize,
+		),
 		queryFn: fetchSearchResults,
-		enabled: !!auth.user?.access_token && !!queryParam,
+		enabled: auth.isAuthenticated && !!queryParam,
 		staleTime: 1000 * 60 * 5,
 		placeholderData: keepPreviousData,
 	});

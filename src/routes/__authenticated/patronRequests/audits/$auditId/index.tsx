@@ -20,7 +20,6 @@ import {
 import { useTranslation } from "react-i18next";
 import request from "graphql-request";
 import { useAuth } from "react-oidc-context";
-import { useMemo } from "react";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
 import { isUuidShaped } from "@helpers/isUuidShaped";
 import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
@@ -32,6 +31,8 @@ import { AuditItem } from "@/models/AuditItem";
 import { AuditQueryData } from "@models/ReactQueryHelperTypes";
 import { getAuditById } from "@queries/getAuditById";
 import { getAuditNeighbours } from "@queries/getAuditNeighbours";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
 
 type AuditNeighbour = Pick<AuditItem, "id" | "briefDescription">;
 
@@ -60,21 +61,17 @@ function AuditDetailsComponent() {
 	const isValidId = isUuidShaped(auditId);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token]
-	);
+	const apiBase = cfg.VITE_DCB_API_BASE;
 
 	const {
 		data: auditData,
 		isLoading: isAuditLoading,
 		isError: isAuditError,
 	} = useQuery<AuditQueryData>({
-		queryKey: ["audit", auditId, headers, DCB_URL],
+		queryKey: queryKeys.audits.detail(apiBase, auditId),
 		queryFn: async () =>
 			request(
-				DCB_URL,
+				apiBase + "/graphql",
 				getAuditById,
 				{
 					query: "id:" + auditId,
@@ -83,7 +80,7 @@ function AuditDetailsComponent() {
 					orderBy: "auditDate",
 					order: "ASC",
 				},
-				headers
+				await authHeaders()
 			),
 		enabled: !!auth.user && isValidId,
 	});
@@ -103,19 +100,23 @@ function AuditDetailsComponent() {
 		isLoading: areNeighboursLoading,
 		isError: areNeighboursError,
 	} = useQuery<AuditNeighboursQueryData>({
-		queryKey: ["auditNeighbours", patronRequestId, auditDate, headers, DCB_URL],
+		queryKey: queryKeys.audits.neighbours(
+			apiBase,
+			patronRequestId ?? "",
+			auditDate ?? "",
+		),
 		// The bound is the service's own string, never a parsed Date: the column keeps
 		// microseconds and a Date keeps milliseconds, so a round-tripped bound would
 		// return this entry as its own neighbour.
 		queryFn: async () =>
 			request(
-				DCB_URL,
+				apiBase + "/graphql",
 				getAuditNeighbours,
 				{
 					older: `patronRequest:${patronRequestId} AND auditDate:{* TO ${auditDate}}`,
 					newer: `patronRequest:${patronRequestId} AND auditDate:{${auditDate} TO *}`,
 				},
-				headers
+				await authHeaders()
 			),
 		enabled: canFindNeighbours,
 	});

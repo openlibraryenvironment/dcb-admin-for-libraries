@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { OPTIONAL_QUERY } from "@helpers/serviceErrors";
+import { authHeaders } from "@helpers/auth";
+import { availabilityKeys } from "@helpers/availabilityApi";
 
 import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
 import { Item } from "@models/Item";
@@ -12,7 +14,6 @@ interface CheckedOutDueDate {
 	checkoutCompleted: boolean;
 	isCheckedOutItem: (item: Item) => boolean;
 	apiBase: string;
-	headers: Record<string, string>;
 }
 
 /**
@@ -27,21 +28,17 @@ export const useCheckedOutDueDate = ({
 	checkoutCompleted,
 	isCheckedOutItem,
 	apiBase,
-	headers,
 }: CheckedOutDueDate) => {
 	const query = useQuery({
 		meta: OPTIONAL_QUERY,
-		queryKey: [
-			"availability",
-			"checkedOut",
-			patronRequestId,
-			bibClusterId,
-			headers,
+		queryKey: availabilityKeys.checkedOut(
 			apiBase,
-		],
+			patronRequestId ?? "",
+			bibClusterId ?? "",
+		),
 		queryFn: async ({ signal }) => {
 			const response = await axios.get(`${apiBase}/items/availability`, {
-				headers,
+				headers: await authHeaders(),
 				params: { clusteredBibId: bibClusterId },
 				signal,
 			});

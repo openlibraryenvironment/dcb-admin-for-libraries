@@ -1,7 +1,6 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "react-oidc-context";
 import { useTranslation } from "react-i18next";
 import { ClientError, request } from "graphql-request";
 import {
@@ -25,6 +24,8 @@ import {
 import { isAnnouncementsEnabled } from "@helpers/featureFlags";
 import { pageTitle } from "@helpers/pageTitle";
 import { ownLibraryQueryOptions } from "@helpers/ownLibrary";
+import { authHeaders } from "@helpers/auth";
+import { queryKeys } from "@helpers/queryKeys";
 import { formatTimestamp } from "@helpers/formatters";
 import {
 	defaultExpiry,
@@ -75,12 +76,8 @@ const serverMessage = (error: unknown, fallback: string): string =>
 	(error instanceof ClientError && error.response.errors?.[0]?.message) ||
 	fallback;
 
-const announcementsKey = (apiBase: string, headers: object, scopeId?: string) =>
-	["LoadAnnouncements", apiBase, headers, scopeId] as const;
-
 function Announcements() {
 	const { t } = useTranslation();
-	const auth = useAuth();
 	const announce = useAnnounce();
 	const clock = useClock();
 	const queryClient = useQueryClient();
@@ -90,34 +87,25 @@ function Announcements() {
 	const apiBase = cfg.VITE_DCB_API_BASE;
 	const { agencyCode: code } = useAgencyCodes();
 
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token],
-	);
-
 	const libraryQuery = useQuery({
-		...ownLibraryQueryOptions(cfg, auth, code ?? ""),
+		...ownLibraryQueryOptions(cfg, code ?? ""),
 		enabled: Boolean(code),
 	});
 
-	const scopeId = libraryQuery.data?.libraries?.content?.[0]?.id;
-
-	// headers is in the key because the queryFn fetches with it: a token change is a
-	// different request, and a key that omits an input serves the previous session an
-	// answer it was not entitled to.
-	const listKey = announcementsKey(apiBase, headers, scopeId);
+	const scopeId = libraryQuery.data?.libraries?.content?.[0]?.id ?? "";
+	const listKey = queryKeys.announcements.forScope(apiBase, scopeId);
 
 	const announcements = useQuery({
 		queryKey: listKey,
 		// Only once the library is known: the scope is its id, and asking for announcements
-		// at `undefined` scope is a request that can only fail.
+		// at an empty scope is a request that can only fail.
 		enabled: Boolean(scopeId),
 		queryFn: async () =>
 			request<{ announcements?: AnnouncementRow[] }>(
 				apiBase + "/graphql",
 				getAnnouncements(),
 				{ scopeType: "LIBRARY", scopeId },
-				headers,
+				await authHeaders(),
 			),
 	});
 
@@ -127,8 +115,13 @@ function Announcements() {
 	const [expiresAt, setExpiresAt] = useState(defaultExpiry);
 
 	const publish = useMutation({
-		mutationFn: (input: Record<string, unknown>) =>
-			request(apiBase + "/graphql", createAnnouncement(), { input }, headers),
+		mutationFn: async (input: Record<string, unknown>) =>
+			request(
+				apiBase + "/graphql",
+				createAnnouncement(),
+				{ input },
+				await authHeaders(),
+			),
 		onSuccess: () => {
 			setHeadline("");
 			setBody("");
@@ -140,12 +133,12 @@ function Announcements() {
 	});
 
 	const withdraw = useMutation({
-		mutationFn: (id: string) =>
+		mutationFn: async (id: string) =>
 			request(
 				apiBase + "/graphql",
 				deleteAnnouncement(),
 				{ input: { id, reason: "Withdrawn from DCB Admin for Libraries" } },
-				headers,
+				await authHeaders(),
 			),
 		onSuccess: () => {
 			announce(t("announcements.withdrawn"));
