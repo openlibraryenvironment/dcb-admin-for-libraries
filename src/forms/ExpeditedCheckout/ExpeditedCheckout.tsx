@@ -1,4 +1,4 @@
-import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
+import { availabilityQueryOptions } from "@helpers/availabilityApi";
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import {
 	FormEvent,
@@ -299,20 +299,7 @@ export default function ExpeditedCheckout({
 		isFetching: itemsLoading,
 		isError: itemsError,
 	} = useQuery({
-		queryKey: [
-			"availability",
-			bibClusterId,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-		],
-		queryFn: async () => {
-			const response = await axios.get(
-				`${cfg.VITE_DCB_API_BASE}/items/availability`,
-				{ headers, params: { clusteredBibId: bibClusterId } },
-			);
-			return response.data;
-		},
-		...AVAILABILITY_QUERY_POLICY,
+		...availabilityQueryOptions(cfg.VITE_DCB_API_BASE, bibClusterId),
 		enabled: activeStep === 1 && !!bibClusterId,
 	});
 

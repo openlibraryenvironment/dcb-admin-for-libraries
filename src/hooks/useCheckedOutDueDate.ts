@@ -37,10 +37,11 @@ export const useCheckedOutDueDate = ({
 			headers,
 			apiBase,
 		],
-		queryFn: async () => {
+		queryFn: async ({ signal }) => {
 			const response = await axios.get(`${apiBase}/items/availability`, {
 				headers,
 				params: { clusteredBibId: bibClusterId },
+				signal,
 			});
 			return response.data as { itemList?: Item[] };
 		},

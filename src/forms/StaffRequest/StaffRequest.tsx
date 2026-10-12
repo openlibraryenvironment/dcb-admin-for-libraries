@@ -1,4 +1,4 @@
-import { AVAILABILITY_QUERY_POLICY } from "@constants/availability";
+import { availabilityQueryOptions } from "@helpers/availabilityApi";
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { FormEvent, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -196,28 +196,16 @@ export default function StaffRequest({
 		enabled: false,
 	});
 
-	// Asked once, when manual selection is chosen, and then served from cache for
-	// AVAILABILITY_QUERY_POLICY's staleTime: every open of the item picker used to
-	// call refetch(), which ignores staleTime and fans out to every member LMS.
+	// Asked once, when manual selection is chosen, and usually not even then: the
+	// record page and the search card hold the same cache entry. Never refetch():
+	// it ignores staleTime and fans out to every member LMS.
 	const {
 		data: availabilityResults,
 		isLoading: itemsLoading,
 		isError: itemsError,
-	} = useQuery<any>({
-		queryKey: [
-			"itemAvailability",
-			bibClusterId,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-		],
-		queryFn: () =>
-			axios.get(`${cfg.VITE_DCB_API_BASE}/items/availability`, {
-				headers,
-				params: { clusteredBibId: bibClusterId },
-			}),
-		...AVAILABILITY_QUERY_POLICY,
+	} = useQuery({
+		...availabilityQueryOptions(cfg.VITE_DCB_API_BASE, bibClusterId),
 		enabled: activeStep === 1 && selectionType === "manual" && !!bibClusterId,
-		select: (response) => response.data,
 	});
 
 	const itemsData: Item[] = availabilityResults?.itemList || [];
