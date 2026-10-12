@@ -14,6 +14,7 @@ import { SparkLineChart } from "@mui/x-charts-pro";
 import { visuallyHidden } from "@mui/utils";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
+import { formatNumber, formatPercent } from "@helpers/formatters";
 import { useChartPalette } from "@/hooks/useChartPalette";
 import MetricInfo from "./MetricInfo";
 import PanelState from "./PanelState";
@@ -131,8 +132,8 @@ function TrendTile({ trend, colour }: { trend: TrendSeries; colour: string }) {
 	const title = t(`insights.trends.${trend.id}.title`);
 	const format = (value: number) =>
 		trend.id === "volume"
-			? Math.round(value).toLocaleString()
-			: `${value.toFixed(1)}%`;
+			? formatNumber(Math.round(value))
+			: formatPercent(value);
 
 	return (
 		<Box>

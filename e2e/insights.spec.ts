@@ -2,6 +2,7 @@ import { test, expect } from "./fixtures/test";
 import { READ_ONLY_ROLES } from "./fixtures/auth";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import { scrollUntilPresent } from "./fixtures/lazy";
+import { DEFAULT_STATS } from "./fixtures/stats";
 
 /**
  * Library insights. Two properties neither of which is visible in a
@@ -533,5 +534,80 @@ test.describe("collection figures are written in the reader's region", () => {
 			.getByRole("cell");
 		await expect(own.nth(1)).toHaveText(/^640\s000$/);
 		await expect(own.last()).toHaveText(/^13,8\s%$/);
+	});
+
+	test("walk-up counts and share follow the region", async ({ app, page }) => {
+		await app.enableFeatures([
+			"VITE_FEATURE_INSIGHTS",
+			"VITE_FEATURE_INSIGHTS_WALK_UP",
+		]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats({
+			"library-breakdown": [
+				{
+					libraryCode: "e2e-lms",
+					libraryName: "E2E Test Library",
+					totalRequests: 1234,
+					walkUpRequests: 308,
+					shippedRequests: 926,
+				},
+			],
+		});
+		await page.goto("/insights?tab=service");
+		await scrollUntilPresent(page, page.getByRole("heading", { name: WALK_UP_PANEL }));
+
+		const cells = page
+			.getByRole("region", { name: WALK_UP_PANEL })
+			.getByRole("row", { name: /E2E Test Library/ })
+			.getByRole("cell");
+		await expect(cells).toHaveText([/^1\s234$/, "308", "926", /^25,0\s%$/]);
+	});
+
+	test("the trend strip's headline figures follow the region", async ({ app, page }) => {
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		// The default flow scaled by twenty: the volume needs a group separator, and every
+		// ratio is unchanged.
+		const flow = DEFAULT_STATS.timeseries as { count: number }[];
+		await app.mockStats({
+			timeseries: flow.map((r) => ({ ...r, count: r.count * 20 })),
+		});
+		await page.goto("/insights?tab=trends");
+
+		// The innermost element holding both the strip's heading and its last tile.
+		const strip = page
+			.locator("div")
+			.filter({
+				has: page.getByRole("heading", { name: "Is it getting better or worse?" }),
+			})
+			.filter({ hasText: "Error rate" })
+			.last();
+		await expect(strip.getByText(/^\d\s\d{3}$/)).toHaveCount(1);
+		await expect(strip.getByText(/^\d{1,2},\d\s%$/)).toHaveCount(2);
+	});
+
+	test("request counts in the title tables follow the region", async ({ app, page }) => {
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats({
+			"unfillable-demand": [
+				{
+					clusterId: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+					title: "The Lost Atlas",
+					author: "M. Ortega",
+					requestCount: 1500,
+				},
+			],
+		});
+		await page.goto("/insights?tab=demand");
+
+		const titles = page.getByRole("table", { name: "Demand nothing could supply" });
+		await scrollUntilPresent(page, titles);
+		await expect(
+			titles.getByRole("row", { name: /The Lost Atlas/ }).getByRole("cell"),
+		).toHaveText(["The Lost Atlas", "M. Ortega", /^1\s500$/]);
 	});
 });

@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
+import { formatNumber, formatPercent } from "@helpers/formatters";
 import { libraryBreakdownQueryOptions, StatsParams } from "@helpers/statsApi";
 
 import MetricInfo from "./MetricInfo";
@@ -130,13 +131,13 @@ export default function WalkUpDiversionPanel({ params }: { params: StatsParams }
 													{row.libraryName}
 												</TableCell>
 												<TableCell align="right">
-													{row.totalRequests.toLocaleString()}
+													{formatNumber(row.totalRequests)}
 												</TableCell>
 												<TableCell align="right">
-													{row.walkUpRequests.toLocaleString()}
+													{formatNumber(row.walkUpRequests)}
 												</TableCell>
 												<TableCell align="right">
-													{row.shippedRequests.toLocaleString()}
+													{formatNumber(row.shippedRequests)}
 												</TableCell>
 												<TableCell align="right">
 													{/* An em dash, not 0%. A library with no requests has
@@ -144,7 +145,7 @@ export default function WalkUpDiversionPanel({ params }: { params: StatsParams }
 													    walks up here" rather than "nothing to divide by". */}
 													{row.walkUpShare == null
 														? "—"
-														: `${row.walkUpShare.toFixed(1)}%`}
+														: formatPercent(row.walkUpShare)}
 												</TableCell>
 											</TableRow>
 										))}

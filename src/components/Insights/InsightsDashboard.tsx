@@ -580,7 +580,7 @@ export default function InsightsDashboard({
 										headerKey: "insights.charts.top_titles.col_requests",
 										align: "right",
 										text: (r) => r.requestCount,
-										cell: (r) => r.requestCount,
+										cell: (r) => formatNumber(r.requestCount),
 									},
 								]}
 							/>
@@ -648,7 +648,7 @@ export default function InsightsDashboard({
 									headerKey: "insights.charts.top_titles.col_requests",
 									align: "right",
 									text: (r) => r.requestCount,
-									cell: (r) => r.requestCount,
+									cell: (r) => formatNumber(r.requestCount),
 								},
 							]}
 						/>
@@ -719,7 +719,7 @@ export default function InsightsDashboard({
 											headerKey: "insights.charts.top_titles.col_requests",
 											align: "right",
 											text: (r) => r.requestCount,
-											cell: (r) => r.requestCount,
+											cell: (r) => formatNumber(r.requestCount),
 										},
 									]}
 								/>
@@ -741,7 +741,7 @@ export default function InsightsDashboard({
 											headerKey: "insights.charts.top_titles.col_requests",
 											align: "right",
 											text: (r) => r.requestCount,
-											cell: (r) => r.requestCount,
+											cell: (r) => formatNumber(r.requestCount),
 										},
 									]}
 								/>
@@ -771,7 +771,7 @@ export default function InsightsDashboard({
 											"insights.charts.consortial_lifeline.col_supplied",
 										align: "right",
 										text: (r) => r.supplyCount,
-										cell: (r) => r.supplyCount,
+										cell: (r) => formatNumber(r.supplyCount),
 									},
 								]}
 							/>
