@@ -113,3 +113,45 @@ test("a record journey asks each member library once per filter", async ({
 	// is computed from - so it is asked once in its own right.
 	expect(calls).toEqual({ default: 1, none: 1 });
 });
+
+test("a page of search results never has more than four availability calls in flight", async ({
+	app,
+	page,
+}) => {
+	const instances = Array.from({ length: 20 }, (_, index) => ({
+		id: `bbbbbbbb-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+		title: `Record ${index + 1}`,
+		publicationDate: "1900",
+		sourceTypes: ["Book"],
+		contributors: [],
+	}));
+	// Tall enough that every card is in view at once, so every card asks at once.
+	await page.setViewportSize({ width: 1280, height: 10_000 });
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraries: library });
+	await app.mockSearch({ totalRecords: instances.length, instances });
+
+	let inFlight = 0;
+	let peak = 0;
+	let served = 0;
+	await page.route("**/items/availability**", async (route) => {
+		inFlight += 1;
+		peak = Math.max(peak, inFlight);
+		await new Promise((resolve) => setTimeout(resolve, 300));
+		// Before fulfilling: nothing can start in the response's place until the
+		// browser has it, so a slot is never counted twice.
+		inFlight -= 1;
+		served += 1;
+		return route.fulfill({ json: { itemList: [], timings: {} } });
+	});
+
+	await page.goto("/requesting?filters=keyword%3Arecord&pagesize=20");
+	await expect(
+		page.getByRole("list", { name: /search results/i }),
+	).toBeVisible();
+
+	await expect
+		.poll(() => served, { timeout: 30_000 })
+		.toBe(instances.length);
+	expect(peak).toBeLessThanOrEqual(4);
+});
