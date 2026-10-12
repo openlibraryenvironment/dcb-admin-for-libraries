@@ -67,9 +67,14 @@ import {
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 import PatronRequestAuditLog from "@components/PatronRequestAuditLog/PatronRequestAuditLog";
+import { auditLogGrid } from "@helpers/dataGrid/gridDefinitions";
+import { z } from "zod";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
-	head: () => ({ meta: [{ title: pageTitle("patron_request.title") }] }),
+	validateSearch: z.object({
+		audit: auditLogGrid.searchSchema.optional().catch(undefined),
+	}),
+	head:() => ({ meta: [{ title: pageTitle("patron_request.title") }] }),
 	component: RouteComponent,
 });
 

@@ -1,20 +1,20 @@
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { getRouteApi } from "@tanstack/react-router";
 import request from "graphql-request";
 import { authHeaders } from "@helpers/auth";
 import { gridPage, queryKeys } from "@helpers/queryKeys";
 import DataGrid from "@components/DataGrid/DataGrid";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { auditColumns } from "@helpers/dataGrid/columns/auditColumns";
+import { auditLogGrid } from "@helpers/dataGrid/gridDefinitions";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import { AuditQueryData } from "@models/ReactQueryHelperTypes";
 import { getAuditsByPatronRequest } from "@queries/getAuditByPatronRequest";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 
-// One id for every request's audit log: keyed per request, the persisted grid
-// state grew by one entry for every request a user ever opened.
-const AUDIT_GRID = "patronRequestAuditLog";
+const route = getRouteApi("/__authenticated/patronRequests/$id/");
 
 interface PatronRequestAuditLogProps {
 	apiBase: string;
@@ -27,15 +27,10 @@ export default function PatronRequestAuditLog({
 }: PatronRequestAuditLogProps) {
 	const { t } = useTranslation();
 
-	const grid = useSyncedDataGrid({
-		gridId: AUDIT_GRID,
-		defaultSort: [{ field: "auditDate", sort: "desc" }],
-		defaultColumnVisibility: {},
-		defaultPagination: { page: 0, pageSize: 25 },
-	});
+	const grid = useSyncedDataGrid(auditLogGrid, route.useSearch().audit);
 
 	const page = gridPage(
-		grid.debouncedFilterModel,
+		grid.appliedFilterModel,
 		grid.paginationModel,
 		grid.sortModel,
 	);
@@ -62,13 +57,7 @@ export default function PatronRequestAuditLog({
 			placeholderData: (previousData) => previousData,
 		});
 
-	useDataGridErrorSafely(
-		AUDIT_GRID,
-		isError,
-		error,
-		grid.setLocalFilterModel,
-		grid.setLocalSortModel,
-	);
+	useDataGridErrorSafely(grid, isError, error);
 
 	return (
 		<DataGrid

@@ -2,20 +2,15 @@ import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
-import { useGridStore } from "@/hooks/useDataGridStore";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestExport } from "@/hooks/useExport";
 import DataGrid from "@components/DataGrid/DataGrid";
 import { ExportProgressDialog } from "@components/DataGrid/components/ExportProgressDialog";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import { defaultPatronRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/patronRequestColumnVisibility";
-import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
-import {
-	checkIfFiltering,
-	processGridFilterModel,
-} from "@helpers/dataGrid/utilities";
+import { patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
+import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import {
 	borrowedByLibraryQuery,
 	hasBorrowingScope,
@@ -24,11 +19,7 @@ import { Library } from "@models/Library";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import {
 	GridColDef,
-	GridColumnVisibilityModel,
-	GridFilterModel,
-	GridPaginationModel,
 	GridRowModesModel,
-	GridSortModel,
 	useGridApiRef,
 } from "@mui/x-data-grid-premium";
 import { gridPage, queryKeys } from "@helpers/queryKeys";
@@ -42,11 +33,12 @@ import {
 	useRouter,
 } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/")({
+	validateSearch: patronRequestsGrid.searchSchema,
 	head: () => ({ meta: [{ title: pageTitle("nav.patron_requests.title") }] }),
 	component: RouteComponent,
 });
@@ -57,26 +49,7 @@ function RouteComponent() {
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
-	const gridId = "mainPatronRequests";
-	const storedState = {
-		sort: useGridStore((state) => state.sortModel[gridId]),
-		filter: useGridStore((state) => state.filterModel[gridId]),
-		pagination: useGridStore((state) => state.paginationModel[gridId]),
-		columnVisibility: useGridStore(
-			(state) => state.columnVisibilityModel[gridId],
-		),
-	};
-	const setSortModel = useGridStore((state) => state.setSortModel);
-	const setFilterModel = useGridStore((state) => state.setFilterModel);
-	const setPaginationModel = useGridStore((state) => state.setPaginationModel);
-	const setColumnVisibilityModel = useGridStore(
-		(state) => state.setColumnVisibilityModel,
-	);
-
-	const [paginationModel, setLocalPaginationModel] =
-		useState<GridPaginationModel>(
-			storedState.pagination ?? { page: 0, pageSize: 25 },
-		);
+	const grid = useSyncedDataGrid(patronRequestsGrid, Route.useSearch());
 
 	const [alert, setAlert] = useState<{
 		open: boolean;
@@ -97,51 +70,7 @@ function RouteComponent() {
 		}
 		setAlert({ open: false, severity: "success", text: null });
 	};
-	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
-		storedState.filter ?? { items: [] },
-	);
-	const debouncedFilterModel = useDebounce(filterModel, 500);
-	const isFiltering = checkIfFiltering(filterModel, debouncedFilterModel);
-
-	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
-		storedState.sort ?? [{ field: "dateCreated", sort: "desc" }],
-	);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? defaultPatronRequestColumnVisibility,
-	);
-
-	const handlePaginationChange = useCallback(
-		(model: GridPaginationModel) => {
-			setLocalPaginationModel(model);
-			setPaginationModel(gridId, model);
-		},
-		[gridId, setPaginationModel],
-	);
-
-	const handleFilterChange = useCallback(
-		(model: GridFilterModel) => {
-			setLocalFilterModel(model);
-			setFilterModel(gridId, model);
-		},
-		[gridId, setFilterModel],
-	);
-
-	const handleSortChange = useCallback(
-		(model: GridSortModel) => {
-			setLocalSortModel(model);
-			setSortModel(gridId, model);
-		},
-		[gridId, setSortModel],
-	);
-
-	const handleColumnVisibilityChange = useCallback(
-		(model: GridColumnVisibilityModel) => {
-			setLocalColumnVisibilityModel(model);
-			setColumnVisibilityModel(gridId, model);
-		},
-		[gridId, setColumnVisibilityModel],
-	);
 
 	const { agencyCode: code } = useAgencyCodes();
 
@@ -175,7 +104,7 @@ function RouteComponent() {
 	// Columns that have dynamic options for their filters
 	const dynamicPatronRequestColumns = useMemo(() => {
 		const supplyingAgencyField = "supplyingAgencyCode";
-		return standardPatronRequestColumns.map((col) => {
+		return patronRequestsGrid.columns.map((col) => {
 			if (col.field === supplyingAgencyField) {
 				const { ...baseColProps } = col;
 				const selectCol: GridColDef = {
@@ -189,7 +118,11 @@ function RouteComponent() {
 		});
 	}, [libraryFilterOptions]);
 
-	const grid = gridPage(debouncedFilterModel, paginationModel, sortModel);
+	const page = gridPage(
+		grid.appliedFilterModel,
+		grid.paginationModel,
+		grid.sortModel,
+	);
 	const {
 		data: patronRequestData,
 		isLoading: isPatronRequestLoading,
@@ -201,20 +134,20 @@ function RouteComponent() {
 		queryKey: queryKeys.patronRequests.list(
 			dcbApiBase,
 			{ agencyCode: code ?? "", hostLmsCode: userLibraryHostLmsCode },
-			grid,
+			page,
 		),
 		queryFn: async () => {
 			const baseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
 			const queryVariables = {
 				query:
-					processGridFilterModel(grid.filterModel, baseQuery, [
+					processGridFilterModel(page.filterModel, baseQuery, [
 						"status",
 						"description",
 					]) ?? "",
-				pagesize: clampPageSize(grid.pageSize),
-				pageno: grid.page ?? 0,
-				order: grid.sortField ?? "dateCreated",
-				orderBy: grid.sortDirection?.toUpperCase() ?? "DESC",
+				pagesize: clampPageSize(page.pageSize),
+				pageno: page.page ?? 0,
+				order: page.sortField ?? "dateCreated",
+				orderBy: page.sortDirection?.toUpperCase() ?? "DESC",
 			};
 			return request(
 				`${dcbApiBase}/graphql`,
@@ -233,18 +166,12 @@ function RouteComponent() {
 		placeholderData: (previousData) => previousData,
 	});
 
-	useDataGridErrorSafely(
-		gridId,
-		isPatronRequestError,
-		error,
-		setLocalFilterModel,
-		setLocalSortModel,
-		() =>
-			setAlert({
-				open: true,
-				severity: "warning",
-				text: t("ui.feedback.error.cannot_process"),
-			}),
+	useDataGridErrorSafely(grid, isPatronRequestError, error, () =>
+		setAlert({
+			open: true,
+			severity: "warning",
+			text: t("ui.feedback.error.cannot_process"),
+		}),
 	);
 
 	// No cleanup here: this grid lists what THIS library borrowed, and cleanup belongs to
@@ -257,8 +184,8 @@ function RouteComponent() {
 		dcbApiBase,
 		baseQuery: exportBaseQuery,
 		exportQuery: getPatronRequestsForExport,
-		filterModel: debouncedFilterModel,
-		sortModel,
+		filterModel: grid.appliedFilterModel,
+		sortModel: grid.sortModel,
 		onExportSuccess: (msg, count) => {
 			setAlert({
 				open: true,
@@ -300,7 +227,7 @@ function RouteComponent() {
 
 	// Determine if we should show loading state
 	const shouldShowLoading =
-		isFiltering ||
+		grid.isFiltering ||
 		isPatronRequestLoading ||
 		(isFetching && !!patronRequestData);
 
@@ -315,8 +242,8 @@ function RouteComponent() {
 					disablePivoting
 					rows={patronRequestData?.patronRequests?.content ?? []}
 					columns={dynamicPatronRequestColumns}
-					columnVisibilityModel={columnVisibilityModel}
-					onColumnVisibilityModelChange={handleColumnVisibilityChange}
+					columnVisibilityModel={grid.columnVisibilityModel}
+					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
 					type="patronRequests"
 					label={t("nav.patron_requests.title")}
 					identifier="patronRequestsMain"
@@ -332,14 +259,14 @@ function RouteComponent() {
 					toolbarVisible
 					searchText={t("ui.actions.search")}
 					paginationMode="server"
-					paginationModel={paginationModel}
-					onPaginationModelChange={handlePaginationChange}
+					paginationModel={grid.paginationModel}
+					onPaginationModelChange={grid.handlePaginationChange}
 					filterMode="server"
-					filterModel={filterModel} // Use immediate filter model for UI
-					onFilterModelChange={handleFilterChange}
+					filterModel={grid.filterModel}
+					onFilterModelChange={grid.handleFilterChange}
 					sortingMode="server"
-					sortModel={sortModel}
-					onSortModelChange={handleSortChange}
+					sortModel={grid.sortModel}
+					onSortModelChange={grid.handleSortChange}
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}

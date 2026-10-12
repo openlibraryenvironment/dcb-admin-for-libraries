@@ -94,3 +94,61 @@ segment was only visible in devtools. `NotFound` shows the address.
 **The way out is home, not "go back".** The previous page is what produced the
 bad link, so returning to it re-offers the same dead end.
 
+## Grid state is URL state
+
+A server-paged grid's filter, sort and page live in its route's search, so a
+list can be shared, bookmarked, opened in a new tab, and is put back exactly
+by the back button from a detail page. Every such route declares
+`validateSearch` with its grid's schema; `tests/gridRoutesValidateSearch.test.ts`
+fails one that does not. A hand-typed or stale link cannot crash the page or
+reach the server unchecked: each key `.catch()`es to absent, a sort or filter
+must name a column the grid offers it on, with one of that column's operators
+and a value of that column's type, and a page size must be one the grid offers.
+Anything else is dropped, not passed on.
+
+```
+/patronRequests?page=1&sort=status%3Aasc&filters=%5B%7B%22id%22%3A1%2C%22field%22%3A%22status%22%2C%22operator%22%3A%22is%22%2C%22value%22%3A%22COMPLETED%22%7D%5D
+```
+
+Only what differs from the grid's defaults is written, and every change
+**replaces** the history entry rather than pushing one, so paging and typing do
+not flood history. Filter typing reaches the URL after the same 500 ms debounce
+the request always had. A grid inside a page with search of its own - the
+audit log, a tab of `/patronRequests/$id` - keeps its state under one key,
+`audit`.
+
+The grid is shown what the reader just did at once, not when the URL catches
+up a tick later: MUI X treats a sort or filter it receives late as a fresh
+change and sends the reader back to the first page.
+
+Column visibility is a device preference, not a view, so it stays in the
+persisted grid store. That store no longer persists filter, sort or page; the
+client-paged grids (record items, the cleanup dialog) keep theirs in memory for
+the session.
+
+### What never goes in the URL
+
+A patron barcode is personal data and close to a credential, and a URL is not
+private: every reload or deep link sends the whole URL to the host's request
+logs (Cloudflare, S3), it travels in the Referer of every asset the page
+fetches, it sits in the browser history of a shared library desk, and it goes
+wherever someone pastes it. Quick-search text is free text a member of staff
+can paste a barcode into, so it is treated the same. Filters on the fields in
+`PRIVATE_FILTER_FIELDS` (`src/helpers/dataGrid/gridSearch.ts`) and quick-search
+values are kept in the tab's history entry instead, keyed by grid. They survive
+back, forward and a reload of that tab, reach `dcb-service` only inside the
+GraphQL request body, and are absent from a copied link. A field that carries a
+patron's barcode is added to that constant, and nowhere else.
+
+### Adding a grid
+
+1. Define it in `src/helpers/dataGrid/gridDefinitions.ts` with `defineGrid`:
+   an id, the columns **as rendered** (they are the sort and filter allow-list),
+   the default sort, page size and column visibility.
+2. Give its route `validateSearch: yourGrid.searchSchema`.
+3. In the component, `useSyncedDataGrid(yourGrid, Route.useSearch())`; hand the
+   grid `filterModel`, `sortModel`, `paginationModel` and their handlers, and
+   build the request from `appliedFilterModel`, which is the debounced one.
+4. `useDataGridErrorSafely(grid, isError, error)` puts the grid back to its
+   defaults when the server cannot process a filter or sort.
+

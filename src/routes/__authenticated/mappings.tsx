@@ -2,21 +2,19 @@ import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
-import { useGridStore } from "@/hooks/useDataGridStore";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import Confirmation from "@components/Confirmation/Confirmation";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import { standardRefValueMappingColumns } from "@helpers/dataGrid/columns/referenceValueMappingColumns";
-import { referenceValueMappingColumnVisibility } from "@helpers/dataGrid/columnVisibility/referenceValueMappingColumnVisibilityModel";
 import { computeMutation } from "@helpers/dataGrid/computeMutation";
 import {
 	getSortOrderForServer,
-	checkIfFiltering,
 	processGridFilterModel,
 } from "@helpers/dataGrid/utilities";
+import { mappingsGrid } from "@helpers/dataGrid/gridDefinitions";
 import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
 import { FunctionalSettingStatus } from "@models/FunctionalSetting";
 import { ReferenceValueMappingsQueryData } from "@models/ReactQueryHelperTypes";
@@ -24,14 +22,10 @@ import { Cancel, Delete, Edit, Save } from "@mui/icons-material";
 import {
 	GridActionsCellItem,
 	GridColDef,
-	GridColumnVisibilityModel,
-	GridFilterModel,
-	GridPaginationModel,
 	GridRowId,
 	GridRowModel,
 	GridRowModes,
 	GridRowModesModel,
-	GridSortModel,
 	GridValidRowModel,
 } from "@mui/x-data-grid-premium";
 import { deleteReferenceValueMapping } from "@mutations/deleteReferenceValueMapping";
@@ -50,6 +44,7 @@ import { useTranslation } from "react-i18next";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/mappings")({
+	validateSearch: mappingsGrid.searchSchema,
 	head: () => ({ meta: [{ title: pageTitle("nav.mappings.title") }] }),
 	component: RouteComponent,
 });
@@ -74,43 +69,12 @@ function RouteComponent() {
 	const queryClient = useQueryClient();
 	const { cfg } = useRouter().options.context as { cfg: any };
 
-	const gridId = "referenceValueMappings";
-	const storedState = {
-		sort: useGridStore((state) => state.sortModel[gridId]),
-		filter: useGridStore((state) => state.filterModel[gridId]),
-		pagination: useGridStore((state) => state.paginationModel[gridId]),
-		columnVisibility: useGridStore(
-			(state) => state.columnVisibilityModel[gridId],
-		),
-	};
-	const setSortModel = useGridStore((state) => state.setSortModel);
-	const setFilterModel = useGridStore((state) => state.setFilterModel);
-	const setPaginationModel = useGridStore((state) => state.setPaginationModel);
-	const setColumnVisibilityModel = useGridStore(
-		(state) => state.setColumnVisibilityModel,
-	);
-
-	const [paginationModel, setLocalPaginationModel] =
-		useState<GridPaginationModel>(
-			storedState.pagination ?? { page: 0, pageSize: 25 }
-		);
-	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
-		storedState.filter ?? { items: [] }
-	);
-	const debouncedFilterModel = useDebounce(filterModel, 500);
-	const isFiltering = checkIfFiltering(filterModel, debouncedFilterModel);
-
-	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
-		storedState.sort ?? [{ field: "lastImported", sort: "desc" }]
-	);
+	const grid = useSyncedDataGrid(mappingsGrid, Route.useSearch());
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const [promiseArguments, setPromiseArguments] = useState<any>(null);
 	const [editRecord, setEditRecord] = useState<string | null>(null);
 	const [deleteConfirmationId, setDeleteConfirmationId] =
 		useState<GridRowId | null>(null);
-	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? referenceValueMappingColumnVisibility
-	);
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
 	// An edit or a deletion that did not save. The grid used to build this message
 	// and throw it away, so a failed save reverted the row and said nothing.
@@ -146,7 +110,11 @@ function RouteComponent() {
 			"DENY_LIBRARY_MAPPING_EDIT"
 		) == FunctionalSettingStatus.DISABLED;
 
-	const grid = gridPage(debouncedFilterModel, paginationModel, sortModel);
+	const page = gridPage(
+		grid.appliedFilterModel,
+		grid.paginationModel,
+		grid.sortModel
+	);
 	const {
 		data: mappingsData,
 		isLoading: mappingsLoading,
@@ -154,22 +122,22 @@ function RouteComponent() {
 		error,
 		isError: mappingsError,
 	} = useQuery<ReferenceValueMappingsQueryData>({
-		queryKey: queryKeys.mappings.list(apiBase, libraryHostLmsCode, grid),
+		queryKey: queryKeys.mappings.list(apiBase, libraryHostLmsCode, page),
 		queryFn: async () => {
 			const baseQuery = `(toContext:"${libraryHostLmsCode}" OR fromContext:${libraryHostLmsCode}) AND NOT deleted:true`;
 			// Second Host LMS to come.
 			const queryVariables = {
 				query:
-					processGridFilterModel(grid.filterModel, baseQuery, [
+					processGridFilterModel(page.filterModel, baseQuery, [
 						"fromValue",
 						"toValue",
 						"fromCategory",
 						"toCategory",
 					]) ?? "",
-				pagesize: clampPageSize(grid.pageSize),
-				pageno: grid.page ?? 0,
-				order: grid.sortField ?? "lastImported",
-				orderBy: getSortOrderForServer(grid.sortDirection) ?? "DESC",
+				pagesize: clampPageSize(page.pageSize),
+				pageno: page.page ?? 0,
+				order: page.sortField ?? "lastImported",
+				orderBy: getSortOrderForServer(page.sortDirection) ?? "DESC",
 			};
 			return request(
 				apiBase + "/graphql",
@@ -238,38 +206,6 @@ function RouteComponent() {
 			);
 		},
 	});
-
-	const handlePaginationChange = useCallback(
-		(model: GridPaginationModel) => {
-			setLocalPaginationModel(model);
-			setPaginationModel(gridId, model);
-		},
-		[gridId, setPaginationModel]
-	);
-
-	const handleFilterChange = useCallback(
-		(model: GridFilterModel) => {
-			setLocalFilterModel(model);
-			setFilterModel(gridId, model);
-		},
-		[gridId, setFilterModel]
-	);
-
-	const handleSortChange = useCallback(
-		(model: GridSortModel) => {
-			setLocalSortModel(model);
-			setSortModel(gridId, model);
-		},
-		[gridId, setSortModel]
-	);
-
-	const handleColumnVisibilityChange = useCallback(
-		(model: GridColumnVisibilityModel) => {
-			setLocalColumnVisibilityModel(model);
-			setColumnVisibilityModel(gridId, model);
-		},
-		[gridId, setColumnVisibilityModel]
-	);
 
 	const handleEditClick = useCallback(
 		(id: GridRowId) => () => {
@@ -470,13 +406,8 @@ function RouteComponent() {
 		[editingEnabled, actionsColumn]
 	);
 
-	useDataGridErrorSafely(
-		gridId,
-		mappingsError,
-		error,
-		setLocalFilterModel,
-		setLocalSortModel,
-		() => setSnackbarOpen(true)
+	useDataGridErrorSafely(grid, mappingsError, error, () =>
+		setSnackbarOpen(true)
 	);
 	// Show loading if initial load or libraries are loading
 	if ((mappingsLoading && !mappingsData) || librariesLoading) {
@@ -506,7 +437,7 @@ function RouteComponent() {
 
 	// Determine if we should show loading state
 	const shouldShowLoading =
-		isFiltering || mappingsLoading || (isFetching && !!mappingsData);
+		grid.isFiltering || mappingsLoading || (isFetching && !!mappingsData);
 
 	return (
 		<>
@@ -515,23 +446,23 @@ function RouteComponent() {
 				<DataGrid
 					disablePivoting
 					label={t("nav.mappings.title")}
-					identifier={gridId}
+					identifier={mappingsGrid.id}
 					type="referenceValueMappings"
 					columns={refValueColumns}
 					rows={mappingsData?.referenceValueMappings?.content ?? []}
 					rowCount={mappingsData?.referenceValueMappings?.totalSize ?? 0}
 					loading={shouldShowLoading} // Show loading when filtering or fetching
 					paginationMode="server"
-					paginationModel={paginationModel}
-					onPaginationModelChange={handlePaginationChange}
+					paginationModel={grid.paginationModel}
+					onPaginationModelChange={grid.handlePaginationChange}
 					filterMode="server"
-					filterModel={filterModel} // Use immediate filter model for UI
-					onFilterModelChange={handleFilterChange}
+					filterModel={grid.filterModel}
+					onFilterModelChange={grid.handleFilterChange}
 					sortingMode="server"
-					sortModel={sortModel}
-					onSortModelChange={handleSortChange}
-					columnVisibilityModel={columnVisibilityModel}
-					onColumnVisibilityModelChange={handleColumnVisibilityChange}
+					sortModel={grid.sortModel}
+					onSortModelChange={grid.handleSortChange}
+					columnVisibilityModel={grid.columnVisibilityModel}
+					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
 					editMode="row"
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}

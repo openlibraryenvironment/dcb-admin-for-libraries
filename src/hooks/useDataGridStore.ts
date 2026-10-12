@@ -10,11 +10,13 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { storageKey } from "@helpers/appBase";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 
-// Persist all our grid options so we don't lose them on reload
+/**
+ * Column visibility is a device preference, persisted. Filter, sort and page
+ * here belong to the client-paged grids only and last for the session in
+ * memory: a server-paged grid keeps them in its URL (docs/routing.md).
+ */
 interface GridState {
-	// Sort model is stored directly for consistency
 	sortModel: Record<string, GridSortModel>;
-	// Only the filter model is needed; the string is derived from it
 	filterModel: Record<string, GridFilterModel>;
 	paginationModel: Record<string, GridPaginationModel>;
 	columnVisibilityModel: Record<string, GridColumnVisibilityModel>;
@@ -30,6 +32,9 @@ interface GridActions {
 	) => void;
 	clearGridState: () => void;
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+	typeof value === "object" && value !== null && !Array.isArray(value);
 
 export const useGridStore = create<GridState & GridActions>()(
 	persist(
@@ -78,22 +83,20 @@ export const useGridStore = create<GridState & GridActions>()(
 			// "grid-storage" key in the same sessionStorage, with a different shape.
 			// On a shared origin the two collide and hydration can throw.
 			name: storageKey("grid-storage"),
-			storage: createJSONStorage(() => sessionStorage), // or localStorage
-			/**
-			 * A page size this build no longer offers survives in sessionStorage
-			 * across the deployment that removed it (200 was on the list until the
-			 * 100-row bound was applied), and MUI X does not clamp a
-			 * paginationModel to its pageSizeOptions.
-			 */
+			storage: createJSONStorage(() => sessionStorage),
+			partialize: (state) => ({
+				columnVisibilityModel: state.columnVisibilityModel,
+			}),
+			// An earlier build persisted filter, sort and page as well; only the
+			// visibility is read back, so an old session's filters do not return.
 			merge: (persisted, current) => {
-				const stored = (persisted ?? {}) as Partial<GridState>;
-				const paginationModel = Object.fromEntries(
-					Object.entries(stored.paginationModel ?? {}).map(([grid, model]) => [
-						grid,
-						{ ...model, pageSize: clampPageSize(model?.pageSize) },
-					]),
-				);
-				return { ...current, ...stored, paginationModel };
+				const stored = isRecord(persisted) ? persisted : {};
+				return {
+					...current,
+					columnVisibilityModel: isRecord(stored.columnVisibilityModel)
+						? (stored.columnVisibilityModel as GridState["columnVisibilityModel"])
+						: {},
+				};
 			},
 		}
 	)

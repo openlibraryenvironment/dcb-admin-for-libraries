@@ -18,26 +18,6 @@ test("a date filter reads and writes on the reader's chosen clock", async ({
 			"root:dcb-admin-libraries-theme",
 			JSON.stringify({ state: { clock: "service" }, version: 0 }),
 		);
-		sessionStorage.setItem(
-			"root:grid-storage",
-			JSON.stringify({
-				state: {
-					filterModel: {
-						supplierPatronRequests: {
-							items: [
-								{
-									id: 1,
-									field: "dateCreated",
-									operator: "onOrAfter",
-									value: "2026-09-01T09:15:00.000Z",
-								},
-							],
-						},
-					},
-				},
-				version: 0,
-			}),
-		);
 	});
 	await app.signIn();
 	await app.mockGraphQL({
@@ -46,7 +26,18 @@ test("a date filter reads and writes on the reader's chosen clock", async ({
 		LoadPatronRequests: supplierRequests,
 	});
 
-	await page.goto("/supplierRequests");
+	await page.goto(
+		`/supplierRequests?filters=${encodeURIComponent(
+			JSON.stringify([
+				{
+					id: 1,
+					field: "dateCreated",
+					operator: "onOrAfter",
+					value: "2026-09-01T09:15:00.000Z",
+				},
+			]),
+		)}`,
+	);
 	await expect(page.getByRole("grid")).toBeVisible();
 	await page.getByRole("button", { name: /Show filters, 1 applied/ }).click();
 
