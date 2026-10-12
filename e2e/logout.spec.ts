@@ -51,4 +51,35 @@ test.describe("Logout", () => {
 		);
 		await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
 	});
+
+	// A library desk is a shared machine: the next person should not inherit these.
+	test("forgets the library chosen and the Insights cost, but not display settings", async ({
+		app,
+		page,
+	}) => {
+		await app.useColorScheme("dark");
+		await app.signIn();
+		await page.addInitScript(() => {
+			if (sessionStorage.getItem("__e2e_user_state_seeded__")) return;
+			sessionStorage.setItem("__e2e_user_state_seeded__", "1");
+			localStorage.setItem(
+				"root:selected-agency-code",
+				JSON.stringify({ state: { selected: "e2e-agency-2" }, version: 0 }),
+			);
+			localStorage.setItem(
+				"root:dcb-insights-ill-cost",
+				JSON.stringify({ state: { illUnitCost: 42, currency: "GBP" }, version: 0 }),
+			);
+		});
+		await page.route(DISCOVERY, (route) => route.fulfill({ status: 503, body: "" }));
+
+		await page.goto("/logout");
+		await expect(page.getByRole("alert")).toContainText(/error during logout/i);
+
+		const kept = await page.evaluate(() => Object.keys(localStorage).sort());
+		expect(kept).not.toContain("root:selected-agency-code");
+		expect(kept).not.toContain("root:dcb-insights-ill-cost");
+		expect(kept).toContain("root:dcb-admin-libraries-theme");
+	});
 });
+

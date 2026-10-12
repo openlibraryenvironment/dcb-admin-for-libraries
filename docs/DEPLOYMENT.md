@@ -305,6 +305,9 @@ through them before the release pipeline runs, and the checks after it.
 
 ### After the release
 
+To see which build a host is serving, `curl -s https://<host>/dcb-admin-for-libraries/ | grep dcb-admin-for-libraries-build`
+prints the commit it was built from; the build job asserts the stamp is there.
+
 1. The R2 bucket `ki-front-end-bundles/dcb-admin-for-libraries/` holds `v<version>/`, and
    `latest.json` reads `{"version":"v<version>"}`. Before 2.0, no release had ever reached R2.
 2. `ki-libs-spa-hosting/archive/dcb-admin-for-libraries-v<version>/` exists. While there, look

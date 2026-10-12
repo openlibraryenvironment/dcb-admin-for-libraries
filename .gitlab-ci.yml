@@ -181,6 +181,7 @@ build:
     # The committed route tree is what tsc checked; a build that regenerates it differently means it was stale.
     - git diff --exit-code -- src/routeTree.gen.ts
     - grep -qF 'src="/dcb-admin-for-libraries/assets/' dist/index.html
+    - grep -qF "<meta name=\"dcb-admin-for-libraries-build\" content=\"$CI_COMMIT_SHORT_SHA\">" dist/index.html
     # The worker's CSP must allow these; see docs/DEPLOYMENT.md, "Releasing to the kihosting hosts".
     - node scripts/print-csp-hashes.mjs
   artifacts:

@@ -4,6 +4,21 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 /// <reference types="vitest/config" />
 
+// The commit, not the version: the build job runs before semantic-release bumps package.json.
+function buildStampPlugin(): Plugin {
+	const build = process.env.CI_COMMIT_SHORT_SHA || "local";
+	return {
+		name: "build-stamp",
+		transformIndexHtml: () => [
+			{
+				tag: "meta",
+				attrs: { name: "dcb-admin-for-libraries-build", content: build },
+				injectTo: "head",
+			},
+		],
+	};
+}
+
 function kiBootstrapCssPlugin(): Plugin {
 	return {
 		name: "ki-bootstrap-css",
@@ -61,6 +76,7 @@ export default defineConfig(({ mode }) => {
 			}),
 			react(),
 			kiBootstrapCssPlugin(),
+			buildStampPlugin(),
 		],
 		// An ABSOLUTE base, never a relative "./" one: a relative base resolves assets
 		// against the current page path, and an SPA fallback serves index.html AT the

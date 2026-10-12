@@ -64,6 +64,12 @@ const useAgencySelectionStore = create<AgencySelectionState>()(
 	),
 );
 
+/** Forget the chosen library, in memory and in storage: the next person to sign in starts from their own claim. */
+export const clearAgencySelection = (): void => {
+	useAgencySelectionStore.setState({ selected: null });
+	useAgencySelectionStore.persist.clearStorage();
+};
+
 /** The library being looked at, for a route loader, which cannot call the hook. */
 export const currentAgencyCode = (claim: unknown): string | undefined =>
 	resolveAgencyCode(

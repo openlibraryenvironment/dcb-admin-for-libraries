@@ -10,10 +10,10 @@ import Button from "@mui/material/Button";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import LoginIcon from "@mui/icons-material/Login";
 import { useAuth } from "react-oidc-context";
-import { useGridStore } from "@/hooks/useDataGridStore";
+import { clearUserState } from "@helpers/clearUserState";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
-import { appUrl, storageKey } from "@helpers/appBase";
+import { appUrl } from "@helpers/appBase";
 
 // Define the search params to handle the ?loggedOut=true flag
 const logoutSearchSchema = z.object({
@@ -60,7 +60,6 @@ const Page = ({ children }: { children: ReactNode }) => (
 function Logout() {
 	const auth = useAuth();
 	const navigate = useNavigate();
-	const clearGridState = useGridStore((state) => state.clearGridState);
 	const { loggedOut } = Route.useSearch();
 	const { t } = useTranslation();
 	const { signoutRedirect } = auth;
@@ -71,14 +70,13 @@ function Logout() {
 
 	const performLogout = useCallback(() => {
 		hasTriggeredLogout.current = true;
-		clearGridState();
-		sessionStorage.removeItem(storageKey("afterLoginRedirectPath"));
+		clearUserState();
 		// Base-scoped: the bare origin serves no app when several are mounted under
 		// path prefixes, so Keycloak would return the user to DCB Admin.
 		void signoutRedirect({
 			post_logout_redirect_uri: appUrl("logout?loggedOut=true"),
 		});
-	}, [clearGridState, signoutRedirect]);
+	}, [signoutRedirect]);
 
 	useEffect(() => {
 		if (loggedOut || auth.isLoading || hasTriggeredLogout.current) return;
@@ -90,14 +88,13 @@ function Logout() {
 
 		// No session to end, so no redirect will ever come back to say it ended.
 		hasTriggeredLogout.current = true;
-		clearGridState();
+		clearUserState();
 		void navigate({ to: "/logout", search: { loggedOut: true }, replace: true });
 	}, [
 		auth.isAuthenticated,
 		auth.isLoading,
 		loggedOut,
 		performLogout,
-		clearGridState,
 		navigate,
 	]);
 

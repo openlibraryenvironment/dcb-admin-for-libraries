@@ -145,3 +145,12 @@ withoutInjectedConfig(
 		expect(requested).toEqual([`${BASE}/inject_env.json`]);
 	},
 );
+
+// Support needs to know which build a host is serving; see docs/DEPLOYMENT.md section 5.
+test("the page says which commit it was built from", async ({ page }) => {
+	await page.goto(`${BASE}/login`);
+	await expect(
+		page.locator('meta[name="dcb-admin-for-libraries-build"]'),
+	).toHaveAttribute("content", /^(local|[0-9a-f]{7,40})$/);
+});
+
