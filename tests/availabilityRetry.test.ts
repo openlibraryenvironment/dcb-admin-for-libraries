@@ -77,9 +77,12 @@ describe("the availability retry policy", () => {
 	});
 });
 
-/** The policy is only worth having if nothing reaches the endpoint without it. */
-describe("every availability query carries the policy", () => {
-
+/**
+ * The policy and the shared cache key are only worth having if nothing reaches
+ * the endpoint around them. The due-date hook is the one deliberate exception:
+ * it must ask again after a checkout, so it keeps its own key.
+ */
+describe("one factory reaches the availability endpoint", () => {
 	const sources = (dir: string): string[] =>
 		readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
 			const path = join(dir, entry.name).replaceAll("\\", "/");
@@ -93,8 +96,11 @@ describe("every availability query carries the policy", () => {
 			readFileSync(file, "utf8").includes("/items/availability"),
 	);
 
-	it("finds the call sites, so it cannot pass vacuously", () => {
-		expect(callers.length).toBeGreaterThanOrEqual(5);
+	it("is the factory and the post-checkout due date, and nothing else", () => {
+		expect(callers.sort()).toEqual([
+			"src/helpers/availabilityApi.ts",
+			"src/hooks/useCheckedOutDueDate.ts",
+		]);
 	});
 
 	it("spreads AVAILABILITY_QUERY_POLICY into each useQuery that hits it", () => {
