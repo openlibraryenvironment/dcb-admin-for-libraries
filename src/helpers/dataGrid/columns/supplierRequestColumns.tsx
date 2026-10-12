@@ -44,8 +44,9 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 		headerName: i18n.t("grid.headers.patron_library"),
 		filterable: true, // Should present library options but with the HOST LMS code as a mapping.
 		sortable: false,
+		// The default singleSelect operators: these columns are the URL's filter
+		// allow-list, so they must offer what the grid renders.
 		type: "singleSelect",
-		filterOperators: isOnly,
 		flex: 1,
 	},
 	{
@@ -104,13 +105,9 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 		sortable: false,
 		valueGetter: (
 			value: string,
-			row: { suppliers: { canonicalItemType: string }[] },
+			row: { suppliers?: { canonicalItemType: string }[] | null },
 		) => {
-			if (row.suppliers.length > 0) {
-				return row.suppliers[0].canonicalItemType;
-			} else {
-				return ""; // This allows us to handle the array being empty, and any related type errors.
-			}
+			return row.suppliers?.[0]?.canonicalItemType ?? "";
 		},
 	},
 	{
@@ -164,8 +161,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 	{
 		field: "elapsedTimeInCurrentStatus",
 		headerName: i18n.t("grid.headers.time_in_state_days"),
-		description:
-			"The time the request has been in its current status, in the format dd:hh:mm:ss", // Can we replicate this elsewhere?
+		description: i18n.t("grid.headers.time_in_state_description"),
 		minWidth: 50,
 		type: "number",
 		filterOperators: durationFilters,
@@ -250,11 +246,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 		sortable: false,
 		flex: 0.3,
 		valueGetter: (value: any, row: PatronRequest) => {
-			if (row.suppliers.length > 0) {
-				return row.suppliers[0].localItemBarcode;
-			} else {
-				return "";
-			}
+			return row.suppliers?.[0]?.localItemBarcode ?? "";
 		},
 	},
 	{

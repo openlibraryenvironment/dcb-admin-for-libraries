@@ -2,10 +2,19 @@ import { test, expect as strictExpect, type AppFixture } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
+import polarisLibrary from "./fixtures-data/library-polaris.json" with { type: "json" };
+import supplierRequests from "./fixtures-data/supplier-requests.json" with { type: "json" };
+import sparseRequest from "./fixtures-data/patronRequest-sparse.json" with { type: "json" };
+import locations from "./fixtures-data/locations.json" with { type: "json" };
+import bibs from "./fixtures-data/bibs.json" with { type: "json" };
+import audit from "./fixtures-data/audit.json" with { type: "json" };
 import {
 	colorSchemeAttribute,
 	type ColorScheme,
 } from "./fixtures/color-scheme";
+import { scrollUntilPresent } from "./fixtures/lazy";
+import { AGENCY_CODE } from "./fixtures/auth";
+import type { Page } from "@playwright/test";
 
 /**
  * The accessibility gate: zero axe violations on every surface in PAGES, in
@@ -24,7 +33,7 @@ interface Surface {
 	name: string;
 	path: string;
 	/** Runs before navigation: sign-in, mocks, anything else the page needs. */
-	prepare?: (app: AppFixture) => Promise<void>;
+	prepare?: (app: AppFixture, page: Page) => Promise<void>;
 	/**
 	 * Mount anything the page defers until it is scrolled into view.
 	 *
@@ -33,9 +42,9 @@ interface Surface {
 	 * page that defers content MUST bring it in here, and `ready` must then wait
 	 * for the LAST thing revealed rather than the first thing painted.
 	 */
-	reveal?: (page: import("@playwright/test").Page) => Promise<void>;
+	reveal?: (page: Page) => Promise<void>;
 	/** Waited for before scanning, so axe never sees a half-rendered page. */
-	ready: (page: import("@playwright/test").Page) => Promise<void>;
+	ready: (page: Page) => Promise<void>;
 }
 
 /**
@@ -47,33 +56,6 @@ interface Surface {
 const RARE_GEM = "Unique collection value";
 
 /**
- * Steps down the page until `locator` exists, so everything behind an
- * IntersectionObserver has mounted before axe scans. POLLED rather than a
- * fixed number of steps, and one viewport per pass: the failure both of those
- * avoid is in docs/testing.md.
- */
-async function scrollUntilPresent(
-	page: import("@playwright/test").Page,
-	locator: import("@playwright/test").Locator,
-) {
-	await expect
-		.poll(
-			async () => {
-				await page.evaluate(() =>
-					window.scrollBy(0, Math.max(window.innerHeight - 100, 200)),
-				);
-				return locator.count();
-			},
-			{
-				message:
-					"scrolled to the bottom without the last deferred panel ever mounting",
-				timeout: 30_000,
-			},
-		)
-		.toBeGreaterThan(0);
-}
-
-/**
  * Every subject, and the heading that proves its last panel has mounted.
  *
  * Waiting on a NAMED heading rather than a count is what makes the reveal
@@ -82,10 +64,78 @@ async function scrollUntilPresent(
 const INSIGHTS_SUBJECTS = [
 	{ subject: "trends", lastPanel: "Requesting activity over time" },
 	{ subject: "service", lastPanel: "Supplier responsiveness" },
-	{ subject: "demand", lastPanel: "Demand by patron group" },
+	{ subject: "demand", lastPanel: "Demand nothing could supply" },
 	{ subject: "partners", lastPanel: "Borrowing vs supplying" },
+	{ subject: "collection", lastPanel: "Who holds the same works" },
 	{ subject: "gaps", lastPanel: RARE_GEM },
 ] as const;
+
+/** A cluster record with one requestable item at the signed-in library. */
+const RECORD = "aaaaaaaa-0000-4000-8000-000000000001";
+
+const mockRecord = async (app: AppFixture, page: Page) => {
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraries: library,
+		LoadPatronRequests: patronRequests,
+		LoadLocations: {
+			locations: {
+				totalSize: 1,
+				content: [
+					{
+						id: "loc-1",
+						name: "Main desk",
+						code: "MAIN",
+						agency: { name: "E2E Test Library", code: AGENCY_CODE },
+					},
+				],
+			},
+		},
+	});
+	await page.route("**/opac-inventory/instances/**", (route) =>
+		route.fulfill({
+			json: {
+				id: RECORD,
+				title: "Middlemarch",
+				description: "A study of provincial life",
+				contributors: [{ name: "Eliot, George" }],
+				sourceTypes: ["Book"],
+				subjects: [{ value: "Provincial life" }],
+			},
+		}),
+	);
+	await page.route("**/items/availability**", (route) =>
+		route.fulfill({
+			json: {
+				itemList: [
+					{
+						id: "item-1",
+						barcode: "30001",
+						status: { code: "AVAILABLE" },
+						agency: { code: AGENCY_CODE, description: "E2E Test Library" },
+						isRequestable: true,
+						isSuppressed: false,
+						location: { code: "MAIN", name: "Main" },
+					},
+				],
+				timings: {},
+			},
+		}),
+	);
+	await page.route("**/patron/auth/lookup", (route) =>
+		route.fulfill({
+			json: { status: "VALID", localPatronId: ["p1"], agencyCode: AGENCY_CODE },
+		}),
+	);
+};
+
+const openRequestDialog = async (page: Page) => {
+	const place = page.getByRole("button", { name: /^place request$/i });
+	await expect(place).toBeEnabled();
+	await place.click();
+	await page.getByRole("button", { name: /continue/i }).click();
+};
 
 const PAGES: Surface[] = [
 	{
@@ -112,6 +162,27 @@ const PAGES: Surface[] = [
 		},
 		ready: async (page) => {
 			await expect(page.getByText("E2E Test Library").first()).toBeVisible();
+		},
+	},
+	{
+		// The announcements compose form. Two text fields, a date input and a switch — a form, which is
+		// where accessible names and error association fail, and the only surface in this
+		// app that publishes something patrons will read.
+		name: "announcements",
+		path: "/announcements",
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_ANNOUNCEMENTS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraryBasics: library,
+				LoadAnnouncements: { announcements: [] },
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Tell your patrons" }),
+			).toBeVisible();
 		},
 	},
 	{
@@ -169,7 +240,10 @@ const PAGES: Surface[] = [
 			name: `insights - ${subject}`,
 			path: `/insights?tab=${subject}`,
 			prepare: async (app) => {
-				await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+				await app.enableFeatures([
+					"VITE_FEATURE_INSIGHTS",
+					"VITE_FEATURE_INSIGHTS_WALK_UP",
+				]);
 				await app.signIn();
 				await app.mockGraphQL({
 					LoadLibrary: library,
@@ -291,6 +365,31 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// Every control in it is a form control, in groups, with an error state.
+		name: "export wizard",
+		path: "/patronRequests",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraries: library,
+				LoadPatronRequests: patronRequests,
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("grid", { name: /patron requests/i }),
+			).toBeVisible();
+			await page.getByRole("button", { name: "Export" }).click();
+			await page.getByRole("menuitem", { name: "Export…" }).click();
+			const dialog = page.getByRole("dialog", { name: "Export requests" });
+			await expect(dialog).toBeVisible();
+			// The error state, so its contrast and its association are scanned too.
+			await dialog.getByRole("button", { name: "Clear all" }).click();
+			await expect(dialog.getByRole("alert")).toBeVisible();
+		},
+	},
+	{
 		// The library profile IN EDIT MODE, with a validation error on screen.
 		// Neither state was ever scanned, and between them they carry every
 		// form control and every error message in the application - which is
@@ -352,6 +451,305 @@ const PAGES: Surface[] = [
 			).toBeVisible();
 		},
 	},
+	{
+		// Two Host LMS configurations, so every credential row and both sections render.
+		name: "service",
+		path: "/service",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibraryServiceConfig: polarisLibrary });
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Service" }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("heading", { level: 2, name: /E2E Second Host LMS/ }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "maintenance",
+		path: "/maintenance",
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Maintenance in progress" }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "network error",
+		path: "/networkError",
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Network error detected" }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "logged out",
+		path: "/logout?loggedOut=true",
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Logged out" }),
+			).toBeVisible();
+		},
+	},
+	{
+		// The library selector renders only for a multi-agency claim; no other surface has one.
+		name: "header with library selector",
+		path: "/settings",
+		prepare: async (app) => {
+			await app.signIn({ agencyCode: "e2e-agency,e2e-agency-2" });
+			await app.mockGraphQL({ LoadLibrary: library });
+		},
+		ready: async (page) => {
+			await expect(page.getByRole("combobox", { name: "Library" })).toBeVisible();
+		},
+	},
+	{
+		name: "announcements, with notices",
+		path: "/announcements",
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_ANNOUNCEMENTS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibraryBasics: library,
+				LoadAnnouncements: {
+					announcements: [
+						{
+							id: "aaaaaaaa-0000-4000-8000-000000000001",
+							scopeType: "LIBRARY",
+							scopeId: library.libraries.content[0].id,
+							headline: "Requesting paused",
+							body: "Requests resume on Monday.",
+							urgent: false,
+							dismissible: true,
+							startsAt: "2020-01-01T00:00:00Z",
+							expiresAt: "2020-01-31T23:59:59Z",
+						},
+					],
+				},
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("button", { name: "Take down: Requesting paused" }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "record information",
+		path: `/requesting/${RECORD}`,
+		prepare: mockRecord,
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Middlemarch" }),
+			).toBeVisible();
+			await expect(page.getByText("Eliot, George")).toBeVisible();
+		},
+	},
+	{
+		name: "record items",
+		path: `/requesting/${RECORD}/items`,
+		prepare: mockRecord,
+		ready: async (page) => {
+			await expect(page.getByRole("grid", { name: /^items$/i })).toBeVisible();
+			await expect(page.getByText("item-1")).toBeVisible();
+		},
+	},
+	{
+		name: "record history",
+		path: `/requesting/${RECORD}/history`,
+		prepare: mockRecord,
+		ready: async (page) => {
+			const grid = page.getByRole("grid", { name: /request history/i });
+			await expect(grid).toBeVisible();
+			// Rows, not the grid: an empty row group mid-load is an axe "incomplete".
+			await expect(grid.getByRole("link", { name: /2026-09-01/ }).first()).toBeVisible();
+		},
+	},
+	{
+		name: "requesting dialog, patron step",
+		path: `/requesting/${RECORD}`,
+		prepare: mockRecord,
+		reveal: openRequestDialog,
+		ready: async (page) => {
+			await expect(
+				page.getByRole("textbox", { name: /patron barcode/i }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "staff request, manual item selection",
+		path: `/requesting/${RECORD}`,
+		prepare: mockRecord,
+		reveal: async (page) => {
+			await openRequestDialog(page);
+			const barcode = page.getByRole("textbox", { name: /patron barcode/i });
+			await barcode.fill("12345");
+			await barcode.press("Enter");
+			await page.getByRole("radio", { name: /manual/i }).check();
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("combobox", { name: /item library/i }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "requesting, advanced search",
+		path: "/requesting?filters=keyword%3Amiddlemarch",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library });
+			await app.mockSearch();
+		},
+		reveal: async (page) => {
+			await page.getByRole("button", { name: /show advanced search/i }).click();
+			await page.getByRole("button", { name: /add filter/i }).click();
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("button", { name: /remove filter/i }).first(),
+			).toBeVisible();
+			await expect(
+				page.getByRole("list", { name: /search results/i }),
+			).toBeVisible();
+		},
+	},
+	{
+		// No suppliers and no members: the sparse shape a new request has.
+		name: "patron request detail",
+		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadPatronRequest: sparseRequest,
+				// Unmocked, it is aborted, and the app's error handler leaves for /networkError mid-scan.
+				LoadHostLms: { hostLms: { content: [] } },
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Patron request" }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("button", { name: "Check for updates" }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "patron request audit log",
+		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadPatronRequest: sparseRequest,
+				// Unmocked, it is aborted, and the app's error handler leaves for /networkError mid-scan.
+				LoadHostLms: { hostLms: { content: [] } },
+				GetAuditsByPatronRequest: audit,
+			});
+		},
+		reveal: async (page) => {
+			await page.getByRole("tab", { name: "Audit log" }).click();
+		},
+		ready: async (page) => {
+			const grid = page.getByRole("grid", { name: "Audit log" });
+			await expect(grid).toBeVisible();
+			await expect(grid.getByRole("link")).toBeVisible();
+		},
+	},
+	{
+		name: "audit entry",
+		path: `/patronRequests/audits/${audit.audits.content[0].id}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				GetAuditById: audit,
+				GetAuditNeighbours: { older: audit.audits, newer: { content: [] } },
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: audit.audits.content[0].id }),
+			).toBeVisible();
+			await expect(page.getByRole("button", { name: "Older" })).toBeEnabled();
+		},
+	},
+	{
+		name: "supplier requests",
+		path: "/supplierRequests",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraries: library,
+				LoadPatronRequests: supplierRequests,
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("grid", { name: /supplier requests/i }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("row", { name: /Alpha and the art of failure/ }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "locations",
+		path: "/locations",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library, LoadLocations: locations });
+		},
+		ready: async (page) => {
+			await expect(page.getByRole("grid", { name: "Locations" })).toBeVisible();
+			await expect(page.getByRole("link", { name: "Main Library" })).toBeVisible();
+		},
+	},
+	{
+		name: "location detail",
+		path: `/locations/${locations.locations.content[0].id}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library, LoadLocation: locations });
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Main Library" }),
+			).toBeVisible();
+		},
+	},
+	{
+		name: "bibs",
+		path: "/bibs",
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library, LoadBibs: bibs });
+		},
+		ready: async (page) => {
+			await expect(page.getByRole("grid", { name: "Bib records" })).toBeVisible();
+			await expect(page.getByRole("link", { name: "Middlemarch" })).toBeVisible();
+		},
+	},
+	{
+		name: "bib detail",
+		path: `/bibs/${bibs.sourceBibs.content[0].id}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({ LoadLibrary: library, LoadBibMainDetails: bibs });
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("heading", { level: 1, name: "Middlemarch" }),
+			).toBeVisible();
+		},
+	},
 ];
 
 const SCHEMES: ColorScheme[] = ["light", "dark"];
@@ -361,7 +759,7 @@ for (const scheme of SCHEMES) {
 		for (const surface of PAGES) {
 			test(`${surface.name} has no violations`, async ({ app, page }) => {
 				await app.useColorScheme(scheme);
-				await surface.prepare?.(app);
+				await surface.prepare?.(app, page);
 
 				await page.goto(surface.path);
 				await surface.reveal?.(page);
@@ -373,8 +771,66 @@ for (const scheme of SCHEMES) {
 					colorSchemeAttribute(scheme),
 				);
 
+				// Contrast is judged at rest: a button fading from disabled to enabled was sampled mid-way.
+				await expect
+					.poll(() =>
+						page.evaluate(
+							() =>
+								document
+									.getAnimations()
+									.filter((a) => a instanceof CSSTransition && a.playState === "running")
+									.length,
+						),
+					)
+					.toBe(0);
+
 				await app.expectNoAccessibilityViolations();
 			});
 		}
 	});
 }
+
+/** The widest elements past the right edge, so a failure names what to fix. */
+async function horizontalOverflow(page: Page) {
+	return page.evaluate(() => {
+		const root = document.documentElement;
+		const limit = root.clientWidth;
+		const offenders = [...document.body.querySelectorAll<HTMLElement>("*")]
+			.filter((el) => el.getBoundingClientRect().right > limit + 1)
+			.filter((el) => {
+				// Inside its own scroller (a tab strip, a grid) it does not move the page.
+				for (let up = el.parentElement; up && up !== document.body; up = up.parentElement) {
+					if (getComputedStyle(up).overflowX !== "visible") return false;
+				}
+				return true;
+			})
+			.slice(0, 8)
+			.map((el) => {
+				const id = el.id ? `#${el.id}` : "";
+				const cls = [...el.classList].slice(0, 2).map((c) => `.${c}`).join("");
+				return `${el.tagName.toLowerCase()}${id}${cls} right=${Math.round(el.getBoundingClientRect().right)}`;
+			});
+		return { overflow: root.scrollWidth - limit, offenders };
+	});
+}
+
+// WCAG 1.4.10: content reflows at 320 CSS px with no horizontal page scroll. A data grid
+// may scroll inside itself; the page around it may not.
+test.describe("WCAG 2.2 AA - 1.4.10 reflow at 320 CSS px", () => {
+	test.use({ viewport: { width: 320, height: 640 } });
+
+	for (const surface of PAGES) {
+		test(`${surface.name} does not scroll horizontally`, async ({ app, page }) => {
+			await surface.prepare?.(app, page);
+			await page.goto(surface.path);
+			await surface.reveal?.(page);
+			await surface.ready(page);
+
+			const { overflow, offenders } = await horizontalOverflow(page);
+			expect(
+				overflow,
+				`the page is ${overflow}px wider than the viewport:\n  ${offenders.join("\n  ")}`,
+			).toBeLessThanOrEqual(0);
+		});
+	}
+});

@@ -30,7 +30,7 @@ export default function Loading({ title, subtitle }: LoadingProps) {
                         alignItems: "center",
                         alignSelf: "center"
                     }}>
-					<CircularProgress size={125} />
+					<CircularProgress size={125} aria-label={title} />
 					<Typography variant="loadingText">{title}</Typography>
 					<Typography variant="componentSubheading">{subtitle}</Typography>
 				</Stack>

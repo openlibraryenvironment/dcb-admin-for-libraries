@@ -1,0 +1,261 @@
+import type { Browser, Page } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
+import { injectRuntimeConfig } from "./fixtures/runtime-config";
+import { seedAuth } from "./fixtures/auth";
+import { mockGraphQL } from "./fixtures/graphql";
+import library from "./fixtures-data/library.json" with { type: "json" };
+import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
+
+/**
+ * A server-paged grid's filter, sort and page are URL state (docs/routing.md):
+ * shareable, bookmarkable, and restored by the back button. The patron barcode
+ * and quick-search text are not: they live in the tab's history entry.
+ */
+
+const BARCODE = "PB8675309";
+const QUICK = "QS4815162342";
+
+interface Sent {
+	query: string;
+	pageno: number;
+	pagesize: number;
+	order: string;
+	orderBy: string;
+}
+
+/** Sixty requests, so the grid has a second and third page. */
+async function mockGrid(page: Page): Promise<Sent[]> {
+	const sent: Sent[] = [];
+	await mockGraphQL(page, {
+		LoadLibrary: library,
+		LoadLibraries: library,
+		LoadPatronRequests: (variables) => {
+			sent.push(variables as unknown as Sent);
+			return {
+				patronRequests: { ...patronRequests.patronRequests, totalSize: 60 },
+			};
+		},
+	});
+	return sent;
+}
+
+async function openInNewContext(browser: Browser, url: string) {
+	const context = await browser.newContext();
+	const page = await context.newPage();
+	await injectRuntimeConfig(page);
+	await seedAuth(page);
+	const sent = await mockGrid(page);
+	await page.goto(url);
+	await expect(page.getByRole("grid")).toBeVisible();
+	return { context, page, sent };
+}
+
+const searchOf = (page: Page) => new URL(page.url()).searchParams;
+
+/** The toolbar's: a filtered column's header carries a "Show filters" button too. */
+const filterButton = (page: Page) =>
+	page.getByRole("toolbar").getByRole("button", { name: /^Show filters/ });
+
+/** Opens the filter panel on one column and returns its value input. */
+async function filterOn(page: Page, column: string) {
+	await page
+		.getByRole("columnheader", { name: column })
+		.hover();
+	await page
+		.getByRole("columnheader", { name: column })
+		.getByRole("button", { name: /menu/i })
+		.click();
+	await page.getByRole("menuitem", { name: "Filter" }).click();
+	return page.getByRole("tooltip").getByRole("textbox", { name: "Value" })
+		.or(page.getByRole("tooltip").getByRole("combobox", { name: "Value" }));
+}
+
+test.beforeEach(async ({ app }) => {
+	await app.signIn();
+});
+
+test("filter, sort and page live in the URL, and back from a request restores them", async ({
+	page,
+}) => {
+	const sent = await mockGrid(page);
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	await (await filterOn(page, "Status")).click();
+	await page.getByRole("option", { name: "Completed" }).click();
+	await page.keyboard.press("Escape");
+	await expect(filterButton(page)).toHaveAccessibleName(
+		"Show filters, 1 applied",
+	);
+	await expect.poll(() => searchOf(page).get("filters")).toContain("COMPLETED");
+
+	await page.getByRole("columnheader", { name: "Status" }).click();
+	await expect.poll(() => searchOf(page).get("sort")).toBe("status:asc");
+
+	await page.getByRole("button", { name: "Go to next page" }).click();
+	await expect.poll(() => searchOf(page).get("page")).toBe("1");
+
+	const listUrl = page.url();
+	const before = sent.at(-1)!;
+	expect(before.query).toContain("status:COMPLETED");
+	expect(before).toMatchObject({ pageno: 1, order: "status", orderBy: "ASC" });
+
+	await page.getByRole("link", { name: /2026-09-01/ }).first().click();
+	await expect(page).toHaveURL(/\/patronRequests\/11111111-/);
+	const sentBeforeBack = sent.length;
+
+	await page.goBack();
+	await expect(page).toHaveURL(listUrl);
+	await expect(page.getByRole("grid")).toBeVisible();
+	await expect(filterButton(page)).toHaveAccessibleName(
+		"Show filters, 1 applied",
+	);
+	await expect(
+		page.getByRole("columnheader", { name: "Status" }),
+	).toHaveAttribute("aria-sort", "ascending");
+	await expect(page.getByText(/26–50 of 60/)).toBeVisible();
+
+	const after = sent.slice(sentBeforeBack).at(-1) ?? sent.at(-1)!;
+	expect(after).toEqual(before);
+});
+
+test("a copied grid link opens the same view in someone else's browser", async ({
+	page,
+	browser,
+}) => {
+	await mockGrid(page);
+	await page.goto(
+		`/patronRequests?page=1&sort=status%3Aasc&filters=${encodeURIComponent(
+			JSON.stringify([
+				{ id: 1, field: "status", operator: "is", value: "COMPLETED" },
+			]),
+		)}`,
+	);
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	const elsewhere = await openInNewContext(browser, page.url());
+	await expect(filterButton(elsewhere.page)).toHaveAccessibleName(
+		"Show filters, 1 applied",
+	);
+	await expect(
+		elsewhere.page.getByRole("columnheader", { name: "Status" }),
+	).toHaveAttribute("aria-sort", "ascending");
+	await expect(elsewhere.page.getByText(/26–50 of 60/)).toBeVisible();
+	await expect.poll(() => elsewhere.sent.length).toBeGreaterThan(0);
+	expect(elsewhere.sent.at(-1)!.query).toContain("status:COMPLETED");
+	expect(elsewhere.sent.at(-1)).toMatchObject({
+		pageno: 1,
+		order: "status",
+		orderBy: "ASC",
+	});
+	await elsewhere.context.close();
+});
+
+test("a patron barcode filter never reaches the URL, and survives a reload of the tab only", async ({
+	page,
+	browser,
+}) => {
+	const urls: string[] = [];
+	page.on("framenavigated", (frame) => {
+		if (frame === page.mainFrame()) urls.push(frame.url());
+	});
+	const sent = await mockGrid(page);
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	const value = await filterOn(page, "Patron barcode");
+	await value.pressSequentially(BARCODE, { delay: 30 });
+	urls.push(page.url());
+	await expect
+		.poll(() => sent.at(-1)?.query ?? "")
+		.toContain(`patronBarcode:${BARCODE}`);
+	await page.keyboard.press("Escape");
+	urls.push(page.url());
+
+	await page.getByRole("button", { name: "Go to next page" }).click();
+	await expect.poll(() => searchOf(page).get("page")).toBe("1");
+	expect(sent.at(-1)!.query).toContain(`patronBarcode:${BARCODE}`);
+
+	const sentBeforeReload = sent.length;
+	await page.reload();
+	await expect(page.getByRole("grid")).toBeVisible();
+	await expect(filterButton(page)).toHaveAccessibleName(
+		"Show filters, 1 applied",
+	);
+	await expect.poll(() => sent.length).toBeGreaterThan(sentBeforeReload);
+	expect(sent.at(-1)!.query).toContain(`patronBarcode:${BARCODE}`);
+	urls.push(page.url());
+
+	for (const url of urls) expect(url).not.toContain(BARCODE);
+
+	const elsewhere = await openInNewContext(browser, page.url());
+	await expect(filterButton(elsewhere.page)).toHaveAccessibleName(
+		"Show filters",
+	);
+	await expect.poll(() => elsewhere.sent.length).toBeGreaterThan(0);
+	for (const request of elsewhere.sent) {
+		expect(request.query).not.toContain(BARCODE);
+	}
+	await elsewhere.context.close();
+});
+
+test("quick-search text is kept in the tab's history entry, never the URL", async ({
+	page,
+	browser,
+}) => {
+	const sent = await mockGrid(page);
+	await page.goto("/patronRequests?page=1");
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	// The toolbar offers no quick-search box today, so the entry is written the
+	// way the grid hook writes it, past the router's own wrapper, and read on reload.
+	await page.evaluate((quick) => {
+		History.prototype.replaceState.call(
+			history,
+			{
+				...history.state,
+				grids: { mainPatronRequests: { items: [], quickFilterValues: [quick] } },
+			},
+			"",
+		);
+	}, QUICK);
+	await page.reload();
+	await expect(page.getByRole("grid")).toBeVisible();
+	await expect.poll(() => sent.at(-1)?.query ?? "").toContain(QUICK);
+	expect(page.url()).not.toContain(QUICK);
+
+	await page.getByRole("button", { name: "Go to next page" }).click();
+	await expect.poll(() => searchOf(page).get("page")).toBe("2");
+	expect(sent.at(-1)!.query).toContain(QUICK);
+	expect(page.url()).not.toContain(QUICK);
+
+	const elsewhere = await openInNewContext(browser, page.url());
+	await expect.poll(() => elsewhere.sent.length).toBeGreaterThan(0);
+	for (const request of elsewhere.sent) {
+		expect(request.query).not.toContain(QUICK);
+	}
+	await elsewhere.context.close();
+});
+
+test("a hand-typed junk URL renders the grid with its defaults and sends a valid request", async ({
+	page,
+}) => {
+	const sent = await mockGrid(page);
+	await page.goto(
+		"/patronRequests?page=-3&pageSize=100000&sort=evil:sideways&filters=%5B%7Bgarbage",
+	);
+	await expect(page.getByRole("grid")).toBeVisible();
+	await expect(filterButton(page)).toHaveAccessibleName("Show filters");
+	await expect.poll(() => sent.length).toBeGreaterThan(0);
+
+	for (const request of sent) {
+		expect(request.pagesize).toBeLessThanOrEqual(100);
+		expect(request).toMatchObject({
+			pageno: 0,
+			pagesize: 25,
+			order: "dateCreated",
+			orderBy: "DESC",
+		});
+		expect(request.query).not.toMatch(/evil|garbage/);
+	}
+});

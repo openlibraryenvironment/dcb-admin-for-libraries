@@ -40,6 +40,20 @@ for (const page_ of PAGES) {
 	});
 }
 
+// Outside the authenticated layout, so each has to be its own main landmark too.
+const BARE_PAGES = [
+	{ path: "/maintenance", title: /^Maintenance in progress · DCB Admin for Libraries$/ },
+	{ path: "/networkError", title: /^Network error detected · DCB Admin for Libraries$/ },
+];
+
+for (const bare of BARE_PAGES) {
+	test(`${bare.path} titles itself and is a main landmark`, async ({ page }) => {
+		await page.goto(bare.path);
+		await expect(page).toHaveTitle(bare.title);
+		await expect(page.getByRole("main")).toHaveCount(1);
+	});
+}
+
 test("the title changes when the route does", async ({ app, page }) => {
 	await app.signIn();
 	await app.mockGraphQL({ LoadLibrary: library, LoadMappings: mappings });

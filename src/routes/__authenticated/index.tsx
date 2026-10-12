@@ -3,20 +3,23 @@ import { pageTitle } from "@helpers/pageTitle";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
-import axios from "axios";
+import { createFileRoute, useBlocker, useRouter } from "@tanstack/react-router";
 import {
 	BrandUploadError,
 	uploadStagedBrandImages,
 } from "@helpers/brandAssetUpload";
 import request from "graphql-request";
-import { getLibrary } from "../../queries/getLibrary";
+import { libraryQueryOptions } from "@helpers/sharedQueries";
+import { createRestClient } from "@helpers/createRestClient";
+import { authHeaders } from "@helpers/auth";
+import { queryKeys } from "@helpers/queryKeys";
 import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { Library } from "@models/Library";
 import { useTranslation } from "react-i18next";
 import RenderAttribute from "../../components/RenderAttribute/RenderAttribute";
 import {
+	Alert,
 	Button,
 	CircularProgress,
 	MenuItem,
@@ -106,13 +109,6 @@ function HomeComponent() {
 
 	const { cfg } = useRouter().options.context as { cfg: any };
 
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${auth.user?.access_token}`,
-		}),
-		[auth.user?.access_token],
-	);
-
 	const { agencyCode: code } = useAgencyCodes();
 
 	const [editMode, setEditMode] = useState(false);
@@ -123,6 +119,7 @@ function HomeComponent() {
 	const handleCancel = () => {
 		setEditMode(false);
 		setChangedFields({});
+		setStagedLogo(null);
 		reset();
 	};
 
@@ -138,7 +135,7 @@ function HomeComponent() {
 	// the mutation sends changed fields only, so a stored brand survives being hidden.
 	const discoveryActive = isDiscoveryActive();
 
-	// R-17b. A deployment with dcb.branding.assets.store=none has no upload route, so the
+	// A deployment with dcb.branding.assets.store=none has no upload route, so the
 	// button would 404. The URL field stays either way — pointing at a CDN the library
 	// already runs is a first-class route in, not a fallback.
 	const brandUploadsAvailable = useBrandUploadsAvailable();
@@ -153,7 +150,6 @@ function HomeComponent() {
 	// Refactor into common functionality
 	// Handling the edits, saves, info
 	// then the confirm save
-	// and then also the unsaved changes warning - this will probably be very different in tanstack router
 	const handleEdit = () => {
 		setEditMode(true);
 		setTimeout(() => {
@@ -163,30 +159,11 @@ function HomeComponent() {
 		}, 0);
 	};
 
-	// skip if headers not available
-	// figure out polling intervals
-	// need a better way of handling tokens as this causes a request to be sent (almost) every time
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const { data, isError, isLoading, refetch } = useQuery({
-		queryKey: ["libraryInfo", headers, code, DCB_API_BASE],
-		queryFn: async () =>
-			request(
-				DCB_API_BASE + "/graphql",
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
-				headers,
-			),
-		// do the on success here
-	});
-	// on success
+	const { data, isError, refetch } = useQuery(
+		libraryQueryOptions(DCB_API_BASE, code ?? ""),
+	);
 
-	const library: Library = data?.libraries?.content?.[0];
+	const library: Library | undefined = data?.libraries?.content?.[0];
 	const userLibraryHostLmsCode = library?.agency?.hostLms?.code;
 
 	const {
@@ -195,7 +172,7 @@ function HomeComponent() {
 		isError: supplierRequestStatsError,
 		isFetching: supplierRequestFetching,
 	} = useQuery<PatronRequestQueryData>({
-		queryKey: ["LoadSupplierRequestStats", DCB_API_BASE, headers, code],
+		queryKey: queryKeys.requestStats.supplied(DCB_API_BASE, code ?? ""),
 		queryFn: async () => {
 			const baseQuery = `supplyingAgencyCode:${code}`;
 			const queryVariables = {
@@ -209,13 +186,12 @@ function HomeComponent() {
 				`${DCB_API_BASE}/graphql`,
 				getPatronRequestStats,
 				queryVariables,
-				headers,
+				await authHeaders(),
 			);
 		},
 		// Gated on the agency code, which is what supplyingAgencyCode is built from -
 		// this waited on a Host LMS lookup the query never used
-		enabled: !!headers && !!DCB_API_BASE && !!code,
-		// refetchInterval: 1000000, // milliseconds
+		enabled: !!DCB_API_BASE && !!code,
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
@@ -227,15 +203,12 @@ function HomeComponent() {
 		error: patronRequestStatsError,
 		isFetching: patronRequestStatsFetching,
 	} = useQuery<PatronRequestQueryData>({
-		queryKey: [
-			"LoadPatronRequestStats",
+		// Both the agency and the Host LMS feed the scope this query runs under.
+		queryKey: queryKeys.requestStats.borrowed(
 			DCB_API_BASE,
-			headers,
+			code ?? "",
 			userLibraryHostLmsCode,
-			// Both feed the scope this query runs under, so a change to either has to
-			// invalidate what was cached against the previous one
-			code,
-		],
+		),
 		queryFn: async () => {
 			const baseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
 			const queryVariables = {
@@ -249,15 +222,12 @@ function HomeComponent() {
 				`${DCB_API_BASE}/graphql`,
 				getPatronRequestStats,
 				queryVariables,
-				headers,
+				await authHeaders(),
 			);
 		},
 		// Gated on whatever the scope is actually built from - see the borrowing grid
 		enabled:
-			!!headers &&
-			!!DCB_API_BASE &&
-			hasBorrowingScope(code, userLibraryHostLmsCode),
-		// refetchInterval: 1000000, // milliseconds
+			!!DCB_API_BASE && hasBorrowingScope(code, userLibraryHostLmsCode),
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
@@ -284,11 +254,11 @@ function HomeComponent() {
 						...formData,
 					}),
 				},
-				headers,
+				await authHeaders(),
 			);
 			return response.updateLibrary;
 		},
-		onSuccess: (data) => {
+		onSuccess: () => {
 			setChangedFields({});
 			setEditMode(false);
 			refetch();
@@ -301,23 +271,6 @@ function HomeComponent() {
 				}),
 				title: t("common.updated"),
 			});
-			if (data) {
-				reset({
-					fullName: library.fullName ?? "",
-					shortName: library.shortName ?? "",
-					abbreviatedName: library.abbreviatedName ?? "",
-					supportHours: library.supportHours ?? "",
-					backupDowntimeSchedule: library.backupDowntimeSchedule,
-					longitude: library.longitude,
-					latitude: library.latitude,
-					brandLogoUrl: library.brandLogoUrl ?? "",
-					brandLogoAlt: library.brandLogoAlt ?? "",
-					defaultThemeName: library.defaultThemeName ?? "",
-					patronWebsite: library.patronWebsite ?? "",
-					supportUrl: library.supportUrl ?? "",
-				});
-			}
-			refetch();
 		},
 		onError: () => {
 			setAlert({
@@ -335,7 +288,7 @@ function HomeComponent() {
 	const validationSchema = useMemo(() => libraryProfileSchema(t), [t]);
 
 	/**
-	 * The logo chosen but not yet uploaded — R-17e.
+	 * The logo chosen but not yet uploaded.
 	 *
 	 * Uploading at pick time left a stored image behind every time somebody reconsidered or
 	 * closed the tab; dcb-service cannot tell those from an image about to be used, so it
@@ -346,19 +299,10 @@ function HomeComponent() {
 
 	const stageLogo = (file: File | null) => setStagedLogo(file);
 
-	/**
-	 * The upload moved here from inside the field, because the upload is now part of Save.
-	 * This app has no shared REST client, so the base URL and bearer token are assembled the
-	 * same way the component used to assemble them.
-	 */
+	// Here rather than inside the field, because the upload is part of Save.
 	const uploadClient = useMemo(
-		() => ({
-			post: (path: string, body: FormData) =>
-				axios.post(`${DCB_API_BASE}${path}`, body, {
-					headers: { Authorization: `Bearer ${auth.user?.access_token}` },
-				}),
-		}),
-		[DCB_API_BASE, auth.user?.access_token],
+		() => createRestClient(DCB_API_BASE),
+		[DCB_API_BASE],
 	);
 
 	const {
@@ -367,7 +311,6 @@ function HomeComponent() {
 		reset,
 		setValue,
 		formState: { errors, isDirty },
-		// watch,
 	} = useForm<UpdateLibraryFormData>({
 		defaultValues: {
 			fullName: library?.fullName,
@@ -382,12 +325,18 @@ function HomeComponent() {
 		mode: "onChange",
 	});
 
+	const hasUnsavedEdits = editMode && (isDirty || !!stagedLogo);
+	const leaveGuard = useBlocker({
+		shouldBlockFn: () => hasUnsavedEdits,
+		enableBeforeUnload: hasUnsavedEdits,
+		disabled: !hasUnsavedEdits,
+		withResolver: true,
+	});
+
 	useEffect(() => {
-		if (library) {
-			// The reset function populates the form with the latest data
-			// from the query, whether it's the initial fetch or a subsequent poll.
-			// This exists to replicate what was previously handled by the onSuccess in react-query
-			// https://tkdodo.eu/blog/breaking-react-querys-api-on-purpose
+		// Not while editing: a refetch (a focus, a renewed token in the key) would
+		// otherwise replace what the administrator has typed with the server's copy.
+		if (library && !editMode) {
 			reset({
 				fullName: library.fullName ?? "",
 				shortName: library.shortName ?? "",
@@ -403,10 +352,13 @@ function HomeComponent() {
 				supportUrl: library.supportUrl ?? "",
 			});
 		}
-	}, [library, reset]);
+	}, [library, editMode, reset]);
 
 	// refactor this into common code
 	const onSubmit = async (data: Partial<Library>) => {
+		// Nothing to compare against while the record is being refetched.
+		if (!library) return;
+
 		// The staged logo is uploaded HERE, before the confirmation dialog rather than after
 		// it: asking somebody to confirm a save we already know will be rejected is asking
 		// them to approve something that will not happen.
@@ -467,30 +419,14 @@ function HomeComponent() {
 		changeCategory: string,
 		changeReferenceUrl: string,
 	) => {
-		try {
-			updateLibraryMutation.mutate({
-				id: library.id,
-				...changedFields,
-				reason,
-				changeCategory,
-				changeReferenceUrl,
-			});
-		} catch {
-			setAlert({
-				open: true,
-				severity: "error",
-				text: t("common.update_failure", {
-					entity: t("entities.location"),
-					name: library?.fullName,
-				}),
-				// The failure path, so the alert title is Error - matching the
-				// identical handler above. It read ui.data_grid.updated, a key that
-				// does not exist, so the alert was titled with the key itself.
-				title: t("common.error"),
-			});
-		} finally {
-			setConfirmationEdit(false);
-		}
+		updateLibraryMutation.mutate({
+			id: library?.id,
+			...changedFields,
+			reason,
+			changeCategory,
+			changeReferenceUrl,
+		});
+		setConfirmationEdit(false);
 	};
 
 	return (
@@ -503,6 +439,11 @@ function HomeComponent() {
 					{t("library.title", { library: library?.fullName })}
 				</Typography>
 			</Grid>
+            {isError && (
+				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+					<Alert severity="error">{t("library.load_failed")}</Alert>
+				</Grid>
+			)}
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography>
 					{t("welcome.title", {
@@ -521,7 +462,11 @@ function HomeComponent() {
 									color="primary"
 									startIcon={<Save />}
 									onClick={handleSubmit(onSubmit)}
-									disabled={Object.keys(errors).length > 0 || !isDirty}
+									disabled={
+										!library ||
+										Object.keys(errors).length > 0 ||
+										!(isDirty || stagedLogo)
+									}
 									ref={saveButtonRef}
 									sx={{ mr: 1 }}>
 									{t("ui.actions.save")}
@@ -549,7 +494,6 @@ function HomeComponent() {
 				<Typography variant="h3" component="h2" sx={{
                     fontWeight: "bold"
                 }}>
-					{/* {t("welcome.library", { library: library?.fullName })} */}
 					{t("welcome.library_short")}
 				</Typography>
 			</Grid>
@@ -680,16 +624,6 @@ function HomeComponent() {
 				</ProfileField>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Attribute label={t("library.site_designation")}>
-					{/* This may need special handling when we have real data and know what format it's coming in */}
-					<RenderAttribute
-						attribute={
-							library?.agency?.hostLms?.clientConfig?.contextHierarchy[0]
-						}
-					/>
-				</Attribute>
-			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("library.id")}>
 					<RenderAttribute attribute={library?.id} />
 				</Attribute>
@@ -702,7 +636,7 @@ function HomeComponent() {
                 tidy. See @constants/serviceCapabilities. */}
             {discoveryActive && isLibraryBrandingEnabled() && (
               <>
-              {/* Patron-facing brand — N-1B. Its own labelled block because everything
+              {/* Patron-facing brand. Its own labelled block because everything
   			    above configures this library's participation in DCB and these three
   			    configure what a patron sees in the discovery app. The library's mark
   			    leads the lockup there and the consortium's follows it, smaller: the
@@ -898,12 +832,6 @@ function HomeComponent() {
             )}
             </>
             )}
-            {/* /* 'Primary location' title goes here/* */}
-            {/* <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h3" component="h2" fontWeight={"bold"}>
-					{t("library.primary_location.title")}
-				</Typography>
-			</Grid> */}
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("library.primary_location.address")}>
 					{/* This will need address-specific handling, and possibly its own component - leave as placeholder until we're ready + open maps in new tab*/}
@@ -966,7 +894,10 @@ function HomeComponent() {
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("library.statistics.requests_made")}>
 					{patronRequestStatsLoading || patronRequestStatsFetching ? (
-						<CircularProgress size="1rem" />
+						<CircularProgress
+							size="1rem"
+							aria-label={t("library.statistics.loading")}
+						/>
 					) : (
 						<RenderAttribute
 							attribute={
@@ -981,7 +912,10 @@ function HomeComponent() {
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("library.statistics.requests_supplied")}>
 					{supplierRequestStatsLoading || supplierRequestFetching ? (
-						<CircularProgress size="1rem" />
+						<CircularProgress
+							size="1rem"
+							aria-label={t("library.statistics.loading")}
+						/>
 					) : (
 						<RenderAttribute
 							attribute={
@@ -1013,8 +947,7 @@ function HomeComponent() {
 								{t("library.statistics.top_titles_month")}
 							</Typography>
 							<TopTitlesSummary
-								headers={headers}
-								libraryCode={userLibraryHostLmsCode}
+								libraryCode={userLibraryHostLmsCode ?? ""}
 							/>
 						</Stack>
 					</Grid>
@@ -1024,8 +957,7 @@ function HomeComponent() {
 								{t("library.statistics.top_requesters_month")}
 							</Typography>
 							<TopRequestorsSummary
-								headers={headers}
-								libraryCode={userLibraryHostLmsCode}
+								libraryCode={userLibraryHostLmsCode ?? ""}
 							/>
 						</Stack>
 					</Grid>
@@ -1046,6 +978,17 @@ function HomeComponent() {
 					action="pageEdit"
 					editInformation={formatChangedFields(changedFields, library)}
 					entityName={library?.fullName}
+					entityType={t("entities.library")}
+					gridEdit={false}
+				/>
+			)}
+            {leaveGuard.status === "blocked" && (
+				<Confirmation
+					open
+					onClose={leaveGuard.reset}
+					onConfirm={() => leaveGuard.proceed()}
+					action="unsavedChanges"
+					entityName={library?.fullName ?? ""}
 					entityType={t("entities.library")}
 					gridEdit={false}
 				/>

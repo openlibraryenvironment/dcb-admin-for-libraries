@@ -40,6 +40,10 @@ export const getPatronRequests = gql`
 				localItemId
 				localItemStatus
 				localItemType
+				pickupRequestId
+				pickupRequestStatus
+				isExpeditedCheckout
+				renewalCount
 				patron {
 					id
 				}
@@ -57,9 +61,6 @@ export const getPatronRequests = gql`
 				clusterRecord {
 					id
 					title
-					members {
-						publisher
-					}
 				}
 			}
 			pageable {

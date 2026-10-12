@@ -27,7 +27,7 @@ export interface Library {
 	hostLmsConfiguration: string;
 	discoverySystem: string;
 	backupDowntimeSchedule: string;
-	// Patron-facing brand (N-1B). Rendered by the discovery app, not by this one, and
+	// Patron-facing brand. Rendered by the discovery app, not by this one, and
 	// nullable everywhere: a library that has set none is complete, not unfinished.
 	brandLogoUrl?: string | null;
 	brandLogoAlt?: string | null;

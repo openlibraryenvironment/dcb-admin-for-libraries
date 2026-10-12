@@ -1,3 +1,4 @@
+import { OPTIONAL_QUERY } from "@helpers/serviceErrors";
 import { useQuery } from "@tanstack/react-query";
 import {
 	Typography,
@@ -13,23 +14,22 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 import { useRouter } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { LIBRARY_CODE_PARAM } from "@helpers/statsApi";
+import { authHeaders } from "@helpers/auth";
+import { queryKeys } from "@helpers/queryKeys";
 
 interface TopTitlesSummaryProps {
-	headers: Record<string, string>;
 	libraryCode: string;
 }
 
-export default function TopTitlesSummary({
-	headers,
-	libraryCode,
-}: TopTitlesSummaryProps) {
+export default function TopTitlesSummary({ libraryCode }: TopTitlesSummaryProps) {
 	const { t } = useTranslation();
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const DCB_API_BASE = cfg.VITE_DCB_API_BASE;
 
 	const { data, isLoading, isError } = useQuery({
-		queryKey: ["TopRequestedTitlesSummary", libraryCode, DCB_API_BASE, headers],
+		queryKey: queryKeys.insights.topTitles(DCB_API_BASE, libraryCode),
+		meta: OPTIONAL_QUERY,
 		queryFn: async () => {
 			const startDate = dayjs()
 				.subtract(1, "month")
@@ -49,7 +49,7 @@ export default function TopTitlesSummary({
 			const response = await fetch(
 				`${DCB_API_BASE}/insights/top-requested-titles?${params}`,
 				{
-					headers,
+					headers: await authHeaders(),
 				},
 			);
 			if (!response.ok) {
@@ -57,7 +57,7 @@ export default function TopTitlesSummary({
 			}
 			return response.json();
 		},
-		enabled: !!libraryCode && !!headers,
+		enabled: !!libraryCode,
 	});
 
 	if (!libraryCode || isLoading) {

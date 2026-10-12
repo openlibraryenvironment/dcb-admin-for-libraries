@@ -72,7 +72,7 @@ export default function RangeFilter(props: GridFilterInputValueProps) {
 				flexDirection: "row",
 				alignItems: "end",
 				height: 48,
-				pl: "20px",
+				pl: 2.5,
 			}}>
 			<TextField
 				name="lower-bound-input"
@@ -95,7 +95,14 @@ export default function RangeFilter(props: GridFilterInputValueProps) {
 				type="number"
 				slotProps={{
 					input: applying
-						? { endAdornment: <CircularProgress size={"sm"} /> }
+						? {
+								endAdornment: (
+									<CircularProgress
+										size="1rem"
+										aria-label={t("ui.data_grid.filters.applying")}
+									/>
+								),
+							}
 						: {},
 				}}
 			/>

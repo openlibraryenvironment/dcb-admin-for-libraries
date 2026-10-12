@@ -28,7 +28,7 @@ export const BRAND_LIMITS = {
 export const BRAND_ASSET_PATH_PREFIX = "/discovery/brand-assets/";
 
 /**
- * What the file picker offers - R-17c. PNG and JPEG; SVG and WebP are refused
+ * What the file picker offers. PNG and JPEG; SVG and WebP are refused
  * for reasons in docs/branding.md.
  *
  * A CONVENIENCE, never a control: a picker filter is a hint to the operating
@@ -55,7 +55,7 @@ export function brandAssetStoreFrom(info: unknown): string | null {
 }
 
 /**
- * Whether this deployment accepts brand image uploads - R-17b. With
+ * Whether this deployment accepts brand image uploads. With
  * `assets.store=none` dcb-service does not register the controller at all, so
  * POST /brand-assets is a 404.
  *
@@ -96,7 +96,7 @@ export function isValidLogoUrl(value?: string | null): boolean {
 		return true;
 	}
 
-	// R-17e. The one site-relative form we accept: an asset dcb-service stored itself,
+	// The one site-relative form we accept: an asset dcb-service stored itself,
 	// named by its own content. The KEY is checked as well as the prefix, because a
 	// "starts with" test would accept /discovery/brand-assets/../../something and a
 	// prefix test that can be walked out of is not a prefix test.

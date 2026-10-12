@@ -1,8 +1,20 @@
 import { gql } from "graphql-request";
 
 export const getPatronIdentities = gql`
-	query LoadPatronIdentities($order: String!, $orderBy: String!) {
-		patronIdentities(order: $order, orderBy: $orderBy) {
+	query LoadPatronIdentities(
+		$query: String!
+		$pageno: Int!
+		$pagesize: Int!
+		$order: String!
+		$orderBy: String!
+	) {
+		patronIdentities(
+			query: $query
+			pageno: $pageno
+			pagesize: $pagesize
+			order: $order
+			orderBy: $orderBy
+		) {
 			totalSize
 			content {
 				id

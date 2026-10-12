@@ -24,8 +24,10 @@ function RootComponent() {
 	const auth = useAuth();
 	const { t } = useTranslation();
 
-	// Show a global loading spinner only during the initial auth check
-	if (auth.isLoading) {
+	// The initial session restore only. A navigator (signinRedirect, signoutRedirect)
+	// also sets isLoading; unmounting the tree for it remounts the page that started
+	// it when it fails, and that page starts it again.
+	if (auth.isLoading && !auth.activeNavigator) {
 		return (
 			<>
 				<HeadContent />

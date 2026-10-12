@@ -17,7 +17,6 @@ export const getAgency = gql`
 					code
 					name
 					lmsClientClass
-					clientConfig
 				}
 				locations {
 					id

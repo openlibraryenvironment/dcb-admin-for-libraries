@@ -1,5 +1,7 @@
 import { test, expect } from "../e2e/fixtures/test";
 import library from "../e2e/fixtures-data/library.json" with { type: "json" };
+import patronRequests from "../e2e/fixtures-data/patronRequests.json" with { type: "json" };
+import { RUNTIME_CONFIG } from "../e2e/fixtures/runtime-config";
 
 /**
  * Navigation with the app mounted under a path prefix.
@@ -31,6 +33,17 @@ test.describe("Navigation under a deployment base path", () => {
 			expect(href).toMatch(new RegExp(`^${BASE}(/|$)`));
 			expect(href!.slice(BASE.length)).not.toContain(BASE);
 		}
+	});
+
+	test("the header logo goes home under the base", async ({ page }) => {
+		await page.goto(`${BASE}/settings`);
+
+		const logo = page.getByRole("link", { name: /go to the home page/i });
+		await expect(logo).toHaveAttribute("href", `${BASE}/`);
+
+		await logo.click();
+		await expect(page).toHaveURL(new RegExp(`${BASE}/$`));
+		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 	});
 
 	test("clicking a tab lands on the page, not on Not Found", async ({
@@ -70,6 +83,36 @@ test.describe("Navigation under a deployment base path", () => {
 		).toHaveAttribute("aria-selected", "true");
 	});
 
+	test("a grid's state is written to the URL under the base, once", async ({
+		app,
+		page,
+	}) => {
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraries: library,
+			LoadPatronRequests: {
+				patronRequests: {
+					...patronRequests.patronRequests,
+					totalSize: 60,
+				},
+			},
+		});
+		await page.goto(`${BASE}/patronRequests`);
+		await expect(page.getByRole("grid")).toBeVisible();
+
+		await page.getByRole("button", { name: "Go to next page" }).click();
+		await expect(page).toHaveURL(`${BASE}/patronRequests?page=1`);
+
+		await page.reload();
+		await expect(page.getByText(/26–50 of 60/)).toBeVisible();
+		const href = await page
+			.getByRole("link", { name: /2026-09-01/ })
+			.first()
+			.getAttribute("href");
+		expect(href).toMatch(new RegExp(`^${BASE}/patronRequests/`));
+		expect(href!.slice(BASE.length)).not.toContain(BASE);
+	});
+
 	test("not found routes home to the app, not to the origin root", async ({
 		page,
 	}) => {
@@ -106,3 +149,39 @@ test.describe("Navigation under a deployment base path", () => {
 		expect(failures).toEqual([]);
 	});
 });
+
+// Every other spec injects window.__APP_ENV__, so the production fetch is exercised only here.
+const withoutInjectedConfig = test.extend({
+	// eslint-disable-next-line no-empty-pattern -- Playwright reads fixture dependencies from this pattern
+	runtimeConfig: async ({}, use) => {
+		await use();
+	},
+});
+
+withoutInjectedConfig(
+	"runtime config is fetched under the base, never from the origin root",
+	async ({ page }) => {
+		const requested: string[] = [];
+		await page.route("**/inject_env.json", async (route) => {
+			requested.push(new URL(route.request().url()).pathname);
+			await route.fulfill({ json: RUNTIME_CONFIG });
+		});
+
+		await page.goto(`${BASE}/login`);
+
+		await expect(
+			page.getByRole("button", { name: /sign in with keycloak/i }),
+		).toBeVisible();
+		// On a shared origin the root's inject_env.json belongs to another app.
+		expect(requested).toEqual([`${BASE}/inject_env.json`]);
+	},
+);
+
+// Support needs to know which build a host is serving; see docs/DEPLOYMENT.md section 5.
+test("the page says which commit it was built from", async ({ page }) => {
+	await page.goto(`${BASE}/login`);
+	await expect(
+		page.locator('meta[name="dcb-admin-for-libraries-build"]'),
+	).toHaveAttribute("content", /^(local|[0-9a-f]{7,40})$/);
+});
+

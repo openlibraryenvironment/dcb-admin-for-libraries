@@ -22,7 +22,8 @@ Log into your Keycloak dashboard, select the `dcb-hub` realm, and complete these
 8. Set the flow to **Standard flow**.
 9. Turn **OFF** client authentication (this must be a public access type, not a confidential OIDC client).
 10. Under the "Advanced" tab, set the Proof Key for Code Exchange (PKCE) Code Challenge Method to **S256**.
-11. Set the **Valid Redirect URIs** and **Web Origins** strictly to the exact URL where your application will be hosted (e.g., `https://libraries.yourlibrary.org`). **CRITICAL SECURITY NOTE:** Never use a wildcard (`*`) in production, as this may allow malicious sites to steal user tokens.
+11. Set **Valid Redirect URIs** to the app's own path, scoped by a trailing wildcard: `https://<host>/dcb-admin-for-libraries/*` on a shared origin such as `mobius.kihosting.net`, or `https://<host>/*` when the app is at the root. Sign-in returns to the base and sign-out to `<base>logout?loggedOut=true`, so the exact base URL alone rejects the sign-out redirect. Leave **Valid post logout redirect URIs** as `+` (the same list). Set **Web Origins** to the origin only, with no path (`https://<host>`). Keep this client separate from DCB Admin's even on the same host.
+    **CRITICAL SECURITY NOTE:** Never use a bare wildcard (`*`) or a host-wide one where other apps share the origin: either lets a redirect deliver the authorisation code somewhere this app does not control.
 
 ---
 
@@ -65,15 +66,20 @@ does not show the feature.
 | `VITE_FEATURE_LIBRARY_BRANDING` | **9.0.0** or later | The "How your library appears to patrons" block on the library profile: logo, logo description and discovery theme |
 | `VITE_FEATURE_INSIGHTS` | **9.0.0** or later | The Insights page, and the top-titles / top-requesters panels on the library profile (all of them call `/insights/**`) |
 | `VITE_FEATURE_LIBRARY_SUPPORT_URL` | **after 9.0.0** (`V9_0_008`, on main) | The "Report a problem URL" field in the "Links for patrons" block |
+| `VITE_FEATURE_INSIGHTS_WALK_UP` | **after 9.1.0**: the release carrying `/insights/library-breakdown` | The "Collected in person, or sent" panel under Insights, Service. Needs `VITE_FEATURE_INSIGHTS` too |
 | `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | **9.0.0** or later | Scoping the request grids by agency code rather than by Host LMS code, and the library column that needs it |
+| `VITE_FEATURE_GUARDED_CLEANUP` | **9.0.0** or later | Request cleanup that the service refuses, with a reason, while the item is still out |
+| `VITE_FEATURE_INSIGHTS_TRENDS` | **9.1.0** or later (`/insights/trend`) | The duration trend panel on Insights → Trends. Needs `VITE_FEATURE_INSIGHTS` as well |
+| `VITE_FEATURE_ANNOUNCEMENTS` | **no release serves this yet** | The Announcements page. Leave it off: on a service without the announcement operations, the page's whole GraphQL request is rejected |
 
 **On the kihosting.net hosts you do not set these.** Those deployments are served by the
 shared Cloudflare worker that also serves DCB Admin, which derives the whole flag block
-from the dcb-service version named for that host. The worker and its host table live in
-`dcb-admin-ui`, in `dcb-hub-admin-ui/docs/`, as `worker.js` and `deployment.md` Option A. A
-flag added here has to be added to that worker's `APP_FEATURES` in the same change, or it
-is undefined in every one of those environments — nothing in this repository can catch
-that.
+from the dcb-service version named for that host: its `APP_FEATURES` table maps each flag to
+the first version that serves it. The worker is not kept in this repository or in
+`dcb-admin-ui`; that repo's `dcb-hub-admin-ui/docs/deployment.md` (Option A) describes it.
+A flag added here has to be added to the worker's table for this app in the same change, or
+it is undefined, and so off, on every one of those hosts. Nothing in this repository can
+catch that. The release checklist in section 5 lists what the table needs for 2.0.
 
 **`VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is the one flag that is not cosmetic when off.**
 It switches the request filter from `patronHostlmsCode` to `patronAgencyCode`. Left off on
@@ -108,9 +114,9 @@ A flag left **off** after the upgrade costs a hidden feature and nothing else.
 
 A flag switched **on** too early is the expensive mistake, because the newer GraphQL
 fields do not degrade gracefully: a field the server does not declare is a validation
-error that fails the whole operation. `LoadLibrary` runs in the header on every page and
-in six routes, so `VITE_FEATURE_LIBRARY_BRANDING=true` against 8.71.0 does not grey out a
-form — it takes the application down.
+error that fails the whole operation. `LoadLibrary` runs in four routes and the on-site
+borrowing form, so `VITE_FEATURE_LIBRARY_BRANDING=true` against 8.71.0 does not grey out a
+form — it takes those pages down.
 
 ### Adding the next one
 
@@ -145,6 +151,21 @@ Configure KI Console SPA bootstrap host records with app
 
 The existing S3 paths, Docker image, `inject_env.json`, and local `npm run dev`
 flow remain unchanged.
+
+### After a deploy
+
+Every deploy deletes the previous build's hashed chunks, so a tab opened before it asks
+for a chunk that no longer exists at its next lazy route. TanStack Router recovers from
+that itself: `lazyRouteComponent` reloads the page once per missing chunk, which fetches the
+new `index.html`, and shows the route's error page if the chunk is still missing after
+that. `e2e/route-error.spec.ts` holds it to one reload. Do not add a second
+`vite:preloadError` handler on top: one was tried, and it reloaded a permanently missing
+chunk in a loop.
+
+The reload only helps if `index.html` is never served from a cache. The pipeline uploads it
+with `Cache-Control: no-store`, hashed assets as immutable, and the other stable names
+(`ki-bootstrap.js`, the favicon) as `no-cache`. If the Cloudflare worker sets its own
+headers, it must keep those semantics.
 
 ### Option A: Cloudflare Pages
 
@@ -242,3 +263,61 @@ PKCE was explicitly designed to secure public clients like SPAs and mobile appli
 - **Dynamic verification:** Instead of relying on a static, unchanging secret, PKCE generates a unique, temporary cryptographic "Code Verifier" and "Code Challenge" for every single login attempt.
 - **Interception protection:** When the application requests an access token, it must provide the original verifier. Even if a malicious actor (such as a compromised browser extension) intercepts the authorization code during the redirect, it is completely useless without the original verifier (which remains secure in the legitimate user's local browser memory).
 - **OAuth best practices:** Using PKCE (specifically with the `S256` hashing method) is the current industry gold standard and is recommended by the OAuth 2.0 Security Best Current Practice guidelines.
+
+---
+
+## 5. Releasing to the kihosting hosts
+
+The kihosting hosts, `mobius.kihosting.net` among them, serve this app at
+`/dcb-admin-for-libraries/` through the Cloudflare worker that also serves DCB Admin at
+`/dcb-admin/`. The pipeline publishes the bundle; these are the parts it cannot do. Work
+through them before the release pipeline runs, and the checks after it.
+
+### Before the release
+
+1. **The worker's flag table for this app.** In `APP_FEATURES`, each flag maps to the
+   first dcb-service release that serves it:
+
+   | Flag | First served by |
+   | --- | --- |
+   | `VITE_FEATURE_INSIGHTS`, `VITE_FEATURE_LIBRARY_BRANDING`, `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`, `VITE_FEATURE_GUARDED_CLEANUP` | 9.0.0 |
+   | `VITE_FEATURE_INSIGHTS_TRENDS` | 9.1.0 |
+   | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP` | none yet: must resolve to off |
+
+   A flag that is absent from the table is off on every host, which is the safe failure for
+   the last row and the wrong one for the others. `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`
+   matters most: left off against 9.x, libraries that share a Host LMS see each other's
+   requests (section 2a).
+2. **The Keycloak client for each host.** Valid Redirect URIs
+   `https://<host>/dcb-admin-for-libraries/*`, Valid post logout redirect URIs `+`, Web
+   Origins `https://<host>` (section 1, step 11). With only the exact base URL, sign-out
+   fails with Keycloak's "Invalid redirect uri".
+3. **The worker's Content Security Policy.** `index.html` carries one inline script, which
+   applies the reader's colour scheme before first paint. Under `script-src 'self'` it is
+   blocked and the wrong theme flashes on every load. The `build` job prints the source to
+   allow, `'sha256-…'`, at the end of its log, from `scripts/print-csp-hashes.mjs`. Take it
+   from the release pipeline's own `build` job: the hash changes with the base path and with
+   any edit to the script, so a value copied from an earlier release can be stale.
+4. **Cache headers.** The deploy uploads `index.html` with `Cache-Control: no-store`, hashed
+   files under `assets/` as `immutable`, and the other fixed names as `no-cache`. The worker
+   must pass these through, or keep the same meaning if it sets its own. After a deploy,
+   TanStack Router reloads an open tab once to fetch the new `index.html` ("After a deploy"
+   in section 3), and that only works if `index.html` is never served from a cache.
+
+### After the release
+
+To see which build a host is serving, `curl -s https://<host>/dcb-admin-for-libraries/ | grep dcb-admin-for-libraries-build`
+prints the commit it was built from; the build job asserts the stamp is there.
+
+1. The R2 bucket `ki-front-end-bundles/dcb-admin-for-libraries/` holds `v<version>/`, and
+   `latest.json` reads `{"version":"v<version>"}`. Before 2.0, no release had ever reached R2.
+2. `ki-libs-spa-hosting/archive/dcb-admin-for-libraries-v<version>/` exists. While there, look
+   for a key ending in a bare `dcb-admin-for-libraries-`: releases before 2.0 wrote their
+   archive there, and it is safe to delete.
+3. `curl -sI https://<host>/dcb-admin-for-libraries/` shows `cache-control: no-store`, and any
+   `/dcb-admin-for-libraries/assets/*.js` shows `immutable`.
+4. Sign in and sign out on each host. Sign-out returns to
+   `/dcb-admin-for-libraries/logout?loggedOut=true` without a Keycloak error page.
+5. With the browser's developer tools open, reload: no CSP violation is reported for an
+   inline script.
+

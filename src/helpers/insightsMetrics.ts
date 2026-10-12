@@ -29,6 +29,13 @@ export const METRIC_IDS = [
 	"peer_benchmarks",
 	"checkout_rate",
 	"cost_avoidance",
+	"walk_up_diversion",
+	// --- collection analysis: read off dcb-service's BibRepository --------------------
+	"collection_totals",
+	"clustering_confidence",
+	"collection_profile",
+	"format_mix",
+	"collection_overlap",
 	// --- trends -----------------------------------------------------------------------
 	"request_volume",
 	"trend_direction",

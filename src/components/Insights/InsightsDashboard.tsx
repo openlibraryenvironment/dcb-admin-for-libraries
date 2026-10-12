@@ -1,6 +1,6 @@
 import { useEffect, useMemo, type ReactNode } from "react";
 
-import { formatNumber, formatPercent } from "@helpers/formatters";
+import { formatDate, formatNumber, formatPercent } from "@helpers/formatters";
 import { useAnnounce } from "@/hooks/useAnnouncer";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ import {
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateRangePicker } from "@mui/x-date-pickers-pro";
+import { MultiInputDateRangeField } from "@mui/x-date-pickers-pro/MultiInputDateRangeField";
 import dayjs from "dayjs";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
@@ -28,6 +29,7 @@ import {
 	RequestedTitleStat,
 	StatsParams,
 	TopClusterStat,
+	UnfillableDemandStat,
 	acquisitionOpportunitiesQueryOptions,
 	consortialLifelineQueryOptions,
 	dashboardQueryOptions,
@@ -36,12 +38,12 @@ import {
 	netFlowQueryOptions,
 	supplierResponseSlaQueryOptions,
 	topRequestedTitlesQueryOptions,
+	unfillableDemandQueryOptions,
 	unmetLocalDemandQueryOptions,
 } from "@helpers/statsApi";
 import {
-	rangeToParams,
-	intervalForRange,
-	intervalForSpan,
+	localDay,
+	statsWindow,
 	formatTurnaround,
 } from "@helpers/insightsRange";
 
@@ -60,7 +62,10 @@ import BarStatPanel from "./BarStatPanel";
 import TableStatPanel from "./TableStatPanel";
 import LazyPanel from "./LazyPanel";
 import PeerBenchmarkPanel from "./PeerBenchmarkPanel";
+import WalkUpDiversionPanel from "./WalkUpDiversionPanel";
 import CollectionDimensionPanel from "./CollectionDimensionPanel";
+import CollectionAnalysisSection from "./CollectionAnalysisSection";
+import TradingPartnersPanel from "./TradingPartnersPanel";
 import NewAcquisitionsPanel from "./NewAcquisitionsPanel";
 import SubjectBar from "./SubjectBar";
 import { InsightsExportProvider } from "./ExportContext";
@@ -73,7 +78,10 @@ import { ExpandMore } from "@mui/icons-material";
 import type { InsightsView } from "@/hooks/useInsightsView";
 import type { RangePreset } from "@helpers/insightsSearch";
 import { Subject, resolveSubject } from "@helpers/insightsSubjects";
-import { isInsightsTrendsEnabled } from "@helpers/featureFlags";
+import {
+	isInsightsTrendsEnabled,
+	isInsightsWalkUpEnabled,
+} from "@helpers/featureFlags";
 
 const RANGE_PRESETS: RangePreset[] = ["7d", "30d", "90d", "365d"];
 
@@ -122,9 +130,8 @@ export default function InsightsDashboard({
 	libraryCode,
 	view,
 }: {
-	// Always the signed-in user's own library. This app has no consortium-wide
-	// scope and no library picker: the code is derived from the access token's
-	// agency claim by the route, never chosen in the UI.
+	// One of the signed-in user's own libraries, from the access token's agency
+	// claim; this app has no consortium-wide scope.
 	libraryCode: string;
 	/** The view as the URL states it, and the writers that change it. */
 	view: InsightsView;
@@ -143,14 +150,8 @@ export default function InsightsDashboard({
 	const setCustomRange = view.setCustomRange;
 
 	const { params, interval } = useMemo(() => {
-		// An explicit custom window wins over the preset.
-		const current = customRange ?? rangeToParams(rangePreset);
-		return {
-			params: { libraryCode, ...current } as StatsParams,
-			interval: customRange
-				? intervalForSpan(current.startDate, current.endDate)
-				: intervalForRange(rangePreset),
-		};
+		const { window: span, interval } = statsWindow(rangePreset, customRange);
+		return { params: { libraryCode, ...span } as StatsParams, interval };
 	}, [rangePreset, customRange, libraryCode]);
 
 	// Scope never changes here - this app is one library - so the range is the whole of
@@ -167,9 +168,9 @@ export default function InsightsDashboard({
 		: null;
 
 	const window = customRange
-		? `${dayjs(customRange.startDate).format("D MMM YYYY")} - ${dayjs(
-				customRange.endDate,
-			).format("D MMM YYYY")}`
+		? `${formatDate(localDay(customRange.startDate))} – ${formatDate(
+				localDay(customRange.endDate),
+			)}`
 		: t(`insights.range.${rangePreset}`);
 
 	// Changing the range rewrites every panel below it, and a screen-reader user was
@@ -266,17 +267,24 @@ export default function InsightsDashboard({
 							}
 							onChange={(value) => {
 								const [start, end] = value;
+								// The URL holds calendar days; statsWindow makes them instants.
 								if (start && end) {
 									setCustomRange({
-										startDate: start.startOf("day").toISOString(),
-										endDate: end.endOf("day").toISOString(),
+										startDate: start.format("YYYY-MM-DD"),
+										endDate: end.format("YYYY-MM-DD"),
 									});
 								} else if (!start && !end) {
 									setCustomRange(null);
 								}
 							}}
 							disableFuture
-							slotProps={{ textField: { size: "small" } }}
+							// Two labelled inputs and the same actions as the data grid's date
+							// filter, rather than one combined field with neither.
+							slots={{ field: MultiInputDateRangeField }}
+							slotProps={{
+								textField: { size: "small" },
+								actionBar: { actions: ["clear", "nextOrAccept"] },
+							}}
 							localeText={{
 								start: t("insights.range.from"),
 								end: t("insights.range.to"),
@@ -498,6 +506,15 @@ export default function InsightsDashboard({
 						/>
 					</LazyPanel>
 
+					{/* Walk-up versus shipped, so the courier saving is evidence and not a
+					    slide. Beside peer benchmarking because both answer "how are we
+					    doing" rather than "what happened". */}
+					{isInsightsWalkUpEnabled() ? (
+						<LazyPanel minHeight={320}>
+							<WalkUpDiversionPanel params={params} />
+						</LazyPanel>
+					) : null}
+
 					{/* Operational breakdowns */}
 					<LazyPanel minHeight={360}>
 						<Box
@@ -563,7 +580,7 @@ export default function InsightsDashboard({
 										headerKey: "insights.charts.top_titles.col_requests",
 										align: "right",
 										text: (r) => r.requestCount,
-										cell: (r) => r.requestCount,
+										cell: (r) => formatNumber(r.requestCount),
 									},
 								]}
 							/>
@@ -583,6 +600,7 @@ export default function InsightsDashboard({
 								titleKey="insights.charts.demand_by_pickup.title"
 								subtitleKey="insights.charts.demand_by_pickup.subtitle"
 								seriesLabelKey="insights.charts.demand_by_pickup.series"
+								categoryKey="insights.charts.demand_by_pickup.category"
 								queryOptions={demandByPickupLocationQueryOptions(
 									client,
 									params,
@@ -596,6 +614,7 @@ export default function InsightsDashboard({
 								titleKey="insights.charts.demand_by_patron_group.title"
 								subtitleKey="insights.charts.demand_by_patron_group.subtitle"
 								seriesLabelKey="insights.charts.demand_by_patron_group.series"
+								categoryKey="insights.charts.demand_by_patron_group.category"
 								queryOptions={demandByPatronGroupQueryOptions(client, params)}
 								getLabel={(r) => r.patronGroup}
 								getValue={(r) => r.requestCount}
@@ -603,6 +622,36 @@ export default function InsightsDashboard({
 								horizontal
 							/>
 						</Box>
+					</LazyPanel>
+
+					{/* Demand no library could supply: the acquisition signal the failure
+					    taxonomy cannot give, because these requests never had a supplier. */}
+					<LazyPanel minHeight={320}>
+						<TableStatPanel<UnfillableDemandStat>
+							titleKey="insights.charts.unfillable_demand.title"
+							subtitleKey="insights.charts.unfillable_demand.subtitle"
+							metric="unfillable_demand"
+							queryOptions={unfillableDemandQueryOptions(client, params)}
+							getRowKey={(r) => r.clusterId}
+							columns={[
+								{
+									headerKey: "insights.charts.top_titles.col_title",
+									text: (r) => r.title,
+									cell: (r) => r.title ?? "—",
+								},
+								{
+									headerKey: "insights.charts.rare_gem.col_author",
+									text: (r) => r.author,
+									cell: (r) => r.author ?? "—",
+								},
+								{
+									headerKey: "insights.charts.top_titles.col_requests",
+									align: "right",
+									text: (r) => r.requestCount,
+									cell: (r) => formatNumber(r.requestCount),
+								},
+							]}
+						/>
 					</LazyPanel>
 				</Section>
 
@@ -612,10 +661,28 @@ export default function InsightsDashboard({
 					current={subject}
 					titleKey="insights.sections.partners"
 				>
+					<LazyPanel minHeight={360}>
+						{/* Keyed on the range so its page starts over: the old page may not exist in the new one. */}
+						<TradingPartnersPanel
+							key={`${params.startDate ?? ""}|${params.endDate ?? ""}`}
+							params={params}
+							libraryCode={libraryCode}
+						/>
+					</LazyPanel>
+
 					{/* Reciprocity / value */}
 					<LazyPanel minHeight={360}>
 						<NetFlowChart params={params} />
 					</LazyPanel>
+				</Section>
+
+				<Section
+					id="insights-collection-heading"
+					subject="collection"
+					current={subject}
+					titleKey="insights.sections.collection"
+				>
+					<CollectionAnalysisSection libraryCode={libraryCode} />
 				</Section>
 
 				<Section
@@ -652,7 +719,7 @@ export default function InsightsDashboard({
 											headerKey: "insights.charts.top_titles.col_requests",
 											align: "right",
 											text: (r) => r.requestCount,
-											cell: (r) => r.requestCount,
+											cell: (r) => formatNumber(r.requestCount),
 										},
 									]}
 								/>
@@ -674,7 +741,7 @@ export default function InsightsDashboard({
 											headerKey: "insights.charts.top_titles.col_requests",
 											align: "right",
 											text: (r) => r.requestCount,
-											cell: (r) => r.requestCount,
+											cell: (r) => formatNumber(r.requestCount),
 										},
 									]}
 								/>
@@ -704,7 +771,7 @@ export default function InsightsDashboard({
 											"insights.charts.consortial_lifeline.col_supplied",
 										align: "right",
 										text: (r) => r.supplyCount,
-										cell: (r) => r.supplyCount,
+										cell: (r) => formatNumber(r.supplyCount),
 									},
 								]}
 							/>

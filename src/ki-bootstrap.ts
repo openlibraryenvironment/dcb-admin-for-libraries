@@ -1,3 +1,4 @@
+import "@helpers/zodConfig";
 import { configureAppBase } from "@helpers/appBase";
 
 interface KiMountOptions {

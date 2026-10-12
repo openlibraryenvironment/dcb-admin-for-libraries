@@ -118,10 +118,14 @@ export const handleClusterTabChange = (
 	recordId: string,
 	navigate: UseNavigateResult<string>,
 ) => {
-	const targetPath =
-		newValue === "info"
-			? `/requesting/${recordId}`
-			: `/requesting/${recordId}/${newValue}`;
-
-	navigate({ to: targetPath });
+	switch (newValue) {
+		case "items":
+			navigate({ to: "/requesting/$recordId/items", params: { recordId } });
+			break;
+		case "history":
+			navigate({ to: "/requesting/$recordId/history", params: { recordId } });
+			break;
+		default:
+			navigate({ to: "/requesting/$recordId", params: { recordId } });
+	}
 };

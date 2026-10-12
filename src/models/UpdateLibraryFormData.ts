@@ -4,7 +4,7 @@ export interface UpdateLibraryFormData {
 	abbreviatedName?: string;
 	supportHours?: string;
 	backupDowntimeSchedule?: string;
-	// Patron-facing brand (N-1B) - see constants/discoveryBranding.
+	// Patron-facing brand - see constants/discoveryBranding.
 	//
 	// Null is a value the mutation accepts, not an absence: dcb-service reads an explicit
 	// null (or a blank string) on these fields as "clear it", which is how a library

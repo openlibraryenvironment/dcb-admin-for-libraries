@@ -1,180 +1,171 @@
 variables:
   FF_USE_FASTZIP: "true"
-  # These can be specified per job or per pipeline
   ARTIFACT_COMPRESSION_LEVEL: "fast"
   CACHE_COMPRESSION_LEVEL: "fast"
+  # Must equal @playwright/test in package.json: the browsers are baked into the image.
+  # verify_static fails if the two drift.
+  PLAYWRIGHT_VERSION: "1.62.1"
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  # The runner's clone of gitlab.com has failed on a refused connection; retry it, not the job.
+  GET_SOURCES_ATTEMPTS: "3"
 
 default:
   # Node floor is set by semantic-release 25 (^22.14.0 || >=24.10.0), not by the
-  # app: on 22.12.0 it refused to start and the release job died. Every Node job
-  # inherits this one declaration - the previous copy-per-job made the version a
-  # thing that could drift silently.
+  # app: on 22.12.0 it refused to start and the release job died.
   image:
     name: node:22.23.1-bullseye
     pull_policy: if-not-present
-
   tags:
     - ki-onprem
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - scheduler_failure
+      - api_failure
+  # npm ci deletes node_modules, so only npm's download cache is worth keeping.
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
 
 stages:
   - verify
   - build
   - release
-  - container
   - deploy
 
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - dcb-admin-for-libraries/.npm/
-    - dcb-admin-for-libraries/node-modules/
-    - .yarn
-    - .npm
-
-build:
-  stage: build
-  script:
-    - export NPM_TOKEN="$NPMJS_TOKEN"
-    - git config --global user.name "ianibbo"
-    - git config --global user.email "ian.ibbotson@k-int.com"
-    - pwd
-    - ls -al
-    - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
-    - npm ci
-    # must equal the S3 app prefix the worker serves this app from.
-    - VITE_PUBLIC_URL=/dcb-admin-for-libraries/ npm run build
-  artifacts:
-    paths:
-      - dist/
-    expire_in: 1 hour
-
-# Types, lint and unit tests. Separate from the e2e jobs and first in the stage
-# because it needs no browser image, finishes in well under a minute, and catches
-# the class of mistake that would otherwise burn three Playwright runs to find.
-#
-# `npm run build` does run tsc, but in the BUILD stage - after verify has already
-# passed - so a type error currently surfaces late and mixed in with bundling.
 verify_static:
   stage: verify
+  timeout: 15m
   script:
-    - export NPM_TOKEN="$NPMJS_TOKEN"
-    - npm ci
+    - npm ci --prefer-offline --no-audit --no-fund
+    - test "$(node -p "require('./package.json').devDependencies['@playwright/test']")" = "$PLAYWRIGHT_VERSION"
     - npx tsc --noEmit
     # eslint exits 0 on warnings; a warning here is broken code, not advice.
     - npm run lint -- --max-warnings=0
-    # NOT `npm run test` - that script is bare `vitest`, which is watch mode and
-    # would hang the pipeline until it times out.
-    - npx vitest run
+    # NOT `npm run test` - that script is bare `vitest`, which is watch mode.
+    - npx vitest run --reporter=default --reporter=junit --outputFile.junit=reports/unit-junit.xml
+  artifacts:
+    when: always
+    reports:
+      junit: reports/unit-junit.xml
+    expire_in: 1 week
+
+verify_dependencies:
+  stage: verify
+  timeout: 10m
+  cache: []
+  script:
+    - npm audit --omit=dev --audit-level=high
+    - node scripts/check-licences.mjs
 
 verify_e2e:
   stage: verify
-  # The image tag must track @playwright/test in package.json: the browsers are
-  # baked into the image, and a mismatch fails at launch.
+  timeout: 30m
   image:
-    name: mcr.microsoft.com/playwright:v1.62.1-noble
+    name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
     pull_policy: if-not-present
   script:
-    - export NPM_TOKEN="$NPMJS_TOKEN"
-    - npm ci
-    # Runs the app specs AND e2e/accessibility.spec.ts - the WCAG 2.2 AA gate,
-    # zero axe violations across every listed page in light and dark. A failure
-    # here is an accessibility regression, not a flaky test.
+    - npm ci --prefer-offline --no-audit --no-fund
+    # Includes e2e/accessibility.spec.ts, the WCAG 2.2 AA gate in light and dark.
     - npm run e2e
   artifacts:
     when: always
+    expose_as: "E2E and accessibility report"
     paths:
       - playwright-report/
+    reports:
+      junit: reports/e2e-junit.xml
     expire_in: 1 week
 
 verify_performance:
   stage: verify
-  # The Playwright image, because lighthouserc.cjs points CHROME_PATH at the
-  # Chrome that @playwright/test pins - one browser for both gates rather than a
-  # second download whose version nothing tracks.
+  timeout: 30m
+  # lighthouserc.cjs points CHROME_PATH at the Chrome @playwright/test pins.
   image:
-    name: mcr.microsoft.com/playwright:v1.62.1-noble
+    name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
     pull_policy: if-not-present
   script:
-    - export NPM_TOKEN="$NPMJS_TOKEN"
-    - npm ci
-    # Bytes first: it is deterministic, it covers every chunk including the ones
-    # behind sign-in, and it fails fast. VITE_PUBLIC_URL is pinned so the chunk
-    # names match the budget regardless of what .env says.
+    - npm ci --prefer-offline --no-audit --no-fund
+    # Base pinned so chunk names match bundle-budget.json regardless of .env.
     - VITE_PUBLIC_URL=/ npm run build
     - npm run budget
-    # Lighthouse can only reach /login - every other route is behind Keycloak.
-    # It rebuilds through scripts/preview-for-lighthouse.mjs, which pins the base
-    # for the preview as well as the build.
+    # Lighthouse can only reach /login; every other route is behind Keycloak.
     - npm run lighthouse
   artifacts:
     when: always
+    expose_as: "Lighthouse report"
     paths:
       - .lighthouseci/
     expire_in: 1 week
 
+# verify_e2e pins the base to "/", so this is the job that runs the shipped base.
 verify_base_path:
   stage: verify
-  # The `build` job ships the app under VITE_PUBLIC_URL=/dcb-admin-for-libraries/
-  # so one origin can host it alongside dcb-admin at /dcb-admin. verify_e2e pins
-  # the base to "/", so without this job the shipped configuration is the one
-  # configuration nothing runs - and a base applied twice (by Vite AND by the
-  # router) reaches production looking green.
+  timeout: 20m
   image:
-    name: mcr.microsoft.com/playwright:v1.62.1-noble
+    name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
     pull_policy: if-not-present
   script:
-    - export NPM_TOKEN="$NPMJS_TOKEN"
-    - npm ci
+    - npm ci --prefer-offline --no-audit --no-fund
     - npm run e2e:base-path
   artifacts:
     when: always
+    expose_as: "Base-path report"
     paths:
       - playwright-report/
+    reports:
+      junit: reports/base-path-junit.xml
     expire_in: 1 week
 
 verify_ki_bootstrap:
   stage: verify
+  timeout: 20m
   image:
-    name: mcr.microsoft.com/playwright:v1.62.1-noble
+    name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
     pull_policy: if-not-present
   script:
-    - export NPM_TOKEN="$NPMJS_TOKEN"
-    - npm ci
+    - npm ci --prefer-offline --no-audit --no-fund
     - npm run e2e:ki-bootstrap
+  artifacts:
+    when: always
+    expose_as: "Bootloader report"
+    paths:
+      - playwright-report/
+    reports:
+      junit: reports/ki-bootstrap-junit.xml
+    expire_in: 1 week
 
-# Names that mean nothing to a reader outside this workspace: an unannounced product
-# name, a section number from a planning document they will never see. This repository is
-# mirrored to a public GitHub remote, so a comment and a commit message reach it exactly as
-# code does.
-#
-# The rules live in naming-gate.json, so adding one is a data change. No npm install: the
-# checker has no dependencies, which is what keeps this job under ten seconds.
-#
-# The message scan needs origin/main to resolve. It does on a merge-request pipeline and
-# may not on a branch pipeline, where it says so and skips rather than failing on nothing -
-# so the tree scan is the half that always runs.
+# Rules are data in naming-gate.json; what they catch and why is in docs/testing.md.
 verify_naming:
   stage: verify
+  timeout: 5m
+  cache: []
   variables:
     GIT_DEPTH: "0"
   script:
+    # A branch pipeline fetches only its own ref; without origin/main the message scan skips.
+    - git fetch --no-tags --quiet origin "+refs/heads/main:refs/remotes/origin/main"
     - node scripts/check-naming.mjs --messages origin/main..HEAD
 
-# Every secret this repository has ever committed stays readable in its history: deleting
-# the line does not un-leak it, only rotation does. This repository's history is clean, so there is no
-# baseline to carry: any finding at all is a new one.
+# Every secret ever committed stays readable in history; only rotation un-leaks it.
 verify_secrets:
   stage: verify
+  timeout: 10m
+  cache: []
   image:
     name: zricethezav/gitleaks:v8.30.1
     entrypoint: [""]
   variables:
-    # GitLab clones 20 commits deep by default, so without this the scan would cover a
-    # sliding window and quietly report clean on a repository it never read.
+    # The default 20-commit clone would scan a sliding window and report clean.
     GIT_DEPTH: "0"
   script:
-    # --redact so a finding does not print the secret into a job log that is readable by
-    # everyone who can see the pipeline.
+    # --redact so a finding does not print the secret into a widely readable job log.
     - gitleaks git --redact --exit-code 1 --config .gitleaks.toml --report-format sarif --report-path gitleaks.sarif .
   artifacts:
     when: always
@@ -182,162 +173,160 @@ verify_secrets:
       - gitleaks.sarif
     expire_in: 1 month
 
+build:
+  stage: build
+  timeout: 15m
+  script:
+    - npm ci --prefer-offline --no-audit --no-fund
+    # Must equal the S3 app prefix the worker serves this app from.
+    - VITE_PUBLIC_URL=/dcb-admin-for-libraries/ npm run build
+    # The committed route tree is what tsc checked; a build that regenerates it differently means it was stale.
+    - git diff --exit-code -- src/routeTree.gen.ts
+    - grep -qF 'src="/dcb-admin-for-libraries/assets/' dist/index.html
+    - grep -qF "<meta name=\"dcb-admin-for-libraries-build\" content=\"$CI_COMMIT_SHORT_SHA\">" dist/index.html
+    # The worker's CSP must allow these; see docs/DEPLOYMENT.md, "Releasing to the kihosting hosts".
+    - node scripts/print-csp-hashes.mjs
+  artifacts:
+    paths:
+      - dist/
+    # Long enough to retry a failed deploy the next day.
+    expire_in: 1 week
+
 release:
   stage: release
-  # This rule ensures the job ONLY runs on the 'release' branch
+  interruptible: false
+  timeout: 15m
+  # No `needs`: it would let this start before the verify stage has passed.
   rules:
     - if: '$CI_COMMIT_BRANCH == "release"'
-      when: always
+      when: on_success
     - when: never
+  dependencies: []
   script:
-    - export NPM_TOKEN="$NPMJS_TOKEN"
-    # Set up git credentials again for this job
-    - git config --global user.name "ianibbo"
-    - git config --global user.email "ian.ibbotson@k-int.com"
-    - pwd
-    - ls -al
     - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
-    - npm ci
-    # Run the release, save the version so we can use it in the next stage
+    - npm ci --prefer-offline --no-audit --no-fund
     - npm run semantic-release
-    - echo "RELEASE_VERSION=v$(node -p "require('./package.json').version")" > deploy.env
+    - export RELEASE_VERSION="v$(node -p "require('./package.json').version")"
+    # Only true if @semantic-release/npm wrote the version before @semantic-release/git committed it.
+    - test "$RELEASE_VERSION" = "$(git describe --tags --abbrev=0)"
+    - echo "RELEASE_VERSION=$RELEASE_VERSION" > deploy.env
   artifacts:
     reports:
       dotenv: deploy.env
-  # This job depends on the build job completing successfully
-  dependencies:
-    - build
 
-# build-container-image:
-#   image:
-#     name: docker:stable
-#     pull_policy: if-not-present
-#   stage: build
-#   only:
-#     - release
-#   tags:
-#     - ki-onprem
-#   script:
-#     - echo Building container image
-#     - pwd
-#     - ls
-#     - docker info
-#     - docker login -u $NEXUS_USER -p $NEXUS_PASS docker.libsdev.k-int.com
-#     - docker build -f ./docker/production/Dockerfile -t docker.libsdev.k-int.com/knowledgeintegration/ki-dcb-admin-for-libraries:latest -t docker.libsdev.k-int.com/knowledgeintegration/ki-dcb-admin-for-libraries:v1 .
-#     - docker push docker.libsdev.k-int.com/knowledgeintegration/ki-dcb-admin-for-libraries:latest
-#     - docker push docker.libsdev.k-int.com/knowledgeintegration/ki-dcb-admin-for-libraries:v1
-#     - docker images
-
-# Copy the dist build up to s3 where we can point cloudfront as a distribution service
+# Copy the dist build up to S3, where the Cloudflare worker serves it by hostname.
 deploy_tag_to_s3:
   stage: deploy
+  interruptible: false
+  timeout: 15m
+  cache: []
   rules:
-    # - if: "$CI_COMMIT_TAG =~ /^v[0-9].*/"
-    #   when: always
-    # - when: never
     - if: '$CI_COMMIT_BRANCH == "release"'
       when: on_success
     - when: never
-  tags:
-    - ki-onprem
   image:
     name: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
     pull_policy: if-not-present
-  script:
-    - echo "Deploying version $RELEASE_VERSION to S3..."
-    # Key layout is <env-root>/<app>/, and the worker picks the root by hostname.
-    # Trailing slashes are explicit: --delete is scoped to the destination
-    # prefix, and one level up it would wipe the sibling apps in this root.
-    - aws s3 sync dist/ "s3://ki-libs-spa-hosting/prod/dcb-admin-for-libraries/" --delete
-    # Immutable archive of the released bundle, NOT a servable path: the base
-    # ("/dcb-admin-for-libraries/") is baked in, so this copy only ever resolves
-    # its assets from that path. It exists to roll back FROM, by copying it over
-    # prod/dcb-admin-for-libraries/ - never to be served in place.
-    #
-    # Keyed on $RELEASE_VERSION from the release job's dotenv report, not
-    # $CI_COMMIT_TAG: this job is gated on the `release` BRANCH, so there is no
-    # tag in scope and $CI_COMMIT_TAG expanded to nothing - every release
-    # overwrote a single key literally named "dcb-admin-for-libraries-".
-    - aws s3 sync dist/ "s3://ki-libs-spa-hosting/archive/dcb-admin-for-libraries-$RELEASE_VERSION/" --delete
   variables:
     AWS_ACCESS_KEY_ID: $AWS_DEVOPS_AGENT_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $AWS_DEVOPS_AGENT_ACCESS_KEY_SECRET
     AWS_REGION: eu-west-1
+    # Trailing slash is load-bearing: --delete one level up would wipe the sibling apps.
+    DEST: "s3://ki-libs-spa-hosting/prod/dcb-admin-for-libraries/"
+  # Both in `needs` and no `dependencies`: a `dependencies` list would stop release's dotenv arriving.
   needs:
     - build
     - release
-  dependencies:
-    - build
+  script:
+    - test -n "$RELEASE_VERSION"
+    # Hashed assets, then stable names, then the shell: nothing goes live before the chunks it names.
+    # Same three passes as dcb-admin-ui; the reasoning is in its docs/deployment.md.
+    - aws s3 sync dist/ "$DEST" --delete --exclude "*" --include "assets/*"
+      --cache-control "public, max-age=31536000, immutable"
+    - aws s3 sync dist/ "$DEST" --delete --exclude "assets/*" --exclude "index.html" --exclude "inject_env.json"
+      --cache-control "public, no-cache"
+    - aws s3 cp dist/index.html "${DEST}index.html"
+      --cache-control "no-store, no-cache, must-revalidate"
+    # Roll-back copy, never served in place: the base is baked in.
+    - aws s3 sync dist/ "s3://ki-libs-spa-hosting/archive/dcb-admin-for-libraries-$RELEASE_VERSION/" --delete
 
-deploy_tag_to_r2:
+# Runs on the release BRANCH: semantic-release's "[skip ci]" release commit also skips
+# the tag pipeline, so the tag-gated job this replaces never ran.
+deploy_release_to_r2:
   stage: deploy
+  interruptible: false
+  timeout: 15m
+  cache: []
   rules:
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_BRANCH == "release"'
       when: on_success
     - when: never
-  tags:
-    - ki-onprem
   image:
     name: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
     pull_policy: if-not-present
-  script:
-    - echo "Deploying version $CI_COMMIT_TAG to CF R2..."
-    - test -z "$(aws s3 ls "s3://ki-front-end-bundles/dcb-admin-for-libraries/${CI_COMMIT_TAG}/" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com" --recursive)"
-    - aws s3 cp dist/ "s3://ki-front-end-bundles/dcb-admin-for-libraries/${CI_COMMIT_TAG}/" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com" --recursive
-    - echo "{\"version\":\"${CI_COMMIT_TAG}\"}" > latest.json
-    - aws s3 cp latest.json "s3://ki-front-end-bundles/dcb-admin-for-libraries/latest.json" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com"
   variables:
     AWS_ACCESS_KEY_ID: $CF_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $CF_SECRET_ACCESS_KEY
     AWS_REGION: auto
   needs:
     - build
-  dependencies:
-    - build
+    - release
+  script:
+    - test -n "$RELEASE_VERSION"
+    - echo "Publishing $RELEASE_VERSION to CF R2..."
+    # A published version directory is immutable; refuse to overwrite one.
+    - test -z "$(aws s3 ls "s3://ki-front-end-bundles/dcb-admin-for-libraries/${RELEASE_VERSION}/" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com" --recursive)"
+    - aws s3 cp dist/ "s3://ki-front-end-bundles/dcb-admin-for-libraries/${RELEASE_VERSION}/" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com" --recursive
+    # The channel file the bootloader reads for "latest", written after the bundle it names.
+    - echo "{\"version\":\"${RELEASE_VERSION}\"}" > latest.json
+    - aws s3 cp latest.json "s3://ki-front-end-bundles/dcb-admin-for-libraries/latest.json" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
 deploy_dev_to_s3:
   stage: deploy
+  interruptible: false
+  timeout: 15m
+  cache: []
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null'
-      when: always
+      when: on_success
     - when: never
-  tags:
-    - ki-onprem
   image:
     name: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
     pull_policy: if-not-present
-  script:
-    # dev/, not dcb-admin-for-libraries-dev/. The worker resolves
-    # /dcb-admin-for-libraries/... against <env-root>/dcb-admin-for-libraries/,
-    # and dev.kihosting.net's root is "dev". A key prefix it does not know about
-    # is a 502 - which is exactly what "dcb-admin-for-libraries-dev" was giving.
-    - aws s3 sync dist/ "s3://ki-libs-spa-hosting/dev/dcb-admin-for-libraries/" --delete
   variables:
     AWS_ACCESS_KEY_ID: $AWS_DEVOPS_AGENT_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $AWS_DEVOPS_AGENT_ACCESS_KEY_SECRET
     AWS_REGION: eu-west-1
-  dependencies:
+    # dev.kihosting.net's env root is "dev"; a key prefix the worker does not know is a 502.
+    DEST: "s3://ki-libs-spa-hosting/dev/dcb-admin-for-libraries/"
+  needs:
     - build
+  script:
+    - aws s3 sync dist/ "$DEST" --delete --exclude "*" --include "assets/*"
+      --cache-control "public, max-age=31536000, immutable"
+    - aws s3 sync dist/ "$DEST" --delete --exclude "assets/*" --exclude "index.html" --exclude "inject_env.json"
+      --cache-control "public, no-cache"
+    - aws s3 cp dist/index.html "${DEST}index.html"
+      --cache-control "no-store, no-cache, must-revalidate"
 
 deploy_dev_to_r2:
   stage: deploy
+  interruptible: false
+  timeout: 15m
+  cache: []
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null'
       when: on_success
     - when: never
-  tags:
-    - ki-onprem
   image:
     name: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
     pull_policy: if-not-present
-  script:
-    - aws s3 rm "s3://ki-front-end-bundles/dcb-admin-for-libraries/next/" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com" --recursive || true
-    - aws s3 cp dist/ "s3://ki-front-end-bundles/dcb-admin-for-libraries/next/" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com" --recursive
   variables:
     AWS_ACCESS_KEY_ID: $CF_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $CF_SECRET_ACCESS_KEY
     AWS_REGION: auto
   needs:
     - build
-  dependencies:
-    - build
+  script:
+    - aws s3 rm "s3://ki-front-end-bundles/dcb-admin-for-libraries/next/" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com" --recursive || true
+    - aws s3 cp dist/ "s3://ki-front-end-bundles/dcb-admin-for-libraries/next/" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com" --recursive

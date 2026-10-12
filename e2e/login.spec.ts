@@ -18,7 +18,7 @@ test.describe("Login", () => {
 	test("does not render a protected page without a session", async ({
 		page,
 	}) => {
-		// withAuthenticationRequired wraps the whole __authenticated tree, so a deep
+		// The __authenticated layout starts sign-in for the whole tree, so a deep
 		// link without a session must go to the identity provider instead of
 		// rendering the page first and redirecting after. react-oidc-context's first
 		// step is the discovery document, which is enough to prove the redirect was
@@ -34,5 +34,39 @@ test.describe("Login", () => {
 			"/.well-known/openid-configuration",
 		);
 		await expect(page.getByRole("grid")).toHaveCount(0);
+	});
+
+	test("stops and explains when the identity provider is down", async ({
+		page,
+	}) => {
+		let discoveryCalls = 0;
+		await page.route("**/.well-known/openid-configuration", (route) => {
+			discoveryCalls += 1;
+			return route.fulfill({ status: 503, body: "" });
+		});
+
+		await page.goto("/mappings");
+
+		await expect(page).toHaveURL(/\/login$/);
+		await expect(page.getByRole("alert")).toContainText(
+			/authentication error/i,
+		);
+		// The library guard re-called signinRedirect after every failure, so this
+		// counted up for as long as the tab stayed open.
+		expect(discoveryCalls).toBe(1);
+	});
+
+	test("shows the identity provider's refusal instead of a blank page", async ({
+		page,
+	}) => {
+		await page.goto("/?error=access_denied&state=e2e-unknown-state");
+
+		await expect(page).toHaveURL(/\/login$/);
+		await expect(page.getByRole("alert")).toContainText(
+			/authentication error/i,
+		);
+		await expect(
+			page.getByRole("button", { name: /sign in with keycloak/i }),
+		).toBeVisible();
 	});
 });

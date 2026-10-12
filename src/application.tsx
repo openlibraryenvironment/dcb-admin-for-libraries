@@ -5,15 +5,18 @@ import { createRouter, type AnyRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { LicenseInfo } from "@mui/x-license";
 import { AuthProvider } from "react-oidc-context";
-import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import App from "@components/App/App";
+import { classifyServiceError } from "@helpers/serviceErrors";
 import NotFound from "@components/Error/NotFound";
 import RouteError from "@components/Error/RouteError";
 import { User } from "oidc-client-ts";
+import { createUserManager } from "@helpers/auth";
+import { safeReturnPath } from "@helpers/returnPath";
 import {
 	appPath,
 	appUrl,
@@ -80,23 +83,11 @@ export async function getStandaloneConfig() {
 
 let router: AnyRouter;
 
-const handleServiceErrors = (error: any) => {
-	const isNetworkError =
-		error.message?.includes("Failed to fetch") ||
-		error.message?.includes("Network request failed") ||
-		error.message?.includes("NetworkError");
-	const isServiceUnavailable = error?.response?.status === 503;
-
-	if (toRoutePath() === "/maintenance") {
-		return;
-	}
-
-	if (isServiceUnavailable) {
-		window.location.href = appPath("maintenance");
-	}
-	if (isNetworkError) {
-		window.location.href = appPath("networkError");
-	}
+const handleServiceErrors = (error: unknown) => {
+	if (toRoutePath() === "/maintenance") return;
+	const failure = classifyServiceError(error);
+	if (failure === "maintenance") window.location.href = appPath("maintenance");
+	if (failure === "network") window.location.href = appPath("networkError");
 };
 
 const queryClient = new QueryClient({
@@ -106,11 +97,13 @@ const queryClient = new QueryClient({
 			retry: 1,
 		},
 	},
+	// Mutations are absent on purpose: a user's action reports its own failure where it was
+	// taken, and leaving the page would lose the form and the answer to "did it go through?".
 	queryCache: new QueryCache({
-		onError: (error) => handleServiceErrors(error),
-	}),
-	mutationCache: new MutationCache({
-		onError: (error) => handleServiceErrors(error),
+		onError: (error, query) => {
+			if (query.meta?.optional) return;
+			handleServiceErrors(error);
+		},
 	}),
 });
 
@@ -154,45 +147,55 @@ export async function mountDcbAdminForLibraries(
 		LicenseInfo.setLicenseKey(cfg.VITE_MUI_X_LICENSE_KEY);
 	}
 
-	const oidcConfig = {
-		authority: cfg.VITE_KEYCLOAK_URL,
-		client_id: cfg.VITE_KEYCLOAK_ID,
+	const userManager = createUserManager({
+		authority: cfg.VITE_KEYCLOAK_URL ?? "",
+		client_id: cfg.VITE_KEYCLOAK_ID ?? "",
 		redirect_uri: appUrl(),
 		post_logout_redirect_uri: appUrl(),
 		response_type: "code",
 		scope: "openid profile email",
 		loadUserInfo: true,
 		automaticSilentRenew: true,
-		onSigninCallback: (_user: User | void): void => {
-			const isReadOnly = _user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
-			const afterLoginRedirectPath = sessionStorage.getItem(
-				storageKey("afterLoginRedirectPath"),
+	});
+
+	const onSigninCallback = (_user: User | void): void => {
+		const isReadOnly = _user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
+		const afterLoginRedirectPath = sessionStorage.getItem(
+			storageKey("afterLoginRedirectPath"),
+		);
+		if (isReadOnly) {
+			window.location.replace(appPath("requesting"));
+			return;
+		}
+		sessionStorage.removeItem(storageKey("afterLoginRedirectPath"));
+		const returnTo = safeReturnPath(afterLoginRedirectPath, getAppBase());
+		if (returnTo) {
+			window.location.replace(returnTo);
+		} else {
+			window.history.replaceState(
+				{},
+				document.title,
+				window.location.pathname,
 			);
-			if (isReadOnly) {
-				window.location.replace(appPath("requesting"));
-				return;
-			}
-			if (afterLoginRedirectPath) {
-				sessionStorage.removeItem(storageKey("afterLoginRedirectPath"));
-				window.location.replace(afterLoginRedirectPath);
-			} else {
-				window.history.replaceState(
-					{},
-					document.title,
-					window.location.pathname,
-				);
-			}
-		},
+		}
 	};
 
 	if (!rootElement.innerHTML) {
 		ReactDOM.createRoot(rootElement).render(
 			<React.StrictMode>
-				<AuthProvider {...oidcConfig}>
+				<AuthProvider
+					userManager={userManager}
+					onSigninCallback={onSigninCallback}>
 					<App queryClient={queryClient} router={router} />
 				</AuthProvider>
 			</React.StrictMode>,
 		);
+	}
+}
+
+declare module "@tanstack/react-query" {
+	interface Register {
+		queryMeta: { optional?: boolean };
 	}
 }
 

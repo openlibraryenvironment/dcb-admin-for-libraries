@@ -27,5 +27,5 @@
 		"noEmit": true,
 		"jsx": "react-jsx"
 	},
-	"include": ["src", "src/vite-env.d.ts", "e2e", "e2e-ki-bootstrap", "tests"]
+	"include": ["src", "src/vite-env.d.ts", "e2e", "e2e-base-path", "e2e-ki-bootstrap", "tests"]
 }

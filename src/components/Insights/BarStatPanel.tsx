@@ -3,6 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, Typography } from "@mui/material";
 import { BarChartPro } from "@mui/x-charts-pro";
 
+import { formatNumber } from "@helpers/formatters";
+
+import ChartDataTable from "./ChartDataTable";
 import PanelState from "./PanelState";
 
 const CHART_HEIGHT = 320;
@@ -11,6 +14,8 @@ interface BarStatPanelProps<T> {
 	titleKey: string;
 	subtitleKey: string;
 	seriesLabelKey: string;
+	/** Heads the column of labels in the chart's data table. */
+	categoryKey: string;
 	// A statsApi *QueryOptions(...) result. Built by the parent with the rest client.
 	queryOptions: {
 		queryKey: readonly unknown[];
@@ -29,6 +34,7 @@ export default function BarStatPanel<T>({
 	titleKey,
 	subtitleKey,
 	seriesLabelKey,
+	categoryKey,
 	queryOptions,
 	getLabel,
 	getValue,
@@ -65,23 +71,33 @@ export default function BarStatPanel<T>({
 					isRetrying={isFetching}
 					height={CHART_HEIGHT}
 				>
-					{() =>
-						horizontal ? (
-							<BarChartPro
-								height={CHART_HEIGHT}
-								layout="horizontal"
-								yAxis={bandAxis}
-								series={series}
-								margin={{ left: 160 }}
+					{() => (
+						<>
+							{horizontal ? (
+								<BarChartPro
+									height={CHART_HEIGHT}
+									layout="horizontal"
+									yAxis={bandAxis}
+									series={series}
+									margin={{ left: 160 }}
+								/>
+							) : (
+								<BarChartPro
+									height={CHART_HEIGHT}
+									xAxis={bandAxis}
+									series={series}
+								/>
+							)}
+							<ChartDataTable
+								caption={t(titleKey)}
+								columns={[t(categoryKey), t(seriesLabelKey)]}
+								rows={labels.map((label, index) => [
+									label,
+									formatNumber(values[index]),
+								])}
 							/>
-						) : (
-							<BarChartPro
-								height={CHART_HEIGHT}
-								xAxis={bandAxis}
-								series={series}
-							/>
-						)
-					}
+						</>
+					)}
 				</PanelState>
 			</CardContent>
 		</Card>

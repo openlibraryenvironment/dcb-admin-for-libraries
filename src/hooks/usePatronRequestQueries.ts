@@ -2,14 +2,13 @@
 // i.e. the requests, the libraries (for the filters), and ideally the locations too
 // It also deals with the models
 // And it needs configuration options as some pages might not need everything, per se
-import {
-	clampPageSize,
-	REFERENCE_LIST_PAGE_SIZE,
-} from "@constants/dataGrid/pagination";
+import { clampPageSize } from "@constants/dataGrid/pagination";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import { useMemo } from "react";
-import { getLibraries } from "@queries/getLibraries";
+import { gridPage, queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
@@ -19,12 +18,8 @@ import {
 	GridPaginationModel,
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
-import {
-	LibrariesQueryData,
-	PatronRequestQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import { getPatronRequestModeQuery } from "@helpers/dataGrid/getPatronRequestModeQuery";
 
 interface UsePatronRequestQueriesProps {
@@ -44,40 +39,17 @@ export const usePatronRequestQueries = ({
 	additionalQuery,
 	mode,
 }: UsePatronRequestQueriesProps) => {
-	const auth = useAuth();
-
 	// The library being looked at. Empty only while the claim is still loading, which
 	// the enabled guards below already wait on.
 	const { agencyCode } = useAgencyCodes();
 	const code = agencyCode ?? "";
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${auth?.user?.access_token}`,
-		}),
-		[auth?.user?.access_token],
-	);
 
 	// Get the libraries. Used for the various library filters
 	const {
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery<LibrariesQueryData>({
-		queryKey: ["allLibraries", headers, code, apiBase],
-		queryFn: async () =>
-			request(
-				`${apiBase}/graphql`,
-				getLibraries,
-				{
-					query: "",
-					pagesize: REFERENCE_LIST_PAGE_SIZE,
-					pageno: 0,
-					order: "fullName",
-					orderBy: "ASC",
-				},
-				headers,
-			),
-	});
+	} = useQuery(allLibrariesQueryOptions(apiBase));
 
 	// Memoised because `?? []` allocates a new array on every render, which made
 	// every memo keyed on it recompute every render.
@@ -111,6 +83,7 @@ export const usePatronRequestQueries = ({
 	}, [libraries]);
 
 	// Get the actual requests themselves. These are what goes in the grid
+	const grid = gridPage(filterModel, paginationModel, sortModel);
 	const {
 		data: patronRequestData,
 		isLoading: isPatronRequestLoading,
@@ -118,20 +91,16 @@ export const usePatronRequestQueries = ({
 		error,
 		isFetching,
 	} = useQuery<PatronRequestQueryData>({
-		queryKey: [
-			"getPatronRequests",
+		queryKey: queryKeys.patronRequests.list(
 			apiBase,
-			headers,
-			userLibraryHostLmsCode,
-			filterModel,
-			paginationModel.pageSize,
-			paginationModel.page,
-			sortModel[0]?.field,
-			sortModel[0]?.sort,
-			additionalQuery,
-			mode,
-			code,
-		],
+			{
+				agencyCode: code,
+				hostLmsCode: userLibraryHostLmsCode,
+				mode,
+				additionalQuery,
+			},
+			grid,
+		),
 		queryFn: async () => {
 			const baseQuery = additionalQuery
 				? "(" +
@@ -141,20 +110,20 @@ export const usePatronRequestQueries = ({
 				: getPatronRequestModeQuery(mode, code, userLibraryHostLmsCode);
 			const queryVariables = {
 				query:
-					processGridFilterModel(filterModel, baseQuery, [
+					processGridFilterModel(grid.filterModel, baseQuery, [
 						"status",
 						"description",
 					]) ?? "",
-				pagesize: clampPageSize(paginationModel.pageSize),
-				pageno: paginationModel.page ?? 0,
-				order: sortModel[0]?.field ?? "dateCreated",
-				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+				pagesize: clampPageSize(grid.pageSize),
+				pageno: grid.page ?? 0,
+				order: grid.sortField ?? "dateCreated",
+				orderBy: grid.sortDirection?.toUpperCase() ?? "DESC",
 			};
 			return request(
 				`${apiBase}/graphql`,
 				getPatronRequests,
 				queryVariables,
-				headers,
+				await authHeaders(),
 			);
 		},
 		enabled: !!apiBase && !!userLibraryHostLmsCode,

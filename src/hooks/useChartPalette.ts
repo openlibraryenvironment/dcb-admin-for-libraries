@@ -1,4 +1,5 @@
-import { useTheme } from "@mui/material";
+import { useResolvedMode } from "@/hooks/useResolvedMode";
+import type { ThemeMode } from "@/hooks/useThemeStore";
 
 // Validated categorical palette (dataviz skill reference instance). Light and dark
 // are SELECTED sets, not an auto-flip: each was validated against its own surface.
@@ -80,12 +81,24 @@ const STATUS_ORDER = [
 	"ERROR",
 ];
 
+// Sequential single-hue ramp (light -> dark, one hue), per scheme.
+const SEQUENTIAL_LIGHT: [string, string] = ["#e8eefc", "#2a78d6"];
+const SEQUENTIAL_DARK: [string, string] = ["#12233d", "#3987e5"];
+
+/**
+ * The scheme the user is looking at. Not `useTheme().palette.mode`: with
+ * cssVariables and colorSchemes that is the DEFAULT scheme's, so dark mode drew
+ * the light palette - see docs/insights.md. High contrast is a light scheme.
+ */
+export const isDarkScheme = (mode: ThemeMode): boolean => mode === "dark";
+
 export function useChartPalette() {
-	const isDark = useTheme().palette.mode === "dark";
+	const isDark = isDarkScheme(useResolvedMode());
 	const categorical = isDark ? CATEGORICAL_DARK : CATEGORICAL_LIGHT;
 
 	return {
 		categorical,
+		sequential: isDark ? SEQUENTIAL_DARK : SEQUENTIAL_LIGHT,
 		status: STATUS,
 		// Stable colour for a given status code, independent of selection order.
 		colorForStatus: (status: string): string => {

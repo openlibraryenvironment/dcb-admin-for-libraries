@@ -1,12 +1,8 @@
 /**
- * The five subjects, and which panels belong to each.
+ * The six subjects, and which panels belong to each - the same six as DCB Admin.
  *
  * The order is the reading order: what is happening, how well it went, what was asked for,
- * who with, what we are missing.
- *
- * "Collection" is absent, unlike dcb-admin-ui: the collection-analysis endpoints describe
- * the consortium's catalogue rather than one library's traffic, and this app has no panels
- * for them. A subject with nothing in it is worse than one that is not offered.
+ * who with, what we hold, what we are missing.
  */
 
 export const SUBJECTS = [
@@ -14,6 +10,7 @@ export const SUBJECTS = [
 	"service",
 	"demand",
 	"partners",
+	"collection",
 	"gaps",
 ] as const;
 

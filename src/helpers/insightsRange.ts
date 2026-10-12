@@ -23,6 +23,28 @@ export function rangeToParams(preset: RangePreset): {
 	return { startDate: start.toISOString(), endDate: end.toISOString() };
 }
 
+/** A `YYYY-MM-DD` day as local midnight; `new Date("2026-08-01")` is UTC midnight. */
+export function localDay(date: string): Date {
+	const [year, month, day] = date.split("-").map(Number);
+	return new Date(year, month - 1, day);
+}
+
+/**
+ * An explicit window of calendar days, from the start of the first to the end of
+ * the last in the reader's own clock, as the instants the statistics API binds.
+ */
+export function dayRangeToParams(range: { startDate: string; endDate: string }): {
+	startDate: string;
+	endDate: string;
+} {
+	const end = localDay(range.endDate);
+	end.setHours(23, 59, 59, 999);
+	return {
+		startDate: localDay(range.startDate).toISOString(),
+		endDate: end.toISOString(),
+	};
+}
+
 // Coarser buckets for longer windows keep the flow chart legible.
 export function intervalForRange(preset: RangePreset): TimeSeriesInterval {
 	switch (preset) {
@@ -47,6 +69,21 @@ export function intervalForSpan(
 	if (days <= 45) return "day";
 	if (days <= 180) return "week";
 	return "month";
+}
+
+/**
+ * The window and bucket size a view asks the statistics API for. One function,
+ * because the route loader prefetches under the key the dashboard then reads.
+ */
+export function statsWindow(
+	range: RangePreset,
+	custom: { startDate: string; endDate: string } | null,
+): { window: { startDate: string; endDate: string }; interval: TimeSeriesInterval } {
+	if (!custom) {
+		return { window: rangeToParams(range), interval: intervalForRange(range) };
+	}
+	const window = dayRangeToParams(custom);
+	return { window, interval: intervalForSpan(window.startDate, window.endDate) };
 }
 
 // Human-readable turnaround: seconds -> "3.2 days" / "7 hrs" / "45 min".

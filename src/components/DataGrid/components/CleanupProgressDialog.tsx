@@ -108,7 +108,6 @@ export const CleanupProgressDialog = ({
 								// with no accessible name (axe: aria-progressbar-name).
 								aria-label={t("patron_request.cleanup_in_progress")}
 								sx={{ flex: 1 }}
-								// sx={{ height: 10, borderRadius: 5 }}
 							/>
 							{isCleaning ? (
 								<Typography
@@ -172,7 +171,6 @@ export const CleanupProgressDialog = ({
 											listViewEnabled={false}
 											pivotingEnabled
 											loading={isCleaning}
-											scrollbarVisible={false}
 											paginationModel={currentPagination}
 											filterModel={currentFilter}
 											rowModesModel={rowModesModel}
@@ -235,7 +233,6 @@ export const CleanupProgressDialog = ({
 										listViewEnabled={false}
 										pivotingEnabled
 										loading={isCleaning}
-										scrollbarVisible={false}
 										paginationModel={currentPagination}
 										filterModel={currentFilter}
 										rowModesModel={rowModesModel}
@@ -309,7 +306,6 @@ export const CleanupProgressDialog = ({
 										listViewEnabled={false}
 										pivotingEnabled
 										loading={isCleaning}
-										scrollbarVisible={false}
 										paginationModel={currentPagination}
 										filterModel={currentFilter}
 										rowModesModel={rowModesModel}

@@ -1,95 +1,44 @@
+import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
-import { useGridStore } from "@/hooks/useDataGridStore";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import { defaultLocationColumns } from "@helpers/dataGrid/columns/locationColumns";
-import { standardLocationsColumnVisibility } from "@helpers/dataGrid/columnVisibility/locationColumnVisibility";
+import { locationsGrid } from "@helpers/dataGrid/gridDefinitions";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
-import {
-	LibrariesQueryData,
-	LocationsQueryData,
-} from "@models/ReactQueryHelperTypes";
-import {
-	GridColumnVisibilityModel,
-	GridFilterModel,
-	GridPaginationModel,
-	GridRowModesModel,
-	GridSortModel,
-} from "@mui/x-data-grid-premium";
-import { getLibrary } from "@queries/getLibrary";
+import { LocationsQueryData } from "@models/ReactQueryHelperTypes";
+import { GridRowModesModel } from "@mui/x-data-grid-premium";
+import { gridPage, queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { libraryQueryOptions } from "@helpers/sharedQueries";
 import { getLocations } from "@queries/getLocations";
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
-	// useNavigate,
 	useRouter,
 } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/locations/")({
+	validateSearch: gridSearchSchema,
 	head: () => ({ meta: [{ title: pageTitle("nav.locations.title") }] }),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	const auth = useAuth();
-
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
-	const token = auth?.user?.access_token;
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${token}`,
-		}),
-		[token]
-	);
-	const gridId = "locations";
-	const {
-		sortModel: storedSortModel,
-		filterModel: storedFilterModel,
-		paginationModel: storedPaginationModel,
-		columnVisibilityModel: storedColumnVisibilityModel,
-		setSortModel,
-		setFilterModel,
-		setPaginationModel,
-		setColumnVisibilityModel,
-	} = useGridStore();
-
-	const storedState = {
-		sort: storedSortModel[gridId],
-		filter: storedFilterModel[gridId],
-		pagination: storedPaginationModel[gridId],
-		columnVisibility: storedColumnVisibilityModel[gridId],
-	};
-
-	const [paginationModel, setLocalPaginationModel] =
-		useState<GridPaginationModel>(
-			storedState.pagination ?? { page: 0, pageSize: 25 }
-		);
-	const [filterModel, setLocalFilterModel] = useState<GridFilterModel>(
-		storedState.filter ?? { items: [] }
-	);
-	const debouncedFilterModel = useDebounce(filterModel, 500);
-
-	const [sortModel, setLocalSortModel] = useState<GridSortModel>(
-		storedState.sort ?? [{ field: "lastImported", sort: "desc" }]
-	);
+	const grid = useSyncedDataGrid(locationsGrid, Route.useSearch());
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-	const [columnVisibilityModel, setLocalColumnVisibilityModel] = useState(
-		storedState.columnVisibility ?? standardLocationsColumnVisibility
-	);
 
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -103,56 +52,6 @@ function RouteComponent() {
 		setSnackbarOpen(false);
 	};
 
-	// Add state to track if we're filtering
-	const [isFiltering, setIsFiltering] = useState(false);
-
-	// Track when filter is being applied
-	useEffect(() => {
-		const hasActiveFilters =
-			filterModel.items.some(
-				(item) => item.value && item.value !== "" && item.value !== null
-			) ||
-			(filterModel.quickFilterValues &&
-				filterModel.quickFilterValues.length > 0);
-
-		// We're filtering if there are active filters but they don't match debounced filters
-		const isDifferent =
-			JSON.stringify(filterModel) !== JSON.stringify(debouncedFilterModel);
-		setIsFiltering(!!hasActiveFilters && isDifferent);
-	}, [filterModel, debouncedFilterModel]);
-
-	const handlePaginationChange = useCallback(
-		(model: GridPaginationModel) => {
-			setLocalPaginationModel(model);
-			setPaginationModel(gridId, model);
-		},
-		[gridId, setPaginationModel]
-	);
-
-	const handleFilterChange = useCallback(
-		(model: GridFilterModel) => {
-			setLocalFilterModel(model);
-			setFilterModel(gridId, model);
-		},
-		[gridId, setFilterModel]
-	);
-
-	const handleSortChange = useCallback(
-		(model: GridSortModel) => {
-			setLocalSortModel(model);
-			setSortModel(gridId, model);
-		},
-		[gridId, setSortModel]
-	);
-
-	const handleColumnVisibilityChange = useCallback(
-		(model: GridColumnVisibilityModel) => {
-			setLocalColumnVisibilityModel(model);
-			setColumnVisibilityModel(gridId, model);
-		},
-		[gridId, setColumnVisibilityModel]
-	);
-
 	const { agencyCode: code } = useAgencyCodes();
 
 	// Library query
@@ -160,23 +59,13 @@ function RouteComponent() {
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", headers, code, dcbApiBase],
-		queryFn: async () =>
-			request(
-				`${dcbApiBase}/graphql`,
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
-				headers
-			),
-	});
-	const agencyId = librariesData?.libraries?.content?.[0]?.agency?.id;
+	} = useQuery(libraryQueryOptions(dcbApiBase, code ?? ""));
+	const agencyId = librariesData?.libraries?.content?.[0]?.agency?.id ?? "";
+	const page = gridPage(
+		grid.appliedFilterModel,
+		grid.paginationModel,
+		grid.sortModel,
+	);
 
 	const {
 		data: locationsData,
@@ -185,50 +74,37 @@ function RouteComponent() {
 		error,
 		isFetching,
 	} = useQuery<LocationsQueryData>({
-		queryKey: [
-			"getLocations",
-			dcbApiBase,
-			headers,
-			agencyId,
-			debouncedFilterModel,
-			paginationModel.pageSize,
-			paginationModel.page,
-			sortModel[0]?.field,
-			sortModel[0]?.sort,
-		],
+		queryKey: queryKeys.locations.list(dcbApiBase, agencyId, page),
 		queryFn: async () => {
 			const baseQuery = `agency:${agencyId}`;
 			const queryVariables = {
 				query:
-					processGridFilterModel(debouncedFilterModel, baseQuery, [
+					processGridFilterModel(page.filterModel, baseQuery, [
 						"name",
 						"code",
 					]) ?? "",
-				pagesize: clampPageSize(paginationModel.pageSize),
-				pageno: paginationModel.page ?? 0,
-				order: sortModel[0]?.field ?? "name",
-				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+				pagesize: clampPageSize(page.pageSize),
+				pageno: page.page ?? 0,
+				order: page.sortField ?? "name",
+				orderBy: page.sortDirection?.toUpperCase() ?? "DESC",
 			};
 			return request(
 				`${dcbApiBase}/graphql`,
 				getLocations,
 				queryVariables,
-				headers
+				await authHeaders()
 			);
 		},
-		enabled: !!token && !!dcbApiBase && !!agencyId,
-		// refetchInterval: 1000000, // milliseconds
+		enabled: !!dcbApiBase && !!agencyId,
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
 	});
 
 	useDataGridErrorSafely(
-		gridId,
+		grid,
 		locationsError,
 		error,
-		setLocalFilterModel,
-		setLocalSortModel,
 		() => setSnackbarOpen(true)
 	);
 
@@ -236,7 +112,7 @@ function RouteComponent() {
 		return (
 			<Loading
 				title={t("ui.info.loading.document", {
-					document_type: t("nav.patron_requests.title").toLowerCase(),
+					document_type: t("nav.locations.title").toLowerCase(),
 				})}
 				subtitle={t("ui.feedback.please_wait")}
 			/>
@@ -256,7 +132,7 @@ function RouteComponent() {
 
 	// Determine if we should show loading state
 	const shouldShowLoading =
-		isFiltering || locationsDataLoading || (isFetching && !!locationsData);
+		grid.isFiltering || locationsDataLoading || (isFetching && !!locationsData);
 
 	return (
 		<>
@@ -265,9 +141,9 @@ function RouteComponent() {
 				<DataGrid
 					disablePivoting
 					rows={locationsData?.locations?.content ?? []}
-					columns={defaultLocationColumns}
-					columnVisibilityModel={columnVisibilityModel}
-					onColumnVisibilityModelChange={handleColumnVisibilityChange}
+					columns={locationsGrid.columns}
+					columnVisibilityModel={grid.columnVisibilityModel}
+					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
 					type="locations"
 					label={t("nav.locations.title")}
 					identifier="locations"
@@ -282,16 +158,15 @@ function RouteComponent() {
 					pivotingEnabled={false}
 					toolbarVisible
 					searchText={t("ui.data_grid.search_locations")}
-					scrollbarVisible={false}
 					paginationMode="server"
-					paginationModel={paginationModel}
-					onPaginationModelChange={handlePaginationChange}
+					paginationModel={grid.paginationModel}
+					onPaginationModelChange={grid.handlePaginationChange}
 					filterMode="server"
-					filterModel={filterModel} // Use immediate filter model for UI
-					onFilterModelChange={handleFilterChange}
+					filterModel={grid.filterModel}
+					onFilterModelChange={grid.handleFilterChange}
 					sortingMode="server"
-					sortModel={sortModel}
-					onSortModelChange={handleSortChange}
+					sortModel={grid.sortModel}
+					onSortModelChange={grid.handleSortChange}
 					rowCount={locationsData?.locations?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
@@ -302,11 +177,8 @@ function RouteComponent() {
 					open={snackbarOpen}
 					onCloseFunc={handleSnackbarClose}
 					severityType="warning"
-					// variant="filled"
-					// sx={{ width: "100%" }}
 					alertText={
-						t("ui.feedback.error.cannot_process") ||
-						"We could not process that operation, so we have reset the data grid options."
+						t("ui.feedback.error.cannot_process")
 					}></TimedAlert>
 			}
 		</>

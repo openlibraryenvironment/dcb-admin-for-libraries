@@ -1,0 +1,220 @@
+import { describe, expect, it } from "vitest";
+import {
+	defaultParseSearch,
+	defaultStringifySearch,
+} from "@tanstack/react-router";
+import type { GridFilterModel } from "@mui/x-data-grid-premium";
+
+import {
+	PRIVATE_FILTER_FIELDS,
+	readFilter,
+	readGrid,
+	readSort,
+	serialiseGrid,
+} from "@helpers/dataGrid/gridSearch";
+import { patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
+
+const BARCODE = "PATRON-BC-90817";
+const QUICK = "quick-text-55120";
+
+/** What the router does with the search a navigate is handed, and back. */
+const throughUrl = (search: object) => {
+	const href = defaultStringifySearch(search as Record<string, unknown>);
+	const parsed = patronRequestsGrid.searchSchema.parse(
+		defaultParseSearch(href),
+	);
+	return { href, parsed };
+};
+
+const statusItem = {
+	id: 1,
+	field: "status",
+	operator: "is",
+	value: "COMPLETED",
+};
+
+describe("grid state in the URL", () => {
+	it("keeps the patron barcode and quick-search text out of the URL, and everything else in", () => {
+		const filterModel: GridFilterModel = {
+			items: [
+				{ id: 7, field: "patronBarcode", operator: "equals", value: BARCODE },
+				statusItem,
+			],
+			quickFilterValues: [QUICK],
+		};
+
+		const { search, state } = serialiseGrid(patronRequestsGrid, {
+			filterModel,
+			sortModel: [{ field: "dateUpdated", sort: "asc" }],
+			paginationModel: { page: 2, pageSize: 50 },
+		});
+		const { href } = throughUrl(search);
+
+		for (const secret of [BARCODE, QUICK]) {
+			expect(href).not.toContain(secret);
+			expect(decodeURIComponent(href)).not.toContain(secret);
+		}
+		expect(decodeURIComponent(href)).not.toContain("patronBarcode");
+		expect(decodeURIComponent(href)).toContain("COMPLETED");
+		expect(decodeURIComponent(href)).toContain("dateUpdated:asc");
+		expect(search.page).toBe(2);
+		expect(search.pageSize).toBe(50);
+
+		expect(JSON.stringify(state)).toContain(BARCODE);
+		expect(state?.quickFilterValues).toEqual([QUICK]);
+	});
+
+	it("names every barcode-bearing personal field in one place", () => {
+		expect(PRIVATE_FILTER_FIELDS).toContain("patronBarcode");
+		expect(PRIVATE_FILTER_FIELDS).not.toContain("itemBarcode");
+	});
+
+	it("drops a hand-typed junk URL entirely", () => {
+		const parsed = patronRequestsGrid.searchSchema.parse(
+			defaultParseSearch(
+				"?page=-3&pageSize=100000&sort=evil:sideways&filters=%7Bgarbage&logic=xor",
+			),
+		);
+		expect(parsed).toEqual({});
+
+		const models = readGrid(patronRequestsGrid, parsed, undefined);
+		expect(models.paginationModel).toEqual({ page: 0, pageSize: 25 });
+		expect(models.sortModel).toEqual(patronRequestsGrid.defaultSort);
+		expect(models.filterModel.items).toEqual([]);
+	});
+
+	it.each([101, 200, 100000, 0, -1, 2.5, "25"])(
+		"rejects a page size of %s",
+		(pageSize) => {
+			expect(
+				patronRequestsGrid.searchSchema.parse({ pageSize }).pageSize,
+			).toBeUndefined();
+		},
+	);
+
+	it("accepts a page size the grid offers, up to the bound", () => {
+		expect(patronRequestsGrid.searchSchema.parse({ pageSize: 100 })).toEqual({
+			pageSize: 100,
+		});
+	});
+
+	it("drops each invalid filter item and keeps the valid ones", () => {
+		const parsed = patronRequestsGrid.searchSchema.parse({
+			filters: [
+				statusItem,
+				{ id: 2, field: "noSuchField", operator: "equals", value: "x" },
+				{ id: 3, field: "status", operator: "contains", value: "COMPLETED" },
+				{ id: 4, field: "status", operator: "is", value: "NOT_A_STATUS" },
+				{ id: 5, field: "clusterRecordTitle", operator: "contains", value: "moby" },
+				{ id: 6, field: "patronBarcode", operator: "equals", value: BARCODE },
+				{ id: 8, field: "pollCountForCurrentStatus", operator: "equals", value: { $gt: 1 } },
+				{ id: 9, field: "dateCreated", operator: "onOrAfter", value: "not a date" },
+				"not an item",
+				null,
+			],
+			sort: "patronBarcode:asc",
+		});
+
+		expect(parsed.filters).toEqual([statusItem]);
+		expect(parsed.sort).toBeUndefined();
+	});
+
+	it("round-trips a valid model, with the private part carried in history state", () => {
+		const filterModel: GridFilterModel = {
+			items: [
+				statusItem,
+				{ id: 2, field: "patronBarcode", operator: "equals", value: BARCODE },
+				{
+					id: 3,
+					field: "dateCreated",
+					operator: "luceneDateRange",
+					value: ["2026-09-01T09:15:00.000Z", null],
+				},
+				{ id: 4, field: "pickupRequestStatus", operator: "isAnyOf", value: ["LOANED", "ERROR"] },
+				{ id: 5, field: "outOfSequenceFlag", operator: "equals", value: "true" },
+				{ id: 6, field: "dateUpdated", operator: "last30Days" },
+			],
+			logicOperator: "or" as GridFilterModel["logicOperator"],
+			quickFilterValues: [QUICK],
+		};
+		const models = {
+			filterModel,
+			sortModel: [{ field: "dateUpdated", sort: "asc" as const }],
+			paginationModel: { page: 3, pageSize: 10 },
+		};
+
+		const { search, state } = serialiseGrid(patronRequestsGrid, models);
+		const { parsed } = throughUrl(search);
+		const back = readGrid(
+			patronRequestsGrid,
+			parsed,
+			structuredClone(state),
+		);
+
+		expect(back.paginationModel).toEqual(models.paginationModel);
+		expect(back.sortModel).toEqual(models.sortModel);
+		expect(back.filterModel.logicOperator).toBe("or");
+		expect(back.filterModel.quickFilterValues).toEqual([QUICK]);
+		expect(back.filterModel.items).toEqual(filterModel.items);
+	});
+
+	it("writes nothing for the grid's defaults, so a shared link says only what was chosen", () => {
+		const { search, state } = serialiseGrid(patronRequestsGrid, {
+			filterModel: { items: [] },
+			sortModel: patronRequestsGrid.defaultSort,
+			paginationModel: { page: 0, pageSize: 25 },
+		});
+		expect(defaultStringifySearch(search as Record<string, unknown>)).toBe("");
+		expect(state).toBeUndefined();
+	});
+
+	it("records a sort the reader cleared, so it is not mistaken for the default", () => {
+		const { search } = serialiseGrid(patronRequestsGrid, {
+			filterModel: { items: [] },
+			sortModel: [],
+			paginationModel: { page: 0, pageSize: 25 },
+		});
+		const { parsed } = throughUrl(search);
+		expect(readGrid(patronRequestsGrid, parsed, undefined).sortModel).toEqual(
+			[],
+		);
+	});
+
+	it("never takes a private field from history state that the grid cannot filter on", () => {
+		const back = readGrid(patronRequestsGrid, {}, {
+			items: [
+				{ index: 0, item: { id: 1, field: "status", operator: "is", value: "COMPLETED" } },
+				{ index: 1, item: { id: 2, field: "patronBarcode", operator: "equals", value: BARCODE } },
+			],
+			quickFilterValues: [QUICK, 42],
+		} as never);
+		expect(back.filterModel.items).toEqual([
+			{ id: 2, field: "patronBarcode", operator: "equals", value: BARCODE },
+		]);
+		expect(back.filterModel.quickFilterValues).toEqual([QUICK]);
+	});
+});
+
+describe("a URL that passed the route's shape check", () => {
+	it("is narrowed to the grid's own fields and operators before it becomes a query", () => {
+		const model = readFilter(
+			patronRequestsGrid,
+			{
+				filters: [
+					{ id: 1, field: "notAColumn", operator: "equals", value: "x" },
+					{ id: 2, field: "status", operator: "notAnOperator", value: "x" },
+					{ id: 3, field: "status", operator: "is", value: "COMPLETED" },
+				],
+			},
+			undefined,
+		);
+		expect(model.items.map((item) => item.id)).toEqual([3]);
+	});
+
+	it("drops a sort on a field the grid cannot sort", () => {
+		expect(readSort(patronRequestsGrid, "notAColumn:asc")).toEqual(
+			patronRequestsGrid.defaultSort,
+		);
+	});
+});
+

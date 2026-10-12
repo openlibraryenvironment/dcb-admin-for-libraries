@@ -162,6 +162,24 @@ export const DEFAULT_STATS: StatsMocks = {
 			supplyCount: 9,
 		},
 	],
+	"library-breakdown": [
+		{
+			libraryCode: "e2e-lms",
+			libraryName: "E2E Test Library",
+			totalRequests: 908,
+			walkUpRequests: 227,
+			shippedRequests: 681,
+		},
+		{
+			// The degrade-honestly case, as above: requests but no library row, so the
+			// panel shows the code rather than a blank cell.
+			libraryCode: "unnamed-lms",
+			libraryName: null,
+			totalRequests: 120,
+			walkUpRequests: 0,
+			shippedRequests: 120,
+		},
+	],
 	"peer-benchmarks": [
 		{
 			libraryCode: "e2e-lms",
@@ -188,6 +206,89 @@ export const DEFAULT_STATS: StatsMocks = {
 			checkoutCount: 60,
 			successCount: 70,
 			failedCount: 30,
+		},
+	],
+	"top-partners": {
+		content: [
+			{
+				partnerCode: "peer-lms",
+				partnerName: "Peer Test Library",
+				borrowedFromCount: 41,
+				suppliedToCount: 63,
+				totalCount: 104,
+			},
+			{
+				// No library onboarded for this Host LMS: the row falls back to the code.
+				partnerCode: "unnamed-lms",
+				partnerName: null,
+				borrowedFromCount: 12,
+				suppliedToCount: 9,
+				totalCount: 21,
+			},
+		],
+		totalSize: 2,
+	},
+	"unfillable-demand": [
+		{
+			clusterId: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+			title: "The Lost Atlas",
+			author: "M. Ortega",
+			requestCount: 7,
+		},
+	],
+	"collection-totals": {
+		distinctTitles: 4_120_884,
+		singlyHeldTitles: 1_902_311,
+		holdings: 7_884_002,
+		contributingSources: 42,
+	},
+	"collection-profile": [
+		{
+			sourceSystemId: "s-1",
+			sourceSystemCode: "peer-lms",
+			clusterCount: 900_120,
+			uniqueTitleCount: 210_004,
+		},
+		{
+			sourceSystemId: "33333333-3333-4333-8333-333333333333",
+			sourceSystemCode: "e2e-lms",
+			clusterCount: 640_000,
+			uniqueTitleCount: 88_120,
+		},
+	],
+	"cluster-size-distribution": [
+		{ holderCount: 1, clusterCount: 1_902_311 },
+		{ holderCount: 2, clusterCount: 1_210_400 },
+		{ holderCount: 3, clusterCount: 608_173 },
+		{ holderCount: 8, clusterCount: 400_000 },
+	],
+	"format-profile": [
+		{
+			sourceSystemId: "33333333-3333-4333-8333-333333333333",
+			sourceSystemCode: "e2e-lms",
+			derivedType: "Book",
+			titleCount: 512_000,
+		},
+		{
+			sourceSystemId: "33333333-3333-4333-8333-333333333333",
+			sourceSystemCode: "e2e-lms",
+			derivedType: "Audiobook",
+			titleCount: 64_000,
+		},
+		{
+			sourceSystemId: "s-1",
+			sourceSystemCode: "peer-lms",
+			derivedType: "Book",
+			titleCount: 800_000,
+		},
+	],
+	"collection-overlap": [
+		{
+			leftSystemId: "33333333-3333-4333-8333-333333333333",
+			leftSystemCode: "e2e-lms",
+			rightSystemId: "s-1",
+			rightSystemCode: "peer-lms",
+			sharedTitleCount: 402_118,
 		},
 	],
 	"new-acquisitions-performance": [

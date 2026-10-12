@@ -6,7 +6,7 @@ import { capabilitySelection } from "@helpers/capabilityFields";
 // This query fetches all information about a Library from DCB.
 // The main place this is used is the individual library page.
 //
-// A FUNCTION, not a constant - R-19. Part of the selection depends on the deployment's
+// A FUNCTION, not a constant. Part of the selection depends on the deployment's
 // dcb-service release, and the flag that decides is read from window.__APP_ENV__, which
 // application.tsx assigns only after awaiting inject_env.json. This module is in the
 // static import graph and evaluates first, so a constant would read every flag as off in
@@ -34,7 +34,7 @@ export const getLibrary = () => gql`
 				# 5.11.1.
 				${capabilitySelection("library_support_url", "Library")}
 				discoverySystem
-				# Patron-facing brand (N-1B), rendered by the discovery app. patronWebsite
+				# Patron-facing brand, rendered by the discovery app. patronWebsite
 				# above is the mark's link target, so there is no second URL here.
 				#
 				# New in dcb-service 9.0.0. Library carried no brand at all before it, so
@@ -55,7 +55,6 @@ export const getLibrary = () => gql`
 						id
 						code
 						name
-						clientConfig
 						lmsClientClass
 						itemSuppressionRulesetName
 						suppressionRulesetName
@@ -65,7 +64,6 @@ export const getLibrary = () => gql`
 					id
 					code
 					name
-					clientConfig
 					lmsClientClass
 					itemSuppressionRulesetName
 					suppressionRulesetName

@@ -26,6 +26,14 @@ const GATES = [
 	},
 	{ name: "secrets", job: "verify_secrets", secrets: true },
 	{
+		name: "dependencies",
+		job: "verify_dependencies",
+		steps: [
+			["npm", ["audit", "--omit=dev", "--audit-level=high"]],
+			["node", ["scripts/check-licences.mjs"]],
+		],
+	},
+	{
 		name: "performance",
 		job: "verify_performance",
 		steps: [

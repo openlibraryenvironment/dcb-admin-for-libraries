@@ -1,12 +1,13 @@
-# THE NEWEST SCHEMA THIS APP TARGETS - dcb-service `v11-presence-links`, which is
-# main (e82945731) plus §V-11.1's `supportUrl`. NOT yet on main: that branch is under
-# evaluation, and this file is ahead of main by exactly the six supportUrl lines until it
-# merges. Nothing here can reach a deployment before then — the capability row carries
-# `since: null` and its flag is off everywhere.
+# THE NEWEST SCHEMA THIS APP TARGETS - dcb-service `feat/discovery-contract`, which is its
+# main plus what a discovery front end needs from it: §V-11.1's links, §N-3's scoped
+# functional settings and §V-12's announcements. On NO dcb-service release and not on its
+# main. That branch exists so these applications can be built against one contract before it
+# merges; nothing here reaches a deployment before it does, because every capability row
+# that depends on it carries `since: null` and its flag is off everywhere.
 #
 # It was byte-identical to the v9.0.0 tag until V9_0_008 added `supportUrl` to Library,
-# Consortium and their update inputs. That is the only difference this app uses; the
-# provisioning API and maxLocalHolds are also on main and belong to DCB Admin.
+# Consortium and their update inputs, and until V-12 added the announcements above. The
+# provisioning API and maxLocalHolds are also on dcb-service main and belong to DCB Admin.
 #
 # Copied verbatim; do not hand-edit. schemaConformance.test.ts validates every
 # document with every flag ON against this file.
@@ -176,6 +177,9 @@ type Query {
 	# a library's staff list is tens of rows, and a roster across 500 libraries is a
 	# different query with different scale properties that nothing has asked for.
 	libraryUsers(libraryId: ID!): [LibraryUser!]!
+	# V-12. Everything at one scope, live or not - the admin list. A patron reads the LIVE
+	# ones from /discovery/announcements, which is anonymous and has no query language.
+	announcements(scopeType: String!, scopeId: ID!): [Announcement!]!
 	# Whether this deployment has an identity provider configured at all, so the UI can
 	# hide a tab that could only fail rather than render a form nobody can submit.
 	libraryUserProvisioningAvailable: Boolean!
@@ -227,6 +231,12 @@ type Mutation {
 	provisionLibraryUser(input: ProvisionLibraryUserInput): LibraryUser!
 	setLibraryUserEnabled(input: SetLibraryUserEnabledInput): LibraryUser!
 	resendLibraryUserInvite(input: ResendLibraryUserInviteInput): LibraryUser!
+	# V-12. A consortium announcement reaches every patron of every member library, so
+	# consortium scope needs CONSORTIUM_ADMIN; a library administrator may publish for a
+	# library they actually administer, and the scope of an existing one cannot be edited.
+	createAnnouncement(input: CreateAnnouncementInput): Announcement!
+	updateAnnouncement(input: UpdateAnnouncementInput): Announcement!
+	deleteAnnouncement(input: DeleteEntityInput): DeleteEntityPayload!
 }
 
 input AddAgencyToGroupCommand {
@@ -1280,4 +1290,61 @@ type LibraryUser {
 	status: LibraryUserStatus!
 	dateCreated: String
 	lastEditedBy: String
+}
+
+# V-12. Something a library or consortium needs to tell its patrons.
+#
+# headline and body are PLAIN TEXT and there is deliberately no markup field: operator-
+# authored markup rendered into every patron's page is stored XSS with an admin form
+# attached. expiresAt is required and there is no "never" value - the failure mode of every
+# announcement banner is the notice from March still up in November.
+type Announcement {
+	id: ID
+	scopeType: String
+	scopeId: ID
+	headline: String
+	body: String
+	urgent: Boolean
+	dismissible: Boolean
+	startsAt: String
+	expiresAt: String
+	lastEditedBy: String
+	reason: String
+	changeCategory: String
+	changeReferenceUrl: String
+	dateCreated: String
+	dateUpdated: String
+}
+
+input CreateAnnouncementInput {
+	# CONSORTIUM | LIBRARY_GROUP | LIBRARY
+	scopeType: String!
+	scopeId: ID!
+	headline: String!
+	body: String!
+	urgent: Boolean
+	dismissible: Boolean
+	# ISO-8601 instants. Both required: a start lets an operator write Monday's notice on
+	# Friday, and an end is what stops it outliving what it was about.
+	startsAt: String!
+	expiresAt: String!
+	reason: String
+	changeCategory: String
+	changeReferenceUrl: String
+}
+
+# The scope is absent on purpose. Moving a library's notice to consortium scope by editing
+# it would widen its reach to every patron of every member library through a path that never
+# asks the question the create path asks; a misplaced notice is withdrawn and republished.
+input UpdateAnnouncementInput {
+	id: ID!
+	headline: String
+	body: String
+	urgent: Boolean
+	dismissible: Boolean
+	startsAt: String
+	expiresAt: String
+	reason: String
+	changeCategory: String
+	changeReferenceUrl: String
 }

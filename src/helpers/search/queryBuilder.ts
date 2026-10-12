@@ -1,3 +1,4 @@
+import { validate } from "uuid";
 import { CQL_FIELD_MAPPING } from "@constants/search/cqlMappings";
 import {
 	BooleanOperator,
@@ -5,11 +6,11 @@ import {
 	SearchFilter,
 } from "@models/SearchTypes";
 
-// It would be nice to integrate this with buildFilterQuery for non search data grids
-// But for now best to keep them separate
-// This handles the building of the server-side query for DCB Locate searches.
-// Defaults to CQL at present, but brings in Lucene where helpful. Mid-term goal is to get to the point where we can standardise to 1
-
+/**
+ * The search request's query: CQL, or Lucene where a filter needs it. A cluster
+ * record ID is looked up on its own rather than searched, so it must be a UUID:
+ * anything else would reach the search engine as raw query syntax.
+ */
 export const buildQuery = (filters: SearchFilter[]): string => {
 	if (filters.length === 0) return ""; // No filters, no query
 
@@ -17,8 +18,9 @@ export const buildQuery = (filters: SearchFilter[]): string => {
 		(f) => f.field === SearchField.PublicationYear && f.value,
 	); // There are some filters we need Lucene for. This is to track those
 
-	if (filters.length == 1 && filters[0].field == SearchField.ClusterRecordID) {
-		return filters[0].value;
+	if (filters.some((filter) => filter.field === SearchField.ClusterRecordID)) {
+		const id = filters[0].value.trim();
+		return filters.length === 1 && validate(id) ? id : "";
 	}
 
 	const queryType: "cql" | "lucene" = hasLuceneOnlyFilter ? "lucene" : "cql";

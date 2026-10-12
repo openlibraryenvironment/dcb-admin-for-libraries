@@ -9,6 +9,7 @@ import {
 	useRouter,
 } from "@tanstack/react-router";
 import {
+	Box,
 	Button,
 	CircularProgress,
 	Grid,
@@ -19,8 +20,9 @@ import {
 import { useTranslation } from "react-i18next";
 import request from "graphql-request";
 import { useAuth } from "react-oidc-context";
-import { useMemo } from "react";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
+import { isUuidShaped } from "@helpers/isUuidShaped";
+import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
 
 import RenderAttribute from "@/components/RenderAttribute/RenderAttribute";
 import Loading from "@/components/Loading/Loading";
@@ -28,9 +30,20 @@ import Error from "@/components/Error/Error";
 import { AuditItem } from "@/models/AuditItem";
 import { AuditQueryData } from "@models/ReactQueryHelperTypes";
 import { getAuditById } from "@queries/getAuditById";
-import { getAuditsByPatronRequest } from "@queries/getAuditByPatronRequest";
+import { getAuditNeighbours } from "@queries/getAuditNeighbours";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
 
-// Define the route and its component
+type AuditNeighbour = Pick<AuditItem, "id" | "briefDescription">;
+
+interface AuditNeighboursQueryData {
+	older: { content: AuditNeighbour[] };
+	newer: { content: AuditNeighbour[] };
+}
+
+// The characters an ISO-8601 instant can contain, so the date cannot end the range term early.
+const INSTANT_SHAPE = /^[0-9T:.+\-Z]+$/;
+
 export const Route = createFileRoute(
 	"/__authenticated/patronRequests/audits/$auditId/"
 )({
@@ -45,23 +58,20 @@ function AuditDetailsComponent() {
 	const auth = useAuth();
 
 	const { auditId } = Route.useParams();
+	const isValidId = isUuidShaped(auditId);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token]
-	);
+	const apiBase = cfg.VITE_DCB_API_BASE;
 
 	const {
 		data: auditData,
 		isLoading: isAuditLoading,
 		isError: isAuditError,
 	} = useQuery<AuditQueryData>({
-		queryKey: ["audit", auditId, headers, DCB_URL],
+		queryKey: queryKeys.audits.detail(apiBase, auditId),
 		queryFn: async () =>
 			request(
-				DCB_URL,
+				apiBase + "/graphql",
 				getAuditById,
 				{
 					query: "id:" + auditId,
@@ -70,102 +80,70 @@ function AuditDetailsComponent() {
 					orderBy: "auditDate",
 					order: "ASC",
 				},
-				headers
+				await authHeaders()
 			),
-		enabled: !!auth.user, // Only run when authenticated
+		enabled: !!auth.user && isValidId,
 	});
 	const audit = auditData?.audits?.content?.[0];
 
-	// Extract the patronRequestId to use in the next query
 	const patronRequestId =
-		audit?.patronRequest.id ?? audit?.auditData.patronRequestId;
+		audit?.patronRequest?.id ?? audit?.auditData?.patronRequestId;
+	const auditDate = audit?.auditDate;
+	const canFindNeighbours =
+		!!patronRequestId &&
+		isUuidShaped(patronRequestId) &&
+		!!auditDate &&
+		INSTANT_SHAPE.test(auditDate);
 
 	const {
-		data: otherAudits = [],
-		isLoading: areOtherAuditsLoading,
-		isError: areOtherAuditsError,
-	} = useQuery({
-		// Removed the explicit generic here to let it be inferred from the typed queryFn
-		// DCB_URL belongs in the key: it is derived from runtime config, so the same
-		// patron request against a differently-configured backend is a different
-		// result. The sibling "audit" query in this file already keys on it.
-		queryKey: ["allAuditsForPatronRequest", patronRequestId, headers, DCB_URL],
-		// This queryFn handles all pagination internally and now explicitly returns Promise<AuditItem[]>
-		queryFn: async (): Promise<AuditItem[]> => {
-			if (!patronRequestId) return []; // Guard against running without the required ID
-
-			const allContent: AuditItem[] = [];
-			const pageSize = 100;
-			let currentPage = 0;
-			let totalPages = 1;
-
-			// Fetch pages sequentially to gather all audit items
-			do {
-				const data = await request<{
-					audits: { content: AuditItem[]; totalSize: number };
-				}>(
-					DCB_URL,
-					getAuditsByPatronRequest,
-					{
-						query: "patronRequest:" + patronRequestId,
-						order: "auditDate",
-						orderBy: "ASC",
-						pagesize: pageSize,
-						pageno: currentPage,
-					},
-					headers
-				);
-
-				const content = data?.audits?.content ?? [];
-				if (content.length > 0) {
-					allContent.push(...content);
-				}
-
-				// Update total pages based on the first response
-				if (currentPage === 0) {
-					totalPages = Math.ceil((data?.audits?.totalSize ?? 0) / pageSize);
-				}
-
-				currentPage++;
-			} while (currentPage < totalPages);
-
-			// Sort the combined results by date one final time
-			return allContent.sort(
-				(a, b) =>
-					new Date(a.auditDate).getTime() - new Date(b.auditDate).getTime()
-			);
-		},
-		enabled: !!patronRequestId, // Only run when we have the patronRequestId
+		data: neighbours,
+		isLoading: areNeighboursLoading,
+		isError: areNeighboursError,
+	} = useQuery<AuditNeighboursQueryData>({
+		queryKey: queryKeys.audits.neighbours(
+			apiBase,
+			patronRequestId ?? "",
+			auditDate ?? "",
+		),
+		// The bound is the service's own string, never a parsed Date: the column keeps
+		// microseconds and a Date keeps milliseconds, so a round-tripped bound would
+		// return this entry as its own neighbour.
+		queryFn: async () =>
+			request(
+				apiBase + "/graphql",
+				getAuditNeighbours,
+				{
+					older: `patronRequest:${patronRequestId} AND auditDate:{* TO ${auditDate}}`,
+					newer: `patronRequest:${patronRequestId} AND auditDate:{${auditDate} TO *}`,
+				},
+				await authHeaders()
+			),
+		enabled: canFindNeighbours,
 	});
 
-	const currentAuditIndex = useMemo(
-		() => otherAudits.findIndex((item) => item.id === auditId),
-		[otherAudits, auditId]
-	);
+	const previousAudit = neighbours?.older?.content?.[0] ?? null;
+	const nextAudit = neighbours?.newer?.content?.[0] ?? null;
 
-	const previousAudit =
-		currentAuditIndex > 0 ? otherAudits[currentAuditIndex - 1] : null;
-	const nextAudit =
-		currentAuditIndex < otherAudits.length - 1
-			? otherAudits[currentAuditIndex + 1]
-			: null;
-
-	// Helper functions for navigation
 	const handleReturn = () => {
 		if (patronRequestId) {
-			navigate({ to: `/patronRequests/${patronRequestId}`, hash: `auditlog` });
+			navigate({
+				to: "/patronRequests/$id",
+				params: { id: patronRequestId },
+				hash: "auditlog",
+			});
 		}
 	};
 	const handleNavigate = (targetAuditId: string | null) => {
-		if (targetAuditId && patronRequestId) {
+		if (targetAuditId) {
 			navigate({
-				to: `/patronRequests/audits/${targetAuditId}`,
+				to: "/patronRequests/audits/$auditId",
+				params: { auditId: targetAuditId },
 			});
 		}
 	};
 
 	// Render loading and error states
-	if (isAuditLoading || (areOtherAuditsLoading && patronRequestId)) {
+	if (isAuditLoading) {
 		return (
 			<Loading
 				title={t("ui.info.loading.document", {
@@ -199,9 +177,9 @@ function AuditDetailsComponent() {
         <Grid
 			container
 			spacing={{ xs: 2, md: 3 }}
-			columns={{ xs: 2, sm: 2, md: 2 }}>
-            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography variant="h1">{audit?.id}</Typography>
+			columns={DETAIL_COLUMNS}>
+            <Grid size={FULL_ROW}>
+				<Typography variant="h1">{audit.id}</Typography>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("audit.uuid")}>
@@ -237,13 +215,14 @@ function AuditDetailsComponent() {
 					<RenderAttribute attribute={audit?.patronRequest?.id} />
 				</Attribute>
 			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={FULL_ROW}>
 				<Attribute label={t("audit.data")}>
-					<pre>{JSON.stringify(audit?.auditData, null, 2)}</pre>
+					<Box component="pre" sx={WRAPPED_PRE}>
+						{JSON.stringify(audit?.auditData, null, 2)}
+					</Box>
 				</Attribute>
 			</Grid>
-            {/* Navigation Buttons */}
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={FULL_ROW}>
 				<Stack
                     direction="row"
                     sx={{
@@ -255,6 +234,7 @@ function AuditDetailsComponent() {
 					</Button>
 					<Stack direction="row" spacing={2}>
 						<Tooltip
+							describeChild
 							title={
 								previousAudit
 									? previousAudit.briefDescription
@@ -266,12 +246,12 @@ function AuditDetailsComponent() {
 									onClick={() => handleNavigate(previousAudit?.id ?? null)}
 									disabled={
 										!previousAudit ||
-										areOtherAuditsLoading ||
-										areOtherAuditsError
+										areNeighboursLoading ||
+										areNeighboursError
 									}
 									startIcon={
-										areOtherAuditsLoading ? (
-											<CircularProgress size={20} />
+										areNeighboursLoading ? (
+											<CircularProgress size={20} aria-label={t("ui.info.loading.value")} />
 										) : (
 											<ArrowLeft />
 										)
@@ -281,6 +261,7 @@ function AuditDetailsComponent() {
 							</span>
 						</Tooltip>
 						<Tooltip
+							describeChild
 							title={
 								nextAudit
 									? nextAudit.briefDescription
@@ -291,11 +272,11 @@ function AuditDetailsComponent() {
 									variant="outlined"
 									onClick={() => handleNavigate(nextAudit?.id ?? null)}
 									disabled={
-										!nextAudit || areOtherAuditsLoading || areOtherAuditsError
+										!nextAudit || areNeighboursLoading || areNeighboursError
 									}
 									endIcon={
-										areOtherAuditsLoading ? (
-											<CircularProgress size={20} />
+										areNeighboursLoading ? (
+											<CircularProgress size={20} aria-label={t("ui.info.loading.value")} />
 										) : (
 											<ArrowRight />
 										)

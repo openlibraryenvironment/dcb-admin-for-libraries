@@ -1,0 +1,32 @@
+{
+	"patronRequests": {
+		"totalSize": 1,
+		"pageable": { "number": 0, "offset": 0 },
+		"content": [
+			{
+				"id": "33333333-3333-4333-8333-333333333333",
+				"dateCreated": "2026-09-03T08:00:00Z",
+				"dateUpdated": "2026-09-03T08:30:00Z",
+				"patronHostlmsCode": "E2E-HOST",
+				"pickupLocationCode": null,
+				"description": "A request with nothing filled in",
+				"status": "ERROR",
+				"previousStatus": "RESOLVED",
+				"nextExpectedStatus": null,
+				"currentStatusTimestamp": null,
+				"errorMessage": "Supplier unavailable",
+				"nextScheduledPoll": null,
+				"outOfSequenceFlag": false,
+				"elapsedTimeInCurrentStatus": 60,
+				"pollCountForCurrentStatus": 0,
+				"isManuallySelectedItem": false,
+				"activeWorkflow": "RET-STD",
+				"bibClusterId": null,
+				"suppliers": null,
+				"clusterRecord": null,
+				"patron": null,
+				"requestingIdentity": null
+			}
+		]
+	}
+}

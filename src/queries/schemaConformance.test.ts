@@ -10,7 +10,7 @@ import {
 
 /**
  * Every document this application can emit must be valid against the
- * dcb-service it will be sent to - R-19. Three passes, because a field gated
+ * dcb-service it will be sent to. Three passes, because a field gated
  * at the wrong THRESHOLD is invisible to all-on and all-off alike.
  * docs/service-compatibility.md.
  */
@@ -44,6 +44,23 @@ const RELEASE_9_CAPABILITIES = SERVICE_CAPABILITIES.filter(
 const RELEASE_9_FLAGS = flagsFor(RELEASE_9_CAPABILITIES);
 
 const modules = import.meta.glob("../{queries,mutations}/*.ts");
+
+/**
+ * Documents that are only ever sent when a flag is on, with the flag that sends them.
+ *
+ * EXCLUDED from the narrower passes, not skipped, and the flag is named so the exclusion
+ * is a reviewable claim rather than a hole: docs/testing.md, "Documents only sent behind a
+ * flag".
+ */
+const FLAG_ONLY: Record<string, string> = {
+	"queries/getAnnouncements.ts": "VITE_FEATURE_ANNOUNCEMENTS",
+	"mutations/announcements.ts": "VITE_FEATURE_ANNOUNCEMENTS",
+};
+
+const gatedBy = (file: string): string | undefined => {
+	const name = file.replace(/^\.\.\//, "").replace(/^\.\//, "queries/");
+	return FLAG_ONLY[name];
+};
 
 /**
  * Every document a module exports.
@@ -101,7 +118,12 @@ describe("documents validate against the dcb-service they target", () => {
 		},
 	);
 
-	it.each(files)(
+	it.each(
+		files.filter((file) => {
+			const gate = gatedBy(file);
+			return !gate || gate in RELEASE_9_FLAGS;
+		}),
+	)(
 		"%s is valid against dcb-service 9.0.0 (the release's flags)",
 		async (file) => {
 			vi.stubGlobal("window", { __APP_ENV__: RELEASE_9_FLAGS });
@@ -120,6 +142,19 @@ describe("documents validate against the dcb-service they target", () => {
 		},
 	);
 
+	it("every flag-only exclusion names a flag that exists", () => {
+		const declared = readFileSync(
+			path.resolve(repoRoot, "src/helpers/featureFlags.ts"),
+			"utf8",
+		);
+
+		for (const [file, flag] of Object.entries(FLAG_ONLY)) {
+			expect(declared, `${file} is excluded on ${flag}`).toContain(
+				`readFlag("${flag}")`,
+			);
+		}
+	});
+
 	it("the 9.0.0 pass is not vacuous", () => {
 		// It would be if every capability were `since: null`, or if meetsServiceVersion
 		// started returning null for a release we hold a schema for.
@@ -129,7 +164,7 @@ describe("documents validate against the dcb-service they target", () => {
 		);
 	});
 
-	it.each(files)(
+	it.each(files.filter((file) => !gatedBy(file)))(
 		"%s is valid against dcb-service 8.71.0 (all flags off)",
 		async (file) => {
 			// No window at all: envsubst renders an unset flag as the empty string and a

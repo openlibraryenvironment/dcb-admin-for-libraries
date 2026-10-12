@@ -1,8 +1,11 @@
-// A query for getting all info needed for the export of patron requests data
-
 import { gql } from "graphql-request";
 
-export const getPatronRequestsForExport = gql`
+import { capabilitySelection } from "@helpers/capabilityFields";
+
+// A builder, because resolvedAgency exists only from dcb-service 9.0.0 and the flag that
+// says so arrives after this module evaluates. id, pickupLocationCode, suppliers.localAgency
+// and resolvedAgency are what helpers/exportScope reads to keep or drop each row.
+export const getPatronRequestsForExport = () => gql`
 	query LoadPatronRequestsForExport(
 		$pageno: Int!
 		$pagesize: Int!
@@ -38,6 +41,7 @@ export const getPatronRequestsForExport = gql`
 				pickupRequestStatus
 				pickupItemId
 				isExpeditedCheckout
+				renewalCount
 				rawLocalRequestStatus
 				rawLocalItemStatus
 				localRequestId
@@ -51,6 +55,7 @@ export const getPatronRequestsForExport = gql`
 				requestingIdentity {
 					localBarcode
 					canonicalPtype
+					${capabilitySelection("agency_scoped_requests", "PatronIdentity")}
 				}
 				suppliers {
 					localAgency

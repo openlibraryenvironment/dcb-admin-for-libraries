@@ -7,9 +7,15 @@ export const READ_ONLY_ROLES = ["LIBRARY_READ_ONLY"];
 /** The agency the seeded user belongs to; fixture data is keyed to it. */
 export const AGENCY_CODE = "e2e-agency";
 
+export const ACCESS_TOKEN = "e2e-fake-access-token";
+
 export interface FakeUserOptions {
 	roles?: string[];
 	agencyCode?: string;
+	/** Seconds until the access token expires; a year when omitted. */
+	expiresInSeconds?: number;
+	/** Present, oidc-client-ts renews through the token endpoint rather than an iframe. */
+	refreshToken?: string;
 }
 
 /**
@@ -32,12 +38,14 @@ export function getAuthStorageKey(): string {
 function buildFakeUser({
 	roles = LIBRARY_ADMIN_ROLES,
 	agencyCode = AGENCY_CODE,
+	expiresInSeconds = 60 * 60 * 24 * 365,
+	refreshToken,
 }: FakeUserOptions = {}) {
 	return {
 		id_token: "e2e-fake-id-token",
 		session_state: "e2e-fake-session-state",
-		access_token: "e2e-fake-access-token",
-		refresh_token: undefined,
+		access_token: ACCESS_TOKEN,
+		refresh_token: refreshToken,
 		token_type: "Bearer",
 		scope: "openid profile email",
 		profile: {
@@ -50,7 +58,7 @@ function buildFakeUser({
 		// Far enough out that automaticSilentRenew's timer, which is scheduled
 		// relative to expires_at, never fires mid-run against a host that does
 		// not resolve.
-		expires_at: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365,
+		expires_at: Math.floor(Date.now() / 1000) + expiresInSeconds,
 	};
 }
 

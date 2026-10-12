@@ -1,5 +1,5 @@
 /**
- * Which features need which dcb-service release - R-19.
+ * Which features need which dcb-service release.
  *
  * A field the server does not declare is NOT a null: it is a validation error
  * that fails the whole operation. So a gate has to change the document and the
@@ -62,6 +62,24 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 				"brandLogoAlt",
 				"defaultThemeName",
 			],
+		},
+	},
+	{
+		// On the dcb-service `feat/discovery-contract` branch and in no release at all - not 8.71.0,
+		// not the 9.0.0 tag, not main. `since: null` says exactly that, and the flag stays
+		// off until the branch merges and a release carries it.
+		//
+		// Query and Mutation are listed rather than left empty: they are types like any
+		// other, and listing them is what makes `since: null` a CHECKED claim rather than a
+		// comment. serviceCapabilities.test.ts asserts they are in the target schema and in
+		// none of the releases we hold, and it will fail the day somebody commits the schema
+		// of the release that ships them - which is the reminder to set `since`.
+		id: "announcements",
+		flag: "VITE_FEATURE_ANNOUNCEMENTS",
+		since: null,
+		fields: {
+			Query: ["announcements"],
+			Mutation: ["createAnnouncement", "updateAnnouncement", "deleteAnnouncement"],
 		},
 	},
 	{

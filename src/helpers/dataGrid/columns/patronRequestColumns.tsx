@@ -69,12 +69,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		type: "singleSelect",
 		filterOperators: isOnly,
 		valueGetter: (value: string, row: PatronRequest) => {
-			// Check if suppliers array is not empty
-			if (row.suppliers.length > 0) {
-				return row.suppliers[0].localAgency;
-			} else {
-				return ""; // This allows us to handle the array being empty, and any related type errors.
-			}
+			return row.suppliers?.[0]?.localAgency ?? "";
 		},
 	},
 	{
@@ -114,13 +109,9 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		sortable: false,
 		valueGetter: (
 			value: string,
-			row: { suppliers: { canonicalItemType: string }[] },
+			row: { suppliers?: { canonicalItemType: string }[] | null },
 		) => {
-			if (row.suppliers.length > 0) {
-				return row.suppliers[0].canonicalItemType;
-			} else {
-				return ""; // This allows us to handle the array being empty, and any related type errors.
-			}
+			return row.suppliers?.[0]?.canonicalItemType ?? "";
 		},
 	},
 	{
@@ -174,8 +165,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 	{
 		field: "elapsedTimeInCurrentStatus",
 		headerName: i18n.t("grid.headers.time_in_state_days"),
-		description:
-			"The time the request has been in its current status, in the format dd:hh:mm:ss", // Can we replicate this elsewhere?
+		description: i18n.t("grid.headers.time_in_state_description"),
 		minWidth: 50,
 		type: "number",
 		filterOperators: durationFilters,
@@ -260,11 +250,7 @@ export const standardPatronRequestColumns: GridColDef[] = [
 		sortable: false,
 		flex: 0.3,
 		valueGetter: (value: any, row: PatronRequest) => {
-			if (row.suppliers.length > 0) {
-				return row.suppliers[0].localItemBarcode;
-			} else {
-				return "";
-			}
+			return row.suppliers?.[0]?.localItemBarcode ?? "";
 		},
 	},
 	{

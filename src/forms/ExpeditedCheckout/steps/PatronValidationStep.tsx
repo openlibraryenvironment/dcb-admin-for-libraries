@@ -9,10 +9,10 @@ import {
 import { TFunction } from "i18next";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
 
-// Step 1: Patron Validation Component: this is step 1 in the expedited checkout workflow.
-// Three forms share it - expedited checkout, quick walk-up and staff request - and
-// they agree only on the two fields this step drives, so it is generic over any form
-// carrying them rather than typed to one form's shape.
+// The first step of all three request forms. Generic over any form carrying the two
+// fields this step drives, rather than typed to one form's shape. Validate is the
+// form's submit button, so a barcode scanner's Enter validates; each form's
+// onSubmit sends step 0 to its patron lookup.
 export interface PatronValidationFields extends FieldValues {
 	patronBarcode: string;
 	agencyCode: string;
@@ -23,7 +23,6 @@ interface PatronValidationStepType<TFieldValues extends PatronValidationFields> 
 	patronValidated: boolean;
 	isValidatingPatron: boolean;
 	handleClose: () => void;
-	validatePatron: () => void;
 	patronBarcode: string;
 	agencyCode: string;
 	libraryOptions: PatronRequestAutocompleteOption[];
@@ -35,7 +34,6 @@ export const PatronValidationStep = <TFieldValues extends PatronValidationFields
 	patronValidated,
 	isValidatingPatron,
 	handleClose,
-	validatePatron,
 	patronBarcode,
 	agencyCode,
 	libraryOptions,
@@ -111,9 +109,9 @@ export const PatronValidationStep = <TFieldValues extends PatronValidationFields
 				</Button>
 				<div style={{ flex: "1 0 0" }} />
 				<Button
+					type="submit"
 					color="primary"
 					variant="contained"
-					onClick={validatePatron}
 					disabled={isValidatingPatron || !patronBarcode || !agencyCode}>
 					{isValidatingPatron
 						? t("requesting.staff_request.patron.validating")

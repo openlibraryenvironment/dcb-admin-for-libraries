@@ -7,5 +7,5 @@ export interface ClusterRecord {
 	isDeleted: boolean;
 	dateCreated: string;
 	dateUpdated: string;
-	members: [Bib];
+	members: Bib[] | null;
 }

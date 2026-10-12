@@ -1,12 +1,20 @@
-import { MenuItem, TextField, useTheme } from "@mui/material";
+import {
+	MenuItem,
+	TextField,
+	inputLabelClasses,
+	outlinedInputClasses,
+	selectClasses,
+	useTheme,
+} from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 
-import { getLibraries } from "@queries/getLibraries";
+import { getLibraryNames } from "@queries/getLibraryNames";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
 import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
@@ -18,21 +26,15 @@ import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 export const LibrarySelector = () => {
 	const { t } = useTranslation();
 	const theme = useTheme();
-	const auth = useAuth();
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const { agencyCodes, agencyCode, selectAgencyCode, hasMultipleAgencies } =
 		useAgencyCodes();
 
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token]
-	);
-
 	// Named so the choice reads as library names rather than agency codes. Only
 	// fetched when there is a choice to present.
 	const { data } = useQuery<LibrariesQueryData>({
-		queryKey: ["selectableLibraries", headers, agencyCodes, cfg?.VITE_DCB_API_BASE],
+		queryKey: queryKeys.library.names(cfg?.VITE_DCB_API_BASE, agencyCodes),
 		enabled: hasMultipleAgencies && !!cfg?.VITE_DCB_API_BASE,
 		// Library names change at the pace of onboarding, not of browsing, and
 		// this renders in the header on every page - the default staleTime of 0
@@ -41,7 +43,7 @@ export const LibrarySelector = () => {
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibraries,
+				getLibraryNames,
 				{
 					query: agencyCodes.map((code) => `agencyCode:${code}`).join(" OR "),
 					pagesize: agencyCodes.length,
@@ -49,7 +51,7 @@ export const LibrarySelector = () => {
 					order: "fullName",
 					orderBy: "ASC",
 				},
-				headers
+				await authHeaders()
 			),
 	});
 
@@ -66,6 +68,8 @@ export const LibrarySelector = () => {
 
 	if (!hasMultipleAgencies || !agencyCode) return null;
 
+	const headerText = (theme.vars || theme).palette.primary.headerText;
+
 	return (
 		<TextField
 			select
@@ -75,13 +79,17 @@ export const LibrarySelector = () => {
 			label={t("header.library_selector")}
 			sx={{
 				mr: 2,
-				minWidth: 220,
+				minWidth: { xs: "10rem", sm: "13.75rem" },
 				"& .MuiInputBase-root": {
-					color: (theme.vars || theme).palette.primary.headerText,
+					color: headerText,
 				},
-				"& .MuiInputLabel-root": {
-					color: (theme.vars || theme).palette.primary.headerText,
-				},
+				[`& .${inputLabelClasses.root}, & .${inputLabelClasses.root}.${inputLabelClasses.focused}`]:
+					{ color: headerText },
+				// MUI's defaults are text.primary at rest and primary.main on focus, and
+				// light mode paints the bar itself primary.main.
+				[`& .${outlinedInputClasses.notchedOutline}, & .${outlinedInputClasses.root}:hover .${outlinedInputClasses.notchedOutline}, & .${outlinedInputClasses.root}.${outlinedInputClasses.focused} .${outlinedInputClasses.notchedOutline}`]:
+					{ borderColor: headerText },
+				[`& .${selectClasses.icon}`]: { color: headerText },
 			}}>
 			{agencyCodes.map((code) => (
 				<MenuItem key={code} value={code}>

@@ -2,7 +2,7 @@ import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
- * This app against dcb-service 8.71.0 - R-19.
+ * This app against dcb-service 8.71.0.
  *
  * schemaConformance proves the DOCUMENTS are valid; this proves the
  * APPLICATION is, including that the request on the wire does not name a

@@ -51,24 +51,9 @@ interface Exception {
  * once does not excuse whatever is added to it next. Each has to be argued for
  * here rather than passed over in review.
  */
-const ALLOWED = new Map<string, Exception>([
-	[
-		"src/hooks/useExport.ts",
-		{
-			sizes: [1000],
-			reason:
-				"The export walks the whole result set in batches, because the user asked for every row. Bounded by the grid filter in force.",
-		},
-	],
-	[
-		"src/routes/__authenticated/patronRequests/index.tsx",
-		{
-			sizes: [100000],
-			reason:
-				"KNOWN VIOLATION, not an exemption. Filtering by publisher or title fetches up to 100,000 requests into the browser and matches them there, because dcb-service cannot filter on either field; the code says so itself. Removing it needs the server-side filter, so it is named here rather than quietly allowed.",
-		},
-	],
-]);
+// The export used to be here, at 1000 a request. It now pages at EXPORT_PAGE_SIZE under
+// MAX_EXPORT_ROWS: tests/fetchExportPages.test.ts.
+const ALLOWED = new Map<string, Exception>([]);
 
 const sources = (dir: string): string[] =>
 	readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

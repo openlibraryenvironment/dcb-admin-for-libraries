@@ -18,12 +18,19 @@ test.describe("Route errors", () => {
 			route.abort("failed"),
 		);
 
+		let loads = 0;
+		page.on("load", () => {
+			loads += 1;
+		});
+
 		await page.goto("/settings");
 
 		await expect(
 			page.getByRole("heading", { level: 1, name: "Something went wrong" }),
 		).toBeVisible();
 		await expect(page.getByRole("button", { name: "Reload" })).toBeVisible();
+		// TanStack Router reloads once for a missing route chunk, then shows the error: never a loop.
+		expect(loads).toBeLessThanOrEqual(2);
 	});
 
 	test("does not put the raw error message on screen", async ({
