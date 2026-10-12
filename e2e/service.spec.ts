@@ -11,7 +11,7 @@ test.describe("Service", () => {
 	}) => {
 		await page.setViewportSize({ width: 1600, height: 900 });
 		await app.signIn();
-		await app.mockGraphQL({ LoadLibrary: polarisLibrary });
+		await app.mockGraphQL({ LoadLibraryServiceConfig: polarisLibrary });
 
 		await page.goto("/service");
 		await expect(page.getByText("E2E Second Host LMS").first()).toBeVisible();
@@ -43,7 +43,7 @@ test.describe("Service", () => {
 		await app.signIn();
 		await app.mockGraphQL({});
 		await page.route(`${API_BASE}/graphql`, (route) =>
-			route.request().postDataJSON()?.operationName === "LoadLibrary"
+			route.request().postDataJSON()?.operationName === "LoadLibraryServiceConfig"
 				? route.fulfill({
 						json: { data: null, errors: [{ message: "unavailable" }] },
 					})

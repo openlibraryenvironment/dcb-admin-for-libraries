@@ -55,7 +55,6 @@ export const getLibrary = () => gql`
 						id
 						code
 						name
-						clientConfig
 						lmsClientClass
 						itemSuppressionRulesetName
 						suppressionRulesetName
@@ -65,7 +64,6 @@ export const getLibrary = () => gql`
 					id
 					code
 					name
-					clientConfig
 					lmsClientClass
 					itemSuppressionRulesetName
 					suppressionRulesetName

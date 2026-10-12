@@ -2,13 +2,27 @@
 
 This application is deployed against several `dcb-service` releases at
 once, and a GraphQL field the server has never heard of is **not a null**. It is
-a validation error, and it fails the whole operation. `LoadLibrary` runs in six
-routes and the expedited checkout form, so one field selected a release too
-early does not grey out a form — it takes those pages down.
+a validation error, and it fails the whole operation. `LoadLibrary` runs on the
+library profile, mappings, locations and bibs, and in the on-site borrowing form,
+so one field selected a release too early does not grey out a form — it takes
+those pages down.
 
 The header and the library selector, which render on every page, run
 `LoadLibraryNames` instead: `id`, `fullName` and `agencyCode`, nothing gated by
-release, and none of the Host LMS `clientConfig` that `LoadLibrary` carries.
+release.
+
+## Host LMS credentials are one document
+
+A Host LMS `clientConfig` holds the ILS API keys, secrets and the Polaris staff
+password. `/service` is the only page that shows it, so `LoadLibraryServiceConfig`
+is the only document that selects it. `LoadLibrary`, `LoadLibraries`,
+`LoadLocation`, `LoadAgencies` and `LoadHostLms` do not, on any page.
+`e2e/credentials.spec.ts` asserts that page by page, and that a read-only user
+never reaches `/service`.
+
+`clientConfig` is a `JSON` scalar, so no part of it can be selected without the
+whole. The library profile's "Site designation", which was the first entry of
+its context hierarchy, went with it; the full hierarchy is on `/service`.
 
 ## The capability registry
 

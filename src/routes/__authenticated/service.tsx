@@ -7,7 +7,7 @@ import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
-import { getLibrary } from "@queries/getLibrary";
+import { getLibraryServiceConfig } from "@queries/getLibraryServiceConfig";
 import { Library } from "@models/Library";
 import { HostLMS } from "@models/HostLMS";
 import { getILS } from "@helpers/getILS";
@@ -37,18 +37,12 @@ function ServiceComponent() {
 	const { agencyCode: code } = useAgencyCodes();
 
 	const { data, isLoading, isError } = useQuery({
-		queryKey: ["libraryInfo", headers, code, cfg.VITE_DCB_API_BASE],
+		queryKey: ["libraryServiceConfig", headers, code, cfg.VITE_DCB_API_BASE],
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
+				getLibraryServiceConfig,
+				{ query: "agencyCode:" + code },
 				headers
 			),
 	});

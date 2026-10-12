@@ -656,16 +656,6 @@ function HomeComponent() {
 				</ProfileField>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Attribute label={t("library.site_designation")}>
-					{/* This may need special handling when we have real data and know what format it's coming in */}
-					<RenderAttribute
-						attribute={
-							library?.agency?.hostLms?.clientConfig?.contextHierarchy[0]
-						}
-					/>
-				</Attribute>
-			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("library.id")}>
 					<RenderAttribute attribute={library?.id} />
 				</Attribute>

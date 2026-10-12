@@ -8,7 +8,6 @@ export const getHostLms = gql`
 				code
 				name
 				lmsClientClass
-				clientConfig
 				itemSuppressionRulesetName
 				suppressionRulesetName
 			}
