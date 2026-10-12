@@ -91,6 +91,8 @@ const Confirmation = ({
 						? t(getEntityText(entityName, gridEdit)).toLowerCase()
 						: entityName,
 				});
+			case "unsavedChanges":
+				return t("ui.unsaved_changes.title");
 		}
 	};
 
@@ -115,6 +117,12 @@ const Confirmation = ({
 						context="edit"
 					/>
 				);
+			case "unsavedChanges":
+				return (
+					<Typography variant="body1">
+						{t("ui.unsaved_changes.body", { name: entityName })}
+					</Typography>
+				);
 		}
 	};
 	const getButtonText = () => {
@@ -124,6 +132,8 @@ const Confirmation = ({
 			case "gridEdit":
 			case "pageEdit":
 				return t("ui.actions.confirm_changes");
+			case "unsavedChanges":
+				return t("ui.unsaved_changes.leave");
 		}
 	};
 	const onSubmit = async (data: ConfirmationForm) => {

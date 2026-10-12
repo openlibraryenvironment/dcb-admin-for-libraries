@@ -7,7 +7,9 @@ import { Heatmap } from "@mui/x-charts-pro";
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
 import { demandHeatmapQueryOptions, StatsParams } from "@helpers/statsApi";
+import { formatHourOfDay, formatNumber } from "@helpers/formatters";
 
+import ChartDataTable from "./ChartDataTable";
 import PanelState from "./PanelState";
 
 const CHART_HEIGHT = 300;
@@ -37,19 +39,33 @@ export default function DemandHeatmapChart({
 
 	const days = useMemo(() => weekdayLabels(), []);
 
-	const { series, maxCount } = useMemo(() => {
+	const { series, maxCount, tableRows } = useMemo(() => {
 		const cells = data ?? [];
 		const heatmapData = cells.map(
 			(c) => [c.hourOfDay, c.dayOfWeek, c.requestCount] as const,
 		);
 		const max = cells.reduce((m, c) => Math.max(m, c.requestCount), 0);
+
+		// An hour with no requests is absent from the response; the table says 0
+		// where the chart leaves the cell empty.
+		const counts = days.map(() => HOURS.map(() => 0));
+		for (const c of cells) {
+			if (counts[c.dayOfWeek]?.[c.hourOfDay] !== undefined) {
+				counts[c.dayOfWeek][c.hourOfDay] = c.requestCount;
+			}
+		}
+
 		return {
 			series: [
 				{ data: heatmapData.map((d) => [...d] as [number, number, number]) },
 			],
 			maxCount: max,
+			tableRows: days.map((day, d) => [
+				day,
+				...counts[d].map((count) => formatNumber(count)),
+			]),
 		};
-	}, [data]);
+	}, [data, days]);
 
 	return (
 		<Card variant="outlined">
@@ -70,29 +86,39 @@ export default function DemandHeatmapChart({
 					height={CHART_HEIGHT}
 				>
 					{() => (
-						// The 24-hour axis is wide; allow horizontal scroll on narrow screens.
-						<Box sx={{ overflowX: "auto" }}>
-							<Box sx={{ minWidth: 640 }}>
-								<Heatmap
-									height={CHART_HEIGHT}
-									xAxis={[{ data: HOURS }]}
-									yAxis={[{ data: days }]}
-									zAxis={[
-										{
-											min: 0,
-											max: maxCount,
-											colorMap: {
-												type: "continuous",
+						<>
+							{/* The 24-hour axis is wide; allow horizontal scroll on narrow screens. */}
+							<Box sx={{ overflowX: "auto" }}>
+								<Box sx={{ minWidth: 640 }}>
+									<Heatmap
+										height={CHART_HEIGHT}
+										xAxis={[{ data: HOURS }]}
+										yAxis={[{ data: days }]}
+										zAxis={[
+											{
 												min: 0,
 												max: maxCount,
-												color: sequential,
+												colorMap: {
+													type: "continuous",
+													min: 0,
+													max: maxCount,
+													color: sequential,
+												},
 											},
-										},
-									]}
-									series={series}
-								/>
+										]}
+										series={series}
+									/>
+								</Box>
 							</Box>
-						</Box>
+							<ChartDataTable
+								caption={t("insights.charts.demand_heatmap.title")}
+								columns={[
+									t("insights.charts.demand_heatmap.day"),
+									...HOURS.map((hour) => formatHourOfDay(hour)),
+								]}
+								rows={tableRows}
+							/>
+						</>
 					)}
 				</PanelState>
 			</CardContent>

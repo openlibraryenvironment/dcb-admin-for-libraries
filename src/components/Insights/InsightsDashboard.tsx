@@ -584,6 +584,7 @@ export default function InsightsDashboard({
 								titleKey="insights.charts.demand_by_pickup.title"
 								subtitleKey="insights.charts.demand_by_pickup.subtitle"
 								seriesLabelKey="insights.charts.demand_by_pickup.series"
+								categoryKey="insights.charts.demand_by_pickup.category"
 								queryOptions={demandByPickupLocationQueryOptions(
 									client,
 									params,
@@ -597,6 +598,7 @@ export default function InsightsDashboard({
 								titleKey="insights.charts.demand_by_patron_group.title"
 								subtitleKey="insights.charts.demand_by_patron_group.subtitle"
 								seriesLabelKey="insights.charts.demand_by_patron_group.series"
+								categoryKey="insights.charts.demand_by_patron_group.category"
 								queryOptions={demandByPatronGroupQueryOptions(client, params)}
 								getLabel={(r) => r.patronGroup}
 								getValue={(r) => r.requestCount}
