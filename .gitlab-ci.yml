@@ -6,6 +6,8 @@ variables:
   # verify_static fails if the two drift.
   PLAYWRIGHT_VERSION: "1.62.1"
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  # The runner's clone of gitlab.com has failed on a refused connection; retry it, not the job.
+  GET_SOURCES_ATTEMPTS: "3"
 
 default:
   # Node floor is set by semantic-release 25 (^22.14.0 || >=24.10.0), not by the
