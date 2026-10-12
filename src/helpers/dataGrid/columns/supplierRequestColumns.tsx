@@ -44,8 +44,9 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 		headerName: i18n.t("grid.headers.patron_library"),
 		filterable: true, // Should present library options but with the HOST LMS code as a mapping.
 		sortable: false,
+		// The default singleSelect operators: these columns are the URL's filter
+		// allow-list, so they must offer what the grid renders.
 		type: "singleSelect",
-		filterOperators: isOnly,
 		flex: 1,
 	},
 	{
