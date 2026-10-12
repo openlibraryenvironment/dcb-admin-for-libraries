@@ -60,14 +60,6 @@ const ALLOWED = new Map<string, Exception>([
 				"The export walks the whole result set in batches, because the user asked for every row. Bounded by the grid filter in force.",
 		},
 	],
-	[
-		"src/routes/__authenticated/patronRequests/index.tsx",
-		{
-			sizes: [100000],
-			reason:
-				"KNOWN VIOLATION, not an exemption. Filtering by publisher or title fetches up to 100,000 requests into the browser and matches them there, because dcb-service cannot filter on either field; the code says so itself. Removing it needs the server-side filter, so it is named here rather than quietly allowed.",
-		},
-	],
 ]);
 
 const sources = (dir: string): string[] =>

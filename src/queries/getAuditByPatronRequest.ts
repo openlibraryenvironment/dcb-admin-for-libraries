@@ -20,10 +20,8 @@ export const getAuditsByPatronRequest = gql`
 				id
 				auditDate
 				briefDescription
-				auditData
-				patronRequest {
-					id
-				}
+				fromStatus
+				toStatus
 			}
 		}
 	}

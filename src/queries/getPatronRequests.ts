@@ -61,9 +61,6 @@ export const getPatronRequests = gql`
 				clusterRecord {
 					id
 					title
-					members {
-						publisher
-					}
 				}
 			}
 			pageable {

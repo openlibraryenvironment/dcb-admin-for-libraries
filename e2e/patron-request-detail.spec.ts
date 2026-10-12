@@ -1,9 +1,10 @@
 import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import sparse from "./fixtures-data/patronRequest-sparse.json" with { type: "json" };
+import audit from "./fixtures-data/audit.json" with { type: "json" };
 
 const REQUEST = sparse.patronRequests.content[0];
-const AUDIT = REQUEST.audit[0];
+const AUDIT = audit.audits.content[0];
 
 test.describe("Patron request detail", () => {
 	test.beforeEach(async ({ app }) => {
@@ -13,6 +14,7 @@ test.describe("Patron request detail", () => {
 			LoadPatronRequest: sparse,
 			// Unmocked, it is aborted, and the app's error handler leaves for /networkError.
 			LoadHostLms: { hostLms: { content: [] } },
+			GetAuditsByPatronRequest: audit,
 		});
 	});
 
@@ -70,6 +72,46 @@ test.describe("Patron request detail", () => {
 		await expect(page).toHaveURL(
 			new RegExp(`/patronRequests/audits/${AUDIT.id}`),
 		);
+	});
+
+	test("reads the audit log only when its tab is opened, a page at a time", async ({
+		page,
+	}) => {
+		const documents: { operation: string; query: string; variables: Record<string, unknown> }[] = [];
+		page.on("request", (request) => {
+			const body = request.postDataJSON?.();
+			if (body?.operationName) {
+				documents.push({
+					operation: body.operationName,
+					query: body.query,
+					variables: body.variables,
+				});
+			}
+		});
+		const auditReads = () =>
+			documents.filter(
+				({ operation, query }) =>
+					operation.startsWith("GetAudit") || /\baudit\s*\{/.test(query),
+			);
+
+		await page.goto(`/patronRequests/${REQUEST.id}`);
+		await expect(
+			page.getByRole("button", { name: "Check for updates" }),
+		).toBeVisible();
+		expect(auditReads()).toEqual([]);
+
+		await page.getByRole("tab", { name: "Audit log" }).click();
+		await expect(
+			page.getByRole("grid", { name: "Audit log" }).getByRole("link"),
+		).toBeVisible();
+
+		const reads = auditReads();
+		expect(reads.map(({ operation }) => operation)).toEqual([
+			"GetAuditsByPatronRequest",
+		]);
+		expect(reads[0].variables.query).toBe(`patronRequest:${REQUEST.id}`);
+		expect(Number(reads[0].variables.pagesize)).toBeLessThanOrEqual(100);
+		expect(reads[0].query).not.toMatch(/auditData/);
 	});
 
 	test("treats an address that is not a request id as not found", async ({

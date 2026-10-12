@@ -13,7 +13,6 @@ import { ExportProgressDialog } from "@components/DataGrid/components/ExportProg
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
-import { standardFilters } from "@constants/filters/filters";
 import { defaultPatronRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/patronRequestColumnVisibility";
 import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
 import {
@@ -39,7 +38,6 @@ import {
 	useGridApiRef,
 } from "@mui/x-data-grid-premium";
 import { getLibraries } from "@queries/getLibraries";
-import { getLibraryBibClusterIds } from "@queries/getLibraryBibClusterIds";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { useQuery } from "@tanstack/react-query";
@@ -47,7 +45,6 @@ import {
 	createFileRoute,
 	useRouter,
 } from "@tanstack/react-router";
-import axios from "axios";
 import request from "graphql-request";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -66,7 +63,6 @@ function RouteComponent() {
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
-	const searchApiBase = cfg?.VITE_DCB_SEARCH_BASE;
 	const token = auth?.user?.access_token;
 	const headers = useMemo(
 		() => ({
@@ -161,39 +157,6 @@ function RouteComponent() {
 	);
 
 	const { agencyCode: code } = useAgencyCodes();
-	const roles = auth?.user?.profile?.roles ? auth?.user?.profile?.roles : [];
-
-	const isAdmin = roles.includes("ADMIN");
-	// facets for options
-	// Only the publisher column uses these, and only administrators get it.
-	const { data: publisherOptions = [] } =
-		useQuery({
-			queryKey: ["publisherFacets", searchApiBase, headers],
-			queryFn: async () => {
-				if (!searchApiBase) return [];
-				try {
-					const res = await axios.get(
-						`${searchApiBase}/search/instances/facets`,
-						{
-							headers,
-							params: {
-								query: "cql.allRecords = 1",
-								facet: "instancePublishers:500",
-							},
-						},
-					);
-
-					const buckets = res.data?.facets?.instancePublishers?.values || [];
-					return buckets.map((bucket: any) => ({
-						value: bucket.id,
-						label: `${bucket.id} (${bucket.totalRecords})`,
-					}));
-				} catch {
-					return [];
-				}
-			},
-			enabled: isAdmin && !!searchApiBase && !!token,
-		});
 
 	// Library query
 	const {
@@ -240,8 +203,7 @@ function RouteComponent() {
 	// Columns that have dynamic options for their filters
 	const dynamicPatronRequestColumns = useMemo(() => {
 		const supplyingAgencyField = "supplyingAgencyCode";
-		const titleField = "clusterRecordTitle";
-		const modifiedColumns = standardPatronRequestColumns.map((col) => {
+		return standardPatronRequestColumns.map((col) => {
 			if (col.field === supplyingAgencyField) {
 				const { ...baseColProps } = col;
 				const selectCol: GridColDef = {
@@ -251,38 +213,9 @@ function RouteComponent() {
 				};
 				return selectCol;
 			}
-			if (col.field === titleField) {
-				return {
-					...col,
-					filterable: isAdmin, // Only filterable if user is admin
-					filterOperators: isAdmin ? standardFilters : undefined,
-				};
-			}
 			return col;
 		});
-		if (isAdmin) {
-			// Not ready for prime time, just about good enough for demos
-			modifiedColumns.push({
-				field: "publisher",
-				headerName: t("patron_requests.publisher", "Publisher"),
-				filterable: true,
-				sortable: false,
-				type: "singleSelect",
-				valueOptions: publisherOptions,
-				valueGetter: (value, row) => {
-					const members = row?.clusterRecord?.members;
-					if (!Array.isArray(members) || members.length === 0) return "";
-
-					const firstMemberWithPublisher = members.find(
-						(member) => member?.publisher && member.publisher.trim() !== "",
-					);
-
-					return firstMemberWithPublisher?.publisher || "";
-				},
-			});
-		}
-		return modifiedColumns;
-	}, [libraryFilterOptions, t, publisherOptions, isAdmin]);
+	}, [libraryFilterOptions]);
 
 	// Patron requests query - using debounced filter model
 	const {
@@ -306,99 +239,11 @@ function RouteComponent() {
 			sortModel[0]?.field,
 			sortModel[0]?.sort,
 		],
-		// HIGHLY EXPERIMENTAL PUBLISHER FILTER
-		// this is cursed but will have to do until the backend changes are in
 		queryFn: async () => {
 			const baseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
-			let finalBaseQuery = baseQuery;
-
-			const publisherFilter = debouncedFilterModel?.items?.find(
-				(item) => item.field === "publisher" && item.value,
-			);
-			const titleFilter = debouncedFilterModel?.items?.find(
-				(item) => item.field === "clusterRecordTitle" && item.value,
-			);
-
-			if (publisherFilter || titleFilter) {
-				try {
-					const prVariables = {
-						query: baseQuery,
-						pagesize: 100000,
-						pageno: 0,
-					};
-
-					// Fetch ALL requests for this library AND their publishers/titles
-					const prRes: any = await request(
-						`${dcbApiBase}/graphql`,
-						getLibraryBibClusterIds,
-						prVariables,
-						headers,
-					);
-
-					const matchedIdsRaw = prRes?.patronRequests?.content
-						?.filter((pr: any) => {
-							let matchesPublisher = true;
-							let matchesTitle = true;
-
-							if (publisherFilter) {
-								const members = pr?.clusterRecord?.members;
-								if (!Array.isArray(members)) {
-									matchesPublisher = false;
-								} else {
-									matchesPublisher = members.some(
-										(member: any) =>
-											member?.publisher === publisherFilter.value,
-									);
-								}
-							}
-
-							if (titleFilter) {
-								const title = pr?.clusterRecord?.title || "";
-								const searchTerm = titleFilter.value.toLowerCase();
-
-								if (titleFilter.operator === "equals") {
-									matchesTitle = title.toLowerCase() === searchTerm;
-								} else {
-									// Fallback to 'contains' which is now perfectly safe and fast in JS!
-									matchesTitle = title.toLowerCase().includes(searchTerm);
-								}
-							}
-
-							// Must match both conditions (if both are applied)
-							return matchesPublisher && matchesTitle;
-						})
-						?.map((pr: any) => pr.bibClusterId)
-						.filter(Boolean);
-
-					const uniqueMatchedIds = [...new Set(matchedIdsRaw)];
-
-					if (uniqueMatchedIds.length > 0) {
-						// slicing
-						const uuidChain = uniqueMatchedIds
-							.slice(0, 100)
-							.map((id: unknown) => `bibClusterId:${id}`)
-							.join(" OR ");
-						finalBaseQuery += ` AND (${uuidChain})`;
-					} else {
-						finalBaseQuery += ` AND (bibClusterId:00000000-0000-0000-0000-000000000000)`;
-					}
-				} catch {
-					finalBaseQuery += ` AND (bibClusterId:00000000-0000-0000-0000-000000000000)`;
-				}
-			}
-
-			// Strip out custom fields so standard grid utilities ignore them
-			const cleanedFilterModel = {
-				...debouncedFilterModel,
-				items: debouncedFilterModel.items.filter(
-					(item) =>
-						item.field !== "publisher" && item.field !== "clusterRecordTitle",
-				),
-			};
-
 			const queryVariables = {
 				query:
-					processGridFilterModel(cleanedFilterModel, finalBaseQuery, [
+					processGridFilterModel(debouncedFilterModel, baseQuery, [
 						"status",
 						"description",
 					]) ?? "",

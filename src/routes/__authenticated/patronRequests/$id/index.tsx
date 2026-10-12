@@ -43,16 +43,10 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { isUuidShaped } from "@helpers/isUuidShaped";
-import DataGrid from "@components/DataGrid/DataGrid";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import { formatDuration } from "@helpers/formatDuration";
 import Loading from "@components/Loading/Loading";
-import {
-	GridPaginationModel,
-	GridRowModesModel,
-} from "@mui/x-data-grid-premium";
-import { auditColumns } from "@helpers/dataGrid/columns/auditColumns";
 import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
 import { CustomLink } from "@components/CustomLink";
 import { SourceRecord } from "@models/SourceRecord";
@@ -70,7 +64,7 @@ import {
 } from "@helpers/cleanupPatronRequest";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
-import { useGridStore } from "@/hooks/useDataGridStore";
+import PatronRequestAuditLog from "@components/PatronRequestAuditLog/PatronRequestAuditLog";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
 	head: () => ({ meta: [{ title: pageTitle("patron_request.title") }] }),
@@ -100,24 +94,6 @@ function RouteComponent() {
 		}),
 		[auth.user?.access_token],
 	);
-	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-	// One id for every request's audit log: keyed per request, the persisted grid
-	// state grew by one entry for every request a user ever opened.
-	const auditGridId = "patronRequestAuditLog";
-	const currentPagination = useGridStore(
-		(state) => state.paginationModel[auditGridId],
-	) ?? { page: 0, pageSize: 25 };
-	const currentFilter = useGridStore(
-		(state) => state.filterModel[auditGridId],
-	) ?? { items: [] };
-	const currentSort = useGridStore((state) => state.sortModel[auditGridId]) ?? [
-		{ field: "auditDate", sort: "desc" },
-	];
-	const setAuditPaginationModel = useGridStore(
-		(state) => state.setPaginationModel,
-	);
-	const setAuditFilterModel = useGridStore((state) => state.setFilterModel);
-	const setAuditSortModel = useGridStore((state) => state.setSortModel);
 	const isValidId = isUuidShaped(id);
 
 	const {
@@ -1545,41 +1521,9 @@ function RouteComponent() {
 					<Typography id="auditlog" variant="accordionSummary">
 						{t("audit.log")}
 					</Typography>
-					<DataGrid
-						disablePivoting
-						rows={patronRequest?.audit ?? []}
-						columns={auditColumns}
-						type="audits"
-						label={t("patron_request.audit_log")}
-						identifier="AuditPatronRequestDetails"
-						checkboxSelection={false}
-						filterMode="client"
-						filterModel={currentFilter}
-						onFilterModelChange={(newModel) =>
-							setAuditFilterModel(auditGridId, newModel)
-						}
-						disableAggregation={true}
-						disableHoverInteractions={true}
-						disableRowGrouping={true}
-						loading={patronRequestLoading}
-						listViewEnabled={false}
-						noResultsText={t("audit.no_results")}
-						pagination
-						paginationMode="client"
-						paginationModel={currentPagination}
-						onPaginationModelChange={(newModel: GridPaginationModel) =>
-							setAuditPaginationModel(auditGridId, newModel)
-						}
-						pivotingEnabled={false}
-						onRowModesModelChange={setRowModesModel}
-						toolbarVisible
-						rowModesModel={rowModesModel}
-						searchText={t("ui.data_grid.search_audits")}
-						sortingMode="client"
-						sortModel={currentSort}
-						onSortModelChange={(newModel) =>
-							setAuditSortModel(auditGridId, newModel)
-						}
+					<PatronRequestAuditLog
+						apiBase={cfg.VITE_DCB_API_BASE}
+						patronRequestId={patronRequest.id}
 					/>
 				</TabPanel>
 			</TabContext>
