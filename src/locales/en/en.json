@@ -1390,7 +1390,8 @@
 				"success_one": "Exported {{count}} request.",
 				"success_other": "Exported {{count}} requests.",
 				"records_one": "Exporting {{count}} request.",
-				"records_other": "Exporting {{count}} requests."
+				"records_other": "Exporting {{count}} requests.",
+				"no_filters": "No filters are applied, so this is every row."
 			},
 			"filters": {
 				"active_description": "{{length}} filter(s) active: {{description}}",

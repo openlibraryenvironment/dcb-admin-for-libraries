@@ -180,7 +180,9 @@ export default function ExportToolbar({
 					initiallySelected={initiallySelected}
 					defaultFileName={exportConfig.defaultFileName}
 					hasFilters={hasFilters}
-					filterSummary={filterTooltipText}
+					filterSummary={
+						hasFilters ? filterTooltipText : t("ui.data_grid.export.no_filters")
+					}
 					selectedCount={selectionCount}
 					onExport={(options) => void exportConfig.run(options)}
 				/>
