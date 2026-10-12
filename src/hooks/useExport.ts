@@ -228,7 +228,6 @@ export const usePatronRequestExport = ({
 
 			// A request matched through two suppliers comes back twice; it is exported once.
 			const seen = new Set<string>();
-			let leftOut = 0;
 			const rows = await fetchExportPages<ExportedRequest>({
 				fetchPage: async (pageno) => {
 					const data = await graphql<{ patronRequests?: ExportPage<ExportedRequest> }>(
@@ -239,10 +238,7 @@ export const usePatronRequestExport = ({
 					return data.patronRequests ?? { totalSize: 0, content: [] };
 				},
 				keep: (row) => {
-					if (!isRequestInExportScope(row, guard)) {
-						leftOut += 1;
-						return false;
-					}
+					if (!isRequestInExportScope(row, guard)) return false;
 					if (!row.id || seen.has(row.id)) return false;
 					seen.add(row.id);
 					return true;
@@ -280,10 +276,7 @@ export const usePatronRequestExport = ({
 			download(blob, exportFileName(options.fileName, options.format));
 			onExportResult({
 				severity: "success",
-				text: [
-					t("ui.data_grid.export.success", { count: named.length }),
-					...(leftOut > 0 ? [t("ui.data_grid.export.left_out", { count: leftOut })] : []),
-				].join(" "),
+				text: t("ui.data_grid.export.success", { count: named.length }),
 			});
 		} catch (error) {
 			if (signal.aborted) {

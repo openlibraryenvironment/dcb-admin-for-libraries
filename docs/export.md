@@ -69,10 +69,9 @@ borrowed requests. That is the existing 8.71.0 behaviour, kept deliberately; onc
 `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is on, the patron's agency replaces it and the
 Host LMS counts for nothing.
 
-**Rows the guard leaves out are counted.** The success message says how many: "Exported
-180 requests. 60 requests were left out: none of your libraries borrowed, supplied or
-collects them." Only the count is shown. Requests the server's own scope removes never
-reach the client and are not counted.
+**The row check drops silently.** Its fields are the ones dcb-service filters on, so in
+normal operation it removes nothing; it is there for a server that applies the guard
+wrongly, which library staff could not act on, so nothing is shown to them.
 
 ### What dcb-service already enforces
 

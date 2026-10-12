@@ -127,9 +127,7 @@ test("the downloaded file holds only requests one of the user's libraries is par
 	const csv = await contentOf(download);
 	expect(csv).toContain(IN_SCOPE);
 	expect(csv).not.toContain(OUT_OF_SCOPE);
-	await expect(page.getByRole("alert")).toContainText(
-		"Exported 1 request. 1 request was left out: none of your libraries",
-	);
+	await expect(page.getByRole("alert")).toContainText("Exported 1 request.");
 });
 
 test("on 8.71.0 the export holds what the borrowed grid shows: its libraries' Host LMS", async ({
@@ -144,7 +142,6 @@ test("on 8.71.0 the export holds what the borrowed grid shows: its libraries' Ho
 	expect(csv).toContain(IN_SCOPE);
 	expect(csv).toContain(OUT_OF_SCOPE);
 	await expect(page.getByRole("alert")).toContainText("Exported 2 requests.");
-	await expect(page.getByRole("alert")).not.toContainText("left out");
 });
 
 test("every export request carries the library guard ahead of the grid's query", async ({

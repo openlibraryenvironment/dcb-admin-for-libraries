@@ -1478,8 +1478,6 @@
 				"scope_failed": "The export could not be limited to your libraries, so nothing was exported.",
 				"success_one": "Exported {{count}} request.",
 				"success_other": "Exported {{count}} requests.",
-				"left_out_one": "{{count}} request was left out: none of your libraries borrowed it, supplied it or collects it.",
-				"left_out_other": "{{count}} requests were left out: none of your libraries borrowed, supplied or collects them.",
 				"records_one": "Exporting {{count}} request.",
 				"records_other": "Exporting {{count}} requests.",
 				"no_filters": "No filters are applied, so this is every row."
