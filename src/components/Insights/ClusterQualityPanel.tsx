@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, Box, Typography } from "@mui/material";
+import { Alert, Typography } from "@mui/material";
 import { BarChartPro } from "@mui/x-charts-pro";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
+import { formatNumber } from "@helpers/formatters";
 import {
 	clusterSizeDistributionQueryOptions,
 	type ClusterSizeStat,
@@ -14,6 +15,7 @@ import {
 	clusterQuality,
 	isUnderClustered,
 } from "@helpers/insightsCollection";
+import ChartDataTable from "./ChartDataTable";
 import CollectionPanel from "./CollectionPanel";
 import MetricInfo from "./MetricInfo";
 
@@ -63,12 +65,6 @@ function ClusterQualityBody({ rows }: { rows: ClusterSizeStat[] }) {
 	const singlePct =
 		quality.singleHolderPct != null ? quality.singleHolderPct.toFixed(1) : "—";
 
-	// The chart is one of two renderings of the same numbers; the sentence below carries
-	// them in text, so the SVG needs a label rather than a full description.
-	const chartLabel = t("insights.collection.cluster_quality.chart_label", {
-		single: singlePct,
-	});
-
 	return (
 		<>
 			<Typography variant="body2" gutterBottom>
@@ -87,25 +83,31 @@ function ClusterQualityBody({ rows }: { rows: ClusterSizeStat[] }) {
 				</Alert>
 			)}
 
-			<Box role="img" aria-label={chartLabel}>
-				<BarChartPro
-					height={CHART_HEIGHT}
-					xAxis={[
-						{
-							scaleType: "band",
-							data: buckets.map((b) => b.label),
-							label: t("insights.collection.cluster_quality.axis_holders"),
-						},
-					]}
-					series={[
-						{
-							data: buckets.map((b) => b.clusterCount),
-							label: t("insights.collection.cluster_quality.series"),
-							color: categorical[0],
-						},
-					]}
-				/>
-			</Box>
+			<BarChartPro
+				height={CHART_HEIGHT}
+				xAxis={[
+					{
+						scaleType: "band",
+						data: buckets.map((b) => b.label),
+						label: t("insights.collection.cluster_quality.axis_holders"),
+					},
+				]}
+				series={[
+					{
+						data: buckets.map((b) => b.clusterCount),
+						label: t("insights.collection.cluster_quality.series"),
+						color: categorical[0],
+					},
+				]}
+			/>
+			<ChartDataTable
+				caption={t("insights.collection.cluster_quality.title")}
+				columns={[
+					t("insights.collection.cluster_quality.axis_holders"),
+					t("insights.collection.cluster_quality.series"),
+				]}
+				rows={buckets.map((b) => [b.label, formatNumber(b.clusterCount)])}
+			/>
 		</>
 	);
 }

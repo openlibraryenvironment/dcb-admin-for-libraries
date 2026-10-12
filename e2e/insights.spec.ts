@@ -405,6 +405,23 @@ test.describe("each chart's table carries its figures", () => {
 		await expect(row(collection, "Book").getByRole("cell")).toHaveText(["704"]);
 	});
 
+	test("clustering confidence and the catalogue's format mix", async ({ app, page }) => {
+		await openSubject(app, page, "collection", "Who holds the same works");
+
+		const clusters = page.getByRole("table", { name: "Clustering confidence" });
+		await expect(clusters.getByRole("columnheader")).toHaveText([
+			"Libraries holding the work",
+			"Works",
+		]);
+		await expect(row(clusters, "1").getByRole("cell")).toHaveText(["1,902,311"]);
+		await expect(row(clusters, "8+").getByRole("cell")).toHaveText(["400,000"]);
+
+		const formats = page.getByRole("table", { name: "Format mix of the catalogue" });
+		await expect(formats.getByRole("columnheader")).toHaveText(["Format", "Works"]);
+		await expect(row(formats, "Book").getByRole("cell")).toHaveText(["512,000"]);
+		await expect(row(formats, "Audiobook").getByRole("cell")).toHaveText(["64,000"]);
+	});
+
 	test("duration trends", async ({ app, page }) => {
 		await openSubject(app, page, "trends", "How durations are moving", [
 			"VITE_FEATURE_INSIGHTS_TRENDS",

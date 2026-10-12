@@ -1,15 +1,16 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Box } from "@mui/material";
 import { BarChartPro } from "@mui/x-charts-pro";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
+import { formatNumber } from "@helpers/formatters";
 import {
 	formatProfileQueryOptions,
 	type SourceFormatStat,
 } from "@helpers/statsApi";
 import { formatMix } from "@helpers/insightsCollection";
+import ChartDataTable from "./ChartDataTable";
 import CollectionPanel from "./CollectionPanel";
 import MetricInfo from "./MetricInfo";
 
@@ -79,13 +80,8 @@ function FormatMixChart({
 	const labelFor = (derivedType: string | null) =>
 		derivedType ?? t("insights.collection.format_mix.unknown");
 
-	const chartLabel = t("insights.collection.format_mix.chart_label", {
-		count: slices.length,
-		top: slices.length > 0 ? labelFor(slices[0].derivedType) : "—",
-	});
-
 	return (
-		<Box role="img" aria-label={chartLabel}>
+		<>
 			<BarChartPro
 				height={CHART_HEIGHT}
 				layout="horizontal"
@@ -104,6 +100,17 @@ function FormatMixChart({
 				]}
 				margin={{ left: 160 }}
 			/>
-		</Box>
+			<ChartDataTable
+				caption={t("insights.collection.format_mix.title")}
+				columns={[
+					t("insights.collection.format_mix.col_format"),
+					t("insights.collection.format_mix.series"),
+				]}
+				rows={slices.map((s) => [
+					labelFor(s.derivedType),
+					formatNumber(s.titleCount),
+				])}
+			/>
+		</>
 	);
 }
