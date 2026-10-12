@@ -109,6 +109,14 @@ export default function ExportToolbar({
 						<ListItemText>{t("ui.data_grid.export.all")}</ListItemText>
 					</MenuItem>
 					<MenuItem
+						onClick={() => handleExport("tsv", "all")}
+						disabled={allDataLoading}>
+						<ListItemIcon>
+							<FileDownloadOutlined />
+						</ListItemIcon>
+						<ListItemText>{t("ui.data_grid.export.all_tsv")}</ListItemText>
+					</MenuItem>
+					<MenuItem
 						onClick={() => handleExport("csv", "filtered")}
 						disabled={allDataLoading}>
 						<ListItemIcon>

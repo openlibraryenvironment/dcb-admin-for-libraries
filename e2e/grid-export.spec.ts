@@ -1,6 +1,7 @@
 import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
+import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 
 /**
  * The export menu offered "Export all as CSV" on every grid, and on a grid with
@@ -25,4 +26,23 @@ test("a grid with no export of its own exports through the grid", async ({
 		.getByRole("menuitem", { name: "Export current page as CSV" })
 		.click();
 	expect((await download).suggestedFilename()).toMatch(/\.csv$/);
+});
+
+// main offered "Export all as TSV"; a toolbar rewrite in 2.0 QA dropped it.
+test("the request grids still export everything as TSV", async ({ app, page }) => {
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraries: library,
+		LoadPatronRequests: patronRequests,
+		LoadPatronRequestsForExport: patronRequests,
+	});
+
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid", { name: /patron requests/i })).toBeVisible();
+	await page.getByRole("button", { name: "Export" }).click();
+
+	const download = page.waitForEvent("download");
+	await page.getByRole("menuitem", { name: "Export all as TSV" }).click();
+	expect((await download).suggestedFilename()).toMatch(/\.tsv$/);
 });
