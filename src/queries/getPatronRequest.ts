@@ -70,14 +70,6 @@ export const getPatronRequest = () => gql`
 					# older deployment must select none of it rather than fail the page.
 					${capabilitySelection("agency_scoped_requests", "PatronIdentity")}
 				}
-				audit {
-					id
-					auditDate
-					briefDescription
-					fromStatus
-					toStatus
-					auditData
-				}
 				clusterRecord {
 					id
 					title

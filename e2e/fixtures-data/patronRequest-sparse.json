@@ -25,16 +25,7 @@
 				"suppliers": null,
 				"clusterRecord": null,
 				"patron": null,
-				"requestingIdentity": null,
-				"audit": [
-					{
-						"id": "44444444-4444-4444-8444-444444444444",
-						"auditDate": "2026-09-03T08:15:00Z",
-						"briefDescription": "Moved to ERROR",
-						"fromStatus": "RESOLVED",
-						"toStatus": "ERROR"
-					}
-				]
+				"requestingIdentity": null
 			}
 		]
 	}

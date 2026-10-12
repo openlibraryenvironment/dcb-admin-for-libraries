@@ -600,6 +600,7 @@ const PAGES: Surface[] = [
 				LoadPatronRequest: sparseRequest,
 				// Unmocked, it is aborted, and the app's error handler leaves for /networkError mid-scan.
 				LoadHostLms: { hostLms: { content: [] } },
+				GetAuditsByPatronRequest: audit,
 			});
 		},
 		reveal: async (page) => {
