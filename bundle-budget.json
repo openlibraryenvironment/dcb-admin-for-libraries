@@ -2,8 +2,9 @@
 	"_why": "Gzipped budgets, checked by scripts/check-bundle-budget.mjs after a build: what every page loads first (initialBytes), everything the build emits (totalBytes), and each chunk over nameChunksAboveBytes. Lighthouse cannot reach a route behind Keycloak; this reaches every chunk. Each number is what was measured plus 2% unless its note argues otherwise. Never raise one to make a build pass: cut the weight, or bring a written argument.",
 	"nameChunksAboveBytes": 15000,
 	"initialBytes": 263300,
-	"totalBytes": 977000,
+	"totalBytes": 1255469,
 	"chunks": {
+		"exceljs.min.js": 281900,
 		"DataGrid.js": 198600,
 		"insights.js": 139700,
 		"application.js": 91700,
@@ -20,8 +21,9 @@
 		"useThemeStore.css": 2800
 	},
 	"_notes": {
-		"totalBytes": "Re-derived 2026-10-12 from a measured evaluation, docs/testing.md 'What the bundle budget measures'. 931,176 for this branch, plus 26,665 the two 2.0 feature branches measured against their base (insights-collection 4,440, deployment-locale 22,225), plus 2%. Down from 1,252,000: 303 KB of that was exceljs and rasterizeHTML, which only Excel and chart-image export load and this app offers neither (EXCLUDED_PACKAGES in vite.config.ts).",
+		"totalBytes": "Re-derived 2026-10-12 from a measured evaluation, docs/testing.md 'What the bundle budget measures'. 931,176 for this branch, plus 26,665 the two 2.0 feature branches measured against their base (insights-collection 4,440, deployment-locale 22,225), plus 2%. Down from 1,252,000: 303 KB of that was exceljs and rasterizeHTML, which only Excel and chart-image export load and this app offered neither (EXCLUDED_PACKAGES in vite.config.ts). Raised on 2026-10-12 by exactly what the export wizard measured against its base, 930,613 to 1,209,082 (+278,469), with no further margin: exceljs is back as its own chunk (276,357) for Excel export through the wizard, loaded only when someone exports Excel; the rest is the wizard in the DataGrid chunk (+1,481) and its strings in i18n.js (+372). initialBytes is unchanged: 257,565 before, 258,100 after, the difference being those strings and the bundler's interop helper. docs/export.md.",
 		"initialBytes": "What every page loads before its own route code: index.html's entry, the app shell it boots, and their static imports. 258,099 measured on 2026-10-12, plus 2%. The two 2.0 regressions this file missed both landed here (Insights code on /login, +190 KB; grid definitions on every page, +40 KB).",
+		"exceljs.min.js": "MUI X's Excel library, imported dynamically by src/helpers/dataGrid/xlsxWorkbook.ts and nowhere else (tests/excludedFromBuild.test.ts), so it never joins the initial load or a grid page: only an Excel export downloads it. 276,357 measured on 2026-10-12, plus 2%. It is the whole library. The fork's dist/exceljs.bare.min.js would save about 20 KB by leaving its polyfills out, but only as a deep import into an internal MUI package whose layout is not a contract; not taken.",
 		"insights.js": "Re-derived 2026-10-12: 132,671 measured, plus the 4,440 feat/insights-collection-and-partners measured against its base, plus 2%.",
 		"gridDefinitions.js": "Every server-paged grid's columns and URL allow-list, shared by the grid pages and loaded with them, never with the route tree (tests/gridRoutesValidateSearch.test.ts guards that).",
 		"i18n.js": "The translation catalogue, and nothing else: a feature that speaks to the reader lands here by construction, so growth in this chunk is usually strings, not code.",

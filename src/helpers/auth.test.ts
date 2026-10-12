@@ -7,6 +7,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { authHeaders, clearCacheOnSignOut, createUserManager } from "./auth";
+import { claimedAgencyCodes } from "./exportScope";
 
 const signedInAs = (access_token: string, sub = "librarian") =>
 	new User({
@@ -37,6 +38,36 @@ describe("authHeaders", () => {
 	it("refuses rather than sending a request with no credential", async () => {
 		userManager();
 		await expect(authHeaders()).rejects.toThrow();
+	});
+});
+
+describe("claimedAgencyCodes", () => {
+	const withCode = (code: unknown) =>
+		new User({
+			access_token: "token",
+			token_type: "Bearer",
+			profile: {
+				sub: "librarian",
+				iss: "https://keycloak.invalid",
+				aud: "app",
+				exp: 0,
+				iat: 0,
+				code,
+			},
+		});
+
+	it("is every library the signed-in user's claim names", async () => {
+		const manager = userManager();
+		await manager.storeUser(withCode(["AB1", "ab-2"]));
+		expect(await claimedAgencyCodes()).toEqual(["AB1", "ab-2"]);
+
+		await manager.storeUser(withCode("AB1, CD3"));
+		expect(await claimedAgencyCodes()).toEqual(["AB1", "CD3"]);
+	});
+
+	it("is empty with nobody signed in, never a guess", async () => {
+		userManager();
+		expect(await claimedAgencyCodes()).toEqual([]);
 	});
 });
 

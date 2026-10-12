@@ -1,233 +1,299 @@
-import { RefObject, useState } from "react";
+import { RefObject, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import request from "graphql-request";
 import {
 	GridApiPremium,
-	gridDataRowIdsSelector,
-	gridVisibleColumnFieldsSelector,
+	GridFilterModel,
+	GridSortModel,
+	gridRowSelectionIdsSelector,
 } from "@mui/x-data-grid-premium";
 import { getFileNameForExport } from "@helpers/dataGrid/getFileNameForExport";
-import { convertFileToString } from "@helpers/dataGrid/convertFileToString";
+import {
+	EXPORT_ONLY_COLUMNS,
+	convertFileToString,
+	exportValue,
+} from "@helpers/dataGrid/convertFileToString";
+import {
+	type ExportColumn,
+	type FileExportOptions,
+	exportFileName,
+} from "@helpers/dataGrid/exportOptions";
+import {
+	EXPORT_PAGE_SIZE,
+	ExportTooLargeError,
+	MAX_EXPORT_ROWS,
+	fetchExportPages,
+	type ExportPage,
+} from "@helpers/dataGrid/fetchExportPages";
+import { buildXlsx } from "@helpers/dataGrid/xlsxWorkbook";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
-import { getLocations } from "@queries/getLocations";
+import {
+	ExportScopeError,
+	type ScopedRequestFields,
+	agencyLocationsQuery,
+	claimedAgencyCodes,
+	exportGuard,
+	guardedQuery,
+	isRequestInExportScope,
+	idsQuery,
+} from "@helpers/exportScope";
+import { getAgencyLocationsForExport } from "@queries/getAgencyLocationsForExport";
+import { getLocationForPatronRequestGrid } from "@queries/getLocationForPatronRequestGrid";
+import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { authHeaders } from "@helpers/auth";
 
 /** Whole percent of an export fetched; an empty result is a finished one. */
 export const exportProgressPercent = (loaded: number, total: number): number =>
 	total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 100;
 
+type ExportedRequest = ScopedRequestFields & { id?: string };
+
+export interface ExportResult {
+	severity: "success" | "error" | "warning";
+	text: string;
+}
+
+/** What a request grid hands its toolbar so the export wizard can run. */
+export interface GridExportConfig {
+	run: (options: FileExportOptions) => Promise<void>;
+	defaultFileName: string;
+	/** Fields offered beside the grid's own columns. */
+	extraColumns: ExportColumn[];
+}
+
 interface UsePatronRequestExportProps {
 	apiRef: RefObject<GridApiPremium | null>;
 	dcbApiBase: string;
+	/** The grid's own scope. The library guard is applied whatever this says. */
 	baseQuery: string;
-	exportQuery: string;
-	filterModel: any;
-	sortModel: any;
-	onExportSuccess: (message: string, count: number) => void;
-	onExportError: (message: string) => void;
+	filterModel: GridFilterModel;
+	sortModel: GridSortModel;
+	onExportResult: (result: ExportResult) => void;
 	type: string;
 }
+
+const MIME: Record<"csv" | "tsv", string> = {
+	csv: "text/csv;charset=utf-8",
+	tsv: "text/tab-separated-values;charset=utf-8",
+};
+
+const download = (blob: Blob, fileName: string) => {
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement("a");
+	link.href = url;
+	link.download = fileName;
+	link.style.display = "none";
+	document.body.appendChild(link);
+	link.click();
+	link.remove();
+	// Revoked a tick later: revoking synchronously can cancel the download in some browsers.
+	setTimeout(() => URL.revokeObjectURL(url), 0);
+};
 
 export const usePatronRequestExport = ({
 	apiRef,
 	dcbApiBase,
 	baseQuery,
-	exportQuery,
 	filterModel,
 	sortModel,
-	onExportSuccess,
-	onExportError,
+	onExportResult,
 	type,
 }: UsePatronRequestExportProps) => {
+	const { t } = useTranslation();
 	const [exportProgress, setExportProgress] = useState({
 		isExporting: false,
 		progress: 0,
 		totalRecords: 0,
 	});
+	const controllerRef = useRef<AbortController | null>(null);
 
-	const fetchAllExportData = async (exportMode: string) => {
-		if (!apiRef?.current) return [];
-		setExportProgress({ isExporting: true, progress: 0, totalRecords: 0 });
-		const pageSize = 1000;
-		let allContent: any[] = [];
+	const graphql = async <T>(
+		document: string,
+		variables: Record<string, unknown>,
+		signal: AbortSignal,
+	): Promise<T> =>
+		request<T>({
+			url: `${dcbApiBase}/graphql`,
+			document,
+			variables,
+			requestHeaders: await authHeaders(),
+			signal,
+		});
 
-		const exportQueryString =
-			exportMode === "filtered"
-				? (processGridFilterModel(filterModel, baseQuery, [
-						"status",
-						"description",
-					]) ?? "")
-				: baseQuery;
-
-		const initialData = await request<any>( // also pass as prop
-			`${dcbApiBase}/graphql`,
-			exportQuery,
-			{
-				query: exportQueryString,
-				pagesize: pageSize,
-				pageno: 0,
-				order: sortModel[0]?.field ?? "dateCreated",
-				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
-			},
-			await authHeaders(),
+	// One request: as many agencies as the claim names, each with its own location list.
+	const pickupLocationIdsOf = async (
+		agencyCodes: string[],
+		signal: AbortSignal,
+	): Promise<string[]> => {
+		if (agencyCodes.length === 0) return [];
+		const data = await graphql<{
+			agencies?: {
+				content?: ({ code?: string; locations?: ({ id?: string } | null)[] } | null)[];
+			};
+		}>(
+			getAgencyLocationsForExport,
+			{ query: agencyLocationsQuery(agencyCodes), pageno: 0, pagesize: agencyCodes.length },
+			signal,
 		);
+		return (data.agencies?.content ?? [])
+			.filter((agency) => !!agency?.code && agencyCodes.includes(agency.code))
+			.flatMap((agency) => agency?.locations ?? [])
+			.map((location) => location?.id)
+			.filter((id): id is string => !!id);
+	};
 
-		const totalSize = initialData?.patronRequests?.totalSize || 0;
-		const totalPages = Math.ceil(totalSize / pageSize);
-		allContent = initialData?.patronRequests?.content || [];
-
-		setExportProgress((prev) => ({
-			...prev,
-			totalRecords: totalSize,
-			progress: exportProgressPercent(allContent.length, totalSize),
-		}));
-
-		// Obtain all the pages that exist
-		for (let page = 1; page < totalPages; page++) {
-			const nextPageData = await request<any>(
-				`${dcbApiBase}/graphql`,
-				exportQuery,
-				{
-					query: exportQueryString,
-					pagesize: pageSize,
-					pageno: page,
-					order: sortModel[0]?.field ?? "dateCreated",
-					orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
-				},
-				await authHeaders(),
-			);
-
-			if (nextPageData?.patronRequests?.content) {
-				allContent = [...allContent, ...nextPageData.patronRequests.content];
-				setExportProgress((prev) => ({
-					...prev,
-					progress: exportProgressPercent(allContent.length, totalSize),
-				}));
-			}
-		}
-
-		// We have to put location data in
-
-		const uniqueLocationCodes = Array.from(
-			new Set(
-				allContent
-					.map((request: any) => request.pickupLocationCode)
-					.filter(Boolean),
-			),
-		) as string[];
-
-		if (uniqueLocationCodes.length > 0) {
-			const locationQuery = uniqueLocationCodes
-				.map((id) => `id:${id}`)
-				.join(" OR ");
-
-			try {
-				const locationData = await request<any>(
-					`${dcbApiBase}/graphql`,
-					getLocations,
+	// Display only, after the guard has run: a name the lookup cannot find stays a code.
+	const withPickupLocationNames = async (
+		rows: ExportedRequest[],
+		signal: AbortSignal,
+	): Promise<ExportedRequest[]> => {
+		const ids = [
+			...new Set(rows.map((row) => row.pickupLocationCode).filter(Boolean)),
+		] as string[];
+		const names = new Map<string, string>();
+		try {
+			for (let start = 0; start < ids.length; start += EXPORT_PAGE_SIZE) {
+				const chunk = ids.slice(start, start + EXPORT_PAGE_SIZE);
+				const data = await graphql<{
+					locations?: { content?: { id: string; name?: string }[] };
+				}>(
+					getLocationForPatronRequestGrid,
 					{
-						query: locationQuery,
+						query: idsQuery(chunk),
 						pageno: 0,
-						pagesize: uniqueLocationCodes.length,
+						pagesize: chunk.length,
 						order: "name",
 						orderBy: "ASC",
 					},
-					await authHeaders(),
+					signal,
 				);
-
-				const locationMap = new Map(
-					locationData?.locations?.content?.map((location: any) => [
-						location.id,
-						location.name,
-					]) || [],
-				);
-
-				allContent = allContent.map((item: any) => ({
-					...item,
-					pickupLocationCode:
-						locationMap.get(item.pickupLocationCode) ||
-						item.pickupLocationCode,
-					pickupLocationName:
-						locationMap.get(item.pickupLocationCode) ||
-						item.pickupLocationCode,
-				}));
-			} catch {
-				// Location names are a display nicety; the export proceeds with
-				// the codes it already has rather than failing.
+				for (const location of data.locations?.content ?? []) {
+					if (location.name) names.set(location.id, location.name);
+				}
 			}
+		} catch (error) {
+			if (signal.aborted) throw error;
 		}
-
-		return allContent;
+		return rows.map((row) => ({
+			...row,
+			pickupLocationCode:
+				(row.pickupLocationCode && names.get(row.pickupLocationCode)) ||
+				row.pickupLocationCode,
+		}));
 	};
 
-	const handleExport = async (fileType: string, exportMode: string) => {
-		if (!apiRef?.current) return;
-		// The rows on this page, which can be fewer than the page size.
-		const currentCount = gridDataRowIdsSelector(apiRef).length;
-		if (exportMode === "current") {
-			apiRef.current.exportDataAsCsv();
-			onExportSuccess(
-				`Successfully exported ${currentCount} records.`,
-				currentCount,
-			);
-			return;
+	const gridQueryFor = (options: FileExportOptions): string => {
+		if (options.scope === "selected") {
+			const ids = apiRef.current
+				? Array.from(gridRowSelectionIdsSelector(apiRef).keys())
+				: [];
+			return idsQuery(ids);
 		}
-		if (exportMode === "print") {
-			apiRef.current.exportDataAsPrint();
-			onExportSuccess(
-				`Successfully exported ${currentCount} records.`,
-				currentCount,
-			);
-			return;
+		if (options.scope === "filtered") {
+			return processGridFilterModel(filterModel, baseQuery, ["status", "description"]);
 		}
+		return baseQuery;
+	};
+
+	const run = async (options: FileExportOptions) => {
+		if (controllerRef.current) return;
+		const controller = new AbortController();
+		controllerRef.current = controller;
+		const { signal } = controller;
+		setExportProgress({ isExporting: true, progress: 0, totalRecords: 0 });
 
 		try {
-			const allContent = await fetchAllExportData(exportMode);
-			const delimiter = fileType === "csv" ? "," : "\t";
-			const fileName = `${getFileNameForExport(type, filterModel)}.${fileType}`;
-
-			const visibleColumns = gridVisibleColumnFieldsSelector(apiRef);
-			const usefulColumns =
-				exportMode === "all" || exportMode === "default"
-					? null
-					: visibleColumns.filter(
-							(value) =>
-								value !== "__detail_panel_toggle__" && value !== "__check__",
-						);
-
-			const dataString = convertFileToString(
-				allContent,
-				delimiter,
-				"patronRequests",
-				usefulColumns,
+			const agencyCodes = await claimedAgencyCodes();
+			const guard = exportGuard(
+				agencyCodes,
+				await pickupLocationIdsOf(agencyCodes, signal),
 			);
+			const query = guardedQuery(guard, gridQueryFor(options));
+			const document = getPatronRequestsForExport();
+			const order = sortModel[0]?.field ?? "dateCreated";
+			const orderBy = sortModel[0]?.sort?.toUpperCase() ?? "DESC";
 
-			const blob = new Blob([dataString], {
-				type: `text/${fileType};charset=utf-8;`,
+			// A request matched through two suppliers comes back twice; it is exported once.
+			const seen = new Set<string>();
+			const rows = await fetchExportPages<ExportedRequest>({
+				fetchPage: async (pageno) => {
+					const data = await graphql<{ patronRequests?: ExportPage<ExportedRequest> }>(
+						document,
+						{ query, pagesize: EXPORT_PAGE_SIZE, pageno, order, orderBy },
+						signal,
+					);
+					return data.patronRequests ?? { totalSize: 0, content: [] };
+				},
+				keep: (row) => {
+					if (!isRequestInExportScope(row, guard)) return false;
+					if (!row.id || seen.has(row.id)) return false;
+					seen.add(row.id);
+					return true;
+				},
+				signal,
+				onProgress: (loaded, total) =>
+					setExportProgress({
+						isExporting: true,
+						totalRecords: total,
+						progress: exportProgressPercent(loaded, total),
+					}),
 			});
-			const link = document.createElement("a");
-			if (link.download !== undefined) {
-				const url = URL.createObjectURL(blob);
-				link.setAttribute("href", url);
-				link.setAttribute("download", fileName);
-				link.style.visibility = "hidden";
-				document.body.appendChild(link);
-				link.click();
-				document.body.removeChild(link);
+			const named = await withPickupLocationNames(rows, signal);
+			signal.throwIfAborted();
 
-				onExportSuccess(
-					`Successfully exported ${allContent.length} records.`,
-					allContent.length,
-				);
+			const blob =
+				options.format === "xlsx"
+					? await buildXlsx(
+							options.columns,
+							named.map((row) =>
+								options.columns.map((column) => exportValue(row, column.field)),
+							),
+						)
+					: new Blob(
+							[
+								convertFileToString(
+									named,
+									options.format === "csv" ? "," : "\t",
+									options.columns,
+								),
+							],
+							{ type: MIME[options.format] },
+						);
+			signal.throwIfAborted();
+			download(blob, exportFileName(options.fileName, options.format));
+			onExportResult({
+				severity: "success",
+				text: t("ui.data_grid.export.success", { count: named.length }),
+			});
+		} catch (error) {
+			if (signal.aborted) {
+				onExportResult({ severity: "warning", text: t("ui.data_grid.export.cancelled") });
+			} else if (error instanceof ExportTooLargeError) {
+				onExportResult({
+					severity: "warning",
+					text: t("ui.data_grid.export.too_large", {
+						count: error.totalSize,
+						max: MAX_EXPORT_ROWS,
+					}),
+				});
+			} else if (error instanceof ExportScopeError) {
+				onExportResult({ severity: "error", text: t("ui.data_grid.export.scope_failed") });
+			} else {
+				onExportResult({ severity: "error", text: t("ui.data_grid.export.failed") });
 			}
-		} catch {
-			onExportError("Failed to export records.");
 		} finally {
+			controllerRef.current = null;
 			setExportProgress({ isExporting: false, progress: 0, totalRecords: 0 });
 		}
 	};
 
-	return {
-		exportProgress,
-		handleExport,
+	const cancelExport = () => controllerRef.current?.abort();
+
+	const exportConfig: GridExportConfig = {
+		run,
+		defaultFileName: getFileNameForExport(type),
+		extraColumns: EXPORT_ONLY_COLUMNS(),
 	};
+
+	return { exportProgress, exportConfig, cancelExport };
 };

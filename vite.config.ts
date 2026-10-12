@@ -4,11 +4,9 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 /// <reference types="vitest/config" />
 
-// Loaded only by features this app does not offer, so never by a browser; left in, they were
-// 303 KB gzipped of a 1,260 KB build. tests/excludedFromBuild.test.ts fails if a feature returns.
+// Loaded only by features this app does not offer, so never by a browser. Excel export is
+// offered, through the export wizard only. tests/excludedFromBuild.test.ts fails if either changes.
 const EXCLUDED_PACKAGES = [
-	// Excel export: DataGrid sets excelOptions.disableToolbarButton and nothing calls exportDataAsExcel.
-	"@mui/x-internal-exceljs-fork",
 	// Chart image export: no chart renders a toolbar or calls exportAsImage.
 	"rasterizehtml",
 ];
