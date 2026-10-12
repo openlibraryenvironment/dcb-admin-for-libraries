@@ -326,3 +326,101 @@ test("charts carry their numbers as a table", async ({ app, page }) => {
 	await expect(table).toBeAttached({ timeout: 15000 });
 	await expect(table.getByRole("columnheader").first()).toBeAttached();
 });
+
+/**
+ * One per chart that had no table. Region and zone are pinned so each expected value is
+ * a literal rather than a second copy of the formatting the panel does.
+ */
+test.describe("each chart's table carries its figures", () => {
+	test.use({ locale: "en-GB", timezoneId: "UTC" });
+
+	const openSubject = async (
+		app: import("./fixtures/test").AppFixture,
+		page: import("@playwright/test").Page,
+		subject: string,
+		lastPanel: string,
+		features: string[] = [],
+	) => {
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS", ...features]);
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+		await page.goto(`/insights?tab=${subject}`);
+		await scrollUntilPresent(page, page.getByRole("heading", { name: lastPanel }));
+	};
+
+	const row = (table: import("@playwright/test").Locator, header: string) =>
+		table.getByRole("row").filter({
+			has: table.page().getByRole("rowheader", { name: header, exact: true }),
+		});
+
+	test("demand by pickup location and by patron group", async ({ app, page }) => {
+		await openSubject(app, page, "demand", "Demand by patron group");
+
+		const pickup = page.getByRole("table", { name: "Demand by pickup location" });
+		await expect(pickup.getByRole("columnheader")).toHaveText([
+			"Pickup location",
+			"Requests",
+		]);
+		await expect(row(pickup, "Main Library").getByRole("cell")).toHaveText([
+			"512",
+		]);
+
+		const groups = page.getByRole("table", { name: "Demand by patron group" });
+		await expect(groups.getByRole("columnheader")).toHaveText([
+			"Patron group",
+			"Requests",
+		]);
+		await expect(row(groups, "Undergraduate").getByRole("cell")).toHaveText([
+			"488",
+		]);
+	});
+
+	test("demand by day and hour", async ({ app, page }) => {
+		await openSubject(app, page, "demand", "Demand by patron group");
+
+		const heatmap = page.getByRole("table", { name: "When requests arrive" });
+		const headers = heatmap.getByRole("columnheader");
+		await expect(headers).toHaveCount(25);
+		await expect(headers.first()).toHaveText("Day");
+
+		const column = (await headers.allTextContents()).indexOf("14:00");
+		expect(column).toBeGreaterThan(0);
+
+		// dayOfWeek 3 in the fixture, counted from Sunday as Postgres does.
+		const wednesday = row(heatmap, "Wed").getByRole("cell");
+		await expect(wednesday).toHaveCount(24);
+		await expect(wednesday.nth(column - 1)).toHaveText("41");
+		await expect(wednesday.nth(column - 2)).toHaveText("0");
+	});
+
+	test("collection analysis, by the dimension chosen", async ({ app, page }) => {
+		await openSubject(app, page, "demand", "Demand by patron group");
+
+		const collection = page.getByRole("table", { name: "Collection analysis" });
+		await expect(collection.getByRole("columnheader")).toHaveText([
+			"Format",
+			"Requests",
+		]);
+		await expect(row(collection, "Book").getByRole("cell")).toHaveText(["704"]);
+	});
+
+	test("duration trends", async ({ app, page }) => {
+		await openSubject(app, page, "trends", "How durations are moving", [
+			"VITE_FEATURE_INSIGHTS_TRENDS",
+		]);
+
+		const durations = page.getByRole("table", {
+			name: "How durations are moving",
+		});
+		await expect(durations.getByRole("columnheader")).toHaveText([
+			"Period starting",
+			"Median",
+			"95th percentile",
+		]);
+		await expect(row(durations, "2025-11-02").getByRole("cell")).toHaveText([
+			"41.7 hrs",
+			"4.9 days",
+		]);
+	});
+});

@@ -15,12 +15,14 @@ import { BarChartPro } from "@mui/x-charts-pro";
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
 
+import ChartDataTable from "./ChartDataTable";
 import PanelState from "./PanelState";
 import {
 	demandByDimensionQueryOptions,
 	StatsParams,
 	CollectionDimension,
 } from "@helpers/statsApi";
+import { formatNumber } from "@helpers/formatters";
 
 const CHART_HEIGHT = 340;
 const DIMENSIONS: CollectionDimension[] = [
@@ -89,19 +91,29 @@ export default function CollectionDimensionPanel({
 					height={CHART_HEIGHT}
 				>
 					{() => (
-						<BarChartPro
-							height={CHART_HEIGHT}
-							layout="horizontal"
-							yAxis={[{ scaleType: "band", data: rows.map((r) => r.category) }]}
-							series={[
-								{
-									data: rows.map((r) => r.requestCount),
-									label: t("insights.charts.collection_dimension.series"),
-									color: categorical[0],
-								},
-							]}
-							margin={{ left: 160 }}
-						/>
+						<>
+							<BarChartPro
+								height={CHART_HEIGHT}
+								layout="horizontal"
+								yAxis={[{ scaleType: "band", data: rows.map((r) => r.category) }]}
+								series={[
+									{
+										data: rows.map((r) => r.requestCount),
+										label: t("insights.charts.collection_dimension.series"),
+										color: categorical[0],
+									},
+								]}
+								margin={{ left: 160 }}
+							/>
+							<ChartDataTable
+								caption={t("insights.charts.collection_dimension.title")}
+								columns={[
+									t(`insights.charts.collection_dimension.dim_${dimension}`),
+									t("insights.charts.collection_dimension.series"),
+								]}
+								rows={rows.map((r) => [r.category, formatNumber(r.requestCount)])}
+							/>
+						</>
 					)}
 				</PanelState>
 			</CardContent>

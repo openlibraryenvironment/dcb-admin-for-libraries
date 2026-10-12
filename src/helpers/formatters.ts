@@ -113,6 +113,17 @@ export const formatLongDateTime = (
 		new Date(value),
 	);
 
+/**
+ * An hour with no date: "14:00", or "2:00 PM" where the region keeps a twelve-hour
+ * clock. The hour is written as given; formatting in UTC is what stops the machine's
+ * own zone shifting it.
+ */
+export const formatHourOfDay = (hour: number, locale?: string): string =>
+	dateFormat(
+		{ hour: "numeric", minute: "2-digit", timeZone: "UTC" },
+		locale,
+	).format(new Date(Date.UTC(2023, 0, 1, hour)));
+
 /** UTC is what dcb-service records; see docs/formatting.md. */
 const SERVICE_TIME_ZONE = "UTC";
 

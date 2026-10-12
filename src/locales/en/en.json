@@ -402,16 +402,19 @@
 			"demand_by_patron_group": {
 				"title": "Demand by patron group",
 				"subtitle": "Which patron categories drive requesting.",
-				"series": "Requests"
+				"series": "Requests",
+				"category": "Patron group"
 			},
 			"demand_by_pickup": {
 				"title": "Demand by pickup location",
 				"subtitle": "Where patrons collect their requests.",
-				"series": "Requests"
+				"series": "Requests",
+				"category": "Pickup location"
 			},
 			"demand_heatmap": {
 				"title": "When requests arrive",
-				"subtitle": "Request volume by day of week and hour of day (server time zone)."
+				"subtitle": "Request volume by day of week and hour of day (server time zone).",
+				"day": "Day"
 			},
 			"failure_taxonomy": {
 				"reason": "Reason",
@@ -519,7 +522,8 @@
 				"supplier_response": "Supplier response",
 				"transit": "Time in transit",
 				"p50": "Median",
-				"p95": "95th percentile"
+				"p95": "95th percentile",
+				"period": "Period starting"
 			}
 		},
 		"sections": {
