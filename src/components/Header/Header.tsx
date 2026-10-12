@@ -9,10 +9,11 @@ import Button from "@mui/material/Button";
 import { useTranslation } from "react-i18next";
 import Avatar from "@mui/material/Avatar";
 import { Tooltip, useTheme } from "@mui/material";
-import { useMemo } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import { getLibraryNames } from "@queries/getLibraryNames";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
 import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
 import { assetUrl } from "@helpers/appBase";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
@@ -22,13 +23,6 @@ export const Header = () => {
 	const navigate = useNavigate();
 	const auth = useAuth();
 
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${auth.user?.access_token}`,
-		}),
-		[auth.user?.access_token]
-	);
-
 	// The library currently being looked at, which for almost everybody is their only
 	// one - see useAgencyCodes
 	const { agencyCode: code } = useAgencyCodes();
@@ -37,7 +31,7 @@ export const Header = () => {
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const { data } = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryName", headers, code, cfg.VITE_DCB_API_BASE],
+		queryKey: queryKeys.library.name(cfg.VITE_DCB_API_BASE, code ?? ""),
 		enabled: Boolean(code) && Boolean(cfg.VITE_DCB_API_BASE),
 		placeholderData: keepPreviousData,
 		// A library's name changes at the pace of onboarding, and this renders on
@@ -48,7 +42,7 @@ export const Header = () => {
 				cfg.VITE_DCB_API_BASE + "/graphql",
 				getLibraryNames,
 				{ query: "agencyCode:" + code, pagesize: 1, pageno: 0 },
-				headers
+				await authHeaders()
 			),
 	});
 

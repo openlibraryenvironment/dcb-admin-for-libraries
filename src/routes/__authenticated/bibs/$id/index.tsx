@@ -20,10 +20,12 @@ import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { getBibMainDetails } from "@queries/getBib";
 import { getBibSourceRecord } from "@queries/getBibSourceRecord";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 
@@ -41,11 +43,7 @@ function RouteComponent() {
 	const isValidId = isUuidShaped(id);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const DCB_API_BASE = cfg.VITE_DCB_API_BASE + "/graphql";
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token]
-	);
+	const apiBase = cfg.VITE_DCB_API_BASE;
 	const [isSourceExpanded, setIsSourceExpanded] = useState(false);
 	const [isCanonicalExpanded, setIsCanonicalExpanded] = useState(false);
 
@@ -54,10 +52,10 @@ function RouteComponent() {
 		isLoading: bibDataLoading,
 		isError: bibDataError,
 	} = useQuery<BibsQueryData>({
-		queryKey: ["bibRecord", id, headers, DCB_API_BASE],
+		queryKey: queryKeys.bibs.detail(apiBase, id),
 		queryFn: async () =>
 			request(
-				DCB_API_BASE,
+				apiBase + "/graphql",
 				getBibMainDetails,
 				{
 					query: "id:" + id,
@@ -66,7 +64,7 @@ function RouteComponent() {
 					orderBy: "lastUpdated",
 					order: "ASC",
 				},
-				headers
+				await authHeaders()
 			),
 		enabled: !!auth.user && isValidId,
 	});
@@ -76,9 +74,14 @@ function RouteComponent() {
 		isLoading: isSourceLoading,
 		isError: isSourceError,
 	} = useQuery<BibsQueryData>({
-		queryKey: ["bib", "sourceRecord", id, DCB_API_BASE, headers],
+		queryKey: queryKeys.bibs.sourceRecord(apiBase, id),
 		queryFn: async () =>
-			request(DCB_API_BASE, getBibSourceRecord, { query: "id:" + id }, headers),
+			request(
+				apiBase + "/graphql",
+				getBibSourceRecord,
+				{ query: "id:" + id },
+				await authHeaders()
+			),
 		enabled: !!auth.user && isValidId && isSourceExpanded,
 	});
 	const bibRecord = bibData?.sourceBibs?.content?.[0];

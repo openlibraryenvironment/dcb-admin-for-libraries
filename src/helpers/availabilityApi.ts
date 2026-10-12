@@ -15,6 +15,9 @@ export type AvailabilityFilters = "none";
 export const availabilityKeys = {
 	cluster: (apiBase: string, clusterId: string, filters?: AvailabilityFilters) =>
 		["availability", apiBase, clusterId, filters ?? "default"] as const,
+	/** After a checkout: its own entry, because the record's holds no due date yet. */
+	checkedOut: (apiBase: string, patronRequestId: string, clusterId: string) =>
+		["availability", "checkedOut", apiBase, patronRequestId, clusterId] as const,
 };
 
 export const fetchClusterAvailability = async (

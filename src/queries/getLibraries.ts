@@ -32,7 +32,6 @@ export const getLibraries = gql`
 					hostLms {
 						id
 						code
-						clientConfig
 						lmsClientClass
 					}
 					isSupplyingAgency
@@ -41,7 +40,6 @@ export const getLibraries = gql`
 				secondHostLms {
 					id
 					code
-					clientConfig
 					lmsClientClass
 				}
 				membership {

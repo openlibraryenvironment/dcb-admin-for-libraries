@@ -805,7 +805,6 @@
 			"title": "Service for {{name}}"
 		},
 		"short_name": "Short name",
-		"site_designation": "Site designation",
 		"load_failed": "Your library's details could not be loaded. Try reloading the page.",
 		"statistics": {
 			"loading": "Loading",

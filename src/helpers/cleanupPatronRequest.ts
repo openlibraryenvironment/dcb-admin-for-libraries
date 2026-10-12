@@ -1,4 +1,5 @@
 import axios from "axios";
+import { authHeaders } from "@helpers/auth";
 import { cleanupStatuses } from "@constants/statuses/cleanupStatuses";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 
@@ -70,7 +71,6 @@ export type CleanupOutcome =
  */
 export const cleanupPatronRequest = async (
 	apiBase: string,
-	headers: Record<string, string>,
 	request: CleanableRequest | undefined,
 	{ refreshFirst = false }: { refreshFirst?: boolean } = {},
 ): Promise<CleanupOutcome> => {
@@ -78,10 +78,12 @@ export const cleanupPatronRequest = async (
 
 	try {
 		if (refreshFirst && !untrackedStatuses.includes(String(request?.status))) {
-			await axios.post(`${base}/update`, {}, { headers });
+			await axios.post(`${base}/update`, {}, { headers: await authHeaders() });
 		}
 
-		await axios.post(`${base}/transition/cleanup`, {}, { headers });
+		await axios.post(`${base}/transition/cleanup`, {}, {
+			headers: await authHeaders(),
+		});
 
 		return { kind: "cleaned" };
 	} catch (error) {

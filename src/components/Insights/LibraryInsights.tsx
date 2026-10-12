@@ -35,7 +35,7 @@ export default function LibraryInsights() {
 	const allowed = (auth.user?.profile?.roles ?? []).includes("LIBRARY_ADMIN");
 
 	const { data, isLoading, error } = useQuery({
-		...ownLibraryQueryOptions(cfg, auth, agencyCode ?? ""),
+		...ownLibraryQueryOptions(cfg, agencyCode ?? ""),
 		enabled: allowed && !!agencyCode,
 	});
 

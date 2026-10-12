@@ -19,10 +19,7 @@ import {
 } from "@helpers/dataGrid/utilities";
 import { isFunctionalSettingEnabled } from "@helpers/findFunctionalSetting";
 import { FunctionalSettingStatus } from "@models/FunctionalSetting";
-import {
-	LibrariesQueryData,
-	ReferenceValueMappingsQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { ReferenceValueMappingsQueryData } from "@models/ReactQueryHelperTypes";
 import { Cancel, Delete, Edit, Save } from "@mui/icons-material";
 import {
 	GridActionsCellItem,
@@ -39,7 +36,9 @@ import {
 } from "@mui/x-data-grid-premium";
 import { deleteReferenceValueMapping } from "@mutations/deleteReferenceValueMapping";
 import { updateReferenceValueMapping } from "@mutations/updateReferenceValueMapping";
-import { getLibrary } from "@queries/getLibrary";
+import { gridPage, queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { libraryQueryOptions } from "@helpers/sharedQueries";
 import { getMappings } from "@queries/getMappings";
 import { UserFacingError, userFacingReason } from "@helpers/userFacingReason";
 import { useAnnounce } from "@/hooks/useAnnouncer";
@@ -48,7 +47,6 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/mappings")({
@@ -72,14 +70,9 @@ interface DeleteMappingResponse {
 }
 
 function RouteComponent() {
-	const auth = useAuth();
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
 	const { cfg } = useRouter().options.context as { cfg: any };
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token]
-	);
 
 	const gridId = "referenceValueMappings";
 	const storedState = {
@@ -133,32 +126,17 @@ function RouteComponent() {
 		setSnackbarOpen(false);
 	};
 
-	const DCB_URL = cfg.VITE_DCB_API_BASE + "/graphql";
+	const apiBase = cfg.VITE_DCB_API_BASE;
+	const DCB_URL = apiBase + "/graphql";
 	const { agencyCode: code } = useAgencyCodes();
 
-	// Library query
 	const {
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", headers, code, DCB_URL],
-		queryFn: async () =>
-			request(
-				DCB_URL,
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
-				headers
-			),
-	});
+	} = useQuery(libraryQueryOptions(apiBase, code ?? ""));
 	const libraryHostLmsCode =
-		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.code;
+		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.code ?? "";
 
 	// If the DENY_LIBRARY_MAPPING_EDIT setting is not explicitly disabled, library users cannot edit their mappings.
 	// As such, for editing to be enabled here, DENY_LIBRARY_MAPPING_EDIT must be disabled
@@ -168,7 +146,7 @@ function RouteComponent() {
 			"DENY_LIBRARY_MAPPING_EDIT"
 		) == FunctionalSettingStatus.DISABLED;
 
-	// Mappings query - using debounced filter model
+	const grid = gridPage(debouncedFilterModel, paginationModel, sortModel);
 	const {
 		data: mappingsData,
 		isLoading: mappingsLoading,
@@ -176,34 +154,29 @@ function RouteComponent() {
 		error,
 		isError: mappingsError,
 	} = useQuery<ReferenceValueMappingsQueryData>({
-		queryKey: [
-			gridId,
-			libraryHostLmsCode,
-			paginationModel,
-			debouncedFilterModel, // Use debounced filter model
-			sortModel,
-			headers,
-			DCB_URL,
-			sortModel[0]?.field,
-			sortModel[0]?.sort,
-		],
+		queryKey: queryKeys.mappings.list(apiBase, libraryHostLmsCode, grid),
 		queryFn: async () => {
 			const baseQuery = `(toContext:"${libraryHostLmsCode}" OR fromContext:${libraryHostLmsCode}) AND NOT deleted:true`;
 			// Second Host LMS to come.
 			const queryVariables = {
 				query:
-					processGridFilterModel(debouncedFilterModel, baseQuery, [
+					processGridFilterModel(grid.filterModel, baseQuery, [
 						"fromValue",
 						"toValue",
 						"fromCategory",
 						"toCategory",
 					]) ?? "",
-				pagesize: clampPageSize(paginationModel.pageSize),
-				pageno: paginationModel.page ?? 0,
-				order: sortModel[0]?.field ?? "lastImported",
-				orderBy: getSortOrderForServer(sortModel[0]?.sort) ?? "DESC",
+				pagesize: clampPageSize(grid.pageSize),
+				pageno: grid.page ?? 0,
+				order: grid.sortField ?? "lastImported",
+				orderBy: getSortOrderForServer(grid.sortDirection) ?? "DESC",
 			};
-			return request(DCB_URL, getMappings, queryVariables, headers);
+			return request(
+				apiBase + "/graphql",
+				getMappings,
+				queryVariables,
+				await authHeaders()
+			);
 		},
 		enabled: !!libraryHostLmsCode,
 		refetchOnWindowFocus: true,
@@ -217,15 +190,17 @@ function RouteComponent() {
 		Error,
 		{ input: any }
 	>({
-		mutationFn: (variables: { input: any }) =>
+		mutationFn: async (variables: { input: any }) =>
 			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+				DCB_URL,
 				updateReferenceValueMapping,
 				variables,
-				headers
+				await authHeaders()
 			),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [gridId, libraryHostLmsCode] });
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.mappings.forHostLms(apiBase, libraryHostLmsCode),
+			});
 		},
 	});
 
@@ -240,7 +215,7 @@ function RouteComponent() {
 				DCB_URL,
 				deleteReferenceValueMapping,
 				{ input },
-				headers
+				await authHeaders()
 			);
 			// A refusal can come back as success:false with a 200, not only as an error.
 			if (!result.deleteReferenceValueMapping?.success) {
@@ -249,7 +224,9 @@ function RouteComponent() {
 			return result;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [gridId, libraryHostLmsCode] });
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.mappings.forHostLms(apiBase, libraryHostLmsCode),
+			});
 			announce(t("mappings.deleted"));
 		},
 		onError: (error) => {

@@ -21,12 +21,13 @@ import {
 	Typography,
 } from "@mui/material";
 import axios from "axios";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
 
-import { getLibraries } from "@queries/getLibraries";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
 import { getLocations } from "@queries/getLocations";
 import { getPatronRequestEssentials } from "@queries/getPatronRequestEssentials";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
@@ -40,10 +41,7 @@ import { useCheckedOutDueDate } from "@/hooks/useCheckedOutDueDate";
 import StepAnnouncement from "@components/StepAnnouncement/StepAnnouncement";
 import { AutocompleteOption } from "@models/AutocompleteOption";
 import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocompleteOption";
-import {
-	LibrariesQueryData,
-	PatronRequestQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import { Library } from "@models/Library";
 import { Agency } from "@models/Agency";
 import { LibraryGroupMember } from "@models/LibraryGroupMember";
@@ -62,17 +60,12 @@ export default function QuickWalkUpRequest({
 	onClose: () => void;
 }) {
 	const { t } = useTranslation();
-	const auth = useAuth();
 	const navigate = useNavigate();
 	const { cfg } = useRouter().options.context;
 	// The library the staff member is acting for - see useAgencyCodes
 	const { agencyCode: selectedAgencyCode } = useAgencyCodes();
 	const staffAgencyCode = selectedAgencyCode ?? "";
 
-	const headers = useMemo(
-		() => ({ Authorization: `Bearer ${auth.user?.access_token}` }),
-		[auth.user?.access_token],
-	);
 
 	const [alert, setAlert] = useState<{
 		open: boolean;
@@ -125,23 +118,9 @@ export default function QuickWalkUpRequest({
 		name: ["patronBarcode", "agencyCode", "itemBarcode"],
 	});
 
-	const { data: librariesData, isLoading: librariesLoading } =
-		useQuery<LibrariesQueryData>({
-			queryKey: ["librariesInfo", headers, cfg.VITE_DCB_API_BASE],
-			queryFn: () =>
-				request(
-					`${cfg.VITE_DCB_API_BASE}/graphql`,
-					getLibraries,
-					{
-						pageno: 0,
-						pagesize: REFERENCE_LIST_PAGE_SIZE,
-						order: "fullName",
-						orderBy: "ASC",
-						query: "",
-					},
-					headers,
-				),
-		});
+	const { data: librariesData, isLoading: librariesLoading } = useQuery(
+		allLibrariesQueryOptions(cfg.VITE_DCB_API_BASE),
+	);
 
 	// Memoised because `?? []` allocates a new array on every render, which made
 	// every memo keyed on it recompute every render.
@@ -181,8 +160,11 @@ export default function QuickWalkUpRequest({
 		: "";
 	const { data: pickupLocations, isLoading: pickupLocationsLoading } = useQuery(
 		{
-			queryKey: ["locations", locationQuery, headers, cfg.VITE_DCB_API_BASE],
-			queryFn: () =>
+			queryKey: queryKeys.locations.reference(
+				cfg.VITE_DCB_API_BASE,
+				locationQuery,
+			),
+			queryFn: async () =>
 				request(
 					`${cfg.VITE_DCB_API_BASE}/graphql`,
 					getLocations,
@@ -193,7 +175,7 @@ export default function QuickWalkUpRequest({
 						order: "name",
 						orderBy: "ASC",
 					},
-					headers,
+					await authHeaders(),
 				),
 			enabled: !!staffLibraryOption?.agencyId,
 		},
@@ -212,18 +194,16 @@ export default function QuickWalkUpRequest({
 	);
 
 	const { data: patronRequestData } = useQuery<PatronRequestQueryData>({
-		queryKey: [
-			"patronRequestEssentials",
-			patronRequestId,
-			headers,
+		queryKey: queryKeys.patronRequests.essentials(
 			cfg.VITE_DCB_API_BASE,
-		],
-		queryFn: () =>
+			patronRequestId,
+		),
+		queryFn: async () =>
 			request(
 				`${cfg.VITE_DCB_API_BASE}/graphql`,
 				getPatronRequestEssentials,
 				{ query: `id:${patronRequestId}` },
-				headers,
+				await authHeaders(),
 			),
 		enabled: patronRequestWaiting && !!patronRequestId,
 		refetchInterval: (query) =>
@@ -239,7 +219,6 @@ export default function QuickWalkUpRequest({
 		checkoutCompleted,
 		isCheckedOutItem: (item) => item.barcode === itemBarcode,
 		apiBase: cfg.VITE_DCB_API_BASE,
-		headers,
 	});
 
 	useEffect(() => {
@@ -280,10 +259,10 @@ export default function QuickWalkUpRequest({
 		unknown,
 		{ patronPrinciple: string; agencyCode: string }
 	>({
-		mutationFn: (payload) =>
+		mutationFn: async (payload) =>
 			axios
 				.post(`${cfg.VITE_DCB_API_BASE}/patron/auth/lookup`, payload, {
-					headers,
+					headers: await authHeaders(),
 				})
 				.then((res) => res.data),
 		onSuccess: (data) => {
@@ -340,7 +319,7 @@ export default function QuickWalkUpRequest({
 			const response = await axios.post(
 				`${cfg.VITE_DCB_API_BASE}/patrons/requests/place/walkup`,
 				payload,
-				{ headers },
+				{ headers: await authHeaders() },
 			);
 			return response.data;
 		},

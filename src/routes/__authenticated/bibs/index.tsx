@@ -14,10 +14,7 @@ import {
 	checkIfFiltering,
 	processGridFilterModel,
 } from "@helpers/dataGrid/utilities";
-import {
-	BibsQueryData,
-	LibrariesQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { BibsQueryData } from "@models/ReactQueryHelperTypes";
 import {
 	GridColumnVisibilityModel,
 	GridFilterModel,
@@ -26,16 +23,17 @@ import {
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
 import { getBibs } from "@queries/getBibs";
-import { getLibrary } from "@queries/getLibrary";
+import { gridPage, queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { libraryQueryOptions } from "@helpers/sharedQueries";
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	useRouter,
 } from "@tanstack/react-router";
 import request from "graphql-request";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/bibs/")({
@@ -45,18 +43,9 @@ export const Route = createFileRoute("/__authenticated/bibs/")({
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	const auth = useAuth();
-
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
-	const token = auth?.user?.access_token;
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${token}`,
-		}),
-		[token]
-	);
 	const gridId = "bibs";
 	const storedState = {
 		sort: useGridStore((state) => state.sortModel[gridId]),
@@ -141,25 +130,10 @@ function RouteComponent() {
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery<LibrariesQueryData>({
-		queryKey: ["libraryInfo", headers, code, dcbApiBase],
-		queryFn: async () =>
-			request(
-				`${dcbApiBase}/graphql`,
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
-				headers
-			),
-	});
+	} = useQuery(libraryQueryOptions(dcbApiBase, code ?? ""));
 	const sourceSystemId =
-		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.id;
-	// Bib Columns
+		librariesData?.libraries?.content?.[0]?.agency?.hostLms?.id ?? "";
+	const grid = gridPage(debouncedFilterModel, paginationModel, sortModel);
 
 	const {
 		data: bibsData,
@@ -168,31 +142,25 @@ function RouteComponent() {
 		error,
 		isFetching,
 	} = useQuery<BibsQueryData>({
-		queryKey: [
-			"getBibs",
-			dcbApiBase,
-			headers,
-			sourceSystemId,
-			debouncedFilterModel, // Use debounced filter model
-			paginationModel.pageSize,
-			paginationModel.page,
-			sortModel[0]?.field,
-			sortModel[0]?.sort,
-		],
+		queryKey: queryKeys.bibs.list(dcbApiBase, sourceSystemId, grid),
 		queryFn: async () => {
 			const baseQuery = `sourceSystemId:${sourceSystemId}`;
 			const queryVariables = {
 				query:
-					processGridFilterModel(debouncedFilterModel, baseQuery, ["title"]) ??
-					"",
-				pagesize: clampPageSize(paginationModel.pageSize),
-				pageno: paginationModel.page ?? 0,
-				order: sortModel[0]?.field ?? "dateUpdated",
-				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+					processGridFilterModel(grid.filterModel, baseQuery, ["title"]) ?? "",
+				pagesize: clampPageSize(grid.pageSize),
+				pageno: grid.page ?? 0,
+				order: grid.sortField ?? "dateUpdated",
+				orderBy: grid.sortDirection?.toUpperCase() ?? "DESC",
 			};
-			return request(`${dcbApiBase}/graphql`, getBibs, queryVariables, headers);
+			return request(
+				`${dcbApiBase}/graphql`,
+				getBibs,
+				queryVariables,
+				await authHeaders(),
+			);
 		},
-		enabled: !!token && !!dcbApiBase && !!sourceSystemId,
+		enabled: !!dcbApiBase && !!sourceSystemId,
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		// Keep previous data while new data is loading (v5 syntax)

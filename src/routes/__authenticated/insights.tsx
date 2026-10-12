@@ -76,13 +76,13 @@ export const Route = createFileRoute("/__authenticated/insights")({
 		if (!agencyCode) return;
 
 		const libraryData = await queryClient.ensureQueryData(
-			ownLibraryQueryOptions(cfg, auth, agencyCode),
+			ownLibraryQueryOptions(cfg, agencyCode),
 		);
 
 		const libraryCode = hostLmsCodeOf(libraryData);
 		if (!libraryCode) return;
 
-		const client = createRestClient(cfg, auth);
+		const client = createRestClient(cfg?.VITE_DCB_API_BASE);
 		const view = resolveSearch(deps);
 		const { window, interval } = statsWindow(view.range, view.custom);
 		const params: StatsParams = { libraryCode, ...window };

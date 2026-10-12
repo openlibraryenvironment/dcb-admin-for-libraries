@@ -7,8 +7,6 @@ import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import {
 	AgencyQueryData,
 	HostLmsQueryData,
-	LibrariesQueryData,
-	LocationsQueryData,
 	PatronIdentitiesQueryData,
 	PatronRequestQueryData,
 } from "@models/ReactQueryHelperTypes";
@@ -34,12 +32,11 @@ import {
 	isAgencyScopedRequestsEnabled,
 	isGuardedCleanupEnabled,
 } from "@helpers/featureFlags";
-import { getLocation } from "@queries/getLocation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import axios from "axios";
 import request from "graphql-request";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { isUuidShaped } from "@helpers/isUuidShaped";
@@ -50,7 +47,12 @@ import Loading from "@components/Loading/Loading";
 import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
 import { CustomLink } from "@components/CustomLink";
 import { SourceRecord } from "@models/SourceRecord";
-import { getLibraryBasics } from "@queries/getLibraryBasics";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import {
+	libraryBasicsQueryOptions,
+	locationQueryOptions,
+} from "@helpers/sharedQueries";
 import { Library } from "@models/Library";
 import { getILS } from "@helpers/getILS";
 import { findPrimaryContacts } from "@helpers/findPrimaryContacts";
@@ -88,12 +90,7 @@ function RouteComponent() {
 	const [cleanupRefusal, setCleanupRefusal] = useState<string | null>(null);
 	const { agencyCodes } = useAgencyCodes();
 	const guardedCleanup = isGuardedCleanupEnabled();
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${auth.user?.access_token}`,
-		}),
-		[auth.user?.access_token],
-	);
+	const apiBase: string = cfg.VITE_DCB_API_BASE;
 	const isValidId = isUuidShaped(id);
 
 	const {
@@ -101,11 +98,11 @@ function RouteComponent() {
 		isError,
 		isLoading: patronRequestLoading,
 	} = useQuery<PatronRequestQueryData>({
-		queryKey: ["patronRequest", id, headers, cfg.VITE_DCB_API_BASE],
+		queryKey: queryKeys.patronRequests.detail(apiBase, id),
 		enabled: isValidId,
 		queryFn: async () =>
 			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+				apiBase + "/graphql",
 				getPatronRequest(),
 				{
 					query: "id:" + id,
@@ -114,7 +111,7 @@ function RouteComponent() {
 					orderBy: "dateUpdated",
 					order: "DESC",
 				},
-				headers,
+				await authHeaders(),
 			),
 	});
 	const patronRequest = data?.patronRequests?.content?.[0];
@@ -134,30 +131,9 @@ function RouteComponent() {
 	const {
 		data: supplierLibraryData,
 		isLoading: supplierLibraryLoading,
-	} = useQuery<LibrariesQueryData>({
-		// The dependencies are now restored in the queryKey
-		queryKey: [
-			"patronRequestSupplierLibrary",
-			id,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-			supplier?.localAgency,
-		],
+	} = useQuery({
+		...libraryBasicsQueryOptions(apiBase, supplier?.localAgency ?? ""),
 		enabled: !!supplier?.localAgency,
-
-		queryFn: async () =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibraryBasics,
-				{
-					query: "agencyCode:" + supplier?.localAgency,
-					pageno: 0,
-					pagesize: 10,
-					order: "agencyCode",
-					orderBy: "ASC",
-				},
-				headers,
-			),
 	});
 
 	const supplierLibraries: Library[] =
@@ -169,18 +145,16 @@ function RouteComponent() {
 		isError: patronIdentitiesError,
 		isLoading: patronIdentitiesLoading,
 	} = useQuery<PatronIdentitiesQueryData>({
-		queryKey: [
-			"patronIdentities",
-			patronRequest?.pickupPatronId,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-		],
+		queryKey: queryKeys.patronIdentities.byLocalId(
+			apiBase,
+			patronRequest?.pickupPatronId ?? "",
+		),
 		enabled:
 			patronRequest?.pickupPatronId != null &&
 			patronRequest?.pickupPatronId != undefined,
 		queryFn: async () =>
 			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+				apiBase + "/graphql",
 				getPatronIdentities,
 				{
 					query: "localId:" + patronRequest?.pickupPatronId,
@@ -189,7 +163,7 @@ function RouteComponent() {
 					order: "localId",
 					orderBy: "ASC",
 				},
-				headers,
+				await authHeaders(),
 			),
 	});
 
@@ -200,59 +174,21 @@ function RouteComponent() {
 		data: pickupLocationData,
 		isError: pickupLocationDataError,
 		isLoading: pickupLocationDataLoading,
-	} = useQuery<LocationsQueryData>({
-		queryKey: [
-			"patronRequestPickupLocation",
-			patronRequest?.pickupLocationCode,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-		],
+	} = useQuery({
+		// pickupLocationCode is the location's id (a UUID), not its code.
+		...locationQueryOptions(apiBase, patronRequest?.pickupLocationCode ?? ""),
 		enabled:
 			patronRequest?.pickupLocationCode != null &&
 			patronRequest?.pickupLocationCode != undefined,
-		queryFn: async () =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLocation,
-				{
-					// Note: pickupLocationCode is expected to be the location id (UUID)
-					query: "id:" + patronRequest?.pickupLocationCode,
-					pageno: 0,
-					pagesize: 10,
-					order: "id",
-					orderBy: "ASC",
-				},
-				headers,
-			),
 	});
 
 	const pickupLocation = pickupLocationData?.locations?.content?.[0];
 	const {
 		data: pickupLibraryData,
 		isLoading: pickupLibraryLoading,
-	} = useQuery<LibrariesQueryData>({
-		// The dependencies are now restored in the queryKey
-		queryKey: [
-			"patronRequestPickupLibrary",
-			id,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-			pickupLocation?.agency?.code,
-		],
+	} = useQuery({
+		...libraryBasicsQueryOptions(apiBase, pickupLocation?.agency?.code ?? ""),
 		enabled: !!pickupLocation?.agency?.code,
-		queryFn: async () =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibraryBasics,
-				{
-					query: "agencyCode:" + pickupLocation?.agency?.code,
-					pageno: 0,
-					pagesize: 10,
-					order: "agencyCode",
-					orderBy: "ASC",
-				},
-				headers,
-			),
 	});
 
 	const pickupLibraries: Library[] =
@@ -280,18 +216,14 @@ function RouteComponent() {
 		data: patronLmsData,
 		isLoading: patronLmsLoading,
 	} = useQuery<HostLmsQueryData>({
-		// The dependencies are now restored in the queryKey
-		queryKey: [
-			"patronRequestPatronLms",
-			id,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-			patronRequest?.patronHostlmsCode,
-		],
+		queryKey: queryKeys.hostLms.byCode(
+			apiBase,
+			patronRequest?.patronHostlmsCode ?? "",
+		),
 		enabled: !agencyScoped && !!patronRequest?.patronHostlmsCode,
 		queryFn: async () =>
 			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+				apiBase + "/graphql",
 				getHostLms,
 				{
 					query: "code:" + patronRequest?.patronHostlmsCode,
@@ -300,7 +232,7 @@ function RouteComponent() {
 					order: "name",
 					orderBy: "ASC",
 				},
-				headers,
+				await authHeaders(),
 			),
 	});
 	const patronHostLmss: HostLMS[] = patronLmsData?.hostLms?.content ?? [];
@@ -311,18 +243,11 @@ function RouteComponent() {
 		data: patronAgencyData,
 		isLoading: patronAgencyLoading,
 	} = useQuery<AgencyQueryData>({
-		// The dependencies are now restored in the queryKey
-		queryKey: [
-			"patronRequestAgency",
-			id,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-			patronHostLms?.id,
-		],
+		queryKey: queryKeys.agencies.byHostLms(apiBase, patronHostLms?.id ?? ""),
 		enabled: !agencyScoped && !!patronHostLms?.id,
 		queryFn: async () =>
 			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
+				apiBase + "/graphql",
 				getAgency,
 				{
 					query: "hostLms:" + patronHostLms?.id,
@@ -331,7 +256,7 @@ function RouteComponent() {
 					order: "name",
 					orderBy: "ASC",
 				},
-				headers,
+				await authHeaders(),
 			),
 	});
 
@@ -344,29 +269,9 @@ function RouteComponent() {
 	const {
 		data: patronLibraryData,
 		isLoading: patronLibraryLoading,
-	} = useQuery<LibrariesQueryData>({
-		// The dependencies are now restored in the queryKey
-		queryKey: [
-			"patronRequestLibrary",
-			id,
-			headers,
-			cfg.VITE_DCB_API_BASE,
-			patronAgency?.code,
-		],
+	} = useQuery({
+		...libraryBasicsQueryOptions(apiBase, patronAgency?.code ?? ""),
 		enabled: !!patronAgency?.code,
-		queryFn: async () =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibraryBasics,
-				{
-					query: "agencyCode:" + patronAgency?.code,
-					pageno: 0,
-					pagesize: 10,
-					order: "agencyCode",
-					orderBy: "ASC",
-				},
-				headers,
-			),
 	});
 
 	const patronLibraries: Library[] =
@@ -375,15 +280,18 @@ function RouteComponent() {
 
 	// The request and the grids that list it: both request grids key on these.
 	const invalidateRequest = () => {
-		queryClient.invalidateQueries({ queryKey: ["patronRequest", id] });
-		queryClient.invalidateQueries({ queryKey: ["getPatronRequests"] });
-		queryClient.invalidateQueries({ queryKey: ["getSupplierRequestsByIds"] });
+		queryClient.invalidateQueries({
+			queryKey: queryKeys.patronRequests.detail(apiBase, id),
+		});
+		queryClient.invalidateQueries({ queryKey: queryKeys.patronRequests.lists() });
+		queryClient.invalidateQueries({ queryKey: queryKeys.supplierRequests.lists() });
 	};
 
 	// Mutation for updating the patron request
 	const updateMutation = useMutation({
 		// axios rather than fetch: fetch resolves on a 4xx/5xx, which reported every refusal as success.
-		mutationFn: () => axios.post(updateUrl, {}, { headers }),
+		mutationFn: async () =>
+			axios.post(updateUrl, {}, { headers: await authHeaders() }),
 		onSuccess: () => {
 			invalidateRequest();
 			setUpdateSuccessAlertVisibility(true);
@@ -396,7 +304,7 @@ function RouteComponent() {
 	// Mutation for cleaning up the patron request
 	const cleanupMutation = useMutation({
 		mutationFn: () =>
-			cleanupPatronRequest(cfg.VITE_DCB_API_BASE, headers, patronRequest, {
+			cleanupPatronRequest(apiBase, patronRequest, {
 				refreshFirst: guardedCleanup,
 			}),
 		// A refusal is the server declining, not a transport failure, so it arrives here.

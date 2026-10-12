@@ -1,7 +1,4 @@
-import {
-	clampPageSize,
-	REFERENCE_LIST_PAGE_SIZE,
-} from "@constants/dataGrid/pagination";
+import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
@@ -22,10 +19,7 @@ import {
 	processGridFilterModel,
 } from "@helpers/dataGrid/utilities";
 import { hostLmsLibraryOptions } from "@helpers/hostLmsLibraryOptions";
-import {
-	LibrariesQueryData,
-	PatronRequestQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import {
 	GridColDef,
 	GridColumnVisibilityModel,
@@ -35,7 +29,9 @@ import {
 	GridSortModel,
 	useGridApiRef,
 } from "@mui/x-data-grid-premium";
-import { getLibraries } from "@queries/getLibraries";
+import { gridPage, queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { useQuery } from "@tanstack/react-query";
@@ -43,7 +39,6 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/supplierRequests")({
@@ -51,20 +46,14 @@ export const Route = createFileRoute("/__authenticated/supplierRequests")({
 	component: RouteComponent,
 });
 
+const presetQueryFor = (agencyCode: string | undefined) =>
+	"supplyingAgencyCode:" + agencyCode;
+
 function RouteComponent() {
 	const { t } = useTranslation();
-	const auth = useAuth();
-
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
-	const token = auth?.user?.access_token;
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${token}`,
-		}),
-		[token],
-	);
 	const apiRef = useGridApiRef();
 
 	const gridId = "supplierPatronRequests";
@@ -159,7 +148,8 @@ function RouteComponent() {
 
 	const { agencyCode: code, agencyCodes } = useAgencyCodes();
 
-	const presetQuery = "supplyingAgencyCode:" + code;
+	const presetQuery = presetQueryFor(code);
+	const grid = gridPage(debouncedFilterModel, paginationModel, sortModel);
 
 	const {
 		data: patronRequestData,
@@ -169,59 +159,36 @@ function RouteComponent() {
 		isFetching,
 		refetch,
 	} = useQuery<PatronRequestQueryData>({
-		queryKey: [
-			"getSupplierRequestsByIds",
-			dcbApiBase,
-			headers,
-			debouncedFilterModel,
-			paginationModel.pageSize,
-			paginationModel.page,
-			sortModel[0]?.field,
-			sortModel[0]?.sort,
-			presetQuery,
-		],
+		queryKey: queryKeys.supplierRequests.list(dcbApiBase, code ?? "", grid),
 		queryFn: async () => {
 			const queryVariables = {
-				// Already scoped: processGridFilterModel puts presetQuery first.
-				query: processGridFilterModel(debouncedFilterModel, presetQuery, [
+				// Already scoped: processGridFilterModel puts the preset query first.
+				query: processGridFilterModel(grid.filterModel, presetQueryFor(code), [
 					"status",
 					"description",
 				]),
-				pagesize: clampPageSize(paginationModel.pageSize),
-				pageno: paginationModel.page ?? 0,
-				order: sortModel[0]?.field ?? "dateCreated",
-				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+				pagesize: clampPageSize(grid.pageSize),
+				pageno: grid.page ?? 0,
+				order: grid.sortField ?? "dateCreated",
+				orderBy: grid.sortDirection?.toUpperCase() ?? "DESC",
 			};
 
 			return request(
 				`${dcbApiBase}/graphql`,
 				getPatronRequests,
 				queryVariables,
-				headers,
+				await authHeaders(),
 			);
 		},
-		enabled: !!token && !!dcbApiBase && !!code,
+		enabled: !!dcbApiBase && !!code,
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
 	});
 
-	const { data: librariesData } = useQuery<LibrariesQueryData>({
-		queryKey: ["allLibraries", headers, dcbApiBase],
-		queryFn: async () =>
-			request(
-				`${dcbApiBase}/graphql`,
-				getLibraries,
-				{
-					query: "",
-					pagesize: REFERENCE_LIST_PAGE_SIZE,
-					pageno: 0,
-					orderBy: "DESC",
-					order: "fullName",
-				},
-				headers,
-			),
-		enabled: !!token && !!dcbApiBase,
+	const { data: librariesData } = useQuery({
+		...allLibrariesQueryOptions(dcbApiBase),
+		enabled: !!dcbApiBase,
 		refetchOnWindowFocus: false,
 	});
 
@@ -274,7 +241,6 @@ function RouteComponent() {
 		usePatronRequestCleanup({
 			apiRef,
 			dcbApiBase,
-			headers,
 			agencyCodes,
 			onSuccess: () => {
 				refetch();
@@ -283,7 +249,6 @@ function RouteComponent() {
 	const { exportProgress, handleExport } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
-		headers,
 		baseQuery: presetQuery,
 		exportQuery: getPatronRequestsForExport,
 		filterModel: debouncedFilterModel,

@@ -3,11 +3,12 @@ import { pageTitle } from "@helpers/pageTitle";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import Grid from "@mui/material/Grid";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
-import { getLibrary } from "@queries/getLibrary";
+import { getLibraryServiceConfig } from "@queries/getLibraryServiceConfig";
+import { queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
 import { Library } from "@models/Library";
 import { HostLMS } from "@models/HostLMS";
 import { getILS } from "@helpers/getILS";
@@ -16,7 +17,6 @@ import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import { Alert, CircularProgress, Divider } from "@mui/material";
 import FormatArrayAsList from "@components/FormatArrayAsList/FormatArrayAsList";
 import PrivateData from "@components/PrivateData/PrivateData";
-import { useMemo } from "react";
 
 export const Route = createFileRoute("/__authenticated/service")({
 	head: () => ({ meta: [{ title: pageTitle("nav.library.service") }] }),
@@ -24,32 +24,18 @@ export const Route = createFileRoute("/__authenticated/service")({
 });
 
 function ServiceComponent() {
-	const auth = useAuth();
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const { t } = useTranslation();
-
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${auth.user?.access_token}`,
-		}),
-		[auth.user?.access_token]
-	);
 	const { agencyCode: code } = useAgencyCodes();
 
 	const { data, isLoading, isError } = useQuery({
-		queryKey: ["libraryInfo", headers, code, cfg.VITE_DCB_API_BASE],
+		queryKey: queryKeys.library.serviceConfig(cfg.VITE_DCB_API_BASE, code ?? ""),
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
-				headers
+				getLibraryServiceConfig,
+				{ query: "agencyCode:" + code },
+				await authHeaders()
 			),
 	});
 	const library: Library = data?.libraries?.content?.[0];

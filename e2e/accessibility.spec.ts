@@ -407,7 +407,7 @@ const PAGES: Surface[] = [
 		path: "/service",
 		prepare: async (app) => {
 			await app.signIn();
-			await app.mockGraphQL({ LoadLibrary: polarisLibrary });
+			await app.mockGraphQL({ LoadLibraryServiceConfig: polarisLibrary });
 		},
 		ready: async (page) => {
 			await expect(

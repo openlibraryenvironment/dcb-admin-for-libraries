@@ -4,13 +4,15 @@ import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useBlocker, useRouter } from "@tanstack/react-router";
-import axios from "axios";
 import {
 	BrandUploadError,
 	uploadStagedBrandImages,
 } from "@helpers/brandAssetUpload";
 import request from "graphql-request";
-import { getLibrary } from "../../queries/getLibrary";
+import { libraryQueryOptions } from "@helpers/sharedQueries";
+import { createRestClient } from "@helpers/createRestClient";
+import { authHeaders } from "@helpers/auth";
+import { queryKeys } from "@helpers/queryKeys";
 import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { Library } from "@models/Library";
@@ -107,13 +109,6 @@ function HomeComponent() {
 
 	const { cfg } = useRouter().options.context as { cfg: any };
 
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${auth.user?.access_token}`,
-		}),
-		[auth.user?.access_token],
-	);
-
 	const { agencyCode: code } = useAgencyCodes();
 
 	const [editMode, setEditMode] = useState(false);
@@ -164,24 +159,11 @@ function HomeComponent() {
 		}, 0);
 	};
 
-	const { data, isError, refetch } = useQuery({
-		queryKey: ["libraryInfo", headers, code, DCB_API_BASE],
-		queryFn: async () =>
-			request(
-				DCB_API_BASE + "/graphql",
-				getLibrary(),
-				{
-					query: "agencyCode:" + code,
-					pagesize: 10,
-					pageno: 0,
-					orderBy: "fullName",
-					order: "DESC",
-				},
-				headers,
-			),
-	});
+	const { data, isError, refetch } = useQuery(
+		libraryQueryOptions(DCB_API_BASE, code ?? ""),
+	);
 
-	const library: Library = data?.libraries?.content?.[0];
+	const library: Library | undefined = data?.libraries?.content?.[0];
 	const userLibraryHostLmsCode = library?.agency?.hostLms?.code;
 
 	const {
@@ -190,7 +172,7 @@ function HomeComponent() {
 		isError: supplierRequestStatsError,
 		isFetching: supplierRequestFetching,
 	} = useQuery<PatronRequestQueryData>({
-		queryKey: ["LoadSupplierRequestStats", DCB_API_BASE, headers, code],
+		queryKey: queryKeys.requestStats.supplied(DCB_API_BASE, code ?? ""),
 		queryFn: async () => {
 			const baseQuery = `supplyingAgencyCode:${code}`;
 			const queryVariables = {
@@ -204,12 +186,12 @@ function HomeComponent() {
 				`${DCB_API_BASE}/graphql`,
 				getPatronRequestStats,
 				queryVariables,
-				headers,
+				await authHeaders(),
 			);
 		},
 		// Gated on the agency code, which is what supplyingAgencyCode is built from -
 		// this waited on a Host LMS lookup the query never used
-		enabled: !!headers && !!DCB_API_BASE && !!code,
+		enabled: !!DCB_API_BASE && !!code,
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
@@ -221,15 +203,12 @@ function HomeComponent() {
 		error: patronRequestStatsError,
 		isFetching: patronRequestStatsFetching,
 	} = useQuery<PatronRequestQueryData>({
-		queryKey: [
-			"LoadPatronRequestStats",
+		// Both the agency and the Host LMS feed the scope this query runs under.
+		queryKey: queryKeys.requestStats.borrowed(
 			DCB_API_BASE,
-			headers,
+			code ?? "",
 			userLibraryHostLmsCode,
-			// Both feed the scope this query runs under, so a change to either has to
-			// invalidate what was cached against the previous one
-			code,
-		],
+		),
 		queryFn: async () => {
 			const baseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
 			const queryVariables = {
@@ -243,14 +222,12 @@ function HomeComponent() {
 				`${DCB_API_BASE}/graphql`,
 				getPatronRequestStats,
 				queryVariables,
-				headers,
+				await authHeaders(),
 			);
 		},
 		// Gated on whatever the scope is actually built from - see the borrowing grid
 		enabled:
-			!!headers &&
-			!!DCB_API_BASE &&
-			hasBorrowingScope(code, userLibraryHostLmsCode),
+			!!DCB_API_BASE && hasBorrowingScope(code, userLibraryHostLmsCode),
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
@@ -277,7 +254,7 @@ function HomeComponent() {
 						...formData,
 					}),
 				},
-				headers,
+				await authHeaders(),
 			);
 			return response.updateLibrary;
 		},
@@ -322,19 +299,10 @@ function HomeComponent() {
 
 	const stageLogo = (file: File | null) => setStagedLogo(file);
 
-	/**
-	 * The upload moved here from inside the field, because the upload is now part of Save.
-	 * This app has no shared REST client, so the base URL and bearer token are assembled the
-	 * same way the component used to assemble them.
-	 */
+	// Here rather than inside the field, because the upload is part of Save.
 	const uploadClient = useMemo(
-		() => ({
-			post: (path: string, body: FormData) =>
-				axios.post(`${DCB_API_BASE}${path}`, body, {
-					headers: { Authorization: `Bearer ${auth.user?.access_token}` },
-				}),
-		}),
-		[DCB_API_BASE, auth.user?.access_token],
+		() => createRestClient(DCB_API_BASE),
+		[DCB_API_BASE],
 	);
 
 	const {
@@ -654,16 +622,6 @@ function HomeComponent() {
 						}
 					/>
 				</ProfileField>
-			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
-				<Attribute label={t("library.site_designation")}>
-					{/* This may need special handling when we have real data and know what format it's coming in */}
-					<RenderAttribute
-						attribute={
-							library?.agency?.hostLms?.clientConfig?.contextHierarchy[0]
-						}
-					/>
-				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("library.id")}>
@@ -989,8 +947,7 @@ function HomeComponent() {
 								{t("library.statistics.top_titles_month")}
 							</Typography>
 							<TopTitlesSummary
-								headers={headers}
-								libraryCode={userLibraryHostLmsCode}
+								libraryCode={userLibraryHostLmsCode ?? ""}
 							/>
 						</Stack>
 					</Grid>
@@ -1000,8 +957,7 @@ function HomeComponent() {
 								{t("library.statistics.top_requesters_month")}
 							</Typography>
 							<TopRequestorsSummary
-								headers={headers}
-								libraryCode={userLibraryHostLmsCode}
+								libraryCode={userLibraryHostLmsCode ?? ""}
 							/>
 						</Stack>
 					</Grid>
@@ -1032,7 +988,7 @@ function HomeComponent() {
 					onClose={leaveGuard.reset}
 					onConfirm={() => leaveGuard.proceed()}
 					action="unsavedChanges"
-					entityName={library?.fullName}
+					entityName={library?.fullName ?? ""}
 					entityType={t("entities.library")}
 					gridEdit={false}
 				/>

@@ -1,7 +1,4 @@
-import {
-	clampPageSize,
-	REFERENCE_LIST_PAGE_SIZE,
-} from "@constants/dataGrid/pagination";
+import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
@@ -24,10 +21,7 @@ import {
 	hasBorrowingScope,
 } from "@helpers/patronRequestScope";
 import { Library } from "@models/Library";
-import {
-	LibrariesQueryData,
-	PatronRequestQueryData,
-} from "@models/ReactQueryHelperTypes";
+import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import {
 	GridColDef,
 	GridColumnVisibilityModel,
@@ -37,7 +31,9 @@ import {
 	GridSortModel,
 	useGridApiRef,
 } from "@mui/x-data-grid-premium";
-import { getLibraries } from "@queries/getLibraries";
+import { gridPage, queryKeys } from "@helpers/queryKeys";
+import { authHeaders } from "@helpers/auth";
+import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { useQuery } from "@tanstack/react-query";
@@ -48,7 +44,6 @@ import {
 import request from "graphql-request";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "react-oidc-context";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/")({
@@ -58,18 +53,10 @@ export const Route = createFileRoute("/__authenticated/patronRequests/")({
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	const auth = useAuth();
 	const apiRef = useGridApiRef();
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
-	const token = auth?.user?.access_token;
-	const headers = useMemo(
-		() => ({
-			Authorization: `Bearer ${token}`,
-		}),
-		[token],
-	);
 	const gridId = "mainPatronRequests";
 	const storedState = {
 		sort: useGridStore((state) => state.sortModel[gridId]),
@@ -163,22 +150,7 @@ function RouteComponent() {
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery<LibrariesQueryData>({
-		queryKey: ["allLibraries", headers, code, dcbApiBase],
-		queryFn: async () =>
-			request(
-				`${dcbApiBase}/graphql`,
-				getLibraries,
-				{
-					query: "",
-					pagesize: REFERENCE_LIST_PAGE_SIZE,
-					pageno: 0,
-					order: "fullName",
-					orderBy: "ASC",
-				},
-				headers,
-			),
-	});
+	} = useQuery(allLibrariesQueryOptions(dcbApiBase));
 
 	// All libraries, supplied to the filters. Memoised because `?? []` allocates
 	// a new array on every render, which made every memo keyed on it recompute
@@ -217,7 +189,7 @@ function RouteComponent() {
 		});
 	}, [libraryFilterOptions]);
 
-	// Patron requests query - using debounced filter model
+	const grid = gridPage(debouncedFilterModel, paginationModel, sortModel);
 	const {
 		data: patronRequestData,
 		isLoading: isPatronRequestLoading,
@@ -225,48 +197,37 @@ function RouteComponent() {
 		error,
 		isFetching,
 	} = useQuery<PatronRequestQueryData>({
-		queryKey: [
-			"getPatronRequests",
+		// Both the agency and the Host LMS feed the scope this query runs under.
+		queryKey: queryKeys.patronRequests.list(
 			dcbApiBase,
-			headers,
-			userLibraryHostLmsCode,
-			// Both feed the scope this query runs under, so a change to either has to
-			// invalidate what was cached against the previous one
-			code,
-			debouncedFilterModel, // Use debounced filter model
-			paginationModel.pageSize,
-			paginationModel.page,
-			sortModel[0]?.field,
-			sortModel[0]?.sort,
-		],
+			{ agencyCode: code ?? "", hostLmsCode: userLibraryHostLmsCode },
+			grid,
+		),
 		queryFn: async () => {
 			const baseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
 			const queryVariables = {
 				query:
-					processGridFilterModel(debouncedFilterModel, baseQuery, [
+					processGridFilterModel(grid.filterModel, baseQuery, [
 						"status",
 						"description",
 					]) ?? "",
-				pagesize: clampPageSize(paginationModel.pageSize),
-				pageno: paginationModel.page ?? 0,
-				order: sortModel[0]?.field ?? "dateCreated",
-				orderBy: sortModel[0]?.sort?.toUpperCase() ?? "DESC",
+				pagesize: clampPageSize(grid.pageSize),
+				pageno: grid.page ?? 0,
+				order: grid.sortField ?? "dateCreated",
+				orderBy: grid.sortDirection?.toUpperCase() ?? "DESC",
 			};
 			return request(
 				`${dcbApiBase}/graphql`,
 				getPatronRequests,
 				queryVariables,
-				headers,
+				await authHeaders(),
 			);
 		},
 		// Gated on whatever the scope is actually built from. Under the v9 filter that is
 		// the agency claim, which is available immediately; waiting on the Host LMS would
 		// hold the grid behind a lookup it no longer needs, and strand a library whose
 		// agency has no Host LMS recorded.
-		enabled:
-			!!token &&
-			!!dcbApiBase &&
-			hasBorrowingScope(code, userLibraryHostLmsCode),
+		enabled: !!dcbApiBase && hasBorrowingScope(code, userLibraryHostLmsCode),
 		refetchOnWindowFocus: true,
 		refetchIntervalInBackground: false,
 		placeholderData: (previousData) => previousData,
@@ -294,7 +255,6 @@ function RouteComponent() {
 	const { exportProgress, handleExport } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
-		headers,
 		baseQuery: exportBaseQuery,
 		exportQuery: getPatronRequestsForExport,
 		filterModel: debouncedFilterModel,

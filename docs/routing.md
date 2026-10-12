@@ -20,7 +20,9 @@ again. The layout's `useEffect` was picking up the pieces, which is why it
 existed and why it looked necessary.
 
 `App.tsx` now calls `router.invalidate()` once `auth.isLoading` goes false. The
-guards re-run with the session in hand, and the effect is gone.
+guards re-run with the session in hand, and the effect is gone. It calls it again
+when the signed-in identity changes, and not when a silent renewal replaces the
+token: [auth.md](auth.md).
 
 **`isAuthenticated` false means undecidable, not "no roles".** A guard that
 treats it as a denial fights the layout's sign-in redirect, which is what
