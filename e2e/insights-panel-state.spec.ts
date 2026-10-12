@@ -330,6 +330,22 @@ test.describe("Insights panel states", () => {
 		await expect(trigger).toBeFocused();
 	});
 
+	test("unfillable demand explains where it came from", async ({ page }) => {
+		await page.goto("/insights?tab=demand");
+		await reveal(page, "Demand nothing could supply");
+
+		await page
+			.getByRole("button", { name: "How Demand nothing could supply is calculated" })
+			.click();
+
+		const popover = page.getByRole("dialog", {
+			name: "How Demand nothing could supply is calculated",
+		});
+		await expect(popover).toContainText(
+			"Titles patrons asked for that nothing in the network could satisfy.",
+		);
+	});
+
 	test("a link carries the whole view, and survives a reload", async ({
 		page,
 	}) => {

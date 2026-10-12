@@ -625,6 +625,7 @@ export default function InsightsDashboard({
 						<TableStatPanel<UnfillableDemandStat>
 							titleKey="insights.charts.unfillable_demand.title"
 							subtitleKey="insights.charts.unfillable_demand.subtitle"
+							metric="unfillable_demand"
 							queryOptions={unfillableDemandQueryOptions(client, params)}
 							getRowKey={(r) => r.clusterId}
 							columns={[

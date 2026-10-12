@@ -97,7 +97,7 @@ describe("the metric registry", () => {
 			.filter(({ source }) => !source.includes("MetricInfo"))
 			.map(({ name }) => name);
 
-		// A number, not an intention. Eight panels render a figure with no statement of
+		// A number, not an intention. Seven panels render a figure with no statement of
 		// where it came from; their queries have not been read against the SQL, and
 		// inventing a methodology would be worse than admitting the gap - it is the text a
 		// library will quote back when it disputes a figure.
@@ -107,6 +107,6 @@ describe("the metric registry", () => {
 		expect(
 			undocumented.length,
 			`no MetricInfo yet: ${undocumented.join(", ")}`,
-		).toBeLessThanOrEqual(8);
+		).toBeLessThanOrEqual(7);
 	});
 });
