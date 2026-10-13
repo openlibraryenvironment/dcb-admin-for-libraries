@@ -1,5 +1,5 @@
 import { test, expect, type AppFixture } from "./fixtures/test";
-import { AGENCY_CODE } from "./fixtures/auth";
+import { AGENCY_CODE, LIBRARY_ADMIN_ROLES, READ_ONLY_ROLES } from "./fixtures/auth";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import type { Page, Route } from "@playwright/test";
 
@@ -11,8 +11,9 @@ async function placeWalkUp(
 	app: AppFixture,
 	page: Page,
 	answer: (route: Route) => Promise<void>,
+	roles: string[] = ["CONSORTIUM_ADMIN"],
 ) {
-	await app.signIn({ roles: ["CONSORTIUM_ADMIN"] });
+	await app.signIn({ roles });
 	await app.mockGraphQL({
 		LoadLibrary: library,
 		LoadLibraries: library,
@@ -97,3 +98,23 @@ test("a refused walk-up says why, in the desk's terms", async ({ app, page }) =>
 		page.getByText(/already part of a request that is still in progress/i),
 	).toBeVisible();
 });
+
+// dcb-service lets every one of these roles place a walk-up, on 8.71.0 and since
+for (const [who, roles] of [
+	["a library administrator", LIBRARY_ADMIN_ROLES],
+	["a read-only library user", READ_ONLY_ROLES],
+] as const) {
+	test(`${who} can place a walk-up`, async ({ app, page }) => {
+		const { body } = await placeWalkUp(
+			app,
+			page,
+			(route) => route.fulfill({ status: 400, json: {} }),
+			[...roles],
+		);
+
+		expect(body).toMatchObject({
+			itemAgencyCode: AGENCY_CODE,
+			patronAgencyCode: AGENCY_CODE,
+		});
+	});
+}

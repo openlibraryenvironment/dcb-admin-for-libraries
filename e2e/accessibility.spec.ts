@@ -324,8 +324,8 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
-		// The walk-up dialog is reached only through the Actions menu, which only a
-		// consortium admin sees, so the requesting scan above never contains it.
+		// The walk-up dialog opens from the Actions menu, so the requesting scan above
+		// never contains it.
 		name: "requesting - quick walk-up dialog",
 		path: "/requesting?filters=keyword%3Amiddlemarch",
 		prepare: async (app) => {
