@@ -73,11 +73,16 @@ const selected = GATES.filter(
  */
 const needsShell = (command) => process.platform === "win32" && /^(npm|npx|yarn|pnpm)$/.test(command);
 
+/**
+ * CI=1, because the pipeline has it set and both Playwright configs read it: workers 1
+ * rather than 4, retries 2 rather than 0, reuseExistingServer off. Without it the gates
+ * failed back to back and passed alone - docs/testing.md, "Running the gates locally".
+ */
 const run = (command, args, env) =>
 	spawnSync(command, args, {
 		stdio: "inherit",
 		shell: needsShell(command),
-		env: { ...process.env, ...(env ?? {}) },
+		env: { ...process.env, CI: "1", ...(env ?? {}) },
 	});
 
 const has = (command) =>
