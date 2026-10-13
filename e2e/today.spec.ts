@@ -80,7 +80,8 @@ test.describe("Today", () => {
 
 		await expect.poll(() => sent.LoadPatronRequests?.length ?? 0).toBeGreaterThan(0);
 		expect(sent.LoadPatronRequests.at(-1)!.query).toBe(sent.LoadTodayCounts[0].placed);
-		expect(sent.LoadTodayCounts[0].placed).toMatch(/dateCreated:\[\S+ TO \*\]/);
+		// Closed at the moment counted, so the grid shows exactly the rows counted
+		expect(sent.LoadTodayCounts[0].placed).toMatch(/dateCreated:\[\S+Z TO \S+Z\]/);
 	});
 
 	test("counts a library's own requests the way the grids do, on 8.71.0 and after", async ({
@@ -152,16 +153,45 @@ test.describe("Today", () => {
 		await expect(tile(page, /ready for your patrons to collect/)).toBeVisible();
 	});
 
-	test("refreshing counts again", async ({ app, page }) => {
+	test("refreshing counts again, and keeping focus on the button", async ({ app, page }) => {
 		const sent = recordVariables(page);
 		await app.signIn();
 		await app.mockGraphQL({ LoadLibrary: library });
 		await page.goto("/");
 		await expect(page.getByText(/^Counted from /)).toBeVisible();
 
-		await page.getByRole("button", { name: "Refresh counts" }).click();
+		const refresh = page.getByRole("button", { name: "Refresh counts" });
+		await refresh.focus();
+		await page.keyboard.press("Enter");
 
 		await expect.poll(() => sent.LoadTodayCounts.length).toBe(2);
+		await expect(page.getByText(/^Counted from /)).toBeVisible();
+		await expect(refresh).toBeFocused();
+	});
+
+	test("a library that cannot be loaded says so, rather than counting for ever", async ({
+		app,
+		page,
+	}) => {
+		await app.signIn();
+		await app.mockGraphQL({ LoadLibrary: library });
+		let fail = true;
+		await page.route(`${API_BASE}/graphql`, (route) =>
+			fail && route.request().postDataJSON()?.operationName === "LoadLibrary"
+				? route.fulfill({ json: { data: null, errors: [{ message: "unavailable" }] } })
+				: route.fallback(),
+		);
+		await page.goto("/");
+
+		await expect(page.getByRole("alert")).toContainText(
+			"The request counts could not be loaded.",
+		);
+
+		fail = false;
+		await page.getByRole("button", { name: "Try again" }).click();
+		await expect(tile(page, /ready for your patrons to collect/)).toBeVisible();
+		// The alert that held focus is gone; focus is on what replaced it
+		await expect(page.getByText(/^Counted from /)).toBeFocused();
 	});
 
 	test("points to Insights only where Insights is on", async ({ app, page }) => {
@@ -204,7 +234,10 @@ test.describe("Today's optional parts", () => {
 		page,
 	}) => {
 		const sent = recordVariables(page);
-		await app.enableFeatures(["VITE_FEATURE_TODAY_SINCE_LAST_VISIT"]);
+		await app.enableFeatures([
+			"VITE_FEATURE_TODAY_SINCE_LAST_VISIT",
+			"VITE_FEATURE_TODAY_LAST_WEEK",
+		]);
 		await app.signIn();
 		await app.mockGraphQL({ LoadLibrary: library });
 		await page.goto("/");
@@ -229,7 +262,9 @@ test.describe("Today's optional parts", () => {
 			"Problems since your last visit",
 			"Since your last visit",
 		]);
-		expect(sent.LoadTodayCounts.at(-1)!.placed).toContain(`dateCreated:[${twoDaysAgo} TO *]`);
+		expect(sent.LoadTodayCounts.at(-1)!.placed).toContain(`dateCreated:[${twoDaysAgo} TO `);
+		// Since a visit up to 30 days ago, a week earlier would overlap the span itself
+		await expect(page.getByText(/than the same time last week/)).toHaveCount(0);
 	});
 
 	test("last week: each windowed count says how it compares", async ({ app, page }) => {
@@ -251,7 +286,7 @@ test.describe("Today's optional parts", () => {
 		await expect(page.getByText("234 more than the same time last week")).toBeVisible();
 		await expect(page.getByText("1 more than the same time last week")).toBeVisible();
 		await expect(page.getByText("2 fewer than the same time last week")).toBeVisible();
-		await expect(page.getByText("The same as this time last week")).toHaveCount(2);
+		await expect(page.getByText("No change from the same time last week")).toHaveCount(2);
 		// Closed at both ends, a week back from the span counted
 		expect(sent.LoadTodayLastWeek[0].placed).toMatch(/dateCreated:\[\S+ TO \S+Z\]/);
 	});

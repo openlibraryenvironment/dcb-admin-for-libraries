@@ -10,7 +10,7 @@ import { getTodayLastWeek } from "@queries/getTodayLastWeek";
 import { getTodayHistory } from "@queries/getTodayHistory";
 import { getTodayPickupHere } from "@queries/getTodayPickupHere";
 import { getAgencyLocationsForExport } from "@queries/getAgencyLocationsForExport";
-import { agencyLocationsQuery } from "@helpers/exportScope";
+import { agencyLocationsQuery, quoted } from "@helpers/exportScope";
 
 /** The grid a count belongs to; its link opens that grid with the count's filters. */
 export type TodayScope = "borrowed" | "supplied";
@@ -153,7 +153,7 @@ export const todayCountQuery = (
 export interface TodayCounts {
 	/** The window's start as counted: each link carries this, not a fresh "now". */
 	since: string;
-	/** When the counts were taken; a comparison ends here, one week back. */
+	/** When the counts were taken: the window's end, which links carry too. */
 	until: string;
 	/** null where the service returned no total, which is shown as unknown, never as 0. */
 	counts: Record<TodayCountId, number | null>;
@@ -164,7 +164,7 @@ type Totals = Partial<Record<string, { totalSize?: number | null } | null>>;
 const totalOf = (data: Totals, alias: string): number | null =>
 	data[alias]?.totalSize ?? null;
 
-// Nine counts per load: worth five minutes, and the Refresh button is there for sooner
+// Count queries read the whole request table on 8.71.0: worth five minutes, and Refresh asks sooner
 const TODAY_STALE_TIME = 5 * 60_000;
 
 /** `since` null is the last 24 hours, measured when the counts are taken. */
@@ -177,7 +177,7 @@ export const todayCountsQueryOptions = (
 		queryKey: queryKeys.today.counts(apiBase, scopes, since),
 		queryFn: async (): Promise<TodayCounts> => {
 			const now = new Date();
-			const range = { from: since ?? windowStart(now), to: null };
+			const range = { from: since ?? windowStart(now), to: now.toISOString() };
 			const data = await request<Totals>(
 				`${apiBase}/graphql`,
 				getTodayCounts,
@@ -195,6 +195,8 @@ export const todayCountsQueryOptions = (
 			};
 		},
 		staleTime: TODAY_STALE_TIME,
+		// Returning to the tab is not a request for nine table reads; Refresh is
+		refetchOnWindowFocus: false,
 		meta: OPTIONAL_QUERY,
 	});
 
@@ -220,7 +222,7 @@ export const todayLastWeekQueryOptions = (
 				WINDOWED_COUNTS.map((count) => [count.id, totalOf(data, count.id)]),
 			) as Partial<Record<TodayCountId, number | null>>;
 		},
-		// A week ago does not change
+		// A week ago does not change; a new span counted is a new key
 		staleTime: Infinity,
 		meta: OPTIONAL_QUERY,
 	});
@@ -241,7 +243,9 @@ export const todayHistoryQueryOptions = (
 			);
 			return { borrowed: totalOf(data, "borrowed"), supplied: totalOf(data, "supplied") };
 		},
-		staleTime: TODAY_STALE_TIME,
+		// A library that has borrowed or supplied never goes back to none
+		staleTime: ({ state }) =>
+			state.data?.borrowed || state.data?.supplied ? Infinity : TODAY_STALE_TIME,
 		meta: OPTIONAL_QUERY,
 	});
 
@@ -254,10 +258,7 @@ export const pickupHereQuery = (
 	borrowedScope: string,
 	statusValue: string,
 ): string => {
-	const ids = locationIds
-		.slice(0, MAX_PICKUP_LOCATIONS)
-		.map((id) => `"${id.replace(/["\\]/g, "\\$&")}"`)
-		.join(" OR ");
+	const ids = locationIds.slice(0, MAX_PICKUP_LOCATIONS).map(quoted).join(" OR ");
 	return `pickupLocationCode:(${ids}) AND status:${statusValue} AND NOT (${borrowedScope})`;
 };
 

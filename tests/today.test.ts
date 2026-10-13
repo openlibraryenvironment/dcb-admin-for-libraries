@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	defaultParseSearch,
 	defaultStringifySearch,
@@ -18,11 +18,18 @@ import {
 	lastWeekOf,
 	pickupHereQuery,
 	todayCountQuery,
+	todayCountsQueryOptions,
+	todayHistoryQueryOptions,
 	windowStart,
 } from "@helpers/today";
 import {
+	borrowedByLibraryQuery,
+	suppliedByLibraryQuery,
+} from "@helpers/patronRequestScope";
+import {
 	MAX_LOOKBACK_DAYS,
 	nextVisits,
+	readVisits,
 	sinceLastVisit,
 } from "@helpers/lastVisit";
 
@@ -133,5 +140,77 @@ describe("the last visit", () => {
 		expect(
 			sinceLastVisit({ lastSeen: now.toISOString(), previous: "2026-01-01T00:00:00.000Z" }, now),
 		).toBe("2026-09-13T09:00:00.000Z");
+	});
+});
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe("stored visits, read back from the browser", () => {
+	const storing = (value: string | null) =>
+		vi.stubGlobal("localStorage", { getItem: () => value });
+
+	it.each([
+		["not JSON", "{"],
+		["no lastSeen", JSON.stringify({ previous: "2026-10-01T00:00:00.000Z" })],
+		["a lastSeen that is not a time", JSON.stringify({ lastSeen: "yesterday" })],
+		["a lastSeen far too long", JSON.stringify({ lastSeen: "2026-10-01T00:00:00.000Z".repeat(3) })],
+	])("are ignored when they hold %s", (_case, value) => {
+		storing(value);
+		expect(readVisits()).toBeNull();
+	});
+
+	it("drop a previous visit that is not a time", () => {
+		storing(JSON.stringify({ lastSeen: "2026-10-13T09:00:00.000Z", previous: 42 }));
+		expect(readVisits()).toEqual({ lastSeen: "2026-10-13T09:00:00.000Z", previous: null });
+	});
+
+	it("are absent when storage cannot be read at all", () => {
+		vi.stubGlobal("localStorage", {
+			getItem: () => {
+				throw new Error("blocked");
+			},
+		});
+		expect(readVisits()).toBeNull();
+	});
+});
+
+describe("a location id in the pickup query", () => {
+	it("cannot end its term", () => {
+		expect(pickupHereQuery(['a" OR *:*'], SCOPES.borrowed, "READY_FOR_PICKUP")).toContain(
+			'pickupLocationCode:("a\\" OR *:*")',
+		);
+	});
+});
+
+describe("a library's history", () => {
+	const staleTime = todayHistoryQueryOptions("api", SCOPES).staleTime as (query: {
+		state: { data?: { borrowed: number | null; supplied: number | null } };
+	}) => number;
+
+	it("is never asked for again once the library has borrowed or supplied", () => {
+		expect(staleTime({ state: { data: { borrowed: 0, supplied: 3 } } })).toBe(Infinity);
+	});
+
+	it("is asked for again while the library has done neither", () => {
+		expect(staleTime({ state: { data: { borrowed: 0, supplied: 0 } } })).toBeLessThan(Infinity);
+	});
+});
+
+describe("the by-library table", () => {
+	it("counts the user's own library under the page's own cache entry", () => {
+		vi.stubGlobal("window", {
+			__APP_ENV__: { VITE_FEATURE_AGENCY_SCOPED_REQUESTS: "true" },
+		});
+		const page = {
+			borrowed: borrowedByLibraryQuery("e2e-agency", "e2e-lms"),
+			supplied: suppliedByLibraryQuery("e2e-agency"),
+		};
+		const row = {
+			borrowed: borrowedByLibraryQuery("e2e-agency", undefined),
+			supplied: suppliedByLibraryQuery("e2e-agency"),
+		};
+		expect(todayCountsQueryOptions("api", row, null).queryKey).toEqual(
+			todayCountsQueryOptions("api", page, null).queryKey,
+		);
 	});
 });

@@ -68,7 +68,7 @@ export const exportGuard = (
 };
 
 // Quoted, so no character in a value can end the term: inside quotes only `"` and `\` mean anything.
-const quoted = (value: string): string => `"${value.replace(/["\\]/g, "\\$&")}"`;
+export const quoted = (value: string): string => `"${value.replace(/["\\]/g, "\\$&")}"`;
 
 // Explicit ORs throughout: dcb-service silently drops a clause joined by an implicit operator.
 const anyOf = (field: string, values: readonly string[]): string[] =>

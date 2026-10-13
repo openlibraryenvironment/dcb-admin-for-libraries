@@ -12,6 +12,7 @@ import {
 	TableRow,
 	Typography,
 } from "@mui/material";
+import { visuallyHidden } from "@mui/utils";
 
 import { formatNumber } from "@helpers/formatters";
 import {
@@ -32,7 +33,8 @@ export default function LibrarySplit({
 }: {
 	apiBase: string;
 	agencyCodes: string[];
-	since: string;
+	/** null is the last 24 hours, so the user's own library shares the page's cache entry. */
+	since: string | null;
 }) {
 	const { t } = useTranslation();
 	const headingId = useId();
@@ -66,7 +68,8 @@ export default function LibrarySplit({
 				{t("today.split.title")}
 			</Typography>
 			<Typography gutterBottom>{t("today.split.description")}</Typography>
-			<TableContainer>
+			{/* Focusable: at narrow widths it scrolls sideways, and a keyboard must reach that */}
+			<TableContainer tabIndex={0} role="group" aria-labelledby={headingId}>
 				<Table size="small" aria-labelledby={headingId}>
 					<TableHead>
 						<TableRow>
@@ -86,21 +89,28 @@ export default function LibrarySplit({
 									<TableCell component="th" scope="row">
 										{nameFor.get(code) ?? code}
 									</TableCell>
-									{TODAY_COUNTS.map((count) => (
-										<TableCell key={count.id} align="right">
-											{row.isError ? (
-												t("today.split.failed")
-											) : row.data ? (
-												row.data.counts[count.id] === null ? (
-													"—"
+									{row.isError ? (
+										<TableCell colSpan={TODAY_COUNTS.length}>
+											{t("today.split.failed")}
+										</TableCell>
+									) : (
+										TODAY_COUNTS.map((count) => (
+											<TableCell key={count.id} align="right">
+												{!row.data ? (
+													<Skeleton variant="text" width={24} sx={{ ml: "auto" }} />
+												) : row.data.counts[count.id] === null ? (
+													<>
+														<span aria-hidden="true">—</span>
+														<Box component="span" sx={visuallyHidden}>
+															{t("today.split.unknown")}
+														</Box>
+													</>
 												) : (
 													formatNumber(row.data.counts[count.id]!)
-												)
-											) : (
-												<Skeleton variant="text" width={24} sx={{ ml: "auto" }} />
-											)}
-										</TableCell>
-									))}
+												)}
+											</TableCell>
+										))
+									)}
 								</TableRow>
 							);
 						})}

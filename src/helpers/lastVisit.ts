@@ -1,8 +1,8 @@
 import { storageKey } from "@helpers/appBase";
 
 /**
- * When this browser last opened Today, and when the visit before that one began. Per
- * browser by design - a convenience, not a record - so a shared desk PC shares it.
+ * When this browser last opened Today, and the last time it did so in an earlier visit.
+ * Per browser by design - a convenience, not a record - so a shared desk PC shares it.
  */
 export interface Visits {
 	lastSeen: string;

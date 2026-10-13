@@ -2,6 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import request from "graphql-request";
 
 import { authHeaders } from "@helpers/auth";
+import { escapeLucene } from "@helpers/dataGrid/buildFilterQuery";
 import { queryKeys } from "@helpers/queryKeys";
 import type { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
 import { getLibraryNames } from "@queries/getLibraryNames";
@@ -18,7 +19,7 @@ export const libraryNamesQueryOptions = (apiBase: string, agencyCodes: string[])
 				`${apiBase}/graphql`,
 				getLibraryNames,
 				{
-					query: agencyCodes.map((code) => `agencyCode:${code}`).join(" OR "),
+					query: agencyCodes.map((code) => `agencyCode:${escapeLucene(code)}`).join(" OR "),
 					pagesize: agencyCodes.length,
 					pageno: 0,
 					order: "fullName",

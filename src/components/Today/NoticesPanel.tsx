@@ -43,9 +43,10 @@ export default function NoticesPanel({
 						{live.slice(0, SHOWN).map((row) => (
 							<li key={row.id}>
 								<Typography component="span">
-									{row.headline}
-									{" — "}
-									{t("today.notices.until", { date: formatDate(row.expiresAt) })}
+									{t("today.notices.live_item", {
+										headline: row.headline,
+										date: formatDate(row.expiresAt),
+									})}
 								</Typography>
 							</li>
 						))}

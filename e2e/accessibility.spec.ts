@@ -140,7 +140,7 @@ const openRequestDialog = async (page: Page) => {
 
 const PAGES: Surface[] = [
 	{
-		// Today, the page every sign-in lands on. Insights is on and the counts include a
+		// Today, where a library administrator lands. Insights is on and the counts include a
 		// zero and an unknown, so the scan sees links, plain tiles and the extra link at once.
 		name: "today",
 		path: "/",
@@ -177,13 +177,25 @@ const PAGES: Surface[] = [
 			await app.mockGraphQL({
 				LoadLibrary: library,
 				LoadTodayLastWeek: todayCounts(DEFAULT_TODAY_TOTALS),
-				LoadAnnouncements: { announcements: [] },
+				LoadAnnouncements: {
+					announcements: [
+						{
+							id: "live",
+							headline: "Closed on Monday",
+							body: "",
+							urgent: false,
+							dismissible: true,
+							startsAt: new Date(Date.now() - 86_400_000).toISOString(),
+							expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+						},
+					],
+				},
 			});
 		},
 		ready: async (page) => {
 			await expect(page.getByRole("table", { name: "By library" })).toBeVisible();
 			await expect(page.getByText("Requests resolved")).toBeVisible();
-			await expect(page.getByText("No notices are live.")).toBeVisible();
+			await expect(page.getByText(/^Closed on Monday — until /)).toBeVisible();
 		},
 	},
 	{

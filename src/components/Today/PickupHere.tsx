@@ -1,14 +1,14 @@
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Box, Paper, Skeleton, Typography } from "@mui/material";
+import { Alert, Box, Paper, Typography } from "@mui/material";
 
 import {
 	agencyLocationIdsQueryOptions,
 	todayPickupHereQueryOptions,
 } from "@helpers/today";
 import { TILE_MIN_HEIGHT } from "./layout";
-import { Figure, TileList } from "./TodaySections";
+import { Figure, TileList, TileSkeleton } from "./TodaySections";
 
 /**
  * Other libraries' patrons collecting at this library. No grid lists these, so they are
@@ -50,7 +50,7 @@ export default function PickupHere({
 				<TileList>
 					{(["ready", "arriving"] as const).map((id) => (
 						<Box component="li" key={id}>
-							<Paper variant="outlined" sx={{ p: 2, minHeight: TILE_MIN_HEIGHT }}>
+							<Paper variant="outlined" sx={{ p: 2, minHeight: TILE_MIN_HEIGHT, height: "100%" }}>
 								{counts.data ? (
 									<>
 										<Figure value={counts.data[id]} />
@@ -63,10 +63,7 @@ export default function PickupHere({
 										</Typography>
 									</>
 								) : (
-									<>
-										<Skeleton variant="text" width="30%" height={40} />
-										<Skeleton variant="text" width="80%" />
-									</>
+									<TileSkeleton />
 								)}
 							</Paper>
 						</Box>

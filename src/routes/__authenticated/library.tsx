@@ -58,6 +58,7 @@ import { getPatronRequestStats } from "@queries/getPatronRequestStats";
 import {
 	borrowedByLibraryQuery,
 	hasBorrowingScope,
+	suppliedByLibraryQuery,
 } from "@helpers/patronRequestScope";
 import TopTitlesSummary from "@components/TopTitlesSummary/TopTitlesSummary";
 import TopRequestorsSummary from "@components/TopRequestorSummary/TopRequestorSummary";
@@ -173,7 +174,7 @@ function HomeComponent() {
 	} = useQuery<PatronRequestQueryData>({
 		queryKey: queryKeys.requestStats.supplied(DCB_API_BASE, code ?? ""),
 		queryFn: async () => {
-			const baseQuery = `supplyingAgencyCode:${code}`;
+			const baseQuery = suppliedByLibraryQuery(code);
 			const queryVariables = {
 				query: baseQuery ?? "",
 				pagesize: 20,

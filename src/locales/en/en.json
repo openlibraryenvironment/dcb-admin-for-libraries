@@ -1656,9 +1656,8 @@
 	},
 	"today": {
 		"title": "Today",
-		"subtitle": "Requests for {{library}}: what is waiting on you, and what changed in the last day.",
+		"subtitle": "Requests for {{library}}: what is waiting on you, and what has changed.",
 		"counting": "Counting requests…",
-		"counted": "Counted from {{since}}, the last {{hours}} hours.",
 		"refresh": "Refresh counts",
 		"retry": "Try again",
 		"load_failed": "The request counts could not be loaded.",
@@ -1667,18 +1666,18 @@
 		"insights_link": "Trends, benchmarks and demand are in Insights",
 		"sections": {
 			"waiting": "Waiting on you",
-			"problems_day": "Problems in the last {{hours}} hours",
 			"problems_visit": "Problems since your last visit",
-			"activity_day": "In the last {{hours}} hours",
-			"activity_visit": "Since your last visit"
+			"activity_visit": "Since your last visit",
+			"problems_day_other": "Problems in the last {{count}} hours",
+			"activity_day_other": "In the last {{count}} hours"
 		},
 		"counts": {
 			"readyForPickup_one": "request ready for your patron to collect",
 			"readyForPickup_other": "requests ready for your patrons to collect",
 			"inTransitToPickup_one": "request on its way to your patron",
 			"inTransitToPickup_other": "requests on their way to your patrons",
-			"toSupply_one": "request for you to fill",
-			"toSupply_other": "requests for you to fill",
+			"toSupply_one": "request for you to supply",
+			"toSupply_other": "requests for you to supply",
 			"returning_one": "item on its way back to you",
 			"returning_other": "items on their way back to you",
 			"failedBorrowed_one": "of your patrons' requests failed",
@@ -1689,22 +1688,22 @@
 			"unfilled_other": "requests no library could fill",
 			"placed_one": "request placed by your patrons",
 			"placed_other": "requests placed by your patrons",
-			"received_one": "request for you to supply arrived",
-			"received_other": "requests for you to supply arrived"
+			"received_one": "new request for you to supply",
+			"received_other": "new requests for you to supply"
 		},
 		"counted_visit": "Counted from your last visit, {{since}}.",
 		"window": {
 			"label": "Count changes over",
-			"day": "Last {{hours}} hours",
 			"visit": "Since your last visit",
-			"no_visit": "No earlier visit is recorded in this browser yet."
+			"no_visit": "No earlier visit is recorded in this browser yet.",
+			"day_other": "Last {{count}} hours"
 		},
 		"compare": {
 			"more_one": "{{value}} more than the same time last week",
 			"more_other": "{{value}} more than the same time last week",
 			"fewer_one": "{{value}} fewer than the same time last week",
 			"fewer_other": "{{value}} fewer than the same time last week",
-			"same": "The same as this time last week"
+			"same": "No change from the same time last week"
 		},
 		"pickup": {
 			"title": "Collecting at your locations for other libraries",
@@ -1729,9 +1728,9 @@
 				"logo": "Logo",
 				"support": "Report a problem link"
 			},
-			"done": "done",
-			"todo": "not yet",
-			"link": "Open your library's profile"
+			"link": "Open your library's profile",
+			"item_done": "{{item}}: done",
+			"item_todo": "{{item}}: not yet"
 		},
 		"notices": {
 			"title": "Notices to your patrons",
@@ -1739,8 +1738,8 @@
 			"none": "No notices are live.",
 			"live_one": "{{count}} notice is live:",
 			"live_other": "{{count}} notices are live:",
-			"until": "until {{date}}",
-			"manage": "Manage notices"
+			"manage": "Manage notices",
+			"live_item": "{{headline}} — until {{date}}"
 		},
 		"split": {
 			"title": "By library",
@@ -1752,18 +1751,20 @@
 			"columns": {
 				"readyForPickup": "Ready to collect",
 				"inTransitToPickup": "On the way to patrons",
-				"toSupply": "To fill",
+				"toSupply": "To supply",
 				"returning": "Coming back",
 				"failedBorrowed": "Failed, borrowing",
 				"failedSupplied": "Failed, supplying",
 				"unfilled": "No library could fill",
 				"placed": "Placed",
-				"received": "Arrived to supply"
-			}
+				"received": "New to supply"
+			},
+			"unknown": "Not known"
 		},
 		"insights": {
 			"title": "Your last 7 days",
 			"more": "More in Insights"
-		}
+		},
+		"counted_other": "Counted from {{since}}, the last {{count}} hours."
 	}
 }

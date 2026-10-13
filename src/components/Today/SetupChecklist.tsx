@@ -59,7 +59,7 @@ export default function SetupChecklist({
 				{t("today.setup.title")}
 			</Typography>
 			<Typography gutterBottom>{t("today.setup.intro")}</Typography>
-			<Box component="ul" sx={{ listStyle: "none", p: 0, m: 0 }}>
+			<Box component="ul" role="list" sx={{ listStyle: "none", p: 0, m: 0 }}>
 				{items.map((item) => (
 					<Box
 						component="li"
@@ -72,9 +72,9 @@ export default function SetupChecklist({
 							<RadioButtonUnchecked color="action" fontSize="small" aria-hidden />
 						)}
 						<Typography component="span">
-							{t(`today.setup.items.${item.id}`)}
-							{": "}
-							{t(item.done ? "today.setup.done" : "today.setup.todo")}
+							{t(item.done ? "today.setup.item_done" : "today.setup.item_todo", {
+								item: t(`today.setup.items.${item.id}`),
+							})}
 						</Typography>
 					</Box>
 				))}

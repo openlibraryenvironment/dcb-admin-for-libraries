@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 
@@ -15,6 +16,7 @@ export default function WindowChoice({
 	visitKnown: boolean;
 }) {
 	const { t } = useTranslation();
+	const noteId = useId();
 
 	return (
 		<Stack spacing={0.5}>
@@ -24,16 +26,17 @@ export default function WindowChoice({
 				value={value}
 				onChange={(_event, next: TodayWindowKind | null) => next && onChange(next)}
 				aria-label={t("today.window.label")}
+				aria-describedby={visitKnown ? undefined : noteId}
 			>
 				<ToggleButton value="day">
-					{t("today.window.day", { hours: TODAY_WINDOW_HOURS })}
+					{t("today.window.day", { count: TODAY_WINDOW_HOURS })}
 				</ToggleButton>
 				<ToggleButton value="visit" disabled={!visitKnown}>
 					{t("today.window.visit")}
 				</ToggleButton>
 			</ToggleButtonGroup>
 			{visitKnown ? null : (
-				<Typography variant="body2" color="text.secondary">
+				<Typography id={noteId} variant="body2" color="text.secondary">
 					{t("today.window.no_visit")}
 				</Typography>
 			)}

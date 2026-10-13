@@ -8,9 +8,10 @@ Requesting, as before.
 ## What each count is
 
 Every count belongs to one of the two request grids, and is that grid with a filter
-applied. Selecting a count opens the grid with exactly those filters, so the number and
-the rows always agree; `tests/today.test.ts` fails if a count's query and its grid's
-query ever differ.
+applied. Selecting a count opens the grid with exactly those filters, closed at the moment
+the counts were taken, so a windowed count and its rows agree; `tests/today.test.ts` fails
+if a count's query and its grid's query ever differ. A count of what is waiting has no
+window, so its grid shows the state now, which may have moved since the count.
 
 | Count | Grid | Filter |
 | --- | --- | --- |
@@ -52,7 +53,7 @@ part that needs a dcb-service capability also needs that capability's flag, and
 | Flag | What it adds | Also needs |
 | --- | --- | --- |
 | `VITE_FEATURE_TODAY_SINCE_LAST_VISIT` | A choice between the last 24 hours and "since your last visit" for the problems and activity sections. The window is in the URL (`?window=visit`). | — |
-| `VITE_FEATURE_TODAY_LAST_WEEK` | Under each problem and activity count, how it compares with the same span a week earlier, in words. | — |
+| `VITE_FEATURE_TODAY_LAST_WEEK` | Under each problem and activity count, how it compares with the same span a week earlier, in words. Over the last 24 hours only: since a visit up to 30 days ago, a week earlier would overlap the span itself. | — |
 | `VITE_FEATURE_TODAY_SETUP_CHECKLIST` | For a library that has never borrowed or supplied, which parts of its profile are filled in, with a link to it. | — |
 | `VITE_FEATURE_TODAY_INSIGHTS` | The Insights overview tiles for the last 7 days: the same five tiles, and the same requests, as the Insights page. | `VITE_FEATURE_INSIGHTS` |
 | `VITE_FEATURE_TODAY_ANNOUNCEMENTS` | The notices patrons can see now, up to three, with a link to manage them. | `VITE_FEATURE_ANNOUNCEMENTS` |
@@ -70,16 +71,27 @@ library's Host LMS, and libraries sharing a Host LMS would all show the same num
 **Collections at your locations work on 8.71.0 only.** From 9.0.0 dcb-service shows a
 library only the requests its patrons placed or it supplies; a request it only collects
 is not returned, so the count would read 0. The flag is ignored while
-`VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is on.
+`VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is on. "Other libraries' patrons" means patrons on
+another Host LMS, as "your patrons" does on 8.71.0: a co-tenant's patron collecting here
+is counted among your own. Past 50 locations only the first 50 are counted, so the
+figure is a lower bound for a library with more.
 
 ## What it costs
 
 All nine counts are one GraphQL request, each asking for one row and its total. The
-answer is kept for five minutes; "Refresh counts" asks again sooner. dcb-service 8.71.0
-has no index on request status or dates, so each count reads the request table: at
-100,000 requests a year that is a few hundred thousand rows, nine times, per load.
+answer is kept for five minutes and is not asked for again when the tab regains focus;
+"Refresh counts" asks again sooner. dcb-service 8.71.0 has no index on request status or
+dates, so each count reads the request table: at 100,000 requests a year that is a few
+hundred thousand rows, nine times, per load.
 
-The optional parts add requests only where they are on: one more of five counts for last
-week, kept until the page is reloaded; two counts of all time for the checklist; one of
-nine counts per library, at most ten libraries, for the table; and one location lookup and
-two counts for collections at your locations.
+The optional parts add requests only where they are on:
+
+- last week: one request of five counts for each span counted;
+- the checklist: one request of two counts of all time, not repeated once either is above 0;
+- by library: one request of nine counts for each library after the first, at most ten
+  libraries, the first sharing the page's own request;
+- collections at your locations: one location lookup and one request of two counts.
+
+With every part a deployment can have on at once, a load is at most 9 + 5 + 2 + 81 = 97
+counts with the by-library table on a 9.x deployment, or 9 + 5 + 2 + 2 and a lookup with
+collections at your locations on 8.71.0. The two cannot both be on.

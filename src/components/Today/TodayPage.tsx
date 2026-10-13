@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "react-oidc-context";
 import { useNavigate, useRouter, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -38,7 +39,6 @@ import {
 	todayLastWeekQueryOptions,
 } from "@helpers/today";
 
-
 export default function TodayPage() {
 	const { t } = useTranslation();
 	const { cfg } = useRouter().options.context as {
@@ -48,9 +48,10 @@ export default function TodayPage() {
 	const { agencyCode: code, agencyCodes } = useAgencyCodes();
 	const search = useSearch({ from: "/__authenticated/" });
 	const navigate = useNavigate({ from: "/" });
+	const auth = useAuth();
 
 	const sinceLastVisitOn = isTodaySinceLastVisitEnabled();
-	// Read once per page view: reopening the page within a visit must not move the window
+	// Lazy: a re-render must not recompute the window after the effect below writes this visit
 	const [visitSince] = useState(() =>
 		sinceLastVisitOn ? sinceLastVisit(nextVisits(readVisits(), new Date()), new Date()) : null,
 	);
@@ -80,15 +81,42 @@ export default function TodayPage() {
 	});
 	const counts = countsQuery.data;
 
+	// Only for the 24 hours: since a visit up to 30 days ago, a week earlier overlaps the span itself
+	const compareLastWeek = isTodayLastWeekEnabled() && windowKind === "day";
 	const lastWeekQuery = useQuery({
 		...todayLastWeekQueryOptions(apiBase, scopes, {
 			since: counts?.since ?? "",
 			until: counts?.until ?? "",
 		}),
-		enabled: isTodayLastWeekEnabled() && !!counts,
+		enabled: compareLastWeek && !!counts,
 	});
 
 	const unscopable = !scoped && libraryQuery.isSuccess;
+	const failed = libraryQuery.isError || countsQuery.isError;
+	const busy = libraryQuery.isFetching || countsQuery.isFetching;
+
+	// Try again replaces the alert holding focus with the counts; focus follows to what replaced it
+	const statusRef = useRef<HTMLParagraphElement>(null);
+	const retried = useRef(false);
+	useEffect(() => {
+		if (retried.current && counts) {
+			retried.current = false;
+			statusRef.current?.focus();
+		}
+	}, [counts]);
+
+	const retry = () => {
+		if (busy) return;
+		retried.current = true;
+		if (libraryQuery.isError) libraryQuery.refetch();
+		if (countsQuery.isError) countsQuery.refetch();
+	};
+	// Not `disabled`: a button that disables itself while focused drops focus to the page
+	const refresh = () => {
+		if (!counts || busy) return;
+		countsQuery.refetch();
+	};
+	const isLibraryAdmin = (auth.user?.profile?.roles ?? []).includes("LIBRARY_ADMIN");
 
 	return (
 		<Stack spacing={3}>
@@ -101,21 +129,17 @@ export default function TodayPage() {
 				) : null}
 			</Box>
 
-			{isTodaySetupChecklistEnabled() && library && scoped ? (
-				<SetupChecklist apiBase={apiBase} scopes={scopes} library={library} />
-			) : null}
-
 			{unscopable ? (
 				<Alert severity="warning">{t("today.no_scope")}</Alert>
-			) : countsQuery.isError ? (
+			) : failed ? (
 				<Alert
 					severity="error"
 					action={
 						<Button
 							color="inherit"
 							size="small"
-							onClick={() => countsQuery.refetch()}
-							disabled={countsQuery.isFetching}
+							onClick={retry}
+							aria-disabled={busy}
 						>
 							{t("today.retry")}
 						</Button>
@@ -128,7 +152,8 @@ export default function TodayPage() {
 					<Stack
 						direction={{ xs: "column", md: "row" }}
 						spacing={2}
-						sx={{ alignItems: { md: "center" } }}
+						useFlexGap
+						sx={{ alignItems: { md: "center" }, flexWrap: "wrap" }}
 					>
 						{sinceLastVisitOn ? (
 							<WindowChoice
@@ -139,21 +164,27 @@ export default function TodayPage() {
 								}
 							/>
 						) : null}
-						<Typography role="status" variant="body2" color="text.secondary">
-							{counts
+						<Typography
+							ref={statusRef}
+							tabIndex={-1}
+							role="status"
+							variant="body2"
+							color="text.secondary"
+						>
+							{counts && !countsQuery.isFetching
 								? windowKind === "visit"
 									? t("today.counted_visit", { since: formatDateTime(counts.since) })
 									: t("today.counted", {
 											since: formatDateTime(counts.since),
-											hours: TODAY_WINDOW_HOURS,
+											count: TODAY_WINDOW_HOURS,
 										})
 								: t("today.counting")}
 						</Typography>
 						<Button
 							variant="outlined"
 							size="small"
-							onClick={() => countsQuery.refetch()}
-							disabled={!counts || countsQuery.isFetching}
+							onClick={refresh}
+							aria-disabled={!counts || busy}
 							sx={{ alignSelf: { xs: "flex-start", md: "auto" } }}
 						>
 							{t("today.refresh")}
@@ -162,7 +193,7 @@ export default function TodayPage() {
 
 					<TodaySections
 						data={counts}
-						lastWeek={isTodayLastWeekEnabled() ? lastWeekQuery.data : undefined}
+						lastWeek={compareLastWeek ? lastWeekQuery.data ?? {} : undefined}
 						windowKind={windowKind}
 					/>
 
@@ -178,17 +209,22 @@ export default function TodayPage() {
 						<LibrarySplit
 							apiBase={apiBase}
 							agencyCodes={agencyCodes}
-							since={counts.since}
+							since={windowKind === "visit" ? visitSince : null}
 						/>
 					) : null}
 				</>
 			)}
 
+			{isTodaySetupChecklistEnabled() && library && scoped ? (
+				<SetupChecklist apiBase={apiBase} scopes={scopes} library={library} />
+			) : null}
+
 			{isTodayAnnouncementsEnabled() && library?.id ? (
 				<NoticesPanel apiBase={apiBase} libraryId={library.id} />
 			) : null}
 
-			{isTodayInsightsEnabled() && hostLmsCode ? (
+			{/* Insights is for library administrators, as its own route requires */}
+			{!isLibraryAdmin ? null : isTodayInsightsEnabled() && hostLmsCode ? (
 				<InsightsSummary libraryCode={hostLmsCode} />
 			) : isInsightsEnabled() ? (
 				<Typography>

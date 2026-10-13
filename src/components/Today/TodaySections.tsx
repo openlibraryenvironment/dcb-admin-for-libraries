@@ -29,7 +29,7 @@ const sectionHeading = (
 ) =>
 	section === "waiting"
 		? t("today.sections.waiting")
-		: t(`today.sections.${section}_${windowKind}`, { hours: TODAY_WINDOW_HOURS });
+		: t(`today.sections.${section}_${windowKind}`, { count: TODAY_WINDOW_HOURS });
 
 export default function TodaySections({
 	data,
@@ -78,12 +78,15 @@ function SectionList({
 			<TileList>
 				{TODAY_COUNTS.filter((count) => count.section === section).map((count) => (
 					<Box component="li" key={count.id}>
-						<Paper variant="outlined" sx={{ p: 2, minHeight: TILE_MIN_HEIGHT }}>
+						<Paper
+							variant="outlined"
+							sx={{ p: 2, minHeight: TILE_MIN_HEIGHT, height: "100%" }}
+						>
 							<TodayTile count={count} data={data} />
-							{data && lastWeek && count.id in lastWeek ? (
+							{lastWeek && count.section !== "waiting" ? (
 								<Comparison
-									now={data.counts[count.id]}
-									before={lastWeek[count.id] ?? null}
+									now={data?.counts[count.id] ?? null}
+									before={lastWeek[count.id]}
 								/>
 							) : null}
 						</Paper>
@@ -98,6 +101,8 @@ export function TileList({ children }: { children: React.ReactNode }) {
 	return (
 		<Box
 			component="ul"
+			// Safari drops list semantics from a list with list-style: none
+			role="list"
 			sx={{
 				listStyle: "none",
 				p: 0,
@@ -118,8 +123,17 @@ export function TileList({ children }: { children: React.ReactNode }) {
 
 export const Figure = ({ value }: { value: number | null }) => (
 	<Typography variant="h4" component="span" sx={{ display: "block" }}>
-		{value === null ? "—" : formatNumber(value)}
+		{value === null ? <span aria-hidden="true">—</span> : formatNumber(value)}
 	</Typography>
+);
+
+/** The size of a figure and a two-line label, so a loaded tile does not move what follows. */
+export const TileSkeleton = () => (
+	<>
+		<Skeleton sx={{ typography: "h4", width: "30%" }} />
+		<Skeleton variant="text" width="90%" />
+		<Skeleton variant="text" width="60%" />
+	</>
 );
 
 function TodayTile({
@@ -131,18 +145,11 @@ function TodayTile({
 }) {
 	const { t } = useTranslation();
 
-	if (!data) {
-		return (
-			<>
-				<Skeleton variant="text" width="30%" height={40} />
-				<Skeleton variant="text" width="80%" />
-			</>
-		);
-	}
+	if (!data) return <TileSkeleton />;
 
 	const value = data.counts[count.id];
 
-	// A number with nothing behind it opens an empty grid; an unknown is said in words
+	// An unknown is said in words, never as 0
 	if (value === null) {
 		return (
 			<>
@@ -154,6 +161,7 @@ function TodayTile({
 		);
 	}
 	const label = t(`today.counts.${count.id}`, { count: value });
+	// A zero would open an empty grid
 	if (value === 0) {
 		return (
 			<>
@@ -165,8 +173,9 @@ function TodayTile({
 	return (
 		<CustomLink
 			to={GRID_FOR[count.scope]}
-			search={{ filters: count.filters({ from: data.since, to: null }) }}
-			underline="hover"
+			search={{ filters: count.filters({ from: data.since, to: data.until }) }}
+			// Not colour alone: beside it, a 0 or an unknown is the same tile without a link
+			underline="always"
 			sx={{ display: "block" }}
 		>
 			<Figure value={value} />
@@ -176,8 +185,22 @@ function TodayTile({
 }
 
 /** In words, not only an arrow or a colour: "3 more than the same time last week". */
-function Comparison({ now, before }: { now: number | null; before: number | null }) {
+function Comparison({
+	now,
+	before,
+}: {
+	now: number | null;
+	/** undefined while last week is still loading: the line's space is held for it. */
+	before: number | null | undefined;
+}) {
 	const { t } = useTranslation();
+	if (before === undefined) {
+		return (
+			<Typography variant="body2" sx={{ mt: 0.5 }} aria-hidden="true">
+				&nbsp;
+			</Typography>
+		);
+	}
 	if (now === null || before === null) return null;
 
 	const difference = now - before;
