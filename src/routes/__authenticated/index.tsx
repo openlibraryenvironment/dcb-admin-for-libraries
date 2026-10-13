@@ -798,8 +798,8 @@ function HomeComponent() {
                 />
               </ProfileField>
             </Grid>
-            {/* Behind its own flag, not the branding one: support_url arrived in
-                V9_0_008, after the 9.0.0 tag, and the brand columns arrived in it. The
+            {/* Behind its own flag, not the branding one: support_url arrives
+                after the 9.0.0 tag, and the brand columns arrived in it. The
                 flag is not a render switch — it also keeps the field out of the document
                 and out of the mutation variables, without which nothing on this form
                 saves against a deployment that cannot accept it. */}

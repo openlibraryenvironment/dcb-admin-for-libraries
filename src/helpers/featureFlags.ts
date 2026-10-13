@@ -57,7 +57,7 @@ export const isAnnouncementsEnabled = (): boolean =>
 /**
  * The library's patron support link - dcb-service AFTER 9.0.0.
  *
- * `library.support_url` arrived in V9_0_008, which is on main and in no release, so this
+ * `library.support_url` is in no dcb-service release, so this
  * is a SEPARATE flag from the branding one above rather than a fourth field on it.
  * Selecting `supportUrl` against the 9.0.0 tag fails LoadLibrary whole, exactly as the
  * brand fields do against 8.71.0 - same failure, different threshold, which is the entire
