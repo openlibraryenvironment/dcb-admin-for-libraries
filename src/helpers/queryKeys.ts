@@ -74,8 +74,26 @@ export const queryKeys = {
 			["patronRequests", "essentials", apiBase, id] as const,
 	},
 	today: {
-		counts: (apiBase: string, scopes: { borrowed: string; supplied: string }) =>
-			["today", "counts", apiBase, scopes] as const,
+		counts: (
+			apiBase: string,
+			scopes: { borrowed: string; supplied: string },
+			since: string | null,
+		) => ["today", "counts", apiBase, scopes, since] as const,
+		lastWeek: (
+			apiBase: string,
+			scopes: { borrowed: string; supplied: string },
+			since: string,
+			until: string,
+		) => ["today", "lastWeek", apiBase, scopes, since, until] as const,
+		history: (apiBase: string, scopes: { borrowed: string; supplied: string }) =>
+			["today", "history", apiBase, scopes] as const,
+		pickupHere: (
+			apiBase: string,
+			locationIds: readonly string[],
+			borrowedScope: string,
+		) => ["today", "pickupHere", apiBase, locationIds, borrowedScope] as const,
+		agencyLocations: (apiBase: string, agencyCode: string) =>
+			["today", "agencyLocations", apiBase, agencyCode] as const,
 	},
 	supplierRequests: {
 		lists: () => ["supplierRequests", "list"] as const,

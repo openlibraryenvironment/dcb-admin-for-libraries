@@ -35,8 +35,6 @@ import {
 	dashboardQueryOptions,
 	demandByPatronGroupQueryOptions,
 	demandByPickupLocationQueryOptions,
-	netFlowQueryOptions,
-	supplierResponseSlaQueryOptions,
 	topRequestedTitlesQueryOptions,
 	unfillableDemandQueryOptions,
 	unmetLocalDemandQueryOptions,
@@ -44,10 +42,11 @@ import {
 import {
 	localDay,
 	statsWindow,
-	formatTurnaround,
 } from "@helpers/insightsRange";
 
 import KpiTile from "./KpiTile";
+import OverviewTiles from "./OverviewTiles";
+import { fillRate } from "@helpers/fillRate";
 import DurationsPanel from "./DurationsPanel";
 import CostAvoidanceTile from "./CostAvoidanceTile";
 import StatusFlowChart from "./StatusFlowChart";
@@ -121,11 +120,6 @@ function Section({
 	);
 }
 
-function fillRate(successful: number, failed: number): number | null {
-	const total = successful + failed;
-	return total === 0 ? null : (successful / total) * 100;
-}
-
 export default function InsightsDashboard({
 	libraryCode,
 	view,
@@ -153,19 +147,6 @@ export default function InsightsDashboard({
 		const { window: span, interval } = statsWindow(rangePreset, customRange);
 		return { params: { libraryCode, ...span } as StatsParams, interval };
 	}, [rangePreset, customRange, libraryCode]);
-
-	// Scope never changes here - this app is one library - so the range is the whole of
-	// what moved.
-	// Both are one row for this app: it reports on one library, so the supplier-side SLA
-	// and the net-flow row are its own. The durations panel asks for the same two keys, and
-	// the query cache serves both from one request each.
-	const myResponse = useQuery(supplierResponseSlaQueryOptions(client, params));
-	const netFlow = useQuery(netFlowQueryOptions(client, params));
-
-	const netRow = netFlow.data?.[0];
-	const netBalance = netRow
-		? netRow.suppliedCount - netRow.borrowedCount
-		: null;
 
 	const window = customRange
 		? `${formatDate(localDay(customRange.startDate))} – ${formatDate(
@@ -207,9 +188,6 @@ export default function InsightsDashboard({
 				d.fulfillmentPrior.failedCount,
 			)
 		: null;
-	const rateDelta =
-		currentRate != null && priorRate != null ? currentRate - priorRate : null;
-
 	// Error rate is the complement of the success/fill rate; a rise is bad.
 	const currentErrRate = currentRate != null ? 100 - currentRate : null;
 	const priorErrRate = priorRate != null ? 100 - priorRate : null;
@@ -218,11 +196,7 @@ export default function InsightsDashboard({
 			? currentErrRate - priorErrRate
 			: null;
 
-	const resolved = d
-		? d.fulfillmentCurrent.successfulCount + d.fulfillmentCurrent.failedCount
-		: 0;
 	const totalBorrows = d?.lendBorrowTotals.borrowedCount ?? 0;
-	const totalLends = d?.lendBorrowTotals.suppliedCount ?? 0;
 	const checkoutRate =
 		d && d.checkoutRate.totalCount > 0
 			? (d.checkoutRate.reachedCount / d.checkoutRate.totalCount) * 100
@@ -304,79 +278,7 @@ export default function InsightsDashboard({
 					current={subject}
 					titleKey="insights.sections.overview"
 				>
-					{/* KPI row - auto-fit so the tile count can flex. */}
-					{/* THE FIVE a library director asks: were my patrons served, and am I carrying
-					my share. Ten equal tiles was an index, not a summary - and error rate is the
-					complement of the fill rate now shown beside the request count, so it moves
-					below with the rest rather than saying the same thing twice. */}
-					<Box
-						sx={{
-							display: "grid",
-							gap: 2,
-							gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-						}}
-					>
-						<KpiTile
-							title={t("insights.kpi.resolved.title")}
-							metric="requests_fulfilled"
-							value={formatNumber(resolved)}
-							subtitle={
-								currentRate != null
-									? t("insights.headline.filled", {
-											rate: formatPercent(currentRate),
-										})
-									: t("insights.kpi.resolved.subtitle")
-							}
-							deltaPct={rateDelta}
-							higherIsBetter
-							loading={loading}
-						/>
-						<KpiTile
-							title={t("insights.headline.patron_waited")}
-							metric="turnaround_to_loan"
-							value={formatTurnaround(d?.turnaroundToLoaned?.p50Seconds, t)}
-							subtitle={t("insights.kpi.time_to_loan.subtitle", {
-								p95: formatTurnaround(d?.turnaroundToLoaned?.p95Seconds, t),
-							})}
-							loading={loading}
-						/>
-						<KpiTile
-							title={t("insights.headline.supplied")}
-							metric="items_supplied"
-							value={formatNumber(totalLends)}
-							subtitle={t("insights.kpi.total_lends.subtitle")}
-							loading={loading}
-						/>
-						<KpiTile
-							title={t("insights.headline.my_response")}
-							metric="supplier_response"
-							value={formatTurnaround(
-								myResponse.data?.[0]?.medianResponseSeconds,
-								t,
-							)}
-							subtitle={t("insights.headline.my_response_sub")}
-							loading={myResponse.isLoading}
-						/>
-						<KpiTile
-							title={t("insights.headline.net_flow")}
-							metric="net_flow"
-							value={
-								netBalance == null
-									? "—"
-									: formatNumber(netBalance, { signDisplay: "exceptZero" })
-							}
-							subtitle={
-								netBalance == null
-									? undefined
-									: t(
-											netBalance >= 0
-												? "insights.headline.net_lender"
-												: "insights.headline.net_borrower",
-										)
-							}
-							loading={netFlow.isLoading}
-						/>
-					</Box>
+					<OverviewTiles params={params} />
 
 					{/* MUI wraps the summary in an <h3> by default, which lands between the page
 					<h1> and the panels' <h2>s and skips a level. The heading slot is the

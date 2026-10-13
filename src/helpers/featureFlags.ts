@@ -125,3 +125,31 @@ export const isInsightsWalkUpEnabled = (): boolean =>
  * `import.meta.env`, which needs that prefix.
  */
 export const isDiscoveryActive = (): boolean => readFlag("VITE_DISCOVERY_ACTIVE");
+
+/*
+ * Today's optional parts - docs/today.md. Render switches like VITE_DISCOVERY_ACTIVE, not
+ * capabilities; where a part needs a capability, its function requires that flag too, so
+ * the rule lives here rather than at each call site.
+ */
+export const isTodaySinceLastVisitEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_TODAY_SINCE_LAST_VISIT");
+
+export const isTodayLastWeekEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_TODAY_LAST_WEEK");
+
+export const isTodaySetupChecklistEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_TODAY_SETUP_CHECKLIST");
+
+export const isTodayInsightsEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_TODAY_INSIGHTS") && isInsightsEnabled();
+
+export const isTodayAnnouncementsEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_TODAY_ANNOUNCEMENTS") && isAnnouncementsEnabled();
+
+// Before agency scoping, "your patrons" is a shared Host LMS: every co-tenant's row would match
+export const isTodayLibrarySplitEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_TODAY_LIBRARY_SPLIT") && isAgencyScopedRequestsEnabled();
+
+// 9.0.0's AgencyAccessScope hides requests a library only collects, so this would read 0 there
+export const isTodayPickupHereEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_TODAY_PICKUP_HERE") && !isAgencyScopedRequestsEnabled();

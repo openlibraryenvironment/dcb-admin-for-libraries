@@ -1667,8 +1667,10 @@
 		"insights_link": "Trends, benchmarks and demand are in Insights",
 		"sections": {
 			"waiting": "Waiting on you",
-			"problems": "Problems in the last {{hours}} hours",
-			"activity": "In the last {{hours}} hours"
+			"problems_day": "Problems in the last {{hours}} hours",
+			"problems_visit": "Problems since your last visit",
+			"activity_day": "In the last {{hours}} hours",
+			"activity_visit": "Since your last visit"
 		},
 		"counts": {
 			"readyForPickup_one": "request ready for your patron to collect",
@@ -1689,6 +1691,79 @@
 			"placed_other": "requests placed by your patrons",
 			"received_one": "request for you to supply arrived",
 			"received_other": "requests for you to supply arrived"
+		},
+		"counted_visit": "Counted from your last visit, {{since}}.",
+		"window": {
+			"label": "Count changes over",
+			"day": "Last {{hours}} hours",
+			"visit": "Since your last visit",
+			"no_visit": "No earlier visit is recorded in this browser yet."
+		},
+		"compare": {
+			"more_one": "{{value}} more than the same time last week",
+			"more_other": "{{value}} more than the same time last week",
+			"fewer_one": "{{value}} fewer than the same time last week",
+			"fewer_other": "{{value}} fewer than the same time last week",
+			"same": "The same as this time last week"
+		},
+		"pickup": {
+			"title": "Collecting at your locations for other libraries",
+			"description": "Other libraries' patrons collecting their items at your locations. Neither request grid lists these, so they are counted here only.",
+			"load_failed": "These counts could not be loaded.",
+			"no_locations": "Your library has no locations recorded, so there is nothing to count.",
+			"counts": {
+				"ready_one": "request ready for another library's patron to collect",
+				"ready_other": "requests ready for other libraries' patrons to collect",
+				"arriving_one": "request on its way to you for another library's patron",
+				"arriving_other": "requests on their way to you for other libraries' patrons"
+			}
+		},
+		"setup": {
+			"title": "Getting your library ready",
+			"intro": "Your library has not borrowed or supplied anything yet. These parts of its profile are what patrons and other libraries see.",
+			"items": {
+				"address": "Address",
+				"location": "Location on the map",
+				"website": "Website for patrons",
+				"contacts": "At least one contact",
+				"logo": "Logo",
+				"support": "Report a problem link"
+			},
+			"done": "done",
+			"todo": "not yet",
+			"link": "Open your library's profile"
+		},
+		"notices": {
+			"title": "Notices to your patrons",
+			"load_failed": "Your notices could not be loaded.",
+			"none": "No notices are live.",
+			"live_one": "{{count}} notice is live:",
+			"live_other": "{{count}} notices are live:",
+			"until": "until {{date}}",
+			"manage": "Manage notices"
+		},
+		"split": {
+			"title": "By library",
+			"description": "Each of your libraries, counted the same way. Choose a library in the header to open its requests.",
+			"library": "Library",
+			"failed": "Not loaded",
+			"more_one": "{{count}} more library is not shown.",
+			"more_other": "{{count}} more libraries are not shown.",
+			"columns": {
+				"readyForPickup": "Ready to collect",
+				"inTransitToPickup": "On the way to patrons",
+				"toSupply": "To fill",
+				"returning": "Coming back",
+				"failedBorrowed": "Failed, borrowing",
+				"failedSupplied": "Failed, supplying",
+				"unfilled": "No library could fill",
+				"placed": "Placed",
+				"received": "Arrived to supply"
+			}
+		},
+		"insights": {
+			"title": "Your last 7 days",
+			"more": "More in Insights"
 		}
 	}
 }

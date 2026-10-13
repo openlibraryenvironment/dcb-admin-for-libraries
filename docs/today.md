@@ -40,7 +40,37 @@ they work on 8.71.0 and later with no other change:
   that includes the other libraries' patrons, as the Patron requests grid does. With the
   flag on, they are the requests whose patron belongs to the library.
 
-With `VITE_FEATURE_INSIGHTS` on, the page also links to Insights.
+With `VITE_FEATURE_INSIGHTS` on, the page also links to Insights, unless the Insights tiles
+below are on.
+
+## Optional parts
+
+Each is off until its flag is `true`; `docs/DEPLOYMENT.md` section 2a lists the flags. A
+part that needs a dcb-service capability also needs that capability's flag, and
+`src/helpers/featureFlags.ts` holds that rule, not the page.
+
+| Flag | What it adds | Also needs |
+| --- | --- | --- |
+| `VITE_FEATURE_TODAY_SINCE_LAST_VISIT` | A choice between the last 24 hours and "since your last visit" for the problems and activity sections. The window is in the URL (`?window=visit`). | — |
+| `VITE_FEATURE_TODAY_LAST_WEEK` | Under each problem and activity count, how it compares with the same span a week earlier, in words. | — |
+| `VITE_FEATURE_TODAY_SETUP_CHECKLIST` | For a library that has never borrowed or supplied, which parts of its profile are filled in, with a link to it. | — |
+| `VITE_FEATURE_TODAY_INSIGHTS` | The Insights overview tiles for the last 7 days: the same five tiles, and the same requests, as the Insights page. | `VITE_FEATURE_INSIGHTS` |
+| `VITE_FEATURE_TODAY_ANNOUNCEMENTS` | The notices patrons can see now, up to three, with a link to manage them. | `VITE_FEATURE_ANNOUNCEMENTS` |
+| `VITE_FEATURE_TODAY_LIBRARY_SPLIT` | For a user of more than one library, every count for each library, as a table. | `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` |
+| `VITE_FEATURE_TODAY_PICKUP_HERE` | Other libraries' patrons' requests ready, or on their way, for collection at this library's locations. Counted, not linked: no grid lists them. | `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` **off** |
+
+**"Since your last visit" is per browser.** The last visit is kept in this browser's
+storage, so a desk computer shared by several people shares one. Reopening Today within
+half an hour counts as the same visit, so the window does not move while someone works.
+It reaches back at most 30 days.
+
+**By library needs agency scoping** because before it, "your patrons" is everyone on the
+library's Host LMS, and libraries sharing a Host LMS would all show the same numbers.
+
+**Collections at your locations work on 8.71.0 only.** From 9.0.0 dcb-service shows a
+library only the requests its patrons placed or it supplies; a request it only collects
+is not returned, so the count would read 0. The flag is ignored while
+`VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is on.
 
 ## What it costs
 
@@ -48,3 +78,8 @@ All nine counts are one GraphQL request, each asking for one row and its total. 
 answer is kept for five minutes; "Refresh counts" asks again sooner. dcb-service 8.71.0
 has no index on request status or dates, so each count reads the request table: at
 100,000 requests a year that is a few hundred thousand rows, nine times, per load.
+
+The optional parts add requests only where they are on: one more of five counts for last
+week, kept until the page is reloaded; two counts of all time for the checklist; one of
+nine counts per library, at most ten libraries, for the table; and one location lookup and
+two counts for collections at your locations.
