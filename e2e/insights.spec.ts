@@ -26,7 +26,7 @@ const mocks = { LoadLibrary: library, LoadLibraryBasics: library };
 /**
  * Collects every statistics call the page makes, in order. Attach before goto.
  *
- * Matching /insights/ alone is enough now that the home page's two summary cards
+ * Matching /insights/ alone is enough now that the library page's two summary cards
  * sit behind the same flag as the dashboard. It was not before: the guard
  * redirects to "/", those cards called /insights/... unconditionally, and the
  * flag-off assertion below raced them - which is how it failed about one
@@ -75,7 +75,7 @@ test.describe("Library insights", () => {
 	// Insights API, so leaving them ungated defeated the flag on the page every
 	// library administrator lands on first: an environment too old to serve
 	// /insights still fired both calls and rendered two broken cards.
-	test("the home page makes no Insights call while the flag is off", async ({
+	test("the library page makes no Insights call while the flag is off", async ({
 		page,
 		app,
 	}) => {
@@ -85,7 +85,7 @@ test.describe("Library insights", () => {
 
 		const statsRequests = trackStatsRequests(page);
 
-		await page.goto("/");
+		await page.goto("/library");
 
 		// Wait for something that renders either way, so this cannot pass by
 		// asserting against a page that has not finished loading yet.
@@ -100,7 +100,7 @@ test.describe("Library insights", () => {
 	});
 
 	// ...and they are gated, not deleted.
-	test("the home page shows the summary cards once the flag is on", async ({
+	test("the library page shows the summary cards once the flag is on", async ({
 		page,
 		app,
 	}) => {
@@ -111,7 +111,7 @@ test.describe("Library insights", () => {
 
 		const statsRequests = trackStatsRequests(page);
 
-		await page.goto("/");
+		await page.goto("/library");
 
 		await expect(
 			page.getByRole("heading", { name: /favourite titles/i }),

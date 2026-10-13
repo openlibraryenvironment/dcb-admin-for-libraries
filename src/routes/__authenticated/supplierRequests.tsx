@@ -1,4 +1,4 @@
-import { escapeLucene } from "@helpers/dataGrid/buildFilterQuery";
+import { suppliedByLibraryQuery } from "@helpers/patronRequestScope";
 import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
@@ -39,9 +39,6 @@ export const Route = createFileRoute("/__authenticated/supplierRequests")({
 	component: RouteComponent,
 });
 
-const presetQueryFor = (agencyCode: string | undefined) =>
-	"supplyingAgencyCode:" + escapeLucene(agencyCode ?? "");
-
 function RouteComponent() {
 	const { t } = useTranslation();
 	const { cfg } = useRouter().options.context as { cfg: any };
@@ -78,7 +75,7 @@ function RouteComponent() {
 
 	const { agencyCode: code, agencyCodes } = useAgencyCodes();
 
-	const presetQuery = presetQueryFor(code);
+	const presetQuery = suppliedByLibraryQuery(code);
 	const page = gridPage(
 		grid.appliedFilterModel,
 		grid.paginationModel,
@@ -97,7 +94,7 @@ function RouteComponent() {
 		queryFn: async () => {
 			const queryVariables = {
 				// Already scoped: processGridFilterModel puts the preset query first.
-				query: processGridFilterModel(page.filterModel, presetQueryFor(code), [
+				query: processGridFilterModel(page.filterModel, suppliedByLibraryQuery(code), [
 					"status",
 					"description",
 				]),

@@ -30,7 +30,7 @@ test.describe("Not Found", () => {
 			.click();
 
 		await expect(page).toHaveURL("/");
-		await expect(page.getByRole("tab", { name: "Home" })).toHaveAttribute(
+		await expect(page.getByRole("tab", { name: "Today" })).toHaveAttribute(
 			"aria-selected",
 			"true",
 		);

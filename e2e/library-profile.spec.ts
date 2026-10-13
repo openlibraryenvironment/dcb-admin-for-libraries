@@ -19,7 +19,7 @@ const signedInOnProfile = async (
 		LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
 		LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
 	});
-	await page.goto("/");
+	await page.goto("/library");
 	await expect(page.getByText("E2E Test Library").first()).toBeVisible();
 };
 
@@ -130,7 +130,7 @@ test.describe("a library with no coordinates", () => {
 			LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
 			UpdateLibrary: updates.responder,
 		});
-		await page.goto("/");
+		await page.goto("/library");
 		await page.getByRole("button", { name: /^edit$/i }).click();
 
 		const fullName = page.getByRole("textbox", { name: /full name/i }).first();
@@ -173,7 +173,7 @@ test.describe("a library with no coordinates", () => {
 			LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
 			LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
 		});
-		await page.goto("/");
+		await page.goto("/library");
 		await page.getByRole("button", { name: /^edit$/i }).click();
 
 		await page.getByRole("textbox", { name: /latitude/i }).first().fill("91");
@@ -248,7 +248,7 @@ test.describe("editing the profile", () => {
 			...STATS_MOCKS,
 		});
 
-		await page.goto("/");
+		await page.goto("/library");
 		await page.getByRole("button", { name: /^edit$/i }).click();
 		const fullName = page.getByRole("textbox", { name: /full name/i }).first();
 		await fullName.fill("Typed but not saved");
@@ -281,7 +281,7 @@ test.describe("editing the profile", () => {
 			route.fulfill({ json: { url: "https://assets.example.invalid/logo.png" } }),
 		);
 
-		await page.goto("/");
+		await page.goto("/library");
 		await page.getByRole("button", { name: /^edit$/i }).click();
 		const save = page.getByRole("button", { name: /^save$/i });
 		await expect(save).toBeDisabled();
@@ -316,7 +316,7 @@ test.describe("editing the profile", () => {
 			UpdateLibrary: updates.responder,
 		});
 
-		await page.goto("/");
+		await page.goto("/library");
 		await page.getByRole("button", { name: /^edit$/i }).click();
 		await page
 			.getByRole("textbox", { name: /support hours/i })
@@ -378,7 +378,7 @@ test.describe("leaving the profile with unsaved edits", () => {
 		await dialog.getByRole("button", { name: "Keep editing" }).click();
 
 		await expect(dialog).toHaveCount(0);
-		await expect(page).toHaveURL(/\/$/);
+		await expect(page).toHaveURL(/\/library$/);
 		await expect(fullName).toHaveValue("Typed but not saved");
 		await expect(settingsTab(page)).toBeFocused();
 	});
@@ -403,7 +403,7 @@ test.describe("leaving the profile with unsaved edits", () => {
 			...STATS_MOCKS,
 		});
 		await page.goto("/settings");
-		await page.getByRole("tab", { name: /^home$/i }).click();
+		await page.getByRole("tab", { name: /^your library$/i }).click();
 		await page.getByRole("button", { name: /^edit$/i }).click();
 		await page
 			.getByRole("textbox", { name: /full name/i })
@@ -459,7 +459,7 @@ test.describe("when the profile cannot be loaded", () => {
 				: route.fallback(),
 		);
 
-		await page.goto("/");
+		await page.goto("/library");
 
 		await expect(page.getByRole("alert")).toContainText(/could not be loaded/i);
 	});
@@ -487,7 +487,7 @@ test.describe("statistics", () => {
 			});
 		});
 
-		await page.goto("/");
+		await page.goto("/library");
 
 		await expect(
 			page.getByRole("progressbar", { name: "Loading" }),

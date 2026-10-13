@@ -73,6 +73,10 @@ export const queryKeys = {
 		essentials: (apiBase: string, id: string | null) =>
 			["patronRequests", "essentials", apiBase, id] as const,
 	},
+	today: {
+		counts: (apiBase: string, scopes: { borrowed: string; supplied: string }) =>
+			["today", "counts", apiBase, scopes] as const,
+	},
 	supplierRequests: {
 		lists: () => ["supplierRequests", "list"] as const,
 		list: (apiBase: string, agencyCode: string, grid: GridPage) =>

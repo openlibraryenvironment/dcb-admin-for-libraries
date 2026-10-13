@@ -1,5 +1,6 @@
 import { test, expect as strictExpect, type AppFixture } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
+import { DEFAULT_TODAY_TOTALS, todayCounts } from "./fixtures/today";
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 import polarisLibrary from "./fixtures-data/library-polaris.json" with { type: "json" };
@@ -139,13 +140,30 @@ const openRequestDialog = async (page: Page) => {
 
 const PAGES: Surface[] = [
 	{
+		// Today, the page every sign-in lands on. Insights is on and the counts include a
+		// zero and an unknown, so the scan sees links, plain tiles and the extra link at once.
+		name: "today",
+		path: "/",
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadTodayCounts: todayCounts({ ...DEFAULT_TODAY_TOTALS, unfilled: null }),
+			});
+		},
+		ready: async (page) => {
+			await expect(page.getByText(/^Counted from /)).toBeVisible();
+		},
+	},
+	{
 		// The library profile: the biggest FORM in the app and the only surface where an
 		// administrator types. It was not scanned at all, which meant the presence
 		// fields would have gone in unaudited — and a form is where name, label and error
 		// association actually fail. Every backend-gated block is switched on, so the
 		// scan covers the widest shape the page can render rather than the narrowest.
 		name: "library profile",
-		path: "/",
+		path: "/library",
 		prepare: async (app) => {
 			await app.enableFeatures([
 				"VITE_DISCOVERY_ACTIVE",
@@ -374,7 +392,7 @@ const PAGES: Surface[] = [
 		// form control and every error message in the application - which is
 		// where error.main sat at 3.85:1 unnoticed.
 		name: "library profile, editing with an error",
-		path: "/",
+		path: "/library",
 		prepare: async (app) => {
 			await app.enableFeatures([
 				"VITE_FEATURE_LIBRARY_BRANDING",

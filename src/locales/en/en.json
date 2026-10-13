@@ -964,9 +964,6 @@
 		"data_change_log": {
 			"title": "Data change log"
 		},
-		"home": {
-			"title": "Home"
-		},
 		"library": {
 			"service": "Service",
 			"title": "Your library"
@@ -995,6 +992,9 @@
 		},
 		"insights": {
 			"title": "Insights"
+		},
+		"today": {
+			"title": "Today"
 		}
 	},
 	"patron_request": {
@@ -1640,5 +1640,42 @@
 		"publish_failed": "The notice could not be published.",
 		"withdraw_failed": "The notice could not be taken down.",
 		"unavailable": "Announcements are not available on this deployment yet. They need a newer DCB service."
+	},
+	"today": {
+		"title": "Today",
+		"subtitle": "Requests for {{library}}: what is waiting on you, and what changed in the last day.",
+		"counting": "Counting requests…",
+		"counted": "Counted from {{since}}, the last {{hours}} hours.",
+		"refresh": "Refresh counts",
+		"retry": "Try again",
+		"load_failed": "The request counts could not be loaded.",
+		"no_scope": "Your library has no library system recorded, so its requests cannot be counted. Ask your OpenRS team to check your library's set-up.",
+		"unknown": "{{label}}: not known",
+		"insights_link": "Trends, benchmarks and demand are in Insights",
+		"sections": {
+			"waiting": "Waiting on you",
+			"problems": "Problems in the last {{hours}} hours",
+			"activity": "In the last {{hours}} hours"
+		},
+		"counts": {
+			"readyForPickup_one": "request ready for your patron to collect",
+			"readyForPickup_other": "requests ready for your patrons to collect",
+			"inTransitToPickup_one": "request on its way to your patron",
+			"inTransitToPickup_other": "requests on their way to your patrons",
+			"toSupply_one": "request for you to fill",
+			"toSupply_other": "requests for you to fill",
+			"returning_one": "item on its way back to you",
+			"returning_other": "items on their way back to you",
+			"failedBorrowed_one": "of your patrons' requests failed",
+			"failedBorrowed_other": "of your patrons' requests failed",
+			"failedSupplied_one": "request you were supplying failed",
+			"failedSupplied_other": "requests you were supplying failed",
+			"unfilled_one": "request no library could fill",
+			"unfilled_other": "requests no library could fill",
+			"placed_one": "request placed by your patrons",
+			"placed_other": "requests placed by your patrons",
+			"received_one": "request for you to supply arrived",
+			"received_other": "requests for you to supply arrived"
+		}
 	}
 }

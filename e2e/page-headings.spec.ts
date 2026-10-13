@@ -17,8 +17,14 @@ interface Surface {
 
 const SURFACES: Surface[] = [
 	{
-		name: "library profile",
+		name: "today",
 		path: "/",
+		heading: /^today$/i,
+		mocks: { LoadLibrary: library },
+	},
+	{
+		name: "library profile",
+		path: "/library",
 		heading: /information for/i,
 		mocks: {
 			LoadLibrary: library,

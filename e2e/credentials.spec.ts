@@ -84,7 +84,7 @@ const recordMocks: OperationMocks = {
 const SURFACES: Surface[] = [
 	{
 		name: "library profile",
-		path: "/",
+		path: "/library",
 		mocks: {
 			LoadLibrary: library,
 			LoadPatronRequestStats: { patronRequests: { totalSize: 1 } },

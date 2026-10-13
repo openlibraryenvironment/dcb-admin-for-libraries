@@ -27,7 +27,8 @@ interface LayoutProps {
  * "Not Found" - gets built, and why nothing ever matched the location.
  */
 const TAB_PATHS = {
-	home: "/",
+	today: "/",
+	library: "/library",
 	requesting: "/requesting",
 	patronRequests: "/patronRequests",
 	supplierRequests: "/supplierRequests",
@@ -57,7 +58,8 @@ export const Layout = ({ children }: LayoutProps) => {
 	const tabsConfig = useMemo(() => {
 		return auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN")
 			? [
-					{ label: t("nav.home.title"), value: TAB_PATHS.home },
+					{ label: t("nav.today.title"), value: TAB_PATHS.today },
+					{ label: t("nav.library.title"), value: TAB_PATHS.library },
 					{
 						label: t("nav.requesting.title"),
 						value: TAB_PATHS.requesting,
