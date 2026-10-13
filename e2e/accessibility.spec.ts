@@ -342,6 +342,27 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// The walk-up dialog opens from the Actions menu, so the requesting scan above
+		// never contains it.
+		name: "requesting - quick walk-up dialog",
+		path: "/requesting?filters=keyword%3Amiddlemarch",
+		prepare: async (app) => {
+			await app.signIn({ roles: ["CONSORTIUM_ADMIN"] });
+			await app.mockGraphQL({ LoadLibrary: library });
+			await app.mockSearch();
+		},
+		reveal: async (page) => {
+			await page.getByRole("button", { name: /actions/i }).click();
+			await page.getByRole("menuitem", { name: /quick walk-up request/i }).click();
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("dialog", { name: /quick walk-up request/i }),
+			).toBeVisible();
+			await expect(page.getByText(/patron validation/i).first()).toBeVisible();
+		},
+	},
+	{
 		// A grid page with rows on it. The mappings scan covers a grid, but this
 		// one carries the row links and the detail-panel toggles.
 		name: "patron requests",

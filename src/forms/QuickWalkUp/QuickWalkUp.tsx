@@ -51,7 +51,7 @@ import {
 	getStepLabelFontWeight,
 } from "@helpers/getStepLabelStyles";
 import { PatronLookupResponse } from "@models/PatronLookupResponse";
-import { getRequestError } from "@helpers/getRequestError";
+import { buildWalkUpPayload, walkUpRefusal } from "@helpers/walkUpRequest";
 import { QuickWalkUpFormData } from "@models/QuickWalkUpFormData";
 
 export default function QuickWalkUpRequest({
@@ -305,16 +305,16 @@ export default function QuickWalkUpRequest({
 					t("requesting.staff_request.patron.error.validation_failure"),
 				);
 
-			const payload = {
-				itemHostLmsCode: staffLibraryOption?.hostLmsCode,
-				itemAgencyCode: staffAgencyCode,
+			const payload = buildWalkUpPayload({
+				staffHostLmsCode: staffLibraryOption?.hostLmsCode ?? "",
+				staffAgencyCode,
 				itemBarcode: data.itemBarcode,
 				pickupLocationCode: data.pickupLocationCode,
 				patronBarcode: data.patronBarcode,
 				patronLocalId: patronData.localPatronId[0],
-				agencyCode: data.agencyCode,
+				patronAgencyCode: data.agencyCode,
 				patronHostLmsCode: patronData.systemCode,
-			};
+			});
 
 			const response = await axios.post(
 				`${cfg.VITE_DCB_API_BASE}/patrons/requests/place/walkup`,
@@ -339,7 +339,11 @@ export default function QuickWalkUpRequest({
 			setAlert({
 				open: true,
 				severity: "error",
-				text: getRequestError(error?.response?.data?.failedChecks, t),
+				text: walkUpRefusal(
+					error?.response?.status,
+					error?.response?.data?.failedChecks,
+					t,
+				),
 			});
 			setStepError(1);
 		},

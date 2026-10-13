@@ -104,10 +104,6 @@ export function SharedIndexV2() {
 	const { cfg } = router.options.context as { cfg: any };
 	const { t } = useTranslation();
 	const announce = useAnnounce();
-	const roles = auth?.user?.profile?.roles ? auth?.user?.profile?.roles : [];
-
-	// Quick walk-up stays with consortium admins until its role gate is decided.
-	const isAdmin = roles.includes("CONSORTIUM_ADMIN");
 	// Validated by the route's requestingSearchSchema.
 	const search: RequestingSearch = useSearch({ strict: false });
 	const queryParam = search.filters;
@@ -267,35 +263,33 @@ export function SharedIndexV2() {
 						{t("nav.requesting.title")}
 					</Typography>
 
-					{isAdmin ? (
-						<Box>
-							<Button
-								id="actions-menu-button"
-								aria-controls={isMenuOpen ? "actions-menu" : undefined}
-								aria-haspopup="true"
-								aria-expanded={isMenuOpen ? "true" : undefined}
-								onClick={handleMenuClick}
-								variant="contained"
-								color="primary"
-								startIcon={<ChecklistRounded />}>
-								{t("ui.actions.title")}
-							</Button>
-							<Menu
-								id="actions-menu"
-								anchorEl={menuAnchorEl}
-								open={isMenuOpen}
-								onClose={handleMenuClose}
-								slotProps={{
-									list: {
-										"aria-labelledby": "actions-menu-button",
-									},
-								}}>
-								<MenuItem onClick={handleQuickWalkUpClick}>
-									{t("requesting.quick_walk_up.button")}
-								</MenuItem>
-							</Menu>
-						</Box>
-					) : null}
+					<Box>
+						<Button
+							id="actions-menu-button"
+							aria-controls={isMenuOpen ? "actions-menu" : undefined}
+							aria-haspopup="true"
+							aria-expanded={isMenuOpen ? "true" : undefined}
+							onClick={handleMenuClick}
+							variant="contained"
+							color="primary"
+							startIcon={<ChecklistRounded />}>
+							{t("ui.actions.title")}
+						</Button>
+						<Menu
+							id="actions-menu"
+							anchorEl={menuAnchorEl}
+							open={isMenuOpen}
+							onClose={handleMenuClose}
+							slotProps={{
+								list: {
+									"aria-labelledby": "actions-menu-button",
+								},
+							}}>
+							<MenuItem onClick={handleQuickWalkUpClick}>
+								{t("requesting.quick_walk_up.button")}
+							</MenuItem>
+						</Menu>
+					</Box>
 				</Stack>
 				<form onSubmit={handleSearchSubmit}>
 					<AdvancedSearchFilter
