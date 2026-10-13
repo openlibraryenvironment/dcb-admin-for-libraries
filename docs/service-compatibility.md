@@ -97,8 +97,8 @@ would have:
 | the release's own | `schema.v9.0.0.graphqls` | a 9.0.0 deployment |
 
 **The third pass is the one that was missing**, and it stopped being optional
-when `schema.graphqls` diverged from the 9.0.0 tag: `V9_0_008` added
-`supportUrl` after it. Neither of the others can catch a field gated at the
+when `schema.graphqls` diverged from the 9.0.0 tag: `supportUrl` arrives
+after it. Neither of the others can catch a field gated at the
 wrong *threshold* — all-flags-on validates against a schema that has
 everything, all-flags-off against one that has nothing, and a deployment on the
 9.0.0 release is in neither state.
@@ -130,7 +130,7 @@ exists because the two fields are gated differently:
 - **`patronWebsite`** has been on `Library` since 5.11.1, so it is selected
   unconditionally and needs no flag. It was already fetched and displayed; it
   was never editable.
-- **`supportUrl`** arrived in `V9_0_008`, after the 9.0.0 tag, so it is behind
+- **`supportUrl`** arrives after the 9.0.0 tag, so it is behind
   its own flag. `legacy-service.spec.ts` holds the other end: 8.71.0 is never
   asked for it.
 

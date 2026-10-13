@@ -83,7 +83,7 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		},
 	},
 	{
-		// On dcb-service MAIN, and in no release: V9_0_008 landed after the 9.0.0 tag, so
+		// In no dcb-service release: support_url is on an unmerged branch, so
 		// `since` stays null and serviceCapabilities.test.ts says so. A SEPARATE row from
 		// library_branding, whose since is 9.0.0 - one flag over both would be a lie about
 		// one of them, and switching it on at the v9 upgrade would take LoadLibrary down

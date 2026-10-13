@@ -13,7 +13,7 @@ import library from "./fixtures-data/library.json" with { type: "json" };
 const V9_ONLY_FIELDS = ["brandLogoUrl", "brandLogoAlt", "defaultThemeName"];
 
 /**
- * What arrived AFTER the 9.0.0 tag: `supportUrl`, in V9_0_008, behind its own flag.
+ * What arrives AFTER the 9.0.0 tag: `supportUrl`, behind its own flag.
  *
  * Kept separate from the list above rather than merged into it, because the two lists
  * answer different questions. Both are refused by 8.71.0, so the negative test takes

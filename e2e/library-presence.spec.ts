@@ -3,8 +3,8 @@ import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
  * The library's presence links. Two fields with two different
- * thresholds: patronWebsite is unconditional since 5.11.1, supportUrl arrived
- * in V9_0_008 and is flagged. docs/service-compatibility.md.
+ * thresholds: patronWebsite is unconditional since 5.11.1, supportUrl arrives
+ * after 9.0.0 and is flagged. docs/service-compatibility.md.
  */
 
 const STATS = { patronRequests: { totalSize: 42 } };

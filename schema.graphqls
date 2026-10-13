@@ -1,12 +1,11 @@
-# THE NEWEST SCHEMA THIS APP TARGETS - dcb-service `feat/discovery-contract`, which is its
-# main plus what a discovery front end needs from it: §V-11.1's links, §N-3's scoped
-# functional settings and §V-12's announcements. On NO dcb-service release and not on its
-# main. That branch exists so these applications can be built against one contract before it
-# merges; nothing here reaches a deployment before it does, because every capability row
-# that depends on it carries `since: null` and its flag is off everywhere.
+# THE NEWEST SCHEMA THIS APP TARGETS - dcb-service `feat/discovery-service-support`, which is
+# its main plus what a discovery front end needs from it: the support links and
+# announcements. On NO dcb-service release and not on its main. Nothing here
+# reaches a deployment before it merges, because every capability row that depends on it
+# carries `since: null` and its flag is off everywhere.
 #
-# It was byte-identical to the v9.0.0 tag until V9_0_008 added `supportUrl` to Library,
-# Consortium and their update inputs, and until V-12 added the announcements above. The
+# It was byte-identical to the v9.0.0 tag until `supportUrl` was added to Library,
+# Consortium and their update inputs, and the announcements above after it. The
 # provisioning API and maxLocalHolds are also on dcb-service main and belong to DCB Admin.
 #
 # Copied verbatim; do not hand-edit. schemaConformance.test.ts validates every

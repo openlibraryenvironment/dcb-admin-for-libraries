@@ -73,7 +73,7 @@ describe("themeOptions", () => {
 
 describe("brand field limits", () => {
 	it("matches the column widths in dcb-service's library brand migration", () => {
-		// V9_0_002, plus V5_11_1_003 and V9_0_008 for the two link columns. A
+		// The library brand columns, plus the patron website and support link columns. A
 		// value the database would truncate is refused here, with a message.
 		expect(BRAND_LIMITS).toEqual({
 			linkUrl: 200,

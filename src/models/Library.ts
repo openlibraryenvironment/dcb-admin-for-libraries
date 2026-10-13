@@ -21,7 +21,7 @@ export interface Library {
 	// Two different questions and rarely the same desk, so two fields; discovery renders
 	// both in the footer of every page.
 	patronWebsite?: string | null;
-	// New in V9_0_008, which is on dcb-service main and in no release, so a deployment on
+	// In no dcb-service release yet, so a deployment on
 	// the 9.0.0 tag does not select it at all.
 	supportUrl?: string | null;
 	hostLmsConfiguration: string;
