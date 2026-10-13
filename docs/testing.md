@@ -430,6 +430,16 @@ And `verify_secrets` had no local path of any kind, because gitleaks is not an n
 package: the runner uses a `gitleaks` binary if there is one, Docker if the daemon is
 up, and otherwise reports **SKIP** rather than counting a gate it did not run.
 
+**The runner sets `CI=1`**, because the pipeline has it set and both Playwright configs
+read it: workers 1 rather than 4, retries 2 rather than 0, and `reuseExistingServer`
+off so each gate starts and stops its own preview. Without it, running the gates back to
+back produced **failures that pass on their own** - four workers racing on a machine
+still busy from the Lighthouse run before them, with no retry to absorb it. That is the
+flakiness this document already warns about, met from a new direction.
+
+The cost is CI’s own blind spot: `retries: 2` turns a racing spec green. To hunt one,
+run `npx playwright test --workers=1` directly rather than through the runner.
+
 Three things differ from CI, deliberately:
 
 - **Order.** CI runs these in parallel; this runs them fastest first, so a failure
