@@ -1,8 +1,8 @@
 import { gql } from "graphql-request";
 
 // Requests collected at a library's locations for other libraries' patrons.
-export const getTodayPickupHere = gql`
-	query LoadTodayPickupHere(
+export const getHomePickupHere = gql`
+	query LoadHomePickupHere(
 		$ready: String!,
 		$arriving: String!
 	) {

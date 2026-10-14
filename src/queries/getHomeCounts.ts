@@ -1,11 +1,11 @@
 import { gql } from "graphql-request";
 
-// One request for every count on the Today page; aliases and variables are the TodayCountId values.
-export const getTodayCounts = gql`
-	query LoadTodayCounts(
+// One request for every count on the home page; aliases and variables are the HomeCountId values.
+export const getHomeCounts = gql`
+	query LoadHomeCounts(
 		$readyForPickup: String!,
 		$inTransitToPickup: String!,
-		$toSupply: String!,
+		$notYetSent: String!,
 		$returning: String!,
 		$failedBorrowed: String!,
 		$failedSupplied: String!,
@@ -19,7 +19,7 @@ export const getTodayCounts = gql`
 		inTransitToPickup: patronRequests(query: $inTransitToPickup, pageno: 0, pagesize: 1) {
 			totalSize
 		}
-		toSupply: patronRequests(query: $toSupply, pageno: 0, pagesize: 1) {
+		notYetSent: patronRequests(query: $notYetSent, pageno: 0, pagesize: 1) {
 			totalSize
 		}
 		returning: patronRequests(query: $returning, pageno: 0, pagesize: 1) {

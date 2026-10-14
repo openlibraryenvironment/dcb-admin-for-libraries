@@ -1,8 +1,8 @@
 import { gql } from "graphql-request";
 
 // Every request a library has borrowed and supplied, as the two grids scope them.
-export const getTodayHistory = gql`
-	query LoadTodayHistory(
+export const getHomeHistory = gql`
+	query LoadHomeHistory(
 		$borrowed: String!,
 		$supplied: String!
 	) {

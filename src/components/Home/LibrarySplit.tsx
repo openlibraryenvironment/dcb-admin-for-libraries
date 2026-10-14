@@ -20,7 +20,7 @@ import {
 	suppliedByLibraryQuery,
 } from "@helpers/patronRequestScope";
 import { libraryNamesQueryOptions } from "@helpers/libraryNamesQuery";
-import { TODAY_COUNTS, todayCountsQueryOptions } from "@helpers/today";
+import { HOME_COUNTS, type HomeWindow, homeCountsQueryOptions } from "@helpers/home";
 
 // One request of nine counts per library, all at once: a shared system's handful, never a consortium
 const MAX_SPLIT_LIBRARIES = 10;
@@ -29,12 +29,12 @@ const MAX_SPLIT_LIBRARIES = 10;
 export default function LibrarySplit({
 	apiBase,
 	agencyCodes,
-	since,
+	span,
 }: {
 	apiBase: string;
 	agencyCodes: string[];
-	/** null is the last 24 hours, so the user's own library shares the page's cache entry. */
-	since: string | null;
+	/** The page's own window, so the user's own library shares the page's cache entry. */
+	span: HomeWindow;
 }) {
 	const { t } = useTranslation();
 	const headingId = useId();
@@ -51,13 +51,13 @@ export default function LibrarySplit({
 
 	const rows = useQueries({
 		queries: shown.map((code) =>
-			todayCountsQueryOptions(
+			homeCountsQueryOptions(
 				apiBase,
 				{
 					borrowed: borrowedByLibraryQuery(code, undefined),
 					supplied: suppliedByLibraryQuery(code),
 				},
-				since,
+				span,
 			),
 		),
 	});
@@ -65,18 +65,18 @@ export default function LibrarySplit({
 	return (
 		<Box component="section" aria-labelledby={headingId}>
 			<Typography variant="h2" id={headingId} gutterBottom>
-				{t("today.split.title")}
+				{t("home.split.title")}
 			</Typography>
-			<Typography gutterBottom>{t("today.split.description")}</Typography>
+			<Typography gutterBottom>{t("home.split.description")}</Typography>
 			{/* Focusable: at narrow widths it scrolls sideways, and a keyboard must reach that */}
 			<TableContainer tabIndex={0} role="group" aria-labelledby={headingId}>
 				<Table size="small" aria-labelledby={headingId}>
 					<TableHead>
 						<TableRow>
-							<TableCell>{t("today.split.library")}</TableCell>
-							{TODAY_COUNTS.map((count) => (
+							<TableCell>{t("home.split.library")}</TableCell>
+							{HOME_COUNTS.map((count) => (
 								<TableCell key={count.id} align="right">
-									{t(`today.split.columns.${count.id}`)}
+									{t(`home.split.columns.${count.id}`)}
 								</TableCell>
 							))}
 						</TableRow>
@@ -90,11 +90,11 @@ export default function LibrarySplit({
 										{nameFor.get(code) ?? code}
 									</TableCell>
 									{row.isError ? (
-										<TableCell colSpan={TODAY_COUNTS.length}>
-											{t("today.split.failed")}
+										<TableCell colSpan={HOME_COUNTS.length}>
+											{t("home.split.failed")}
 										</TableCell>
 									) : (
-										TODAY_COUNTS.map((count) => (
+										HOME_COUNTS.map((count) => (
 											<TableCell key={count.id} align="right">
 												{!row.data ? (
 													<Skeleton variant="text" width={24} sx={{ ml: "auto" }} />
@@ -102,7 +102,7 @@ export default function LibrarySplit({
 													<>
 														<span aria-hidden="true">—</span>
 														<Box component="span" sx={visuallyHidden}>
-															{t("today.split.unknown")}
+															{t("home.split.unknown")}
 														</Box>
 													</>
 												) : (
@@ -119,7 +119,7 @@ export default function LibrarySplit({
 			</TableContainer>
 			{agencyCodes.length > shown.length ? (
 				<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-					{t("today.split.more", { count: agencyCodes.length - shown.length })}
+					{t("home.split.more", { count: agencyCodes.length - shown.length })}
 				</Typography>
 			) : null}
 		</Box>

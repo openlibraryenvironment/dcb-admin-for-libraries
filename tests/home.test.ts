@@ -12,16 +12,16 @@ import {
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import {
 	MAX_PICKUP_LOCATIONS,
-	TODAY_COUNTS,
-	TODAY_WINDOW_HOURS,
+	HOME_COUNTS,
 	WINDOWED_COUNTS,
+	comparesWithLastWeek,
 	lastWeekOf,
 	pickupHereQuery,
-	todayCountQuery,
-	todayCountsQueryOptions,
-	todayHistoryQueryOptions,
+	homeCountQuery,
+	homeCountsQueryOptions,
+	homeHistoryQueryOptions,
 	windowStart,
-} from "@helpers/today";
+} from "@helpers/home";
 import {
 	borrowedByLibraryQuery,
 	suppliedByLibraryQuery,
@@ -50,9 +50,9 @@ const asTheGridReadsIt = (scope: keyof typeof GRIDS, filters: unknown[]) =>
 		undefined,
 	);
 
-const each = TODAY_COUNTS.map((count) => [count.id, count] as const);
+const each = HOME_COUNTS.map((count) => [count.id, count] as const);
 
-describe("each Today count", () => {
+describe("each home page count", () => {
 	it.each(each)("%s: the grid it links to keeps every one of its filters", (_id, count) => {
 		const filters = count.filters(OPEN);
 		expect(asTheGridReadsIt(count.scope, filters).items).toEqual(filters);
@@ -60,19 +60,19 @@ describe("each Today count", () => {
 
 	it.each(each)("%s: counts exactly what that grid then asks the service for", (_id, count) => {
 		const grid = asTheGridReadsIt(count.scope, count.filters(OPEN));
-		expect(todayCountQuery(count, OPEN, SCOPES)).toBe(
+		expect(homeCountQuery(count, OPEN, SCOPES)).toBe(
 			processGridFilterModel(grid, SCOPES[count.scope]),
 		);
 	});
 
 	it("is scoped to the grid it belongs to", () => {
-		for (const count of TODAY_COUNTS) {
-			expect(todayCountQuery(count, OPEN, SCOPES).startsWith(SCOPES[count.scope])).toBe(true);
+		for (const count of HOME_COUNTS) {
+			expect(homeCountQuery(count, OPEN, SCOPES).startsWith(SCOPES[count.scope])).toBe(true);
 		}
 	});
 
 	it("puts what waits now outside the window, and everything else inside it", () => {
-		for (const count of TODAY_COUNTS) {
+		for (const count of HOME_COUNTS) {
 			const windowed = count
 				.filters(OPEN)
 				.some((item) => item.operator === "luceneDateRange");
@@ -80,9 +80,17 @@ describe("each Today count", () => {
 		}
 	});
 
+	it("counts as not yet sent every status before the supplier's ILS reports it in transit", () => {
+		const notYetSent = HOME_COUNTS.find((count) => count.id === "notYetSent")!;
+		expect(homeCountQuery(notYetSent, OPEN, SCOPES)).toBe(
+			`${SCOPES.supplied} AND ((status:("REQUEST_PLACED_AT_SUPPLYING_AGENCY" OR "CONFIRMED" OR ` +
+				`"REQUEST_PLACED_AT_BORROWING_AGENCY" OR "REQUEST_PLACED_AT_PICKUP_AGENCY")))`,
+		);
+	});
+
 	it("closes the window at both ends when asked to", () => {
 		for (const count of WINDOWED_COUNTS) {
-			expect(todayCountQuery(count, CLOSED, SCOPES)).toContain(
+			expect(homeCountQuery(count, CLOSED, SCOPES)).toContain(
 				`[${CLOSED.from} TO ${CLOSED.to}]`,
 			);
 		}
@@ -90,8 +98,28 @@ describe("each Today count", () => {
 });
 
 describe("the window", () => {
-	it(`starts ${TODAY_WINDOW_HOURS} hours before now`, () => {
-		expect(windowStart(new Date("2026-10-13T08:00:00.000Z"))).toBe(SINCE);
+	const now = new Date("2026-10-13T08:00:00.000Z");
+
+	it("today starts at the browser's local midnight", () => {
+		const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+		expect(windowStart({ kind: "today" }, now)).toBe(midnight.toISOString());
+	});
+
+	it.each([
+		["week", "2026-10-06T08:00:00.000Z"],
+		["month", "2026-09-13T08:00:00.000Z"],
+	] as const)("the last %s starts that many whole days before now", (kind, start) => {
+		expect(windowStart({ kind }, now)).toBe(start);
+	});
+
+	it("since a visit starts at that visit", () => {
+		expect(windowStart({ kind: "visit", since: SINCE }, now)).toBe(SINCE);
+	});
+
+	it("compares with a week earlier only where that week does not overlap the span", () => {
+		expect(
+			(["today", "week", "month", "visit"] as const).filter(comparesWithLastWeek),
+		).toEqual(["today", "week"]);
 	});
 
 	it("compares with the same span a week earlier", () => {
@@ -183,7 +211,7 @@ describe("a location id in the pickup query", () => {
 });
 
 describe("a library's history", () => {
-	const staleTime = todayHistoryQueryOptions("api", SCOPES).staleTime as (query: {
+	const staleTime = homeHistoryQueryOptions("api", SCOPES).staleTime as (query: {
 		state: { data?: { borrowed: number | null; supplied: number | null } };
 	}) => number;
 
@@ -209,8 +237,8 @@ describe("the by-library table", () => {
 			borrowed: borrowedByLibraryQuery("e2e-agency", undefined),
 			supplied: suppliedByLibraryQuery("e2e-agency"),
 		};
-		expect(todayCountsQueryOptions("api", row, null).queryKey).toEqual(
-			todayCountsQueryOptions("api", page, null).queryKey,
+		expect(homeCountsQueryOptions("api", row, { kind: "week" }).queryKey).toEqual(
+			homeCountsQueryOptions("api", page, { kind: "week" }).queryKey,
 		);
 	});
 });

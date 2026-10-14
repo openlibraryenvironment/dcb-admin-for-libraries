@@ -1,7 +1,7 @@
 import { storageKey } from "@helpers/appBase";
 
 /**
- * When this browser last opened Today, and the last time it did so in an earlier visit.
+ * When this browser last opened the home page, and the last time it did so in an earlier visit.
  * Per browser by design - a convenience, not a record - so a shared desk PC shares it.
  */
 export interface Visits {
@@ -9,7 +9,7 @@ export interface Visits {
 	previous: string | null;
 }
 
-// Reopening Today within half an hour is the same visit, so "since your last visit" holds still
+// Reopening the home page within half an hour is the same visit, so "since your last visit" holds still
 const SAME_VISIT_MS = 30 * 60_000;
 
 // Past this, "since your last visit" is the last 30 days: the window bounds what is counted
@@ -31,7 +31,7 @@ export const sinceLastVisit = (visits: Visits, now: Date): string | null => {
 	return new Date(Math.max(Date.parse(visits.previous), floor)).toISOString();
 };
 
-const KEY = () => storageKey("todayVisits");
+const KEY = () => storageKey("homeVisits");
 
 const isIso = (value: unknown): value is string =>
 	typeof value === "string" && value.length <= 40 && !Number.isNaN(Date.parse(value));

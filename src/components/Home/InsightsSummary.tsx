@@ -24,7 +24,7 @@ export default function InsightsSummary({ libraryCode }: { libraryCode: string }
 	return (
 		<Box component="section" aria-labelledby={headingId}>
 			<Typography variant="h2" id={headingId} gutterBottom>
-				{t("today.insights.title")}
+				{t("home.insights.title")}
 			</Typography>
 			<Suspense
 				fallback={
@@ -45,7 +45,7 @@ export default function InsightsSummary({ libraryCode }: { libraryCode: string }
 			</Suspense>
 			<Typography sx={{ mt: 1 }}>
 				<CustomLink to="/insights" search={{ range: "7d" }}>
-					{t("today.insights.more")}
+					{t("home.insights.more")}
 				</CustomLink>
 			</Typography>
 		</Box>

@@ -16,7 +16,7 @@ import KpiTile from "./KpiTile";
 
 /**
  * The five figures a library director asks for: were my patrons served, and am I carrying
- * my share. Shown above every Insights subject, and on Today.
+ * my share. Shown above every Insights subject, and on the home page.
  */
 export default function OverviewTiles({ params }: { params: StatsParams }) {
 	const { t } = useTranslation();

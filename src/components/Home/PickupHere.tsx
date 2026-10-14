@@ -5,14 +5,14 @@ import { Alert, Box, Paper, Typography } from "@mui/material";
 
 import {
 	agencyLocationIdsQueryOptions,
-	todayPickupHereQueryOptions,
-} from "@helpers/today";
+	homePickupHereQueryOptions,
+} from "@helpers/home";
 import { TILE_MIN_HEIGHT } from "./layout";
-import { Figure, TileList, TileSkeleton } from "./TodaySections";
+import { Figure, TileList, TileSkeleton } from "./HomeSections";
 
 /**
  * Other libraries' patrons collecting at this library. No grid lists these, so they are
- * counted and not linked. 8.71.0 only: isTodayPickupHereEnabled says why.
+ * counted and not linked. 8.71.0 only: isHomePickupHereEnabled says why.
  */
 export default function PickupHere({
 	apiBase,
@@ -29,7 +29,7 @@ export default function PickupHere({
 	const locations = useQuery(agencyLocationIdsQueryOptions(apiBase, agencyCode));
 	const locationIds = locations.data ?? [];
 	const counts = useQuery({
-		...todayPickupHereQueryOptions(apiBase, locationIds, borrowedScope),
+		...homePickupHereQueryOptions(apiBase, locationIds, borrowedScope),
 		enabled: locationIds.length > 0,
 	});
 
@@ -39,13 +39,13 @@ export default function PickupHere({
 	return (
 		<Box component="section" aria-labelledby={headingId}>
 			<Typography variant="h2" id={headingId} gutterBottom>
-				{t("today.pickup.title")}
+				{t("home.pickup.title")}
 			</Typography>
-			<Typography gutterBottom>{t("today.pickup.description")}</Typography>
+			<Typography gutterBottom>{t("home.pickup.description")}</Typography>
 			{failed ? (
-				<Alert severity="error">{t("today.pickup.load_failed")}</Alert>
+				<Alert severity="error">{t("home.pickup.load_failed")}</Alert>
 			) : noLocations ? (
-				<Typography color="text.secondary">{t("today.pickup.no_locations")}</Typography>
+				<Typography color="text.secondary">{t("home.pickup.no_locations")}</Typography>
 			) : (
 				<TileList>
 					{(["ready", "arriving"] as const).map((id) => (
@@ -56,10 +56,10 @@ export default function PickupHere({
 										<Figure value={counts.data[id]} />
 										<Typography component="span">
 											{counts.data[id] === null
-												? t("today.unknown", {
-														label: t(`today.pickup.counts.${id}`, { count: 2 }),
+												? t("home.unknown", {
+														label: t(`home.pickup.counts.${id}`, { count: 2 }),
 													})
-												: t(`today.pickup.counts.${id}`, { count: counts.data[id] })}
+												: t(`home.pickup.counts.${id}`, { count: counts.data[id] })}
 										</Typography>
 									</>
 								) : (

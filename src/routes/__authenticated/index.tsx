@@ -1,15 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-import TodayPage from "@components/Today/TodayPage";
+import HomePage from "@components/Home/HomePage";
 import { pageTitle } from "@helpers/pageTitle";
 
-const todaySearchSchema = z.object({
-	window: z.enum(["day", "visit"]).optional().catch(undefined),
+const homeSearchSchema = z.object({
+	window: z.enum(["today", "week", "month", "visit"]).optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/__authenticated/")({
-	validateSearch: todaySearchSchema,
-	head: () => ({ meta: [{ title: pageTitle("nav.today.title") }] }),
-	component: TodayPage,
+	validateSearch: homeSearchSchema,
+	head: () => ({ meta: [{ title: pageTitle("nav.home.title") }] }),
+	component: HomePage,
 });

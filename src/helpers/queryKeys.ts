@@ -4,6 +4,7 @@ import type {
 	GridSortDirection,
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
+import type { HomeWindow } from "@helpers/home";
 
 /** One page of a server-paged grid, as far as a query key needs to know it. */
 export interface GridPage {
@@ -73,27 +74,27 @@ export const queryKeys = {
 		essentials: (apiBase: string, id: string | null) =>
 			["patronRequests", "essentials", apiBase, id] as const,
 	},
-	today: {
+	home: {
 		counts: (
 			apiBase: string,
 			scopes: { borrowed: string; supplied: string },
-			since: string | null,
-		) => ["today", "counts", apiBase, scopes, since] as const,
+			window: HomeWindow,
+		) => ["home", "counts", apiBase, scopes, window] as const,
 		lastWeek: (
 			apiBase: string,
 			scopes: { borrowed: string; supplied: string },
 			since: string,
 			until: string,
-		) => ["today", "lastWeek", apiBase, scopes, since, until] as const,
+		) => ["home", "lastWeek", apiBase, scopes, since, until] as const,
 		history: (apiBase: string, scopes: { borrowed: string; supplied: string }) =>
-			["today", "history", apiBase, scopes] as const,
+			["home", "history", apiBase, scopes] as const,
 		pickupHere: (
 			apiBase: string,
 			locationIds: readonly string[],
 			borrowedScope: string,
-		) => ["today", "pickupHere", apiBase, locationIds, borrowedScope] as const,
+		) => ["home", "pickupHere", apiBase, locationIds, borrowedScope] as const,
 		agencyLocations: (apiBase: string, agencyCode: string) =>
-			["today", "agencyLocations", apiBase, agencyCode] as const,
+			["home", "agencyLocations", apiBase, agencyCode] as const,
 	},
 	supplierRequests: {
 		lists: () => ["supplierRequests", "list"] as const,

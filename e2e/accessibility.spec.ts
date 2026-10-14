@@ -1,6 +1,6 @@
 import { test, expect as strictExpect, type AppFixture } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
-import { DEFAULT_TODAY_TOTALS, todayCounts } from "./fixtures/today";
+import { DEFAULT_HOME_TOTALS, homeCounts } from "./fixtures/home";
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 import polarisLibrary from "./fixtures-data/library-polaris.json" with { type: "json" };
@@ -140,16 +140,16 @@ const openRequestDialog = async (page: Page) => {
 
 const PAGES: Surface[] = [
 	{
-		// Today, where a library administrator lands. Insights is on and the counts include a
+		// Home, where a library administrator lands. Insights is on and the counts include a
 		// zero and an unknown, so the scan sees links, plain tiles and the extra link at once.
-		name: "today",
+		name: "home",
 		path: "/",
 		prepare: async (app) => {
 			await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
 			await app.signIn();
 			await app.mockGraphQL({
 				LoadLibrary: library,
-				LoadTodayCounts: todayCounts({ ...DEFAULT_TODAY_TOTALS, unfilled: null }),
+				LoadHomeCounts: homeCounts({ ...DEFAULT_HOME_TOTALS, unfilled: null }),
 			});
 		},
 		ready: async (page) => {
@@ -157,26 +157,26 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
-		// Today with the optional parts a 9.x deployment can turn on, together: a table, a
+		// Home with the optional parts a 9.x deployment can turn on, together: a table, a
 		// toggle group, comparisons, notices and the Insights tiles all in one scan.
-		name: "today, with its 9.x parts on",
+		name: "home, with its 9.x parts on",
 		path: "/",
 		prepare: async (app) => {
 			await app.enableFeatures([
 				"VITE_FEATURE_INSIGHTS",
-				"VITE_FEATURE_TODAY_INSIGHTS",
+				"VITE_FEATURE_HOME_INSIGHTS",
 				"VITE_FEATURE_ANNOUNCEMENTS",
-				"VITE_FEATURE_TODAY_ANNOUNCEMENTS",
+				"VITE_FEATURE_HOME_ANNOUNCEMENTS",
 				"VITE_FEATURE_AGENCY_SCOPED_REQUESTS",
-				"VITE_FEATURE_TODAY_LIBRARY_SPLIT",
-				"VITE_FEATURE_TODAY_LAST_WEEK",
-				"VITE_FEATURE_TODAY_SINCE_LAST_VISIT",
+				"VITE_FEATURE_HOME_LIBRARY_SPLIT",
+				"VITE_FEATURE_HOME_LAST_WEEK",
+				"VITE_FEATURE_HOME_SINCE_LAST_VISIT",
 			]);
 			await app.signIn({ agencyCode: "e2e-agency,second-agency" });
 			await app.mockStats();
 			await app.mockGraphQL({
 				LoadLibrary: library,
-				LoadTodayLastWeek: todayCounts(DEFAULT_TODAY_TOTALS),
+				LoadHomeLastWeek: homeCounts(DEFAULT_HOME_TOTALS),
 				LoadAnnouncements: {
 					announcements: [
 						{
@@ -200,24 +200,24 @@ const PAGES: Surface[] = [
 	},
 	{
 		// The two parts that belong to an 8.71.0 deployment, or to a library not yet started.
-		name: "today, with its 8.71.0 parts on",
+		name: "home, with its 8.71.0 parts on",
 		path: "/",
 		prepare: async (app) => {
 			await app.enableFeatures([
-				"VITE_FEATURE_TODAY_PICKUP_HERE",
-				"VITE_FEATURE_TODAY_SETUP_CHECKLIST",
+				"VITE_FEATURE_HOME_PICKUP_HERE",
+				"VITE_FEATURE_HOME_SETUP_CHECKLIST",
 			]);
 			await app.signIn();
 			await app.mockGraphQL({
 				LoadLibrary: library,
-				LoadTodayHistory: todayCounts({ borrowed: 0, supplied: 0 }),
+				LoadHomeHistory: homeCounts({ borrowed: 0, supplied: 0 }),
 				LoadAgencyLocationsForExport: {
 					agencies: {
 						totalSize: 1,
 						content: [{ code: "e2e-agency", locations: [{ id: "loc-1" }] }],
 					},
 				},
-				LoadTodayPickupHere: todayCounts({ ready: 5, arriving: 2 }),
+				LoadHomePickupHere: homeCounts({ ready: 5, arriving: 2 }),
 			});
 		},
 		ready: async (page) => {

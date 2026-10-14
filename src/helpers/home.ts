@@ -5,31 +5,36 @@ import { authHeaders } from "@helpers/auth";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import { queryKeys } from "@helpers/queryKeys";
 import { OPTIONAL_QUERY } from "@helpers/serviceErrors";
-import { getTodayCounts } from "@queries/getTodayCounts";
-import { getTodayLastWeek } from "@queries/getTodayLastWeek";
-import { getTodayHistory } from "@queries/getTodayHistory";
-import { getTodayPickupHere } from "@queries/getTodayPickupHere";
+import { getHomeCounts } from "@queries/getHomeCounts";
+import { getHomeLastWeek } from "@queries/getHomeLastWeek";
+import { getHomeHistory } from "@queries/getHomeHistory";
+import { getHomePickupHere } from "@queries/getHomePickupHere";
 import { getAgencyLocationsForExport } from "@queries/getAgencyLocationsForExport";
 import { agencyLocationsQuery, quoted } from "@helpers/exportScope";
 
 /** The grid a count belongs to; its link opens that grid with the count's filters. */
-export type TodayScope = "borrowed" | "supplied";
+export type HomeScope = "borrowed" | "supplied";
 
-export type TodaySection = "waiting" | "problems" | "activity";
+export type HomeSection = "waiting" | "problems" | "activity";
 
 /** What the problems and activity are counted over. */
-export type TodayWindowKind = "day" | "visit";
+export type HomeWindowKind = "today" | "week" | "month" | "visit";
 
-export const TODAY_WINDOW_HOURS = 24;
+/** "visit" carries the remembered visit it counts from; the others are measured at count time. */
+export type HomeWindow =
+	| { kind: Exclude<HomeWindowKind, "visit"> }
+	| { kind: "visit"; since: string };
 
-const HOUR = 3_600_000;
-const WEEK = 7 * 24 * HOUR;
+export const WINDOW_DAYS = { week: 7, month: 30 } as const;
 
-/** Also the alias and variable names in LoadTodayCounts. */
-export type TodayCountId =
+const DAY = 24 * 3_600_000;
+const WEEK = 7 * DAY;
+
+/** Also the alias and variable names in LoadHomeCounts. */
+export type HomeCountId =
 	| "readyForPickup"
 	| "inTransitToPickup"
-	| "toSupply"
+	| "notYetSent"
 	| "returning"
 	| "failedBorrowed"
 	| "failedSupplied"
@@ -38,17 +43,17 @@ export type TodayCountId =
 	| "received";
 
 /** A window's bounds; an open `to` runs to now. */
-export interface TodayRange {
+export interface HomeRange {
 	from: string;
 	to: string | null;
 }
 
-export interface TodayCount {
-	id: TodayCountId;
-	section: TodaySection;
-	scope: TodayScope;
+export interface HomeCount {
+	id: HomeCountId;
+	section: HomeSection;
+	scope: HomeScope;
 	/** The grid filters this count is, as the grid's own URL state carries them. */
-	filters: (range: TodayRange) => GridFilterItem[];
+	filters: (range: HomeRange) => GridFilterItem[];
 }
 
 const status = (value: string): GridFilterItem => ({
@@ -58,9 +63,16 @@ const status = (value: string): GridFilterItem => ({
 	value,
 });
 
+const anyStatus = (...values: string[]): GridFilterItem => ({
+	id: 1,
+	field: "status",
+	operator: "isAnyOf",
+	value: values,
+});
+
 const within =
 	(field: "dateCreated" | "dateUpdated") =>
-	({ from, to }: TodayRange): GridFilterItem => ({
+	({ from, to }: HomeRange): GridFilterItem => ({
 		id: 2,
 		field,
 		operator: "luceneDateRange",
@@ -68,7 +80,7 @@ const within =
 	});
 
 // "waiting" is the current state, so it has no window: a request ready since Friday still waits
-export const TODAY_COUNTS: readonly TodayCount[] = [
+export const HOME_COUNTS: readonly HomeCount[] = [
 	{
 		id: "readyForPickup",
 		section: "waiting",
@@ -82,10 +94,18 @@ export const TODAY_COUNTS: readonly TodayCount[] = [
 		filters: () => [status("PICKUP_TRANSIT")],
 	},
 	{
-		id: "toSupply",
+		id: "notYetSent",
 		section: "waiting",
 		scope: "supplied",
-		filters: () => [status("REQUEST_PLACED_AT_SUPPLYING_AGENCY")],
+		// Every status before HandleSupplierInTransit sees the supplier's ILS put the item in transit
+		filters: () => [
+			anyStatus(
+				"REQUEST_PLACED_AT_SUPPLYING_AGENCY",
+				"CONFIRMED",
+				"REQUEST_PLACED_AT_BORROWING_AGENCY",
+				"REQUEST_PLACED_AT_PICKUP_AGENCY",
+			),
+		],
 	},
 	{
 		id: "returning",
@@ -128,35 +148,48 @@ export const TODAY_COUNTS: readonly TodayCount[] = [
 	},
 ];
 
-/** The counts a window applies to; also the aliases in LoadTodayLastWeek. */
-export const WINDOWED_COUNTS = TODAY_COUNTS.filter(
+/** The counts a window applies to; also the aliases in LoadHomeLastWeek. */
+export const WINDOWED_COUNTS = HOME_COUNTS.filter(
 	(count) => count.section !== "waiting",
 );
 
-export const windowStart = (now: Date): string =>
-	new Date(now.getTime() - TODAY_WINDOW_HOURS * HOUR).toISOString();
+/** "today" is since the browser's local midnight; week and month are whole days back from now. */
+export const windowStart = (window: HomeWindow, now: Date): string => {
+	switch (window.kind) {
+		case "today":
+			return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+		case "visit":
+			return window.since;
+		default:
+			return new Date(now.getTime() - WINDOW_DAYS[window.kind] * DAY).toISOString();
+	}
+};
+
+/** A week earlier overlaps a 30-day span or a visit up to 30 days ago, so only these compare. */
+export const comparesWithLastWeek = (kind: HomeWindowKind): kind is "today" | "week" =>
+	kind === "today" || kind === "week";
 
 /** The same span, one week earlier: what "the same time last week" means. */
-export const lastWeekOf = (since: string, until: string): TodayRange => ({
+export const lastWeekOf = (since: string, until: string): HomeRange => ({
 	from: new Date(Date.parse(since) - WEEK).toISOString(),
 	to: new Date(Date.parse(until) - WEEK).toISOString(),
 });
 
 /** Exactly the query the count's grid sends for the same filters, so the two agree. */
-export const todayCountQuery = (
-	count: TodayCount,
-	range: TodayRange,
-	scopes: Record<TodayScope, string>,
+export const homeCountQuery = (
+	count: HomeCount,
+	range: HomeRange,
+	scopes: Record<HomeScope, string>,
 ): string =>
 	processGridFilterModel({ items: count.filters(range) }, scopes[count.scope]);
 
-export interface TodayCounts {
+export interface HomeCounts {
 	/** The window's start as counted: each link carries this, not a fresh "now". */
 	since: string;
 	/** When the counts were taken: the window's end, which links carry too. */
 	until: string;
 	/** null where the service returned no total, which is shown as unknown, never as 0. */
-	counts: Record<TodayCountId, number | null>;
+	counts: Record<HomeCountId, number | null>;
 }
 
 type Totals = Partial<Record<string, { totalSize?: number | null } | null>>;
@@ -165,24 +198,23 @@ const totalOf = (data: Totals, alias: string): number | null =>
 	data[alias]?.totalSize ?? null;
 
 // Count queries read the whole request table on 8.71.0: worth five minutes, and Refresh asks sooner
-const TODAY_STALE_TIME = 5 * 60_000;
+const HOME_STALE_TIME = 5 * 60_000;
 
-/** `since` null is the last 24 hours, measured when the counts are taken. */
-export const todayCountsQueryOptions = (
+export const homeCountsQueryOptions = (
 	apiBase: string,
-	scopes: Record<TodayScope, string>,
-	since: string | null,
+	scopes: Record<HomeScope, string>,
+	window: HomeWindow,
 ) =>
 	queryOptions({
-		queryKey: queryKeys.today.counts(apiBase, scopes, since),
-		queryFn: async (): Promise<TodayCounts> => {
+		queryKey: queryKeys.home.counts(apiBase, scopes, window),
+		queryFn: async (): Promise<HomeCounts> => {
 			const now = new Date();
-			const range = { from: since ?? windowStart(now), to: now.toISOString() };
+			const range = { from: windowStart(window, now), to: now.toISOString() };
 			const data = await request<Totals>(
 				`${apiBase}/graphql`,
-				getTodayCounts,
+				getHomeCounts,
 				Object.fromEntries(
-					TODAY_COUNTS.map((count) => [count.id, todayCountQuery(count, range, scopes)]),
+					HOME_COUNTS.map((count) => [count.id, homeCountQuery(count, range, scopes)]),
 				),
 				await authHeaders(),
 			);
@@ -190,37 +222,37 @@ export const todayCountsQueryOptions = (
 				since: range.from,
 				until: now.toISOString(),
 				counts: Object.fromEntries(
-					TODAY_COUNTS.map((count) => [count.id, totalOf(data, count.id)]),
-				) as Record<TodayCountId, number | null>,
+					HOME_COUNTS.map((count) => [count.id, totalOf(data, count.id)]),
+				) as Record<HomeCountId, number | null>,
 			};
 		},
-		staleTime: TODAY_STALE_TIME,
+		staleTime: HOME_STALE_TIME,
 		// Returning to the tab is not a request for nine table reads; Refresh is
 		refetchOnWindowFocus: false,
 		meta: OPTIONAL_QUERY,
 	});
 
 /** The windowed counts over the same span a week earlier. Keyed on the span counted. */
-export const todayLastWeekQueryOptions = (
+export const homeLastWeekQueryOptions = (
 	apiBase: string,
-	scopes: Record<TodayScope, string>,
-	counted: Pick<TodayCounts, "since" | "until">,
+	scopes: Record<HomeScope, string>,
+	counted: Pick<HomeCounts, "since" | "until">,
 ) =>
 	queryOptions({
-		queryKey: queryKeys.today.lastWeek(apiBase, scopes, counted.since, counted.until),
+		queryKey: queryKeys.home.lastWeek(apiBase, scopes, counted.since, counted.until),
 		queryFn: async () => {
 			const range = lastWeekOf(counted.since, counted.until);
 			const data = await request<Totals>(
 				`${apiBase}/graphql`,
-				getTodayLastWeek,
+				getHomeLastWeek,
 				Object.fromEntries(
-					WINDOWED_COUNTS.map((count) => [count.id, todayCountQuery(count, range, scopes)]),
+					WINDOWED_COUNTS.map((count) => [count.id, homeCountQuery(count, range, scopes)]),
 				),
 				await authHeaders(),
 			);
 			return Object.fromEntries(
 				WINDOWED_COUNTS.map((count) => [count.id, totalOf(data, count.id)]),
-			) as Partial<Record<TodayCountId, number | null>>;
+			) as Partial<Record<HomeCountId, number | null>>;
 		},
 		// A week ago does not change; a new span counted is a new key
 		staleTime: Infinity,
@@ -228,16 +260,16 @@ export const todayLastWeekQueryOptions = (
 	});
 
 /** Every request the library has ever borrowed and supplied: is it new to resource sharing? */
-export const todayHistoryQueryOptions = (
+export const homeHistoryQueryOptions = (
 	apiBase: string,
-	scopes: Record<TodayScope, string>,
+	scopes: Record<HomeScope, string>,
 ) =>
 	queryOptions({
-		queryKey: queryKeys.today.history(apiBase, scopes),
+		queryKey: queryKeys.home.history(apiBase, scopes),
 		queryFn: async () => {
 			const data = await request<Totals>(
 				`${apiBase}/graphql`,
-				getTodayHistory,
+				getHomeHistory,
 				scopes,
 				await authHeaders(),
 			);
@@ -245,7 +277,7 @@ export const todayHistoryQueryOptions = (
 		},
 		// A library that has borrowed or supplied never goes back to none
 		staleTime: ({ state }) =>
-			state.data?.borrowed || state.data?.supplied ? Infinity : TODAY_STALE_TIME,
+			state.data?.borrowed || state.data?.supplied ? Infinity : HOME_STALE_TIME,
 		meta: OPTIONAL_QUERY,
 	});
 
@@ -262,17 +294,17 @@ export const pickupHereQuery = (
 	return `pickupLocationCode:(${ids}) AND status:${statusValue} AND NOT (${borrowedScope})`;
 };
 
-export const todayPickupHereQueryOptions = (
+export const homePickupHereQueryOptions = (
 	apiBase: string,
 	locationIds: readonly string[],
 	borrowedScope: string,
 ) =>
 	queryOptions({
-		queryKey: queryKeys.today.pickupHere(apiBase, locationIds, borrowedScope),
+		queryKey: queryKeys.home.pickupHere(apiBase, locationIds, borrowedScope),
 		queryFn: async () => {
 			const data = await request<Totals>(
 				`${apiBase}/graphql`,
-				getTodayPickupHere,
+				getHomePickupHere,
 				{
 					ready: pickupHereQuery(locationIds, borrowedScope, "READY_FOR_PICKUP"),
 					arriving: pickupHereQuery(locationIds, borrowedScope, "PICKUP_TRANSIT"),
@@ -281,14 +313,14 @@ export const todayPickupHereQueryOptions = (
 			);
 			return { ready: totalOf(data, "ready"), arriving: totalOf(data, "arriving") };
 		},
-		staleTime: TODAY_STALE_TIME,
+		staleTime: HOME_STALE_TIME,
 		meta: OPTIONAL_QUERY,
 	});
 
 /** The library's own location ids, through Agency.locations as the export guard reads them. */
 export const agencyLocationIdsQueryOptions = (apiBase: string, agencyCode: string) =>
 	queryOptions({
-		queryKey: queryKeys.today.agencyLocations(apiBase, agencyCode),
+		queryKey: queryKeys.home.agencyLocations(apiBase, agencyCode),
 		queryFn: async () => {
 			const data = await request<{
 				agencies?: {
@@ -306,6 +338,6 @@ export const agencyLocationIdsQueryOptions = (apiBase: string, agencyCode: strin
 				.map((location) => location?.id)
 				.filter((id): id is string => !!id);
 		},
-		staleTime: TODAY_STALE_TIME,
+		staleTime: HOME_STALE_TIME,
 		meta: OPTIONAL_QUERY,
 	});

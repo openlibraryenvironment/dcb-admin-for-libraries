@@ -1,8 +1,8 @@
 import { gql } from "graphql-request";
 
-// Today's windowed counts a week earlier; aliases and variables are the TodayCountId values.
-export const getTodayLastWeek = gql`
-	query LoadTodayLastWeek(
+// The home page's windowed counts a week earlier; aliases and variables are the HomeCountId values.
+export const getHomeLastWeek = gql`
+	query LoadHomeLastWeek(
 		$failedBorrowed: String!,
 		$failedSupplied: String!,
 		$unfilled: String!,

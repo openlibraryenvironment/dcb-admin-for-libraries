@@ -10,7 +10,7 @@ import {
 	isLibraryBrandingEnabled,
 	isLibrarySupportUrlEnabled,
 } from "@helpers/featureFlags";
-import { todayHistoryQueryOptions, type TodayScope } from "@helpers/today";
+import { homeHistoryQueryOptions, type HomeScope } from "@helpers/home";
 import type { Library } from "@models/Library";
 
 interface Item {
@@ -42,12 +42,12 @@ export default function SetupChecklist({
 	library,
 }: {
 	apiBase: string;
-	scopes: Record<TodayScope, string>;
+	scopes: Record<HomeScope, string>;
 	library: Library;
 }) {
 	const { t } = useTranslation();
 	const headingId = useId();
-	const history = useQuery(todayHistoryQueryOptions(apiBase, scopes));
+	const history = useQuery(homeHistoryQueryOptions(apiBase, scopes));
 
 	if (history.data?.borrowed !== 0 || history.data?.supplied !== 0) return null;
 
@@ -56,9 +56,9 @@ export default function SetupChecklist({
 	return (
 		<Paper component="section" variant="outlined" aria-labelledby={headingId} sx={{ p: 2 }}>
 			<Typography variant="h2" id={headingId} gutterBottom>
-				{t("today.setup.title")}
+				{t("home.setup.title")}
 			</Typography>
-			<Typography gutterBottom>{t("today.setup.intro")}</Typography>
+			<Typography gutterBottom>{t("home.setup.intro")}</Typography>
 			<Box component="ul" role="list" sx={{ listStyle: "none", p: 0, m: 0 }}>
 				{items.map((item) => (
 					<Box
@@ -72,15 +72,15 @@ export default function SetupChecklist({
 							<RadioButtonUnchecked color="action" fontSize="small" aria-hidden />
 						)}
 						<Typography component="span">
-							{t(item.done ? "today.setup.item_done" : "today.setup.item_todo", {
-								item: t(`today.setup.items.${item.id}`),
+							{t(item.done ? "home.setup.item_done" : "home.setup.item_todo", {
+								item: t(`home.setup.items.${item.id}`),
 							})}
 						</Typography>
 					</Box>
 				))}
 			</Box>
 			<Typography sx={{ mt: 1 }}>
-				<CustomLink to="/library">{t("today.setup.link")}</CustomLink>
+				<CustomLink to="/library">{t("home.setup.link")}</CustomLink>
 			</Typography>
 		</Paper>
 	);

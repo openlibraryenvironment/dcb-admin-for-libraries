@@ -26,24 +26,24 @@ export default function NoticesPanel({
 	return (
 		<Paper component="section" variant="outlined" aria-labelledby={headingId} sx={{ p: 2 }}>
 			<Typography variant="h2" id={headingId} gutterBottom>
-				{t("today.notices.title")}
+				{t("home.notices.title")}
 			</Typography>
 			{announcements.isError ? (
-				<Alert severity="error">{t("today.notices.load_failed")}</Alert>
+				<Alert severity="error">{t("home.notices.load_failed")}</Alert>
 			) : !announcements.data ? (
 				<Skeleton variant="text" width="60%" />
 			) : live.length === 0 ? (
-				<Typography>{t("today.notices.none")}</Typography>
+				<Typography>{t("home.notices.none")}</Typography>
 			) : (
 				<>
 					<Typography gutterBottom>
-						{t("today.notices.live", { count: live.length })}
+						{t("home.notices.live", { count: live.length })}
 					</Typography>
 					<Box component="ul" sx={{ pl: 3, my: 0 }}>
 						{live.slice(0, SHOWN).map((row) => (
 							<li key={row.id}>
 								<Typography component="span">
-									{t("today.notices.live_item", {
+									{t("home.notices.live_item", {
 										headline: row.headline,
 										date: formatDate(row.expiresAt),
 									})}
@@ -54,7 +54,7 @@ export default function NoticesPanel({
 				</>
 			)}
 			<Typography sx={{ mt: 1 }}>
-				<CustomLink to="/announcements">{t("today.notices.manage")}</CustomLink>
+				<CustomLink to="/announcements">{t("home.notices.manage")}</CustomLink>
 			</Typography>
 		</Paper>
 	);

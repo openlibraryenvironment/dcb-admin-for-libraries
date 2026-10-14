@@ -5,17 +5,17 @@ import { Box, Paper, Skeleton, Typography } from "@mui/material";
 import { CustomLink } from "@components/CustomLink";
 import { formatNumber } from "@helpers/formatters";
 import {
-	TODAY_COUNTS,
-	TODAY_WINDOW_HOURS,
-	type TodayCount,
-	type TodayCountId,
-	type TodayCounts,
-	type TodaySection,
-	type TodayWindowKind,
-} from "@helpers/today";
+	HOME_COUNTS,
+	WINDOW_DAYS,
+	type HomeCount,
+	type HomeCountId,
+	type HomeCounts,
+	type HomeSection,
+	type HomeWindowKind,
+} from "@helpers/home";
 import { TILE_MIN_HEIGHT } from "./layout";
 
-const SECTIONS: readonly TodaySection[] = ["waiting", "problems", "activity"];
+const SECTIONS: readonly HomeSection[] = ["waiting", "problems", "activity"];
 
 const GRID_FOR = {
 	borrowed: "/patronRequests",
@@ -24,22 +24,24 @@ const GRID_FOR = {
 
 const sectionHeading = (
 	t: (key: string, options?: Record<string, unknown>) => string,
-	section: TodaySection,
-	windowKind: TodayWindowKind,
+	section: HomeSection,
+	windowKind: HomeWindowKind,
 ) =>
 	section === "waiting"
-		? t("today.sections.waiting")
-		: t(`today.sections.${section}_${windowKind}`, { count: TODAY_WINDOW_HOURS });
+		? t("home.sections.waiting")
+		: windowKind === "week" || windowKind === "month"
+			? t(`home.sections.${section}_days`, { count: WINDOW_DAYS[windowKind] })
+			: t(`home.sections.${section}_${windowKind}`);
 
-export default function TodaySections({
+export default function HomeSections({
 	data,
 	lastWeek,
 	windowKind,
 }: {
-	data: TodayCounts | undefined;
+	data: HomeCounts | undefined;
 	/** The same counts a week earlier; absent when the comparison is off or not loaded. */
-	lastWeek?: Partial<Record<TodayCountId, number | null>>;
-	windowKind: TodayWindowKind;
+	lastWeek?: Partial<Record<HomeCountId, number | null>>;
+	windowKind: HomeWindowKind;
 }) {
 	return (
 		<>
@@ -62,10 +64,10 @@ function SectionList({
 	lastWeek,
 	windowKind,
 }: {
-	section: TodaySection;
-	data: TodayCounts | undefined;
-	lastWeek?: Partial<Record<TodayCountId, number | null>>;
-	windowKind: TodayWindowKind;
+	section: HomeSection;
+	data: HomeCounts | undefined;
+	lastWeek?: Partial<Record<HomeCountId, number | null>>;
+	windowKind: HomeWindowKind;
 }) {
 	const { t } = useTranslation();
 	const headingId = useId();
@@ -76,15 +78,16 @@ function SectionList({
 				{sectionHeading(t, section, windowKind)}
 			</Typography>
 			<TileList>
-				{TODAY_COUNTS.filter((count) => count.section === section).map((count) => (
+				{HOME_COUNTS.filter((count) => count.section === section).map((count) => (
 					<Box component="li" key={count.id}>
 						<Paper
 							variant="outlined"
 							sx={{ p: 2, minHeight: TILE_MIN_HEIGHT, height: "100%" }}
 						>
-							<TodayTile count={count} data={data} />
+							<HomeTile count={count} data={data} />
 							{lastWeek && count.section !== "waiting" ? (
 								<Comparison
+									kind={windowKind === "week" ? "week" : "today"}
 									now={data?.counts[count.id] ?? null}
 									before={lastWeek[count.id]}
 								/>
@@ -136,12 +139,12 @@ export const TileSkeleton = () => (
 	</>
 );
 
-function TodayTile({
+function HomeTile({
 	count,
 	data,
 }: {
-	count: TodayCount;
-	data: TodayCounts | undefined;
+	count: HomeCount;
+	data: HomeCounts | undefined;
 }) {
 	const { t } = useTranslation();
 
@@ -155,12 +158,12 @@ function TodayTile({
 			<>
 				<Figure value={null} />
 				<Typography component="span">
-					{t("today.unknown", { label: t(`today.counts.${count.id}`, { count: 2 }) })}
+					{t("home.unknown", { label: t(`home.counts.${count.id}`, { count: 2 }) })}
 				</Typography>
 			</>
 		);
 	}
-	const label = t(`today.counts.${count.id}`, { count: value });
+	const label = t(`home.counts.${count.id}`, { count: value });
 	// A zero would open an empty grid
 	if (value === 0) {
 		return (
@@ -186,9 +189,12 @@ function TodayTile({
 
 /** In words, not only an arrow or a colour: "3 more than the same time last week". */
 function Comparison({
+	kind,
 	now,
 	before,
 }: {
+	/** A week earlier is "the same time last week" for today, and "the 7 days before" for a week. */
+	kind: "today" | "week";
 	now: number | null;
 	/** undefined while last week is still loading: the line's space is held for it. */
 	before: number | null | undefined;
@@ -206,8 +212,8 @@ function Comparison({
 	const difference = now - before;
 	const text =
 		difference === 0
-			? t("today.compare.same")
-			: t(difference > 0 ? "today.compare.more" : "today.compare.fewer", {
+			? t(`home.compare.${kind}.same`)
+			: t(`home.compare.${kind}.${difference > 0 ? "more" : "fewer"}`, {
 					count: Math.abs(difference),
 					value: formatNumber(Math.abs(difference)),
 				});

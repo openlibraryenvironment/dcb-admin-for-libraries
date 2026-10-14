@@ -446,7 +446,7 @@ function HomeComponent() {
 			)}
             <Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<Typography>
-					{t("welcome.title", {
+					{t("library.greeting", {
 						library: library?.fullName,
 						name: auth.user?.profile?.name,
 					})}
@@ -494,7 +494,7 @@ function HomeComponent() {
 				<Typography variant="h3" component="h2" sx={{
                     fontWeight: "bold"
                 }}>
-					{t("welcome.library_short")}
+					{t("library.information_short")}
 				</Typography>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>

@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures/test";
 import { API_BASE } from "./fixtures/runtime-config";
-import { DEFAULT_TODAY_TOTALS, todayCounts } from "./fixtures/today";
+import { DEFAULT_HOME_TOTALS, homeCounts } from "./fixtures/home";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import type { Page } from "@playwright/test";
 
@@ -17,8 +17,8 @@ const recordVariables = (page: Page) => {
 
 const tile = (page: Page, name: RegExp) => page.getByRole("link", { name });
 
-test.describe("Today", () => {
-	test("says what waits now and what changed, under one heading per section", async ({
+test.describe("Home", () => {
+	test("welcomes, then says what is in progress and what changed, one heading per section", async ({
 		app,
 		page,
 	}) => {
@@ -26,16 +26,19 @@ test.describe("Today", () => {
 		await app.mockGraphQL({ LoadLibrary: library });
 		await page.goto("/");
 
-		await expect(page.getByRole("heading", { level: 1 })).toHaveText("Today");
+		await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+			"Welcome to DCB Admin for E2E Test Library",
+		);
+		await expect(page.getByText(/^DCB Admin for Libraries is the\s+portal/)).toBeVisible();
 		await expect(page.getByRole("heading", { level: 2 })).toHaveText([
-			"Waiting on you",
-			"Problems in the last 24 hours",
-			"In the last 24 hours",
+			"In progress now",
+			"Problems today",
+			"New today",
 		]);
-		await expect(page.getByText(/^Counted from .+, the last 24 hours\.$/)).toBeVisible();
+		await expect(page.getByText(/^Counted from .+ to .+\.$/)).toBeVisible();
 		await expect(tile(page, /^4 requests ready for your patrons to collect$/)).toBeVisible();
 		await expect(tile(page, /^1,234 requests placed by your patrons$/)).toBeVisible();
-		await expect(page.getByRole("tab", { name: "Today" })).toHaveAttribute(
+		await expect(page.getByRole("tab", { name: "Home" })).toHaveAttribute(
 			"aria-selected",
 			"true",
 		);
@@ -59,7 +62,7 @@ test.describe("Today", () => {
 		await expect(page).toHaveURL(/\/patronRequests\?/);
 		await expect.poll(() => sent.LoadPatronRequests?.length ?? 0).toBeGreaterThan(0);
 		expect(sent.LoadPatronRequests.at(-1)!.query).toBe(
-			sent.LoadTodayCounts[0].readyForPickup,
+			sent.LoadHomeCounts[0].readyForPickup,
 		);
 	});
 
@@ -76,12 +79,48 @@ test.describe("Today", () => {
 		});
 		await page.goto("/");
 
-		await tile(page, /requests placed by your patrons/).click();
+		await tile(page, /requests placed by your patrons$/).click();
 
 		await expect.poll(() => sent.LoadPatronRequests?.length ?? 0).toBeGreaterThan(0);
-		expect(sent.LoadPatronRequests.at(-1)!.query).toBe(sent.LoadTodayCounts[0].placed);
+		expect(sent.LoadPatronRequests.at(-1)!.query).toBe(sent.LoadHomeCounts[0].placed);
 		// Closed at the moment counted, so the grid shows exactly the rows counted
-		expect(sent.LoadTodayCounts[0].placed).toMatch(/dateCreated:\[\S+Z TO \S+Z\]/);
+		expect(sent.LoadHomeCounts[0].placed).toMatch(/dateCreated:\[\S+Z TO \S+Z\]/);
+	});
+
+	test("today, the last 7 days or the last 30 days, kept in the URL", async ({ app, page }) => {
+		const sent = recordVariables(page);
+		await app.signIn();
+		await app.mockGraphQL({ LoadLibrary: library });
+		await page.goto("/");
+		await expect(page.getByText(/^Counted from /)).toBeVisible();
+
+		const choice = page.getByRole("group", { name: "Count changes over" });
+		await expect(choice.getByRole("button", { name: "Today" })).toHaveAttribute(
+			"aria-pressed",
+			"true",
+		);
+		await expect(choice.getByRole("button", { name: "Since your last visit" })).toHaveCount(0);
+
+		await choice.getByRole("button", { name: "Last 30 days" }).click();
+
+		await expect(page).toHaveURL(/window=month/);
+		await expect(page.getByRole("heading", { level: 2 })).toHaveText([
+			"In progress now",
+			"Problems in the last 30 days",
+			"New in the last 30 days",
+		]);
+		await expect.poll(() => sent.LoadHomeCounts.length).toBe(2);
+		const from = sent.LoadHomeCounts[1].placed.match(/dateCreated:\[(\S+) TO /)![1];
+		const days = (Date.now() - Date.parse(from)) / (24 * 3_600_000);
+		expect(Math.round(days)).toBe(30);
+		// What is in progress has no window, whichever is chosen
+		expect(sent.LoadHomeCounts[1].readyForPickup).toBe(sent.LoadHomeCounts[0].readyForPickup);
+
+		await page.reload();
+		await expect(choice.getByRole("button", { name: "Last 30 days" })).toHaveAttribute(
+			"aria-pressed",
+			"true",
+		);
 	});
 
 	test("counts a library's own requests the way the grids do, on 8.71.0 and after", async ({
@@ -94,16 +133,16 @@ test.describe("Today", () => {
 		await page.goto("/");
 		await expect(page.getByText(/^Counted from /)).toBeVisible();
 
-		const legacy = sent.LoadTodayCounts[0];
+		const legacy = sent.LoadHomeCounts[0];
 		expect(legacy.readyForPickup).toMatch(/^patronHostlmsCode:e2e-lms AND /);
 		// Escaped as the supplier grid has always sent it
-		expect(legacy.toSupply).toMatch(/^supplyingAgencyCode:e2e\\-agency AND /);
+		expect(legacy.notYetSent).toMatch(/^supplyingAgencyCode:e2e\\-agency AND /);
 
 		await app.enableFeatures(["VITE_FEATURE_AGENCY_SCOPED_REQUESTS"]);
 		await page.goto("/");
 		await expect(page.getByText(/^Counted from /)).toBeVisible();
 
-		expect(sent.LoadTodayCounts.at(-1)!.readyForPickup).toMatch(
+		expect(sent.LoadHomeCounts.at(-1)!.readyForPickup).toMatch(
 			/^patronAgencyCode:e2e-agency AND /,
 		);
 	});
@@ -115,13 +154,15 @@ test.describe("Today", () => {
 		await app.signIn();
 		await app.mockGraphQL({
 			LoadLibrary: library,
-			LoadTodayCounts: todayCounts({ ...DEFAULT_TODAY_TOTALS, unfilled: null }),
+			LoadHomeCounts: homeCounts({ ...DEFAULT_HOME_TOTALS, unfilled: null }),
 		});
 		await page.goto("/");
 
 		await expect(page.getByText(/^Counted from /)).toBeVisible();
-		await expect(page.getByText("requests you were supplying failed")).toBeVisible();
-		await expect(tile(page, /requests you were supplying failed/)).toHaveCount(0);
+		await expect(
+			page.getByText("requests you were supplying stopped with an error"),
+		).toBeVisible();
+		await expect(tile(page, /requests you were supplying stopped/)).toHaveCount(0);
 		await expect(
 			page.getByText("requests no library could fill: not known"),
 		).toBeVisible();
@@ -136,7 +177,7 @@ test.describe("Today", () => {
 		await app.mockGraphQL({ LoadLibrary: library });
 		let fail = true;
 		await page.route(`${API_BASE}/graphql`, (route) =>
-			fail && route.request().postDataJSON()?.operationName === "LoadTodayCounts"
+			fail && route.request().postDataJSON()?.operationName === "LoadHomeCounts"
 				? route.fulfill({ json: { data: null, errors: [{ message: "unavailable" }] } })
 				: route.fallback(),
 		);
@@ -164,7 +205,7 @@ test.describe("Today", () => {
 		await refresh.focus();
 		await page.keyboard.press("Enter");
 
-		await expect.poll(() => sent.LoadTodayCounts.length).toBe(2);
+		await expect.poll(() => sent.LoadHomeCounts.length).toBe(2);
 		await expect(page.getByText(/^Counted from /)).toBeVisible();
 		await expect(refresh).toBeFocused();
 	});
@@ -207,7 +248,7 @@ test.describe("Today", () => {
 	});
 });
 
-test.describe("Today's optional parts", () => {
+test.describe("Home's optional parts", () => {
 	const OPTIONAL_HEADINGS = [
 		"Collecting at your locations for other libraries",
 		"By library",
@@ -225,7 +266,7 @@ test.describe("Today's optional parts", () => {
 		for (const name of OPTIONAL_HEADINGS) {
 			await expect(page.getByRole("heading", { name })).toHaveCount(0);
 		}
-		await expect(page.getByRole("group", { name: "Count changes over" })).toHaveCount(0);
+		await expect(page.getByRole("button", { name: "Since your last visit" })).toHaveCount(0);
 		await expect(page.getByText(/than the same time last week/)).toHaveCount(0);
 	});
 
@@ -235,8 +276,8 @@ test.describe("Today's optional parts", () => {
 	}) => {
 		const sent = recordVariables(page);
 		await app.enableFeatures([
-			"VITE_FEATURE_TODAY_SINCE_LAST_VISIT",
-			"VITE_FEATURE_TODAY_LAST_WEEK",
+			"VITE_FEATURE_HOME_SINCE_LAST_VISIT",
+			"VITE_FEATURE_HOME_LAST_WEEK",
 		]);
 		await app.signIn();
 		await app.mockGraphQL({ LoadLibrary: library });
@@ -250,7 +291,7 @@ test.describe("Today's optional parts", () => {
 
 		const twoDaysAgo = new Date(Date.now() - 2 * 24 * 3_600_000).toISOString();
 		await page.evaluate((lastSeen) => {
-			const key = Object.keys(localStorage).find((k) => k.endsWith(":todayVisits"))!;
+			const key = Object.keys(localStorage).find((k) => k.endsWith(":homeVisits"))!;
 			localStorage.setItem(key, JSON.stringify({ lastSeen, previous: null }));
 		}, twoDaysAgo);
 		await page.reload();
@@ -260,20 +301,20 @@ test.describe("Today's optional parts", () => {
 		await expect(page).toHaveURL(/window=visit/);
 		await expect(page.getByRole("heading", { level: 2 })).toContainText([
 			"Problems since your last visit",
-			"Since your last visit",
+			"New since your last visit",
 		]);
-		expect(sent.LoadTodayCounts.at(-1)!.placed).toContain(`dateCreated:[${twoDaysAgo} TO `);
+		expect(sent.LoadHomeCounts.at(-1)!.placed).toContain(`dateCreated:[${twoDaysAgo} TO `);
 		// Since a visit up to 30 days ago, a week earlier would overlap the span itself
 		await expect(page.getByText(/than the same time last week/)).toHaveCount(0);
 	});
 
 	test("last week: each windowed count says how it compares", async ({ app, page }) => {
 		const sent = recordVariables(page);
-		await app.enableFeatures(["VITE_FEATURE_TODAY_LAST_WEEK"]);
+		await app.enableFeatures(["VITE_FEATURE_HOME_LAST_WEEK"]);
 		await app.signIn();
 		await app.mockGraphQL({
 			LoadLibrary: library,
-			LoadTodayLastWeek: todayCounts({
+			LoadHomeLastWeek: homeCounts({
 				failedBorrowed: 0,
 				failedSupplied: 0,
 				unfilled: 4,
@@ -288,18 +329,26 @@ test.describe("Today's optional parts", () => {
 		await expect(page.getByText("2 fewer than the same time last week")).toBeVisible();
 		await expect(page.getByText("No change from the same time last week")).toHaveCount(2);
 		// Closed at both ends, a week back from the span counted
-		expect(sent.LoadTodayLastWeek[0].placed).toMatch(/dateCreated:\[\S+ TO \S+Z\]/);
+		expect(sent.LoadHomeLastWeek[0].placed).toMatch(/dateCreated:\[\S+ TO \S+Z\]/);
+
+		await page.getByRole("button", { name: "Last 7 days" }).click();
+		await expect(page.getByText("234 more than the 7 days before")).toBeVisible();
+
+		// A week earlier would overlap 30 days
+		await page.getByRole("button", { name: "Last 30 days" }).click();
+		await expect(page.getByText(/^Counted from /)).toBeVisible();
+		await expect(page.getByText(/than the (same time last week|7 days before)/)).toHaveCount(0);
 	});
 
 	test("the setup checklist appears only for a library that has never borrowed or supplied", async ({
 		app,
 		page,
 	}) => {
-		await app.enableFeatures(["VITE_FEATURE_TODAY_SETUP_CHECKLIST"]);
+		await app.enableFeatures(["VITE_FEATURE_HOME_SETUP_CHECKLIST"]);
 		await app.signIn();
 		await app.mockGraphQL({
 			LoadLibrary: library,
-			LoadTodayHistory: todayCounts({ borrowed: 0, supplied: 0 }),
+			LoadHomeHistory: homeCounts({ borrowed: 0, supplied: 0 }),
 		});
 		await page.goto("/");
 
@@ -312,7 +361,7 @@ test.describe("Today's optional parts", () => {
 
 		await app.mockGraphQL({
 			LoadLibrary: library,
-			LoadTodayHistory: todayCounts({ borrowed: 3, supplied: 0 }),
+			LoadHomeHistory: homeCounts({ borrowed: 3, supplied: 0 }),
 		});
 		await page.reload();
 		await expect(page.getByText(/^Counted from /)).toBeVisible();
@@ -321,8 +370,8 @@ test.describe("Today's optional parts", () => {
 		).toHaveCount(0);
 	});
 
-	test("Insights tiles need both Today's flag and Insights", async ({ app, page }) => {
-		await app.enableFeatures(["VITE_FEATURE_TODAY_INSIGHTS"]);
+	test("Insights tiles need both the home page flag and Insights", async ({ app, page }) => {
+		await app.enableFeatures(["VITE_FEATURE_HOME_INSIGHTS"]);
 		await app.signIn();
 		await app.mockGraphQL({ LoadLibrary: library });
 		await app.mockStats();
@@ -330,7 +379,7 @@ test.describe("Today's optional parts", () => {
 		await expect(page.getByText(/^Counted from /)).toBeVisible();
 		await expect(page.getByRole("heading", { name: "Your last 7 days" })).toHaveCount(0);
 
-		await app.enableFeatures(["VITE_FEATURE_TODAY_INSIGHTS", "VITE_FEATURE_INSIGHTS"]);
+		await app.enableFeatures(["VITE_FEATURE_HOME_INSIGHTS", "VITE_FEATURE_INSIGHTS"]);
 		await page.goto("/");
 
 		const tiles = page.getByRole("region", { name: "Your last 7 days" });
@@ -358,7 +407,7 @@ test.describe("Today's optional parts", () => {
 			expiresAt: new Date(now + to * day).toISOString(),
 		});
 		await app.enableFeatures([
-			"VITE_FEATURE_TODAY_ANNOUNCEMENTS",
+			"VITE_FEATURE_HOME_ANNOUNCEMENTS",
 			"VITE_FEATURE_ANNOUNCEMENTS",
 		]);
 		await app.signIn();
@@ -386,7 +435,7 @@ test.describe("Today's optional parts", () => {
 	}) => {
 		const sent = recordVariables(page);
 		await app.enableFeatures([
-			"VITE_FEATURE_TODAY_LIBRARY_SPLIT",
+			"VITE_FEATURE_HOME_LIBRARY_SPLIT",
 			"VITE_FEATURE_AGENCY_SCOPED_REQUESTS",
 		]);
 		await app.signIn({ agencyCode: "e2e-agency,second-agency" });
@@ -400,9 +449,9 @@ test.describe("Today's optional parts", () => {
 					],
 				},
 			},
-			LoadTodayCounts: (variables) =>
-				todayCounts({
-					...DEFAULT_TODAY_TOTALS,
+			LoadHomeCounts: (variables) =>
+				homeCounts({
+					...DEFAULT_HOME_TOTALS,
 					readyForPickup: String(variables.readyForPickup).includes("second-agency")
 						? 9
 						: 4,
@@ -416,7 +465,7 @@ test.describe("Today's optional parts", () => {
 			table.getByRole("row", { name: /Second Library/ }).getByRole("cell").first(),
 		).toHaveText("9");
 		expect(
-			sent.LoadTodayCounts.some((v) =>
+			sent.LoadHomeCounts.some((v) =>
 				v.readyForPickup.startsWith("patronAgencyCode:second-agency"),
 			),
 		).toBe(true);
@@ -426,7 +475,7 @@ test.describe("Today's optional parts", () => {
 		app,
 		page,
 	}) => {
-		await app.enableFeatures(["VITE_FEATURE_TODAY_LIBRARY_SPLIT"]);
+		await app.enableFeatures(["VITE_FEATURE_HOME_LIBRARY_SPLIT"]);
 		await app.signIn({ agencyCode: "e2e-agency,second-agency" });
 		await app.mockGraphQL({ LoadLibrary: library });
 		await page.goto("/");
@@ -439,7 +488,7 @@ test.describe("Today's optional parts", () => {
 		page,
 	}) => {
 		const sent = recordVariables(page);
-		await app.enableFeatures(["VITE_FEATURE_TODAY_PICKUP_HERE"]);
+		await app.enableFeatures(["VITE_FEATURE_HOME_PICKUP_HERE"]);
 		await app.signIn();
 		await app.mockGraphQL({
 			LoadLibrary: library,
@@ -449,7 +498,7 @@ test.describe("Today's optional parts", () => {
 					content: [{ code: "e2e-agency", locations: [{ id: "loc-1" }] }],
 				},
 			},
-			LoadTodayPickupHere: todayCounts({ ready: 5, arriving: 2 }),
+			LoadHomePickupHere: homeCounts({ ready: 5, arriving: 2 }),
 		});
 		await page.goto("/");
 
@@ -461,12 +510,12 @@ test.describe("Today's optional parts", () => {
 		).toBeVisible();
 		await expect(here.getByText("5", { exact: true })).toBeVisible();
 		await expect(here.getByRole("link")).toHaveCount(0);
-		expect(sent.LoadTodayPickupHere[0].ready).toBe(
+		expect(sent.LoadHomePickupHere[0].ready).toBe(
 			'pickupLocationCode:("loc-1") AND status:READY_FOR_PICKUP AND NOT (patronHostlmsCode:e2e-lms)',
 		);
 
 		await app.enableFeatures([
-			"VITE_FEATURE_TODAY_PICKUP_HERE",
+			"VITE_FEATURE_HOME_PICKUP_HERE",
 			"VITE_FEATURE_AGENCY_SCOPED_REQUESTS",
 		]);
 		await page.goto("/");

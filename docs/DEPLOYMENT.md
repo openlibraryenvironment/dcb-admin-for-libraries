@@ -71,13 +71,13 @@ does not show the feature.
 | `VITE_FEATURE_GUARDED_CLEANUP` | **9.0.0** or later | Request cleanup that the service refuses, with a reason, while the item is still out |
 | `VITE_FEATURE_INSIGHTS_TRENDS` | **9.1.0** or later (`/insights/trend`) | The duration trend panel on Insights → Trends. Needs `VITE_FEATURE_INSIGHTS` as well |
 | `VITE_FEATURE_ANNOUNCEMENTS` | **no release serves this yet** | The Announcements page. Leave it off: on a service without the announcement operations, the page's whole GraphQL request is rejected |
-| `VITE_FEATURE_TODAY_SINCE_LAST_VISIT` | any supported release | Today: count problems and activity since the user's last visit, remembered per browser |
-| `VITE_FEATURE_TODAY_LAST_WEEK` | any supported release | Today: each problem and activity count compared with the same time last week |
-| `VITE_FEATURE_TODAY_SETUP_CHECKLIST` | any supported release | Today: a profile checklist for a library that has never borrowed or supplied |
-| `VITE_FEATURE_TODAY_INSIGHTS` | with `VITE_FEATURE_INSIGHTS` | Today: the Insights overview tiles for the last 7 days. Off while `VITE_FEATURE_INSIGHTS` is |
-| `VITE_FEATURE_TODAY_ANNOUNCEMENTS` | with `VITE_FEATURE_ANNOUNCEMENTS` | Today: the notices live for the library's patrons. Off while `VITE_FEATURE_ANNOUNCEMENTS` is |
-| `VITE_FEATURE_TODAY_LIBRARY_SPLIT` | with `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | Today: a by-library table for users who administer more than one library. Off while agency scoping is |
-| `VITE_FEATURE_TODAY_PICKUP_HERE` | **8.71.0 only** | Today: other libraries' patrons collecting at the library's locations. Off whenever `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is on, because 9.0.0 and later do not show a library the requests it only collects |
+| `VITE_FEATURE_HOME_SINCE_LAST_VISIT` | any supported release | Home page: a "since your last visit" window, remembered per browser |
+| `VITE_FEATURE_HOME_LAST_WEEK` | any supported release | Home page: each problem and new-request count compared with a week earlier, for the today and 7-day windows |
+| `VITE_FEATURE_HOME_SETUP_CHECKLIST` | any supported release | Home page: a profile checklist for a library that has never borrowed or supplied |
+| `VITE_FEATURE_HOME_INSIGHTS` | with `VITE_FEATURE_INSIGHTS` | Home page: the Insights overview tiles for the last 7 days. Off while `VITE_FEATURE_INSIGHTS` is |
+| `VITE_FEATURE_HOME_ANNOUNCEMENTS` | with `VITE_FEATURE_ANNOUNCEMENTS` | Home page: the notices live for the library's patrons. Off while `VITE_FEATURE_ANNOUNCEMENTS` is |
+| `VITE_FEATURE_HOME_LIBRARY_SPLIT` | with `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | Home page: a by-library table for users who administer more than one library. Off while agency scoping is |
+| `VITE_FEATURE_HOME_PICKUP_HERE` | **8.71.0 only** | Home page: other libraries' patrons collecting at the library's locations. Off whenever `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is on, because 9.0.0 and later do not show a library the requests it only collects |
 
 **On the kihosting.net hosts you do not set these.** Those deployments are served by the
 shared Cloudflare worker that also serves DCB Admin, which derives the whole flag block
@@ -290,7 +290,7 @@ through them before the release pipeline runs, and the checks after it.
    | `VITE_FEATURE_INSIGHTS`, `VITE_FEATURE_LIBRARY_BRANDING`, `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`, `VITE_FEATURE_GUARDED_CLEANUP` | 9.0.0 |
    | `VITE_FEATURE_INSIGHTS_TRENDS` | 9.1.0 |
    | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP` | none yet: must resolve to off |
-   | `VITE_FEATURE_TODAY_*` | a product choice, not a release: see section 2a for what each needs beside it |
+   | `VITE_FEATURE_HOME_*` | a product choice, not a release: see section 2a for what each needs beside it |
 
    A flag that is absent from the table is off on every host, which is the safe failure for
    the last row and the wrong one for the others. `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`

@@ -17,9 +17,9 @@ interface Surface {
 
 const SURFACES: Surface[] = [
 	{
-		name: "today",
+		name: "home",
 		path: "/",
-		heading: /^today$/i,
+		heading: /^welcome to dcb admin for /i,
 		mocks: { LoadLibrary: library },
 	},
 	{
