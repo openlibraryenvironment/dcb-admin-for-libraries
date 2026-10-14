@@ -37,7 +37,7 @@ const GATES = [
 		name: "performance",
 		job: "verify_performance",
 		steps: [
-			["npm", ["run", "build"], { VITE_PUBLIC_URL: "/" }],
+			["npm", ["run", "build"], { VITE_PUBLIC_URL: "/", BUNDLE_BUDGET: "1" }],
 			["npm", ["run", "budget"]],
 			["npm", ["run", "lighthouse"]],
 		],
