@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import request from "graphql-request";
 import {
@@ -11,7 +11,7 @@ import { getFileNameForExport } from "@helpers/dataGrid/getFileNameForExport";
 import {
 	EXPORT_ONLY_COLUMNS,
 	convertFileToString,
-	exportValue,
+	exportCell,
 } from "@helpers/dataGrid/convertFileToString";
 import {
 	type ExportColumn,
@@ -276,7 +276,7 @@ export const usePatronRequestExport = ({
 					? await buildXlsx(
 							options.columns,
 							named.map((row) =>
-								options.columns.map((column) => exportValue(row, column.field)),
+								options.columns.map((column) => exportCell(row, column)),
 							),
 							currentClock(),
 						)
@@ -321,13 +321,15 @@ export const usePatronRequestExport = ({
 	};
 
 	const cancelExport = () => controllerRef.current?.abort();
+	// Once per language, not per render: the toolbar memoises the columns it offers on this
+	const extraColumns = useMemo(() => EXPORT_ONLY_COLUMNS(t), [t]);
 
 	const exportConfig: GridExportConfig = {
 		run,
 		cancel: cancelExport,
 		progress: exportProgress,
 		defaultFileName: getFileNameForExport(type),
-		extraColumns: EXPORT_ONLY_COLUMNS(),
+		extraColumns,
 	};
 
 	return { exportProgress, exportConfig };

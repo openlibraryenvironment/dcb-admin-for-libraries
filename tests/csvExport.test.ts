@@ -41,3 +41,23 @@ describe("formatCellValue", () => {
 		);
 	});
 });
+
+describe("a select column in an export", () => {
+	it("carries its option labels, and the file says the label, not the code", async () => {
+		const { exportColumnsOf } = await import("@helpers/dataGrid/exportOptions");
+		const { convertFileToString } = await import("@helpers/dataGrid/convertFileToString");
+		const [status] = exportColumnsOf([
+			{
+				field: "status",
+				headerName: "Status",
+				type: "singleSelect",
+				valueOptions: [{ value: "ERROR", label: "Error" }],
+			},
+		]);
+
+		expect(status.labels).toEqual({ ERROR: "Error" });
+		expect(convertFileToString([{ status: "ERROR" }, { status: "NEW" }], ",", [status])).toBe(
+			"Status\nError\nNEW",
+		);
+	});
+});

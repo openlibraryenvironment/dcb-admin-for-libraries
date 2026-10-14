@@ -7,7 +7,21 @@ export interface ExportColumn {
 	field: string;
 	headerName: string;
 	type?: string;
+	/** A select column's labels by value, so the file says what the grid shows, not a code. */
+	labels?: Readonly<Record<string, string>>;
 }
+
+const labelsOf = (column: GridColDef): Record<string, string> | undefined => {
+	const options = "valueOptions" in column ? column.valueOptions : undefined;
+	if (column.type !== "singleSelect" || !Array.isArray(options)) return undefined;
+	return Object.fromEntries(
+		options.flatMap((option: unknown) =>
+			typeof option === "object" && option !== null && "value" in option && "label" in option
+				? [[String(option.value), String(option.label)]]
+				: [],
+		),
+	);
+};
 
 /** What the export wizard asks for. */
 export interface FileExportOptions {
@@ -33,11 +47,15 @@ const GRID_OWN_FIELDS = new Set([
 export const exportColumnsOf = (columns: readonly GridColDef[]): ExportColumn[] =>
 	columns
 		.filter((column) => column.type !== "actions" && !GRID_OWN_FIELDS.has(column.field))
-		.map((column) => ({
-			field: column.field,
-			headerName: column.headerName || column.field,
-			type: column.type,
-		}));
+		.map((column) => {
+			const labels = labelsOf(column);
+			return {
+				field: column.field,
+				headerName: column.headerName || column.field,
+				type: column.type,
+				...(labels ? { labels } : {}),
+			};
+		});
 
 export const MAX_FILE_NAME_LENGTH = 120;
 
