@@ -308,16 +308,19 @@ export const filterToSearch = (
 		if (isPrivateField(item.field)) privateItems.push({ index, item: plain });
 		else publicItems.push(plain);
 	});
-	const { filters, logic } = grid.searchSchema.parse({
-		filters: publicItems,
-		logic: model.logicOperator === GridLogicOperator.Or ? "or" : undefined,
+	const { filters } = grid.searchSchema.parse({ filters: publicItems });
+	const state = parsePrivateState(grid, {
+		items: privateItems,
+		quickFilterValues: model.quickFilterValues ?? [],
 	});
+	// MUI keeps OR after "Remove all": joining fewer than two filters, it would outlive them in the URL
+	const clauses = (filters?.length ?? 0) + (state?.items.length ?? 0);
 	return {
-		search: { filters, logic },
-		state: parsePrivateState(grid, {
-			items: privateItems,
-			quickFilterValues: model.quickFilterValues ?? [],
-		}),
+		search: {
+			filters,
+			logic: model.logicOperator === GridLogicOperator.Or && clauses > 1 ? "or" : undefined,
+		},
+		state,
 	};
 };
 

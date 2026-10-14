@@ -4,7 +4,7 @@ import {
 	defaultParseSearch,
 	defaultStringifySearch,
 } from "@tanstack/react-router";
-import type { GridFilterModel } from "@mui/x-data-grid-premium";
+import { GridLogicOperator, type GridFilterModel } from "@mui/x-data-grid-premium";
 
 import {
 	PRIVATE_FILTER_FIELDS,
@@ -246,6 +246,21 @@ describe("an unfinished filter row", () => {
 	it("is a draft until it is finished", () => {
 		expect(hasDraftItems(patronRequestsGrid, { items: [{ id: 1, field: "status", operator: "is" }] })).toBe(true);
 		expect(hasDraftItems(patronRequestsGrid, { items: [statusItem] })).toBe(false);
+	});
+});
+
+describe("the logic between filters", () => {
+	it("is written only while it joins two or more", () => {
+		const or = (count: number) =>
+			filterToSearch(patronRequestsGrid, {
+				items: Array.from({ length: count }, (_, id) => ({ ...statusItem, id })),
+				logicOperator: GridLogicOperator.Or,
+			}).search.logic;
+
+		expect(or(2)).toBe("or");
+		// "Remove all" keeps MUI's OR on an empty model
+		expect(or(1)).toBeUndefined();
+		expect(or(0)).toBeUndefined();
 	});
 });
 
