@@ -59,6 +59,24 @@ test.describe("Patron request detail", () => {
 		).toBeVisible();
 	});
 
+	test("the open tab is in the address, so a shared audit-log link opens on it", async ({
+		page,
+	}) => {
+		await page.goto(`/patronRequests/${REQUEST.id}`);
+		await page.getByRole("tab", { name: "Audit log" }).click();
+		await expect(page).toHaveURL(/[?&]tab=5$/);
+
+		await page.goto(page.url());
+		await expect(page.getByRole("tab", { name: "Audit log" })).toHaveAttribute(
+			"aria-selected",
+			"true",
+		);
+		await expect(page.getByRole("grid", { name: "Audit log" })).toBeVisible();
+
+		await page.getByRole("tab", { name: "General" }).click();
+		await expect(page).not.toHaveURL(/[?&]tab=/);
+	});
+
 	test("opens an audit entry from the keyboard", async ({ page }) => {
 		await page.goto(`/patronRequests/${REQUEST.id}`);
 		await page.getByRole("tab", { name: "Audit log" }).click();
