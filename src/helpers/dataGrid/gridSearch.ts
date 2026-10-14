@@ -19,10 +19,11 @@ import type { RouteGridSearch } from "@helpers/dataGrid/gridSearchSchema";
 
 /**
  * Filter fields whose values never go in a URL, only in the tab's history
- * entry: a patron barcode is personal data and close to a credential.
- * Quick-search text is treated the same. docs/routing.md has the argument.
+ * entry: a patron barcode is personal data and close to a credential, and a
+ * requester note is text a patron wrote. Quick-search text is treated the
+ * same. docs/routing.md has the argument.
  */
-export const PRIVATE_FILTER_FIELDS: readonly string[] = ["patronBarcode"];
+export const PRIVATE_FILTER_FIELDS: readonly string[] = ["patronBarcode", "requesterNote"];
 
 /** A reader who cleared the sort, as distinct from one who never chose. */
 const NO_SORT = "none";

@@ -16,6 +16,7 @@ import { patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
 
 const BARCODE = "PATRON-BC-90817";
 const QUICK = "quick-text-55120";
+const NOTE = "please-hold-for-mrs-71";
 
 /** What the router does with the search a navigate is handed, and back. */
 const throughUrl = (search: object) => {
@@ -34,10 +35,11 @@ const statusItem = {
 };
 
 describe("grid state in the URL", () => {
-	it("keeps the patron barcode and quick-search text out of the URL, and everything else in", () => {
+	it("keeps the patron barcode, requester note and quick-search text out of the URL, and everything else in", () => {
 		const filterModel: GridFilterModel = {
 			items: [
 				{ id: 7, field: "patronBarcode", operator: "equals", value: BARCODE },
+				{ id: 8, field: "requesterNote", operator: "contains", value: NOTE },
 				statusItem,
 			],
 			quickFilterValues: [QUICK],
@@ -50,7 +52,7 @@ describe("grid state in the URL", () => {
 		});
 		const { href } = throughUrl(search);
 
-		for (const secret of [BARCODE, QUICK]) {
+		for (const secret of [BARCODE, NOTE, QUICK]) {
 			expect(href).not.toContain(secret);
 			expect(decodeURIComponent(href)).not.toContain(secret);
 		}
@@ -61,11 +63,13 @@ describe("grid state in the URL", () => {
 		expect(search.pageSize).toBe(50);
 
 		expect(JSON.stringify(state)).toContain(BARCODE);
+		expect(JSON.stringify(state)).toContain(NOTE);
 		expect(state?.quickFilterValues).toEqual([QUICK]);
 	});
 
-	it("names every barcode-bearing personal field in one place", () => {
+	it("names every field carrying a patron's barcode or words in one place", () => {
 		expect(PRIVATE_FILTER_FIELDS).toContain("patronBarcode");
+		expect(PRIVATE_FILTER_FIELDS).toContain("requesterNote");
 		expect(PRIVATE_FILTER_FIELDS).not.toContain("itemBarcode");
 	});
 
