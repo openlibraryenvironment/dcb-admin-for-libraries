@@ -462,6 +462,7 @@ function RouteComponent() {
 					sortingMode="server"
 					sortModel={grid.sortModel}
 					onSortModelChange={grid.handleSortChange}
+					views={grid.views}
 					columnVisibilityModel={grid.columnVisibilityModel}
 					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
 					editMode="row"

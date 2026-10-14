@@ -121,6 +121,9 @@ The grid is shown what the reader just did at once, not when the URL catches
 up a tick later: MUI X treats a sort or filter it receives late as a fresh
 change and sends the reader back to the first page.
 
+Each of these grids can copy its address as a link and save its filter and sort for the
+tab: [saved-filters.md](saved-filters.md).
+
 Column visibility is a device preference, not a view, so it stays in the
 persisted grid store. That store no longer persists filter, sort or page; the
 client-paged grids (record items, the cleanup dialog) keep theirs in memory for

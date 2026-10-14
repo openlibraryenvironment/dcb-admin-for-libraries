@@ -27,12 +27,14 @@ import { expandedFilterPanelTypes } from "@constants/dataGrid/types";
 import { SxProps, Theme, Tooltip, TooltipProps } from "@mui/material";
 import ExportToolbar from "./components/ExportToolbar";
 import type { GridExportConfig } from "@/hooks/useExport";
+import type { GridViews } from "@/hooks/useSyncedDataGrid";
 
 declare module "@mui/x-data-grid-premium" {
 	interface ToolbarPropsOverrides {
 		exportConfig?: GridExportConfig;
 		allDataLoading?: boolean;
 		onCleanup?: () => void;
+		views?: GridViews;
 	}
 	interface NoRowsOverlayPropsOverrides {
 		noResultsMessage?: string;
@@ -132,6 +134,8 @@ interface DataGridProps {
 	onCleanup?: () => void;
 	exportConfig?: GridExportConfig;
 	isExporting?: boolean;
+	/** A URL-synced grid's view, which its toolbar can share as a link and save. */
+	views?: GridViews;
 }
 export default function DataGrid({
 	autoRowHeight,
@@ -176,6 +180,7 @@ export default function DataGrid({
 	searchText,
 	toolbarVisible,
 	type,
+	views,
 }: DataGridProps) {
 	const { t } = useTranslation();
 	const clock = useClock();
@@ -320,6 +325,7 @@ export default function DataGrid({
 						excelOptions: { disableToolbarButton: true },
 						allDataLoading: isExporting, // Pass the loading state
 						onCleanup: enableCleanup ? onCleanup : undefined, // Pass cleanup handler
+						views,
 					},
 					noRowsOverlay: { noResultsMessage: noResultsText },
 					noResultsOverlay: { noResultsMessage: noResultsText },

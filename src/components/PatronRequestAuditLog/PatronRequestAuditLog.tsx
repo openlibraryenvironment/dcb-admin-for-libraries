@@ -89,6 +89,7 @@ export default function PatronRequestAuditLog({
 			sortingMode="server"
 			sortModel={grid.sortModel}
 			onSortModelChange={grid.handleSortChange}
+			views={grid.views}
 		/>
 	);
 }

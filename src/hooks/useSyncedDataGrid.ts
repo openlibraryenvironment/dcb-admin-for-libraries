@@ -1,5 +1,5 @@
 import type { RouteGridSearch } from "@helpers/dataGrid/gridSearchSchema";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
 	GridColumnVisibilityModel,
@@ -9,16 +9,18 @@ import {
 } from "@mui/x-data-grid-premium";
 
 import { useGridStore } from "@/hooks/useDataGridStore";
-import { checkIfFiltering } from "@helpers/dataGrid/utilities";
+import type { SavedFilterSearch } from "@helpers/savedFilters";
 import {
 	filterToSearch,
 	GridDefinition,
 	GridModels,
 	GridSearch,
+	hasDraftItems,
 	paginationToSearch,
 	PrivateGridState,
 	readFilter,
 	readSort,
+	savedSearchOf,
 	sortToSearch,
 } from "@helpers/dataGrid/gridSearch";
 
@@ -26,10 +28,28 @@ declare module "@tanstack/react-router" {
 	interface HistoryState {
 		/** Per grid id: the filter values a URL must not carry. docs/routing.md. */
 		grids?: Record<string, PrivateGridState | undefined>;
+		/** Per grid id: the mark of the grid's own last write, to tell it from Back or a link. */
+		gridWrites?: Record<string, string>;
 	}
 }
 
 const FILTER_DEBOUNCE_MS = 500;
+
+/** What the toolbar needs to share the grid's view as a link and to save it. */
+export interface GridViews {
+	gridId: string;
+	/** The filter and sort as the grid shows them, as the URL will hold them. */
+	current: SavedFilterSearch;
+	/** A barcode filter or search text narrows the grid: neither goes in a link or a saved filter. */
+	hasPrivate: boolean;
+	/** Writes a filter still waiting on the debounce, so the address is the grid as shown. */
+	flush: () => Promise<void>;
+	apply: (search: SavedFilterSearch) => void;
+	/** Back to the grid's own filter, sort and first page: the bare address. */
+	reset: () => void;
+	/** A stored search through this grid's allow-list, as a URL is. */
+	sanitise: (search: unknown) => SavedFilterSearch;
+}
 
 type Search = Record<string, unknown>;
 
@@ -60,6 +80,8 @@ const withoutSettled = (
 	if (
 		next.filterModel &&
 		next.filterWritten &&
+		// A row the URL cannot carry yet stays on screen until it is finished or removed
+		!hasDraftItems(grid, next.filterModel) &&
 		settledKeys.filterModel(grid, next.filterModel) ===
 			settledKeys.filterModel(grid, applied.filterModel)
 	) {
@@ -127,9 +149,16 @@ export const useSyncedDataGrid = (
 		paginationModel: unsettled.paginationModel ?? applied.paginationModel,
 	};
 
+	// Marks on this grid's own writes; an entry without one is the address changing under it
+	const ownWrites = useRef<string[]>([]);
+	const writeCount = useRef(0);
+	const mountMark = useId();
+
 	const write = useCallback(
 		(part: Partial<GridSearch>, privateState?: PrivateGridState | null) => {
-			void navigate({
+			const mark = `${mountMark}${++writeCount.current}`;
+			ownWrites.current = [...ownWrites.current.slice(-19), mark];
+			return navigate({
 				to: ".",
 				search: (previous: Search) => {
 					if (!grid.searchKey) return { ...previous, ...part };
@@ -142,23 +171,62 @@ export const useSyncedDataGrid = (
 				// Replaced, not pushed: typing and paging would otherwise flood history.
 				replace: true,
 				resetScroll: false,
-				state:
-					privateState === undefined
-						? true
-						: (previous) => ({
-								...previous,
-								grids: {
-									...previous.grids,
-									[grid.id]: privateState ?? undefined,
-								},
-							}),
+				state: (previous) => ({
+					...previous,
+					gridWrites: { ...previous.gridWrites, [grid.id]: mark },
+					...(privateState === undefined
+						? {}
+						: { grids: { ...previous.grids, [grid.id]: privateState ?? undefined } }),
+				}),
 			});
 		},
-		[grid, navigate],
+		[grid, mountMark, navigate],
 	);
 
 	const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+	const unwritten = useRef<GridFilterModel | null>(null);
 	useEffect(() => () => clearTimeout(timer.current), []);
+
+	const entry = useLocation({ select: (location) => location.state.__TSR_key });
+	const entryMark = useLocation({ select: (location) => location.state.gridWrites?.[grid.id] });
+	const seenEntry = useRef(entry);
+	useEffect(() => {
+		if (entry === seenEntry.current) return;
+		seenEntry.current = entry;
+		const own = entryMark === undefined ? -1 : ownWrites.current.indexOf(entryMark);
+		if (own >= 0) {
+			ownWrites.current = ownWrites.current.slice(own + 1);
+			return;
+		}
+		// Back, forward or a link: a filter still being typed was for the view that left
+		clearTimeout(timer.current);
+		unwritten.current = null;
+		setPending((current) => (Object.keys(current).length > 0 ? {} : current));
+	}, [entry, entryMark]);
+
+	const appliedFilterKey = settledKeys.filterModel(grid, applied.filterModel);
+	const appliedFilterKeyRef = useRef(appliedFilterKey);
+	useEffect(() => {
+		appliedFilterKeyRef.current = appliedFilterKey;
+	}, [appliedFilterKey]);
+
+	const writeFilter = useCallback(
+		(model: GridFilterModel) => {
+			unwritten.current = null;
+			// A changed filter starts on its first page, in the same write: paging inside
+			// the debounce would otherwise carry over to the new filter
+			const resetsPage = settledKeys.filterModel(grid, model) !== appliedFilterKeyRef.current;
+			setPending((current) => {
+				const next: Pending =
+					current.filterModel === model ? { ...current, filterWritten: true } : { ...current };
+				if (resetsPage) delete next.paginationModel;
+				return next;
+			});
+			const { search: part, state } = filterToSearch(grid, model);
+			return write(resetsPage ? { ...part, page: undefined } : part, state ?? null);
+		},
+		[grid, write],
+	);
 
 	const handleFilterChange = useCallback(
 		(model: GridFilterModel) => {
@@ -168,40 +236,75 @@ export const useSyncedDataGrid = (
 				filterWritten: false,
 			}));
 			clearTimeout(timer.current);
-			timer.current = setTimeout(() => {
-				setPending((current) =>
-					current.filterModel === model
-						? { ...current, filterWritten: true }
-						: current,
-				);
-				const { search: part, state } = filterToSearch(grid, model);
-				write(part, state ?? null);
-			}, FILTER_DEBOUNCE_MS);
+			unwritten.current = model;
+			timer.current = setTimeout(() => void writeFilter(model), FILTER_DEBOUNCE_MS);
 		},
-		[grid, write],
+		[writeFilter],
 	);
 
+	const pageSizeShown = shown.paginationModel.pageSize;
 	const handleSortChange = useCallback(
 		(model: GridSortModel) => {
-			setPending((current) => ({ ...current, sortModel: model }));
-			write(sortToSearch(grid, model));
+			// The first page of the new order in one write, not this page and then page 0
+			setPending((current) => ({
+				...current,
+				sortModel: model,
+				paginationModel: { page: 0, pageSize: pageSizeShown },
+			}));
+			void write({ ...sortToSearch(grid, model), page: undefined });
 		},
-		[grid, write],
+		[grid, pageSizeShown, write],
 	);
 
 	const handlePaginationChange = useCallback(
 		(model: GridPaginationModel) => {
 			setPending((current) => ({ ...current, paginationModel: model }));
-			write(paginationToSearch(grid, model));
+			void write(paginationToSearch(grid, model));
 		},
 		[grid, write],
 	);
 
-	const resetFilterAndSort = useCallback(() => {
-		clearTimeout(timer.current);
-		setPending({});
-		write({ filters: undefined, logic: undefined, sort: undefined }, null);
-	}, [write]);
+	const applySearch = useCallback(
+		(search: SavedFilterSearch) => {
+			clearTimeout(timer.current);
+			unwritten.current = null;
+			// Shown at once, as the reader's own changes are: the URL commits a tick later
+			setPending({
+				filterModel: readFilter(grid, search, undefined),
+				filterWritten: true,
+				sortModel: readSort(grid, search.sort),
+				paginationModel: { page: 0, pageSize: pageSizeShown },
+			});
+			void write(
+				{ filters: search.filters, logic: search.logic, sort: search.sort, page: undefined },
+				null,
+			);
+		},
+		[grid, pageSizeShown, write],
+	);
+	const resetFilterAndSort = useCallback(
+		() => applySearch({ filters: undefined, logic: undefined, sort: undefined }),
+		[applySearch],
+	);
+
+	const shownFilter = shown.filterModel;
+	const shownSort = shown.sortModel;
+	const views = useMemo((): GridViews => {
+		const filter = filterToSearch(grid, shownFilter);
+		return {
+			gridId: grid.id,
+			current: { ...filter.search, ...sortToSearch(grid, shownSort) },
+			hasPrivate: filter.state !== undefined,
+			flush: async () => {
+				if (!unwritten.current) return;
+				clearTimeout(timer.current);
+				await writeFilter(unwritten.current);
+			},
+			apply: applySearch,
+			reset: resetFilterAndSort,
+			sanitise: (search) => savedSearchOf(grid, search),
+		};
+	}, [grid, shownFilter, shownSort, applySearch, resetFilterAndSort, writeFilter]);
 
 	const columnVisibilityModel =
 		useGridStore((state) => state.columnVisibilityModel[grid.id]) ??
@@ -224,9 +327,10 @@ export const useSyncedDataGrid = (
 		sortModel: shown.sortModel,
 		paginationModel: shown.paginationModel,
 		columnVisibilityModel,
+		// Any change the server has not answered yet, a removal included
 		isFiltering:
 			unsettled.filterModel !== undefined &&
-			checkIfFiltering(unsettled.filterModel, appliedFilterModel),
+			settledKeys.filterModel(grid, unsettled.filterModel) !== appliedFilterKey,
 		/** Whether the reader narrowed the grid, so there is something to reset. */
 		isNarrowed:
 			appliedFilterModel.items.length > 0 ||
@@ -238,6 +342,7 @@ export const useSyncedDataGrid = (
 		handlePaginationChange,
 		handleColumnVisibilityChange,
 		resetFilterAndSort,
+		views,
 	};
 };
 

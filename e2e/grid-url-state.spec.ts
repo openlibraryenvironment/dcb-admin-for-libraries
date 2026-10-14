@@ -259,3 +259,98 @@ test("a hand-typed junk URL renders the grid with its defaults and sends a valid
 		expect(request.query).not.toMatch(/evil|garbage/);
 	}
 });
+
+test("a date typed into the picker filters the requests and reaches the URL", async ({
+	page,
+}) => {
+	const sent = await mockGrid(page);
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	const header = page.getByRole("columnheader", { name: "Request created" });
+	await header.hover();
+	await header.getByRole("button", { name: /menu/i }).click();
+	await page.getByRole("menuitem", { name: "Filter" }).click();
+
+	const from = page.getByRole("group", { name: "From" });
+	await from.getByRole("spinbutton").first().click();
+	// The picker's own section order, month first, with a meridiem
+	await page.keyboard.type("100120260930a");
+	await expect(from.getByRole("spinbutton", { name: "Meridiem" })).toHaveText("AM");
+	await page.keyboard.press("Escape");
+
+	await expect
+		.poll(() => searchOf(page).get("filters") ?? "")
+		.toContain('"operator":"luceneDateRange"');
+	expect(JSON.parse(searchOf(page).get("filters")!)[0].value[0]).toMatch(/^2026-10-01T/);
+	await expect.poll(() => sent.at(-1)?.query ?? "").toMatch(/dateCreated:\[2026-10-01T\S+ TO \*\]/);
+	await expect(filterButton(page)).toHaveAccessibleName("Show filters, 1 applied");
+});
+
+test("opening a column's filter, and removing every filter, leave the address bare", async ({
+	page,
+}) => {
+	await page.clock.install();
+	await mockGrid(page);
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	// An empty row filters nothing, so it is not written, even past the debounce
+	await filterOn(page, "Status");
+	await page.clock.runFor(1_000);
+	expect(searchOf(page).get("filters")).toBeNull();
+
+	await page.keyboard.press("Escape");
+	await page.goto(
+		`/patronRequests?logic=or&filters=${encodeURIComponent(
+			JSON.stringify([
+				{ id: 1, field: "status", operator: "is", value: "ERROR" },
+				{ id: 2, field: "status", operator: "is", value: "COMPLETED" },
+			]),
+		)}`,
+	);
+	await expect(filterButton(page)).toHaveAccessibleName("Show filters, 2 applied");
+	await filterButton(page).click();
+	await page.getByRole("button", { name: "Remove all" }).click();
+
+	await expect.poll(() => new URL(page.url()).search).toBe("");
+});
+
+test("paging inside the debounce lands on the first page of the new filter", async ({
+	page,
+}) => {
+	await page.clock.install();
+	const sent = await mockGrid(page);
+	await page.goto("/patronRequests?page=2");
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	await (await filterOn(page, "Status")).click();
+	await page.getByRole("option", { name: "Completed" }).click();
+	await page.keyboard.press("Escape");
+	await page.getByRole("button", { name: "Go to next page" }).click();
+	await page.clock.runFor(1_000);
+
+	await expect.poll(() => searchOf(page).get("filters") ?? "").toContain("COMPLETED");
+	expect(searchOf(page).get("page")).toBeNull();
+	await expect.poll(() => sent.at(-1)?.pageno).toBe(0);
+});
+
+test("leaving for the grid's own tab while typing does not bring the filter back", async ({
+	page,
+}) => {
+	await page.clock.install();
+	const sent = await mockGrid(page);
+	await page.goto(`/patronRequests?sort=${encodeURIComponent("status:asc")}`);
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	await (await filterOn(page, "Status")).click();
+	await page.getByRole("option", { name: "Completed" }).click();
+	await page.keyboard.press("Escape");
+	await page.getByRole("tab", { name: "Patron requests" }).click();
+	await expect.poll(() => new URL(page.url()).search).toBe("");
+
+	// Past the debounce: nothing writes the abandoned filter back
+	await page.clock.runFor(1_000);
+	expect(new URL(page.url()).search).toBe("");
+	expect(sent.at(-1)!.query).not.toContain("COMPLETED");
+});

@@ -58,22 +58,6 @@ export const getSortOrderForServer = (sortOrder: GridSortDirection): string => {
 	return sortOrder?.toUpperCase() === "ASC" ? "ASC" : "DESC";
 };
 
-export const checkIfFiltering = (
-	filterModel: GridFilterModel,
-	debouncedFilterModel: GridFilterModel,
-): boolean => {
-	const hasActiveFilters =
-		filterModel.items.some(
-			(item) => item.value && item.value !== "" && item.value !== null,
-		) ||
-		(filterModel.quickFilterValues && filterModel.quickFilterValues.length > 0);
-
-	// We're filtering if there are active filters but they don't match debounced filters
-	const isDifferent =
-		JSON.stringify(filterModel) !== JSON.stringify(debouncedFilterModel);
-	return !!hasActiveFilters && isDifferent;
-};
-
 /** How a description names a column, an operator and a value: the grid's own words, not its ids. */
 export interface FilterLabels {
 	field: (field: string) => string;

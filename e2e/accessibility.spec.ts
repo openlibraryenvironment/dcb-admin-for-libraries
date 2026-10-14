@@ -477,6 +477,33 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// Saved filters, with one saved and the name's error on screen.
+		name: "saved filters",
+		path: `/patronRequests?filters=${encodeURIComponent(
+			JSON.stringify([{ id: 1, field: "status", operator: "is", value: "ERROR" }]),
+		)}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraries: library,
+				LoadPatronRequests: patronRequests,
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("grid", { name: /patron requests/i }),
+			).toBeVisible();
+			await page.getByRole("toolbar").getByRole("button", { name: "Saved filters" }).click();
+			const dialog = page.getByRole("dialog", { name: "Saved filters" });
+			await dialog.getByRole("textbox", { name: "Name" }).fill("Errors");
+			await dialog.getByRole("button", { name: "Save current filters" }).click();
+			await expect(dialog.getByRole("button", { name: /^Errors/ })).toBeVisible();
+			await dialog.getByRole("button", { name: "Save current filters" }).click();
+			await expect(dialog.getByText("Give the filters a name.")).toBeVisible();
+		},
+	},
+	{
 		// The library profile IN EDIT MODE, with a validation error on screen.
 		// Neither state was ever scanned, and between them they carry every
 		// form control and every error message in the application - which is

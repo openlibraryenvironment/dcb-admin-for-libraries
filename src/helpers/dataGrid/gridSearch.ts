@@ -400,6 +400,15 @@ export const readFilter = (
 	return filterModel;
 };
 
+/** A saved search through this grid's allow-list, as a URL is: its filter and sort, never its page. */
+export const savedSearchOf = (
+	grid: GridDefinition,
+	raw: unknown,
+): Pick<GridSearch, "filters" | "logic" | "sort"> => {
+	const { filters, logic, sort } = grid.searchSchema.parse(isRecord(raw) ? raw : {});
+	return { filters, logic, sort };
+};
+
 export const readSort = (
 	grid: GridDefinition,
 	raw: RouteGridSearch["sort"],

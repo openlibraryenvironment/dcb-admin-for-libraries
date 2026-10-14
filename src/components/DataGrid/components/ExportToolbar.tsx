@@ -1,6 +1,7 @@
 import { generateFilterDescription } from "@helpers/dataGrid/utilities";
 import { exportColumnsOf } from "@helpers/dataGrid/exportOptions";
 import type { GridExportConfig } from "@/hooks/useExport";
+import type { GridViews } from "@/hooks/useSyncedDataGrid";
 import {
 	ChecklistRounded,
 	CleaningServicesRounded,
@@ -37,11 +38,13 @@ import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ExportWizard from "./ExportWizard";
 import { useFilterLabels } from "./useFilterLabels";
+import { ResetViewButton, SavedFiltersButton, ShareViewButton } from "./GridViewControls";
 
 interface ExportToolbarProps {
 	exportConfig?: GridExportConfig;
 	allDataLoading?: boolean;
 	onCleanup?: () => void;
+	views?: GridViews;
 }
 
 /** A child of GridToolbarExportContainer, which hands each child the means to close its menu. */
@@ -74,6 +77,7 @@ export default function ExportToolbar({
 	exportConfig,
 	allDataLoading,
 	onCleanup,
+	views,
 }: ExportToolbarProps) {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
@@ -176,6 +180,13 @@ export default function ExportToolbar({
 				<GridCsvExportMenuItem />
 				<GridPrintExportMenuItem />
 			</GridToolbarExportContainer>
+			{views ? (
+				<>
+					<ResetViewButton views={views} />
+					<ShareViewButton views={views} />
+					<SavedFiltersButton views={views} />
+				</>
+			) : null}
 			{exportConfig && (
 				<ExportWizard
 					key={wizard.key}

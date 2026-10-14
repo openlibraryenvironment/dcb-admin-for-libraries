@@ -96,6 +96,9 @@ export const queryKeys = {
 		agencyLocations: (apiBase: string, agencyCode: string) =>
 			["home", "agencyLocations", apiBase, agencyCode] as const,
 	},
+	savedFilters: {
+		list: (gridId: string) => ["savedFilters", "list", gridId] as const,
+	},
 	supplierRequests: {
 		lists: () => ["supplierRequests", "list"] as const,
 		list: (apiBase: string, agencyCode: string, grid: GridPage) =>
