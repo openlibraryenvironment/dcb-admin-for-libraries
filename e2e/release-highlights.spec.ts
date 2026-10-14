@@ -25,9 +25,8 @@ test.describe("a user who has not seen this release's highlights", () => {
 		const dialog = highlights(page);
 		await expect(dialog).toHaveAccessibleName("What's new in version 1.14.0");
 		await expect(dialog.getByRole("listitem")).toHaveCount(4);
-		await expect(dialog.getByRole("heading", { level: 3 }).first()).toHaveText(
-			"A home page for your library",
-		);
+		// The wording is rewritten each release; each item has its heading
+		await expect(dialog.getByRole("heading", { level: 3 })).toHaveCount(4);
 		const notes = dialog.getByRole("link", { name: /full release notes on GitHub/ });
 		await expect(notes).toHaveAttribute("href", `${RELEASE_NOTES}/tag/v1.14.0`);
 		await expect(notes).toHaveAttribute("target", "_blank");

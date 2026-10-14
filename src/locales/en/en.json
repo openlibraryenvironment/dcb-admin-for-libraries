@@ -1822,20 +1822,20 @@
 		"intro": "The main changes in this release of DCB Admin for Libraries.",
 		"items": {
 			"home": {
-				"heading": "A home page for your library",
-				"body": "Home shows where your library's requests are: what is in progress, what has a problem and what is new, for today, the last 7 days or the last 30 days."
+				"heading": "A personalised OpenRS summary for your library",
+				"body": "The Home page now shows a personalised summary of your library's OpenRS activity for today, the last 7 days or the last 30 days."
 			},
 			"views": {
 				"heading": "Share, save and clear a grid's filters",
 				"body": "Copy a link to what a grid is showing, save filters for this browser tab, and clear filters and sorting in one step."
 			},
-			"filters": {
-				"heading": "Filtering and sorting you can rely on",
-				"body": "Dates chosen in the date picker now filter the grid, a filter you are still typing stays where you left it, and a grid sorts by one column at a time."
+			"accessibility": {
+				"heading": "More accessible, and set up the way you work",
+				"body": "In Settings, choose your colour scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change, and Insights charts come with their numbers as a table."
 			},
 			"exports": {
-				"heading": "Exports you can trust",
-				"body": "An export never downloads a partial or empty file, uses the same labels as the grid, opens correctly in Excel, and says clearly when it fails."
+				"heading": "New and improved exports",
+				"body": "A new export wizard lets you customise your patron request exports."
 			}
 		},
 		"notes_link": "Read the full release notes on GitHub",

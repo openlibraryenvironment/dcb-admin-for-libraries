@@ -6,6 +6,6 @@
 export const HIGHLIGHTS_GENERATION = 1;
 
 /** In the order shown; each is release_highlights.items.<key>.heading and .body. */
-export const HIGHLIGHTS = ["home", "views", "filters", "exports"] as const;
+export const HIGHLIGHTS = ["home", "views", "accessibility", "exports"] as const;
 
 export const shouldShowHighlights = (seen: number): boolean => seen < HIGHLIGHTS_GENERATION;
