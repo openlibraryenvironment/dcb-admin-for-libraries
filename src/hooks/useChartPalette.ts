@@ -79,6 +79,8 @@ const STATUS_ORDER = [
 	"CANCELLED",
 	"NO_ITEMS_SELECTABLE_AT_ANY_AGENCY",
 	"ERROR",
+	// Appended, so every status above keeps its colour
+	"AWAITING_RETURN_TO_SUPPLIER",
 ];
 
 // Sequential single-hue ramp (light -> dark, one hue), per scheme.
