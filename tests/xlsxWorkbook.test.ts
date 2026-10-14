@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { buildXlsx } from "@helpers/dataGrid/xlsxWorkbook";
 
 const readBack = async (blob: Blob) => {
@@ -66,5 +66,26 @@ describe("buildXlsx", () => {
 		);
 		expect(sheet.getCell("A2").value).toBeNull();
 		expect(sheet.getCell("A3").value).toBe("not a date");
+	});
+
+	describe("a date-time", () => {
+		const zone = process.env.TZ;
+		afterEach(() => {
+			process.env.TZ = zone;
+		});
+
+		// 09:15 UTC is 10:15 in London in July: a cell holds wall time, with no zone
+		it.each([
+			["device", 10],
+			["service", 9],
+		] as const)("is written on the %s clock the grid shows", async (clock, hours) => {
+			process.env.TZ = "Europe/London";
+			const sheet = await readBack(
+				await buildXlsx(COLUMNS, [["2026-07-01T09:15:00Z", "note", 1, false]], clock),
+			);
+			const value = sheet.getCell("A2").value as Date;
+			expect(value.getUTCHours()).toBe(hours);
+			expect(value.getUTCMinutes()).toBe(15);
+		});
 	});
 });

@@ -1,3 +1,5 @@
+import type { Clock } from "@/themes/display";
+
 type ExcelJs = typeof import("@mui/x-internal-exceljs-fork");
 
 export interface XlsxColumn {
@@ -7,11 +9,17 @@ export interface XlsxColumn {
 
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-const asDate = (value: unknown): Date | unknown => {
-	if (value instanceof Date) return value;
-	if (typeof value !== "string") return value;
-	const date = new Date(value);
-	return Number.isNaN(date.getTime()) ? value : date;
+/**
+ * A cell holds wall-clock time with no zone, and exceljs writes a Date's UTC fields. So the
+ * device clock shifts each instant onto local time; the service clock is UTC already.
+ */
+const asDate = (value: unknown, clock: Clock): Date | unknown => {
+	const date =
+		value instanceof Date ? value : typeof value === "string" ? new Date(value) : null;
+	if (!date || Number.isNaN(date.getTime())) return value;
+	return clock === "service"
+		? date
+		: new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
 };
 
 /**
@@ -22,6 +30,7 @@ const asDate = (value: unknown): Date | unknown => {
 export const buildXlsx = async (
 	columns: readonly XlsxColumn[],
 	rows: readonly (readonly unknown[])[],
+	clock: Clock = "service",
 ): Promise<Blob> => {
 	// Loaded here and nowhere else, so only someone exporting Excel downloads it.
 	const module = await import("@mui/x-internal-exceljs-fork");
@@ -43,7 +52,7 @@ export const buildXlsx = async (
 			row.map((value, index) => {
 				if (value === null || value === undefined) return null;
 				const type = columns[index]?.type;
-				if (type === "dateTime" || type === "date") return asDate(value);
+				if (type === "dateTime" || type === "date") return asDate(value, clock);
 				if (typeof value === "number" || typeof value === "boolean") return value;
 				return String(value);
 			}),

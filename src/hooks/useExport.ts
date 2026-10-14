@@ -42,6 +42,7 @@ import { getAgencyLocationsForExport } from "@queries/getAgencyLocationsForExpor
 import { getLocationForPatronRequestGrid } from "@queries/getLocationForPatronRequestGrid";
 import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { authHeaders } from "@helpers/auth";
+import { currentClock } from "@/hooks/useThemeStore";
 
 /** Whole percent of an export fetched; an empty result is a finished one. */
 export const exportProgressPercent = (loaded: number, total: number): number =>
@@ -277,6 +278,7 @@ export const usePatronRequestExport = ({
 							named.map((row) =>
 								options.columns.map((column) => exportValue(row, column.field)),
 							),
+							currentClock(),
 						)
 					: new Blob(
 							[
