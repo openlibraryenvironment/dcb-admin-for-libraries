@@ -1,5 +1,11 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { buildXlsx } from "@helpers/dataGrid/xlsxWorkbook";
+
+// exceljs is 276 KB minified: loaded once here, its cold import on a busy CI runner passed
+// the 5 s budget of whichever test happened to load it first
+beforeAll(async () => {
+	await import("@mui/x-internal-exceljs-fork");
+}, 60_000);
 
 const readBack = async (blob: Blob) => {
 	const ExcelJS = (await import("@mui/x-internal-exceljs-fork")).default;
