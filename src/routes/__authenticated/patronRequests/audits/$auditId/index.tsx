@@ -77,8 +77,6 @@ function AuditDetailsComponent() {
 					query: "id:" + auditId,
 					pagesize: 10,
 					pageno: 0,
-					orderBy: "auditDate",
-					order: "ASC",
 				},
 				await authHeaders()
 			),

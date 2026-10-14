@@ -3,7 +3,6 @@ import { formatTimestamp } from "@helpers/formatters";
 import {
 	GridFilterModel,
 	GridSortDirection,
-	GridSortModel,
 } from "@mui/x-data-grid-premium";
 import { asTerm, buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
 import i18n from "@/i18n";
@@ -45,13 +44,6 @@ export const processGridFilterModel = (
 		return finalQuery ? `${baseQuery} AND (${finalQuery})` : baseQuery;
 	}
 	return finalQuery;
-};
-
-export const normalizeSortModel = (sortModel: GridSortModel): GridSortModel => {
-	return sortModel.map((sort) => ({
-		...sort,
-		sort: sort.sort?.toUpperCase() === "ASC" ? "asc" : "desc",
-	}));
 };
 
 export const getSortOrderForServer = (sortOrder: GridSortDirection): string => {
