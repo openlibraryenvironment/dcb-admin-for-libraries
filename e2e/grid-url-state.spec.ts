@@ -260,6 +260,26 @@ test("a hand-typed junk URL renders the grid with its defaults and sends a valid
 	}
 });
 
+test("a server-sorted grid sorts by one column: shift-click replaces the sort", async ({
+	page,
+}) => {
+	const sent = await mockGrid(page);
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	await page.getByRole("columnheader", { name: "Status" }).click();
+	await expect.poll(() => searchOf(page).get("sort")).toBe("status:asc");
+	await page
+		.getByRole("columnheader", { name: "Request created" })
+		.click({ modifiers: ["Shift"] });
+
+	await expect(
+		page.locator('[role="columnheader"][aria-sort="ascending"], [role="columnheader"][aria-sort="descending"]'),
+	).toHaveCount(1);
+	await expect.poll(() => searchOf(page).get("sort")).toMatch(/^dateCreated:/);
+	await expect.poll(() => sent.at(-1)?.order).toBe("dateCreated");
+});
+
 test("a date typed into the picker filters the requests and reaches the URL", async ({
 	page,
 }) => {
@@ -353,4 +373,20 @@ test("leaving for the grid's own tab while typing does not bring the filter back
 	await page.clock.runFor(1_000);
 	expect(new URL(page.url()).search).toBe("");
 	expect(sent.at(-1)!.query).not.toContain("COMPLETED");
+});
+
+test("a sort from a later page asks once, for the first page", async ({ page }) => {
+	const sent = await mockGrid(page);
+	await page.goto("/patronRequests?page=2");
+	await expect(page.getByRole("grid")).toBeVisible();
+	await expect.poll(() => sent.length).toBeGreaterThan(0);
+	const before = sent.length;
+
+	await page.getByRole("columnheader", { name: "Status" }).click();
+
+	await expect.poll(() => searchOf(page).get("sort")).toBe("status:asc");
+	expect(searchOf(page).get("page")).toBeNull();
+	await expect.poll(() => sent.length).toBeGreaterThan(before);
+	const after = sent.slice(before);
+	expect(after.map((request) => [request.order, request.pageno])).toEqual([["status", 0]]);
 });

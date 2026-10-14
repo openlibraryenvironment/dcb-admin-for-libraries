@@ -175,16 +175,15 @@ describe("grid state in the URL", () => {
 		expect(state).toBeUndefined();
 	});
 
-	it("records a sort the reader cleared, so it is not mistaken for the default", () => {
+	it("reads a cleared sort as the grid's default, which is what the server sorts by", () => {
 		const { search } = serialiseGrid(patronRequestsGrid, {
 			filterModel: { items: [] },
 			sortModel: [],
 			paginationModel: { page: 0, pageSize: 25 },
 		});
-		const { parsed } = throughUrl(search);
-		expect(readGrid(patronRequestsGrid, parsed, undefined).sortModel).toEqual(
-			[],
-		);
+		expect(search.sort).toBeUndefined();
+		// An older link or saved filter still says "none"
+		expect(readSort(patronRequestsGrid, "none")).toEqual(patronRequestsGrid.defaultSort);
 	});
 
 	it("never takes a private field from history state that the grid cannot filter on", () => {

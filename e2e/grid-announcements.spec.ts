@@ -6,7 +6,7 @@ import supplierRequests from "./fixtures-data/supplier-requests.json" with { typ
  * A server-paged grid redraws silently: the row count changes on screen and
  * nothing tells a screen-reader user. WCAG 4.1.3 Status Messages.
  */
-test("says how many rows a sort settled on", async ({ app, page }) => {
+test("says how many rows a sort settled on, and the order it put them in", async ({ app, page }) => {
 	await app.signIn();
 	await app.mockGraphQL({
 		LoadLibrary: library,
@@ -21,6 +21,8 @@ test("says how many rows a sort settled on", async ({ app, page }) => {
 	await page.getByRole("columnheader", { name: /Request created/ }).click();
 
 	await expect(
-		page.getByRole("status").filter({ hasText: "4 results" }),
+		page
+			.getByRole("status")
+			.filter({ hasText: "4 results, sorted by Request created, ascending" }),
 	).toHaveCount(1);
 });

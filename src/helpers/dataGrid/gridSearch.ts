@@ -25,7 +25,7 @@ import type { RouteGridSearch } from "@helpers/dataGrid/gridSearchSchema";
  */
 export const PRIVATE_FILTER_FIELDS: readonly string[] = ["patronBarcode", "requesterNote"];
 
-/** A reader who cleared the sort, as distinct from one who never chose. */
+/** A cleared sort in links and saved filters from before the server-sorted grids lost "unsorted". */
 const NO_SORT = "none";
 
 const MAX_FILTER_ITEMS = 20;
@@ -341,10 +341,10 @@ export const sortToSearch = (
 	grid: GridDefinition,
 	model: GridSortModel,
 ): Pick<GridSearch, "sort"> => {
-	if (sameSort(model, grid.defaultSort)) return { sort: undefined };
 	const [first] = model;
-	const raw = first?.sort ? `${first.field}:${first.sort}` : NO_SORT;
-	return { sort: grid.searchSchema.parse({ sort: raw }).sort };
+	// The server always orders, so no sort is the grid's own: nothing to write
+	if (!first?.sort || sameSort([first], grid.defaultSort)) return { sort: undefined };
+	return { sort: grid.searchSchema.parse({ sort: `${first.field}:${first.sort}` }).sort };
 };
 
 export const paginationToSearch = (
@@ -414,8 +414,7 @@ export const readSort = (
 	raw: RouteGridSearch["sort"],
 ): GridSortModel => {
 	const { sort } = grid.searchSchema.parse({ sort: raw });
-	if (sort === undefined) return grid.defaultSort;
-	if (sort === NO_SORT) return [];
+	if (sort === undefined || sort === NO_SORT) return grid.defaultSort;
 	const [field, direction] = sort.split(":");
 	return [{ field, sort: direction === "asc" ? "asc" : "desc" }];
 };
