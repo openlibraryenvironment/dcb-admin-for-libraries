@@ -1,3 +1,4 @@
+import { itemOptionLabel } from "@helpers/itemOptionLabel";
 import { availabilityQueryOptions } from "@helpers/availabilityApi";
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import {
@@ -303,20 +304,9 @@ export default function ExpeditedCheckout({
 				barcode: string;
 				dueDate?: string;
 				callNumber?: string;
-				parsedVolumeStatement?: string;
+				rawVolumeStatement?: string;
 			}) => ({
-				label: item?.parsedVolumeStatement
-					? t("requesting.staff_request.patron.item_select_volume", {
-							name: item?.location.name,
-							barcode: item.barcode,
-							callNo: item?.callNumber,
-							volumeStatement: item?.parsedVolumeStatement,
-						})
-					: t("requesting.staff_request.patron.item_select", {
-							name: item?.location.name,
-							barcode: item.barcode,
-							callNo: item?.callNumber,
-						}),
+				label: itemOptionLabel(t, item),
 
 				value: item.id,
 				dueDate: item?.dueDate,

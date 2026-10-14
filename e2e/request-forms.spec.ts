@@ -27,7 +27,11 @@ const openForm = async (
 	app: AppFixture,
 	page: Page,
 	type: "staff" | "walk-up",
-	options: { placeStatus?: number; checkoutStatus?: string } = {},
+	options: {
+		placeStatus?: number;
+		checkoutStatus?: string;
+		item?: Record<string, unknown>;
+	} = {},
 ): Promise<Traffic> => {
 	await app.signIn();
 	await app.mockGraphQL({
@@ -64,7 +68,8 @@ const openForm = async (
 	await page.route("**/items/availability**", (route) => {
 		availabilityCalls += 1;
 		// The due date exists only once the item has been checked out.
-		const item = placed ? { ...ITEM, dueDate: DUE_DATE } : ITEM;
+		const offered = { ...ITEM, ...options.item };
+		const item = placed ? { ...offered, dueDate: DUE_DATE } : offered;
 		return route.fulfill({ json: { itemList: [item], timings: {} } });
 	});
 	const lookups: Record<string, unknown>[] = [];
@@ -227,3 +232,26 @@ test("shows the due date once a walk-up checkout completes", async ({
 	await expect(dialog.getByText(/2026/)).toBeVisible();
 	await expect(dialog.getByText(/still loading|not known yet/i)).toHaveCount(0);
 });
+
+for (const type of ["staff", "walk-up"] as const) {
+	test(`the ${type} item picker names a copy's volume as the library typed it`, async ({
+		app,
+		page,
+	}) => {
+		await openForm(app, page, type, {
+			item: { rawVolumeStatement: "Vol [ 22].(1990)", parsedVolumeStatement: "v22y1990" },
+		});
+		await barcode(page).fill("12345");
+		await barcode(page).press("Enter");
+		if (type === "staff") {
+			await page.getByRole("radio", { name: /manual/i }).check();
+			await choose(page, /item library/i, /e2e test library/i);
+		}
+
+		await page.getByRole("combobox", { name: /item local id/i }).click();
+		const option = page.getByRole("option", { name: /30001/ });
+		await expect(option).toContainText("Volume: Vol [ 22].(1990)");
+		// The comparison key dcb-service matches volumes by, not something a library wrote
+		await expect(option).not.toContainText("v22y1990");
+	});
+}
