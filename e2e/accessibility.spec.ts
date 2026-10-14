@@ -477,6 +477,23 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// A release's highlights, as a user sees them on the first page after it ships.
+		name: "release highlights",
+		path: "/",
+		prepare: async (app, page) => {
+			await app.signIn({ releaseHighlightsSeen: false });
+			await app.mockGraphQL({ LoadLibrary: library });
+			await page.route("**/release.json", (route) =>
+				route.fulfill({ json: { version: "v1.14.0" } }),
+			);
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("dialog", { name: "What's new in version 1.14.0" }),
+			).toBeVisible();
+		},
+	},
+	{
 		// Saved filters, with one saved and the name's error on screen.
 		name: "saved filters",
 		path: `/patronRequests?filters=${encodeURIComponent(

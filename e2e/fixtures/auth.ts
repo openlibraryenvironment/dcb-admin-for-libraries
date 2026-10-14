@@ -16,7 +16,17 @@ export interface FakeUserOptions {
 	expiresInSeconds?: number;
 	/** Present, oidc-client-ts renews through the token endpoint rather than an iframe. */
 	refreshToken?: string;
+	/**
+	 * False for a user who has not yet seen this release's highlights. Seen by default: the
+	 * summary dialog would otherwise sit over the first page of every spec.
+	 */
+	releaseHighlightsSeen?: boolean;
 }
+
+/** Every app namespace a spec runs under: the root build, and the base-path one. */
+const HIGHLIGHTS_SEEN_KEYS = ["root", "dcb-admin-for-libraries"].map(
+	(namespace) => `${namespace}:releaseHighlightsSeen`,
+);
 
 /**
  * oidc-client-ts stores the session in SESSION storage by default, and this app
@@ -90,4 +100,9 @@ export async function seedAuth(
 			SEED_SENTINEL_KEY,
 		] as const,
 	);
+	if (options?.releaseHighlightsSeen === false) return;
+	await page.addInitScript((keys) => {
+		// Past any generation, so no release's highlights open over a spec's page
+		for (const key of keys) window.localStorage.setItem(key, String(Number.MAX_SAFE_INTEGER));
+	}, HIGHLIGHTS_SEEN_KEYS);
 }

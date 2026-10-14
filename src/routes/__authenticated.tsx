@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { hasAuthParams, useAuth } from "react-oidc-context";
 import { Layout } from "@components/Layout/Layout";
+import ReleaseHighlightsOnSignIn from "@components/ReleaseHighlights/ReleaseHighlightsOnSignIn";
 import Loading from "@components/Loading/Loading";
 import { useTranslation } from "react-i18next";
 import { storageKey } from "@helpers/appBase";
@@ -61,6 +62,7 @@ const AuthenticatedLayout = () => {
 	return (
 		<Layout>
 			<Outlet />
+			<ReleaseHighlightsOnSignIn />
 		</Layout>
 	);
 };

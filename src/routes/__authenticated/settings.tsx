@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import MuiLink from "@mui/material/Link";
 
+import { AboutSettings } from "@components/App/AboutSettings";
 import { DisplaySettings } from "@components/App/DisplaySettings";
 import { pageTitle } from "@helpers/pageTitle";
 
@@ -38,6 +39,14 @@ function RouteComponent() {
 				<MuiLink component={Link} to="/accessibility">
 					{t("legal.accessibility.title")}
 				</MuiLink>
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Typography variant="h3" component="h2">
+					{t("about.heading")}
+				</Typography>
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<AboutSettings />
 			</Grid>
 		</Grid>
 	);
