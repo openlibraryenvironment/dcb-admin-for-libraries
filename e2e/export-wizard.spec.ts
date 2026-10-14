@@ -457,3 +457,64 @@ test("asks for the patron's barcode only when its column is chosen", async ({ ap
 	await expect.poll(() => sent.length).toBeGreaterThan(0);
 	expect(sent[0].withBarcode).toBe(false);
 });
+
+test.describe("an export that fails part-way", () => {
+	const firstPage = {
+		patronRequests: {
+			totalSize: 150,
+			pageable: { number: 0, offset: 0 },
+			content: Array.from({ length: 100 }, (_, index) =>
+				request(`00000000-0000-4000-8000-${String(index).padStart(12, "0")}`, {
+					suppliers: [{ localAgency: AGENCY_CODE }],
+				}),
+			),
+		},
+	};
+
+	const failSecondPage = async (page: Page, failure: (route: Route) => Promise<void>) =>
+		page.route(`${API_BASE}/graphql`, async (route: Route) => {
+			const body = route.request().postDataJSON();
+			if (body?.operationName !== "LoadPatronRequestsForExport") return route.fallback();
+			if (body.variables.pageno === 0) return route.fulfill({ json: { data: firstPage } });
+			return failure(route);
+		});
+
+	test.beforeEach(async ({ app }) => {
+		await mockExport(app);
+	});
+
+	test("downloads nothing, and says so with the server's status until dismissed", async ({
+		page,
+	}) => {
+		await page.clock.install();
+		await failSecondPage(page, (route) =>
+			route.fulfill({ status: 500, json: { errors: [{ message: "boom" }] } }),
+		);
+		const downloads: Download[] = [];
+		page.on("download", (download) => downloads.push(download));
+		await page.goto("/patronRequests");
+		await openWizard(page);
+		await submit(page, "CSV");
+
+		const alert = page.getByRole("alert").filter({ hasText: "The export failed" });
+		await expect(alert).toContainText(
+			"The export failed (the server answered 500), so nothing was downloaded. Try again.",
+		);
+		await expect(page.getByRole("dialog", { name: "Exporting data" })).toBeHidden();
+		// An error waits to be dismissed: past the 6 seconds a success message stays for
+		await page.clock.runFor(10_000);
+		await expect(alert).toBeVisible();
+		expect(downloads).toHaveLength(0);
+	});
+
+	test("with no answer at all, says it failed without a status", async ({ page }) => {
+		await failSecondPage(page, (route) => route.abort("connectionreset"));
+		await page.goto("/patronRequests");
+		await openWizard(page);
+		await submit(page, "CSV");
+
+		await expect(page.getByRole("alert").filter({ hasText: "The export failed" })).toHaveText(
+			/The export failed, so nothing was downloaded\. Try again\./,
+		);
+	});
+});

@@ -1465,7 +1465,8 @@
 			"export": {
 				"complete": "{{percentage}} complete",
 				"current": "Export current page as CSV",
-				"failed": "The data grid export has failed. Please try again.",
+				"failed": "The export failed, so nothing was downloaded. Try again.",
+				"failed_status": "The export failed (the server answered {{status}}), so nothing was downloaded. Try again.",
 				"modal_title": "Exporting data",
 				"print": "Print current page",
 				"wizard": "Export…",

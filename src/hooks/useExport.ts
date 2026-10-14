@@ -1,6 +1,6 @@
 import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import request from "graphql-request";
+import request, { ClientError } from "graphql-request";
 import {
 	GridApiPremium,
 	GridFilterModel,
@@ -318,7 +318,14 @@ export const usePatronRequestExport = ({
 			} else if (error instanceof ExportScopeError) {
 				onExportResult({ severity: "error", text: t("ui.data_grid.export.scope_failed") });
 			} else {
-				onExportResult({ severity: "error", text: t("ui.data_grid.export.failed") });
+				// The status carries nothing personal, and tells support a 403 from a 502
+				const status = error instanceof ClientError ? error.response.status : undefined;
+				onExportResult({
+					severity: "error",
+					text: status
+						? t("ui.data_grid.export.failed_status", { status })
+						: t("ui.data_grid.export.failed"),
+				});
 			}
 		} finally {
 			controllerRef.current = null;
