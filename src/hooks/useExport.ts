@@ -305,8 +305,9 @@ export const usePatronRequestExport = ({
 			if (signal.aborted) {
 				onExportResult({ severity: "warning", text: t("ui.data_grid.export.cancelled") });
 			} else if (error instanceof ExportTooLargeError) {
+				// An error, so it stays until dismissed: it asks the reader to narrow the export
 				onExportResult({
-					severity: "warning",
+					severity: "error",
 					text: t("ui.data_grid.export.too_large", {
 						count: error.totalSize,
 						max: MAX_EXPORT_ROWS,

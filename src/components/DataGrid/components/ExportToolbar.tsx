@@ -175,7 +175,13 @@ export default function ExportToolbar({
 				{exportConfig && (
 					<OpenExportWizardMenuItem
 						disabled={allDataLoading}
-						onOpen={() => setWizard(({ key }) => ({ open: true, key: key + 1 }))}
+						// A filter still being typed is written first: the wizard describes, and the
+						// export sends, the filter the grid shows
+						onOpen={() =>
+							void (views?.flush() ?? Promise.resolve()).then(() =>
+								setWizard(({ key }) => ({ open: true, key: key + 1 })),
+							)
+						}
 					/>
 				)}
 				<GridCsvExportMenuItem options={{ utf8WithBom: true }} />
