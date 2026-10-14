@@ -7,6 +7,7 @@ import { dateTimeRangeOperators } from "@constants/filters/dateTimeRangeOperator
 import {
 	containsOnly,
 	durationFilters,
+	booleanFilters,
 	equalsOnly,
 	isOnly,
 	standardFilters,
@@ -148,7 +149,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 		field: "outOfSequenceFlag",
 		headerName: i18n.t("grid.headers.out_of_sequence"), // Should be true/false
 		flex: 0.75,
-		filterOperators: equalsOnly,
+		filterOperators: booleanFilters,
 		type: "boolean",
 	},
 	{
@@ -176,7 +177,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 		field: "isManuallySelectedItem",
 		headerName: i18n.t("grid.headers.manually_selected"),
 		flex: 0.75, // true false
-		filterOperators: equalsOnly,
+		filterOperators: booleanFilters,
 		type: "boolean",
 	},
 	{
@@ -225,7 +226,7 @@ export const standardSupplierRequestColumns: GridColDef[] = [
 		field: "isExpeditedCheckout",
 		headerName: i18n.t("grid.headers.walk_up_request"), // true false
 		flex: 0.5,
-		filterOperators: equalsOnly,
+		filterOperators: booleanFilters,
 		filterable: true,
 		sortable: true,
 		type: "boolean",

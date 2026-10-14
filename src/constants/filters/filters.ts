@@ -1,5 +1,6 @@
 import { betweenFilterOperator } from "./rangeFilterOperator";
 import {
+	getGridBooleanOperators,
 	getGridNumericOperators,
 	getGridSingleSelectOperators,
 	getGridStringOperators,
@@ -61,6 +62,9 @@ export const equalsOnly: GridFilterOperator[] = [
 	...getGridStringOperators().filter(({ value }) => ["equals"].includes(value)),
 	doesNotEqualFilter,
 ];
+
+/** A true/false choice, rather than text that is only a filter once it spells either. */
+export const booleanFilters: GridFilterOperator[] = getGridBooleanOperators();
 
 export const equalsSingular: GridFilterOperator[] = [
 	...getGridStringOperators().filter(({ value }) => ["equals"].includes(value)),

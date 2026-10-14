@@ -138,7 +138,7 @@ describe("grid state in the URL", () => {
 					value: ["2026-09-01T09:15:00.000Z", null],
 				},
 				{ id: 4, field: "pickupRequestStatus", operator: "isAnyOf", value: ["LOANED", "ERROR"] },
-				{ id: 5, field: "outOfSequenceFlag", operator: "equals", value: "true" },
+				{ id: 5, field: "outOfSequenceFlag", operator: "is", value: "true" },
 				{ id: 6, field: "dateUpdated", operator: "last30Days" },
 			],
 			logicOperator: "or" as GridFilterModel["logicOperator"],
