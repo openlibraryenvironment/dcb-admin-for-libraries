@@ -1,4 +1,4 @@
-import { RefObject, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import request from "graphql-request";
 import {
@@ -20,6 +20,7 @@ import {
 } from "@helpers/dataGrid/exportOptions";
 import {
 	EXPORT_PAGE_SIZE,
+	ExportIncompleteError,
 	ExportTooLargeError,
 	MAX_EXPORT_ROWS,
 	fetchExportPages,
@@ -106,6 +107,8 @@ export const usePatronRequestExport = ({
 		totalRecords: 0,
 	});
 	const controllerRef = useRef<AbortController | null>(null);
+	// Leaving the grid stops its export, so no file arrives on another page
+	useEffect(() => () => controllerRef.current?.abort(), []);
 
 	const graphql = async <T>(
 		document: string,
@@ -235,7 +238,8 @@ export const usePatronRequestExport = ({
 						{ query, pagesize: EXPORT_PAGE_SIZE, pageno, order, orderBy },
 						signal,
 					);
-					return data.patronRequests ?? { totalSize: 0, content: [] };
+					// No list at all is no count, which fetchExportPages refuses
+					return data.patronRequests ?? { totalSize: null, content: [] };
 				},
 				keep: (row) => {
 					if (!isRequestInExportScope(row, guard)) return false;
@@ -251,6 +255,10 @@ export const usePatronRequestExport = ({
 						progress: exportProgressPercent(loaded, total),
 					}),
 			});
+			if (rows.length === 0) {
+				onExportResult({ severity: "warning", text: t("ui.data_grid.export.empty") });
+				return;
+			}
 			const named = await withPickupLocationNames(rows, signal);
 			signal.throwIfAborted();
 
@@ -289,6 +297,8 @@ export const usePatronRequestExport = ({
 						max: MAX_EXPORT_ROWS,
 					}),
 				});
+			} else if (error instanceof ExportIncompleteError) {
+				onExportResult({ severity: "error", text: t("ui.data_grid.export.incomplete") });
 			} else if (error instanceof ExportScopeError) {
 				onExportResult({ severity: "error", text: t("ui.data_grid.export.scope_failed") });
 			} else {

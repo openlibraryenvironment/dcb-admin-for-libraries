@@ -352,3 +352,57 @@ test("Excel exports under a strict Content-Security-Policy", async ({ app, page 
 	).toBeUndefined();
 	expect((await violations()).slice(before)).toEqual([]);
 });
+
+/** Holds the export's request until the test lets it go; never, if it does not. */
+const holdExport = async (page: Page) => {
+	let release: () => void = () => undefined;
+	const released = new Promise<void>((resolve) => (release = resolve));
+	await page.route(`${API_BASE}/graphql`, async (route: Route) => {
+		if (route.request().postDataJSON()?.operationName !== "LoadPatronRequestsForExport") {
+			return route.fallback();
+		}
+		await released;
+		await route.fallback();
+	});
+	return release;
+};
+
+test("leaving the grid during an export stops it, and nothing downloads", async ({
+	app,
+	page,
+}) => {
+	await mockExport(app);
+	await holdExport(page);
+	const downloads: Download[] = [];
+	page.on("download", (download) => downloads.push(download));
+	const aborted = page.waitForEvent(
+		"requestfailed",
+		(failedRequest) =>
+			failedRequest.postDataJSON()?.operationName === "LoadPatronRequestsForExport",
+	);
+	// Back to a page inside the app, so the grid unmounts rather than the app unloading
+	await page.goto("/");
+	await page.getByRole("tab", { name: "Patron requests" }).click();
+	await openWizard(page);
+	await submit(page, "CSV");
+	await expect(page.getByRole("dialog", { name: "Exporting data" })).toBeVisible();
+
+	await page.goBack();
+
+	await aborted;
+	expect(downloads).toHaveLength(0);
+});
+
+test("an export that matches nothing downloads nothing, and says so", async ({ app, page }) => {
+	await mockExport(app, {
+		patronRequests: { totalSize: 0, pageable: { number: 0, offset: 0 }, content: [] },
+	});
+	const downloads: Download[] = [];
+	page.on("download", (download) => downloads.push(download));
+	await page.goto("/patronRequests");
+	await openWizard(page);
+	await submit(page, "CSV");
+
+	await expect(page.getByText("No requests match, so there was nothing to export.")).toBeVisible();
+	expect(downloads).toHaveLength(0);
+});

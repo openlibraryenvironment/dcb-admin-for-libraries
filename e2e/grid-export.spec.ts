@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test";
+import { AGENCY_CODE } from "./fixtures/auth";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
@@ -36,7 +37,14 @@ test("the request grids still export everything as TSV", async ({ app, page }) =
 		LoadLibrary: library,
 		LoadLibraries: library,
 		LoadPatronRequests: patronRequests,
-		LoadAgencyLocationsForExport: { agencies: { totalSize: 0, content: [] } },
+		// The user's library, on the rows' Host LMS, so the library guard keeps them: an export
+		// it empties downloads nothing
+		LoadAgencyLocationsForExport: {
+			agencies: {
+				totalSize: 1,
+				content: [{ code: AGENCY_CODE, hostLms: { code: "E2E-HOST" }, locations: [] }],
+			},
+		},
 		LoadPatronRequestsForExport: patronRequests,
 	});
 

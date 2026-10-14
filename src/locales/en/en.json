@@ -1495,7 +1495,9 @@
 				"success_other": "Exported {{count}} requests.",
 				"records_one": "Exporting {{count}} request.",
 				"records_other": "Exporting {{count}} requests.",
-				"no_filters": "No filters are applied, so this is every row."
+				"no_filters": "No filters are applied, so this is every row.",
+				"incomplete": "The requests changed while they were being exported, so nothing was exported. Try again.",
+				"empty": "No requests match, so there was nothing to export."
 			},
 			"filters": {
 				"active_description": "{{length}} filter(s) active: {{description}}",
