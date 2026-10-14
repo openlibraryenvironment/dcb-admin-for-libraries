@@ -444,3 +444,16 @@ test("an export that matches nothing downloads nothing, and says so", async ({ a
 	await expect(page.getByText("No requests match, so there was nothing to export.")).toBeVisible();
 	expect(downloads).toHaveLength(0);
 });
+
+test("asks for the patron's barcode only when its column is chosen", async ({ app, page }) => {
+	await mockExport(app);
+	const sent = await recordExportQueries(page);
+	await page.goto("/patronRequests");
+	const dialog = await openWizard(page);
+	await dialog.getByRole("button", { name: "Clear all" }).click();
+	await dialog.getByRole("checkbox", { name: "Status", exact: true }).check();
+	await dialog.getByRole("button", { name: "Export", exact: true }).click();
+
+	await expect.poll(() => sent.length).toBeGreaterThan(0);
+	expect(sent[0].withBarcode).toBe(false);
+});

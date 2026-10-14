@@ -239,6 +239,7 @@ export const usePatronRequestExport = ({
 			const document = getPatronRequestsForExport();
 			const order = sortModel[0]?.field ?? "dateCreated";
 			const orderBy = sortModel[0]?.sort?.toUpperCase() ?? "DESC";
+			const withBarcode = options.columns.some((column) => column.field === "patronBarcode");
 
 			// A request matched through two suppliers comes back twice; it is exported once.
 			const seen = new Set<string>();
@@ -246,7 +247,7 @@ export const usePatronRequestExport = ({
 				fetchPage: async (pageno) => {
 					const data = await graphql<{ patronRequests?: ExportPage<ExportedRequest> }>(
 						document,
-						{ query, pagesize: EXPORT_PAGE_SIZE, pageno, order, orderBy },
+						{ query, pagesize: EXPORT_PAGE_SIZE, pageno, order, orderBy, withBarcode },
 						signal,
 					);
 					// No list at all is no count, which fetchExportPages refuses

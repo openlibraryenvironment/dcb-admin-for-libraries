@@ -55,6 +55,13 @@ describe("the export document", () => {
 		}
 	});
 
+	it("asks for a patron's barcode only when the export chose its column", () => {
+		withAgencyScope(true);
+		const document = getPatronRequestsForExport();
+		expect(document).toContain("$withBarcode: Boolean!");
+		expect(document).toMatch(/localBarcode @include\(if: \$withBarcode\)/);
+	});
+
 	it("does not ask 8.71.0 for the patron's agency, which it has never heard of", () => {
 		withAgencyScope(false);
 		expect(selectedPaths()).not.toContain("requestingIdentity.resolvedAgency");
