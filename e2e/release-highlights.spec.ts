@@ -12,6 +12,21 @@ const deployedAs = (page: Page, version: string) =>
 
 const highlights = (page: Page) => page.getByRole("dialog", { name: /^What's new/ });
 
+/**
+ * The page as a build stamped with this commit: a CI build stamps its own, a local one
+ * "local", so a test that took the stamp as built would pass in one and fail in the other.
+ */
+const servedWithBuildStamp = (page: Page, stamp: string) =>
+	page.route("**/*", async (route) => {
+		if (route.request().resourceType() !== "document") return route.fallback();
+		const response = await route.fetch();
+		const body = (await response.text()).replace(
+			/(<meta name="dcb-admin-for-libraries-build" content=")[^"]*(")/,
+			`$1${stamp}$2`,
+		);
+		await route.fulfill({ response, body });
+	});
+
 test.describe("a user who has not seen this release's highlights", () => {
 	test.beforeEach(async ({ app }) => {
 		await app.signIn({ releaseHighlightsSeen: false });
@@ -100,12 +115,24 @@ test.describe("settings", () => {
 		await expect(again).toBeFocused();
 	});
 
-	test("say when the version is not known, and link to every release", async ({ page }) => {
+	test("name a build no release deployed by its commit, and link to every release", async ({
+		page,
+	}) => {
+		await servedWithBuildStamp(page, "abc1234");
 		await page.goto("/settings");
 
-		await expect(page.getByText("Version not known", { exact: true })).toBeVisible();
+		await expect(page.getByText("Development build abc1234", { exact: true })).toBeVisible();
 		await expect(
 			page.getByRole("link", { name: "Release notes on GitHub (opens in a new tab)" }),
 		).toHaveAttribute("href", RELEASE_NOTES);
+	});
+
+	test("say the version is not known when the build carries no commit either", async ({
+		page,
+	}) => {
+		await servedWithBuildStamp(page, "local");
+		await page.goto("/settings");
+
+		await expect(page.getByText("Version not known", { exact: true })).toBeVisible();
 	});
 });
