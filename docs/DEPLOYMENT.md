@@ -71,6 +71,13 @@ does not show the feature.
 | `VITE_FEATURE_GUARDED_CLEANUP` | **9.0.0** or later | Request cleanup that the service refuses, with a reason, while the item is still out |
 | `VITE_FEATURE_INSIGHTS_TRENDS` | **9.1.0** or later (`/insights/trend`) | The duration trend panel on Insights → Trends. Needs `VITE_FEATURE_INSIGHTS` as well |
 | `VITE_FEATURE_ANNOUNCEMENTS` | **no release serves this yet** | The Announcements page. Leave it off: on a service without the announcement operations, the page's whole GraphQL request is rejected |
+| `VITE_FEATURE_HOME_SINCE_LAST_VISIT` | any supported release | Home page: a "since your last visit" window, remembered per browser |
+| `VITE_FEATURE_HOME_LAST_WEEK` | any supported release | Home page: each problem and new-request count compared with a week earlier, for the today and 7-day windows |
+| `VITE_FEATURE_HOME_SETUP_CHECKLIST` | any supported release | Home page: a profile checklist for a library that has never borrowed or supplied |
+| `VITE_FEATURE_HOME_INSIGHTS` | with `VITE_FEATURE_INSIGHTS` | Home page: the Insights overview tiles for the last 7 days. Off while `VITE_FEATURE_INSIGHTS` is |
+| `VITE_FEATURE_HOME_ANNOUNCEMENTS` | with `VITE_FEATURE_ANNOUNCEMENTS` | Home page: the notices live for the library's patrons. Off while `VITE_FEATURE_ANNOUNCEMENTS` is |
+| `VITE_FEATURE_HOME_LIBRARY_SPLIT` | with `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | Home page: a by-library table for users who administer more than one library. Off while agency scoping is |
+| `VITE_FEATURE_HOME_PICKUP_HERE` | **8.71.0 only** | Home page: other libraries' patrons collecting at the library's locations. Off whenever `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is on, because 9.0.0 and later do not show a library the requests it only collects |
 
 **On the kihosting.net hosts you do not set these.** Those deployments are served by the
 shared Cloudflare worker that also serves DCB Admin, which derives the whole flag block
@@ -283,6 +290,7 @@ through them before the release pipeline runs, and the checks after it.
    | `VITE_FEATURE_INSIGHTS`, `VITE_FEATURE_LIBRARY_BRANDING`, `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`, `VITE_FEATURE_GUARDED_CLEANUP` | 9.0.0 |
    | `VITE_FEATURE_INSIGHTS_TRENDS` | 9.1.0 |
    | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP` | none yet: must resolve to off |
+   | `VITE_FEATURE_HOME_*` | a product choice, not a release: see section 2a for what each needs beside it |
 
    A flag that is absent from the table is off on every host, which is the safe failure for
    the last row and the wrong one for the others. `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`
@@ -307,7 +315,11 @@ through them before the release pipeline runs, and the checks after it.
 ### After the release
 
 To see which build a host is serving, `curl -s https://<host>/dcb-admin-for-libraries/ | grep dcb-admin-for-libraries-build`
-prints the commit it was built from; the build job asserts the stamp is there.
+prints the commit it was built from; the build job asserts the stamp is there. The version is
+in `release.json` beside it, `curl -s https://<host>/dcb-admin-for-libraries/release.json`,
+which the deploy job writes and settings shows ([release-highlights.md](release-highlights.md)).
+A deployment that does not come from these jobs, a Docker image included, has none, and
+settings says the version is not known.
 
 1. The R2 bucket `ki-front-end-bundles/dcb-admin-for-libraries/` holds `v<version>/`, and
    `latest.json` reads `{"version":"v<version>"}`. Before 2.0, no release had ever reached R2.

@@ -16,7 +16,7 @@ import {
 	Typography,
 } from "@mui/material";
 
-import { getAnnouncements } from "@queries/getAnnouncements";
+import { announcementsQueryOptions, isExpired } from "@helpers/announcements";
 import {
 	createAnnouncement,
 	deleteAnnouncement,
@@ -95,19 +95,7 @@ function Announcements() {
 	const scopeId = libraryQuery.data?.libraries?.content?.[0]?.id ?? "";
 	const listKey = queryKeys.announcements.forScope(apiBase, scopeId);
 
-	const announcements = useQuery({
-		queryKey: listKey,
-		// Only once the library is known: the scope is its id, and asking for announcements
-		// at an empty scope is a request that can only fail.
-		enabled: Boolean(scopeId),
-		queryFn: async () =>
-			request<{ announcements?: AnnouncementRow[] }>(
-				apiBase + "/graphql",
-				getAnnouncements(),
-				{ scopeType: "LIBRARY", scopeId },
-				await authHeaders(),
-			),
-	});
+	const announcements = useQuery(announcementsQueryOptions(apiBase, scopeId));
 
 	const [headline, setHeadline] = useState("");
 	const [body, setBody] = useState("");
@@ -300,14 +288,3 @@ function Announcements() {
 	);
 }
 
-interface AnnouncementRow {
-	id: string;
-	headline: string;
-	body: string;
-	urgent: boolean;
-	dismissible: boolean;
-	startsAt: string;
-	expiresAt: string;
-}
-
-const isExpired = (row: AnnouncementRow) => new Date(row.expiresAt) <= new Date();

@@ -10,7 +10,7 @@ page", and so do these two, unchanged: those write only the rows already on scre
 
 | Choice | Options |
 |---|---|
-| Columns | the grid's columns plus the pickup location and the patron's Host LMS; the grid's visible columns are checked to begin with; at least one |
+| Columns | the grid's columns plus the pickup location and the patron's Host LMS; the grid's visible columns are checked to begin with; at least one. A select column, such as status, is written as the label the grid shows |
 | File name | defaults to `patronRequests_export` or `supplierRequests_export`; no path separator, no character a file system refuses, no leading dot, at most 120 characters; the extension is added |
 | Rows | matching the current filters · all rows, ignoring the filters · the rows selected in the grid |
 | Format | CSV, TSV, Excel (.xlsx) |
@@ -18,9 +18,24 @@ page", and so do these two, unchanged: those write only the rows already on scre
 The file is written from rows fetched from `dcb-service` for the export, never from
 the rows the grid holds, and a selected-rows export asks for those ids again.
 
+**A selection is the page's.** The grid pages on the server, so changing page clears the
+selection, and "select all" selects the rows on this page. Carrying a selection across
+pages would make the list of ids unbounded, and it would then need sending in chunks.
+
+A filter still being typed is written before the wizard opens, so the wizard describes,
+and the export sends, the filter the grid shows. The patron's barcode is fetched only
+when its column is chosen (`@include` in `getPatronRequestsForExport`).
+
 Text a spreadsheet would run as a formula (`= + - @`, tab, carriage return) is
-prefixed with `'` in CSV and TSV. In Excel every text value is written as a text
-cell, which Excel shows and never evaluates; date columns are written as dates.
+prefixed with `'` in CSV and TSV. CSV starts with a UTF-8 byte-order mark, so Excel
+reads accented and Welsh titles correctly. In Excel every text value is written as a
+text cell, which Excel shows and never evaluates; date columns are written as dates,
+on the clock the grid shows (the display setting), because a cell holds no time zone.
+
+An export that would hold no rows downloads nothing and says so. One that comes back
+shorter than the count the server gave, or with no count at all, downloads nothing:
+the rows changed while they were paged, and an offset page would have skipped some.
+Leaving the grid stops a running export.
 
 ## The library guard
 
@@ -92,7 +107,8 @@ whom the server does not scope. On 8.71.0 the client guard is the only scope the
   after the first page, with a message asking for narrower filters, rather than
   written as a truncated file.
 - Pickup location names are looked up after the guard, 100 ids a request.
-- **Cancel** in the progress dialog aborts the request in flight.
+- **Cancel** in the progress dialog, or Escape, aborts the request in flight. A click
+  outside the dialog does not: it would throw a long export away by accident.
 
 `dcb-service` sorts on the grid's sort column only, so a page boundary on a
 column with repeated values can skip or repeat a row; the de-duplication above

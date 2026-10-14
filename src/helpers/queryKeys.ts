@@ -4,6 +4,7 @@ import type {
 	GridSortDirection,
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
+import type { HomeWindow } from "@helpers/home";
 
 /** One page of a server-paged grid, as far as a query key needs to know it. */
 export interface GridPage {
@@ -72,6 +73,34 @@ export const queryKeys = {
 			["patronRequests", "detail", apiBase, id] as const,
 		essentials: (apiBase: string, id: string | null) =>
 			["patronRequests", "essentials", apiBase, id] as const,
+	},
+	home: {
+		counts: (
+			apiBase: string,
+			scopes: { borrowed: string; supplied: string },
+			window: HomeWindow,
+		) => ["home", "counts", apiBase, scopes, window] as const,
+		lastWeek: (
+			apiBase: string,
+			scopes: { borrowed: string; supplied: string },
+			since: string,
+			until: string,
+		) => ["home", "lastWeek", apiBase, scopes, since, until] as const,
+		history: (apiBase: string, scopes: { borrowed: string; supplied: string }) =>
+			["home", "history", apiBase, scopes] as const,
+		pickupHere: (
+			apiBase: string,
+			locationIds: readonly string[],
+			borrowedScope: string,
+		) => ["home", "pickupHere", apiBase, locationIds, borrowedScope] as const,
+		agencyLocations: (apiBase: string, agencyCode: string) =>
+			["home", "agencyLocations", apiBase, agencyCode] as const,
+	},
+	release: {
+		info: () => ["release", "info"] as const,
+	},
+	savedFilters: {
+		list: (gridId: string) => ["savedFilters", "list", gridId] as const,
 	},
 	supplierRequests: {
 		lists: () => ["supplierRequests", "list"] as const,

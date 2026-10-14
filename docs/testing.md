@@ -45,6 +45,14 @@ gate**, so that family stays off until it can be turned on and left green.
 
 Each is what was measured plus 2%, unless its note in the file argues for more. Never raise
 one to make a build pass: cut the weight, or bring a written argument in the same change.
+`initialBytes` is a held ceiling instead (270,000 since 2026-10-14): five raises to exactly
+the measured size, for strings and bundler regrouping, had left it failing on the next
+string. Its note in `bundle-budget.json` says when it is re-derived.
+
+**Measure with `BUNDLE_BUDGET=1`.** It makes `vite.config.ts` ignore `.env`, whose `VITE_`
+values are inlined into the bundle: a local `.env` added 471 bytes to the same commit. The
+performance gate (`npm run gates -- --only performance`) and CI set it. By hand:
+`BUNDLE_BUDGET=1 VITE_PUBLIC_URL=/ npm run build && npm run budget`.
 
 **`initialBytes` was added after both 2.0 regressions slipped past a total-only budget.**
 The Insights dashboard joined `/login`'s initial load (+190 KB) through a pending component

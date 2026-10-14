@@ -167,6 +167,7 @@ function RouteComponent() {
 					sortingMode="server"
 					sortModel={grid.sortModel}
 					onSortModelChange={grid.handleSortChange}
+					views={grid.views}
 					rowCount={locationsData?.locations?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}

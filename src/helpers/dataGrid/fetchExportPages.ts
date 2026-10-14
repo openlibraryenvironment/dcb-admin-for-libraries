@@ -15,8 +15,20 @@ export class ExportTooLargeError extends Error {
 	}
 }
 
+/** The rows changed while they were paged, or the server did not say how many there are. */
+export class ExportIncompleteError extends Error {
+	constructor(
+		readonly fetched: number,
+		readonly totalSize: number | null,
+	) {
+		super(`Export stopped at ${fetched} of ${totalSize ?? "an unknown number of"} rows`);
+		this.name = "ExportIncompleteError";
+	}
+}
+
 export interface ExportPage<Row> {
-	totalSize: number;
+	/** Null where the service did not count: refused, never read as 0. */
+	totalSize: number | null;
 	content: Row[];
 }
 
@@ -46,7 +58,8 @@ export const fetchExportPages = async <Row>({
 		signal?.throwIfAborted();
 
 		if (pageno === 0) {
-			total = page.totalSize ?? 0;
+			if (typeof page.totalSize !== "number") throw new ExportIncompleteError(0, null);
+			total = page.totalSize;
 			if (total > MAX_EXPORT_ROWS) throw new ExportTooLargeError(total);
 		}
 		const content = page.content ?? [];
@@ -54,7 +67,11 @@ export const fetchExportPages = async <Row>({
 		kept.push(...content.filter(keep));
 		onProgress?.(Math.min(fetched, total), total);
 
-		if (content.length < EXPORT_PAGE_SIZE) break;
+		if (content.length < EXPORT_PAGE_SIZE) {
+			// Short before the count: offset pages skip rows once the result shrinks under them
+			if (fetched < total) throw new ExportIncompleteError(fetched, total);
+			break;
+		}
 		pageno++;
 	} while (fetched < total && pageno * EXPORT_PAGE_SIZE < MAX_EXPORT_ROWS);
 

@@ -12,6 +12,7 @@ const BUDGET = JSON.parse(readFileSync("bundle-budget.json", "utf8"));
 // aggregate. Above it, a chunk must be in the budget file — so new weight arrives with a
 // number beside it rather than silently.
 const NAME_ABOVE = BUDGET.nameChunksAboveBytes;
+const UNBUDGETED = BUDGET.unbudgeted ?? {};
 
 /** "RequestsGrid-CMPomE8g.js" -> "RequestsGrid.js": the content hash is not identity. */
 function withoutHash(file) {
@@ -34,7 +35,7 @@ for (const chunk of measured) {
 	const budget = BUDGET.chunks[chunk.name];
 
 	if (budget === undefined) {
-		if (chunk.gz > NAME_ABOVE) {
+		if (chunk.gz > NAME_ABOVE && !(chunk.name in UNBUDGETED)) {
 			problems.push(
 				`${chunk.name} is ${chunk.gz} bytes gzipped and has no budget. Add it to ` +
 					`bundle-budget.json with the number it measures today, or make it smaller ` +
@@ -57,6 +58,14 @@ for (const name of Object.keys(BUDGET.chunks)) {
 	if (!measured.some((chunk) => chunk.name === name)) {
 		// A budget for a chunk that no longer exists is a number nobody is checking.
 		problems.push(`${name} is budgeted but no longer built. Remove it from bundle-budget.json.`);
+	}
+}
+for (const name of Object.keys(UNBUDGETED)) {
+	if (name in BUDGET.chunks) {
+		problems.push(`${name} is both budgeted and unbudgeted in bundle-budget.json.`);
+	}
+	if (!measured.some((chunk) => chunk.name === name)) {
+		problems.push(`${name} is unbudgeted but no longer built. Remove it from bundle-budget.json.`);
 	}
 }
 

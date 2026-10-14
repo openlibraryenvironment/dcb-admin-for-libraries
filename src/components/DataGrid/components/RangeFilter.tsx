@@ -50,7 +50,7 @@ export default function RangeFilter(props: GridFilterInputValueProps) {
 
 			applyValue({
 				...item,
-				value: [lowerBound, upperBound],
+				value: lowerBound || upperBound ? [lowerBound, upperBound] : undefined,
 			});
 		}, rootProps.filterDebounceMs);
 	};

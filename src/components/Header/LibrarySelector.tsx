@@ -8,15 +8,11 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import request from "graphql-request";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { getLibraryNames } from "@queries/getLibraryNames";
-import { queryKeys } from "@helpers/queryKeys";
-import { authHeaders } from "@helpers/auth";
-import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
+import { libraryNamesQueryOptions } from "@helpers/libraryNamesQuery";
 
 /**
  * Which of the user's libraries they are looking at. Renders NOTHING unless
@@ -33,26 +29,9 @@ export const LibrarySelector = () => {
 
 	// Named so the choice reads as library names rather than agency codes. Only
 	// fetched when there is a choice to present.
-	const { data } = useQuery<LibrariesQueryData>({
-		queryKey: queryKeys.library.names(cfg?.VITE_DCB_API_BASE, agencyCodes),
+	const { data } = useQuery({
+		...libraryNamesQueryOptions(cfg?.VITE_DCB_API_BASE, agencyCodes),
 		enabled: hasMultipleAgencies && !!cfg?.VITE_DCB_API_BASE,
-		// Library names change at the pace of onboarding, not of browsing, and
-		// this renders in the header on every page - the default staleTime of 0
-		// would refetch the whole set on every navigation.
-		staleTime: 5 * 60 * 1000,
-		queryFn: async () =>
-			request(
-				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibraryNames,
-				{
-					query: agencyCodes.map((code) => `agencyCode:${code}`).join(" OR "),
-					pagesize: agencyCodes.length,
-					pageno: 0,
-					order: "fullName",
-					orderBy: "ASC",
-				},
-				await authHeaders()
-			),
 	});
 
 	const nameFor = useMemo(() => {

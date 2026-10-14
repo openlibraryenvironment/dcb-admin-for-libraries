@@ -19,12 +19,13 @@ import type { RouteGridSearch } from "@helpers/dataGrid/gridSearchSchema";
 
 /**
  * Filter fields whose values never go in a URL, only in the tab's history
- * entry: a patron barcode is personal data and close to a credential.
- * Quick-search text is treated the same. docs/routing.md has the argument.
+ * entry: a patron barcode is personal data and close to a credential, and a
+ * requester note is text a patron wrote. Quick-search text is treated the
+ * same. docs/routing.md has the argument.
  */
-export const PRIVATE_FILTER_FIELDS: readonly string[] = ["patronBarcode"];
+export const PRIVATE_FILTER_FIELDS: readonly string[] = ["patronBarcode", "requesterNote"];
 
-/** A reader who cleared the sort, as distinct from one who never chose. */
+/** A cleared sort in links and saved filters from before the server-sorted grids lost "unsorted". */
 const NO_SORT = "none";
 
 const MAX_FILTER_ITEMS = 20;
@@ -37,6 +38,8 @@ const NUMERIC = /^-?\d+(\.\d+)?$/;
 type ValueKind = "none" | "scalar" | "list" | "range";
 
 const RANGE_OPERATORS = new Set(["between", "luceneDateRange"]);
+/** Built as dates whatever the column's type, so their values must be dates. */
+const DATE_OPERATORS = new Set(["luceneDateRange", "onOrAfter", "onOrBefore"]);
 
 const kindOf = (operator: GridFilterOperator): ValueKind => {
 	if (operator.value === "isAnyOf") return "list";
@@ -60,6 +63,9 @@ const isEmpty = (value: unknown) =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
 
+const isDateText = (value: unknown) =>
+	typeof value === "string" && value.length <= 64 && !Number.isNaN(Date.parse(value));
+
 const scalarCheck = (column: GridColDef): ((value: unknown) => boolean) => {
 	switch (column.type) {
 		case "number":
@@ -71,10 +77,7 @@ const scalarCheck = (column: GridColDef): ((value: unknown) => boolean) => {
 				typeof value === "boolean" || value === "true" || value === "false";
 		case "date":
 		case "dateTime":
-			return (value) =>
-				typeof value === "string" &&
-				value.length <= 64 &&
-				!Number.isNaN(Date.parse(value));
+			return isDateText;
 		case "singleSelect": {
 			const valueOptions =
 				"valueOptions" in column ? column.valueOptions : undefined;
@@ -144,18 +147,25 @@ const parseItem = (
 		field,
 		operator,
 	};
-	if (kind === "none" || isEmpty(value)) return item;
-	if (kind === "scalar") return rule.accepts(value) ? { ...item, value } : null;
+	// A date operator on a column not typed as a date still builds a date query
+	const accepts = DATE_OPERATORS.has(operator) ? isDateText : rule.accepts;
+	// An item that filters nothing - a row just added, a range cleared - is not carried
+	if (kind === "none") return item;
+	if (kind === "scalar") {
+		return !isEmpty(value) && accepts(value) ? { ...item, value } : null;
+	}
 	if (kind === "list") {
 		return Array.isArray(value) &&
+			value.length > 0 &&
 			value.length <= MAX_LIST_VALUES &&
-			value.every(rule.accepts)
+			value.every(accepts)
 			? { ...item, value }
 			: null;
 	}
 	return Array.isArray(value) &&
 		value.length === 2 &&
-		value.every((bound) => isEmpty(bound) || rule.accepts(bound))
+		value.some((bound) => !isEmpty(bound)) &&
+		value.every((bound) => isEmpty(bound) || accepts(bound))
 		? { ...item, value: value.map((bound) => (isEmpty(bound) ? null : bound)) }
 		: null;
 };
@@ -272,12 +282,16 @@ export const parsePrivateState = (
 		: undefined;
 };
 
-/** Values as JSON will carry them, so a draft compares equal to what it becomes. */
+/**
+ * Values as JSON will carry them, so a draft compares equal to what it becomes. The date
+ * pickers hand over Dayjs objects, which like a Date serialise through toJSON (null if invalid).
+ */
 const plainValue = (value: unknown): unknown => {
-	if (value instanceof Date) {
-		return Number.isNaN(value.getTime()) ? null : value.toISOString();
+	if (Array.isArray(value)) return value.map(plainValue);
+	if (typeof (value as { toJSON?: unknown } | null)?.toJSON === "function") {
+		return (value as { toJSON: () => unknown }).toJSON();
 	}
-	return Array.isArray(value) ? value.map(plainValue) : value;
+	return value;
 };
 
 export const filterToSearch = (
@@ -294,17 +308,26 @@ export const filterToSearch = (
 		if (isPrivateField(item.field)) privateItems.push({ index, item: plain });
 		else publicItems.push(plain);
 	});
-	const { filters, logic } = grid.searchSchema.parse({
-		filters: publicItems,
-		logic: model.logicOperator === GridLogicOperator.Or ? "or" : undefined,
+	const { filters } = grid.searchSchema.parse({ filters: publicItems });
+	const state = parsePrivateState(grid, {
+		items: privateItems,
+		quickFilterValues: model.quickFilterValues ?? [],
 	});
+	// MUI keeps OR after "Remove all": joining fewer than two filters, it would outlive them in the URL
+	const clauses = (filters?.length ?? 0) + (state?.items.length ?? 0);
 	return {
-		search: { filters, logic },
-		state: parsePrivateState(grid, {
-			items: privateItems,
-			quickFilterValues: model.quickFilterValues ?? [],
-		}),
+		search: {
+			filters,
+			logic: model.logicOperator === GridLogicOperator.Or && clauses > 1 ? "or" : undefined,
+		},
+		state,
 	};
+};
+
+/** Rows the URL does not carry: one the reader has not finished, or a value its column cannot take. */
+export const hasDraftItems = (grid: GridDefinition, model: GridFilterModel): boolean => {
+	const { search, state } = filterToSearch(grid, model);
+	return (search.filters?.length ?? 0) + (state?.items.length ?? 0) < model.items.length;
 };
 
 const sameSort = (a: GridSortModel, b: GridSortModel) =>
@@ -318,10 +341,10 @@ export const sortToSearch = (
 	grid: GridDefinition,
 	model: GridSortModel,
 ): Pick<GridSearch, "sort"> => {
-	if (sameSort(model, grid.defaultSort)) return { sort: undefined };
 	const [first] = model;
-	const raw = first?.sort ? `${first.field}:${first.sort}` : NO_SORT;
-	return { sort: grid.searchSchema.parse({ sort: raw }).sort };
+	// The server always orders, so no sort is the grid's own: nothing to write
+	if (!first?.sort || sameSort([first], grid.defaultSort)) return { sort: undefined };
+	return { sort: grid.searchSchema.parse({ sort: `${first.field}:${first.sort}` }).sort };
 };
 
 export const paginationToSearch = (
@@ -377,13 +400,21 @@ export const readFilter = (
 	return filterModel;
 };
 
+/** A saved search through this grid's allow-list, as a URL is: its filter and sort, never its page. */
+export const savedSearchOf = (
+	grid: GridDefinition,
+	raw: unknown,
+): Pick<GridSearch, "filters" | "logic" | "sort"> => {
+	const { filters, logic, sort } = grid.searchSchema.parse(isRecord(raw) ? raw : {});
+	return { filters, logic, sort };
+};
+
 export const readSort = (
 	grid: GridDefinition,
 	raw: RouteGridSearch["sort"],
 ): GridSortModel => {
 	const { sort } = grid.searchSchema.parse({ sort: raw });
-	if (sort === undefined) return grid.defaultSort;
-	if (sort === NO_SORT) return [];
+	if (sort === undefined || sort === NO_SORT) return grid.defaultSort;
 	const [field, direction] = sort.split(":");
 	return [{ field, sort: direction === "asc" ? "asc" : "desc" }];
 };

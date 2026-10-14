@@ -1,6 +1,7 @@
 import type { Page, Route } from "@playwright/test";
 import library from "../fixtures-data/library.json" with { type: "json" };
 import { API_BASE } from "./runtime-config";
+import { DEFAULT_HOME_TOTALS, homeCounts } from "./home";
 
 /**
  * Every GraphQL call in this app goes through graphql-request to
@@ -18,10 +19,12 @@ export type GraphQLResponder =
 export type OperationMocks = Record<string, GraphQLResponder>;
 
 /**
- * The header's library name renders on every authenticated page, so it is
- * mocked by default rather than in every spec. A spec's own mock overrides it.
+ * The header's library name renders on every authenticated page, and the home page's counts on
+ * the page every sign-in lands on, so both are mocked by default rather than in every
+ * spec. A spec's own mock overrides either.
  */
 const DEFAULT_MOCKS: OperationMocks = {
+	LoadHomeCounts: homeCounts(DEFAULT_HOME_TOTALS),
 	LoadLibraryNames: {
 		libraries: {
 			content: library.libraries.content.map(({ id, fullName, agencyCode }) => ({

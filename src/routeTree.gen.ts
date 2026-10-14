@@ -20,6 +20,7 @@ import { Route as _authenticatedAnnouncementsRouteImport } from './routes/__auth
 import { Route as _authenticatedContactsRouteImport } from './routes/__authenticated/contacts'
 import { Route as _authenticatedDataChangeLogRouteImport } from './routes/__authenticated/dataChangeLog'
 import { Route as _authenticatedInsightsRouteImport } from './routes/__authenticated/insights'
+import { Route as _authenticatedLibraryRouteImport } from './routes/__authenticated/library'
 import { Route as _authenticatedMappingsRouteImport } from './routes/__authenticated/mappings'
 import { Route as _authenticatedServiceRouteImport } from './routes/__authenticated/service'
 import { Route as _authenticatedSettingsRouteImport } from './routes/__authenticated/settings'
@@ -92,6 +93,11 @@ const _authenticatedDataChangeLogRoute =
 const _authenticatedInsightsRoute = _authenticatedInsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
+  getParentRoute: () => _authenticatedRoute,
+} as any)
+const _authenticatedLibraryRoute = _authenticatedLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
   getParentRoute: () => _authenticatedRoute,
 } as any)
 const _authenticatedMappingsRoute = _authenticatedMappingsRouteImport.update({
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof _authenticatedContactsRoute
   '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
   '/insights': typeof _authenticatedInsightsRoute
+  '/library': typeof _authenticatedLibraryRoute
   '/mappings': typeof _authenticatedMappingsRoute
   '/service': typeof _authenticatedServiceRoute
   '/settings': typeof _authenticatedSettingsRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/contacts': typeof _authenticatedContactsRoute
   '/dataChangeLog': typeof _authenticatedDataChangeLogRoute
   '/insights': typeof _authenticatedInsightsRoute
+  '/library': typeof _authenticatedLibraryRoute
   '/mappings': typeof _authenticatedMappingsRoute
   '/service': typeof _authenticatedServiceRoute
   '/settings': typeof _authenticatedSettingsRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/__authenticated/contacts': typeof _authenticatedContactsRoute
   '/__authenticated/dataChangeLog': typeof _authenticatedDataChangeLogRoute
   '/__authenticated/insights': typeof _authenticatedInsightsRoute
+  '/__authenticated/library': typeof _authenticatedLibraryRoute
   '/__authenticated/mappings': typeof _authenticatedMappingsRoute
   '/__authenticated/service': typeof _authenticatedServiceRoute
   '/__authenticated/settings': typeof _authenticatedSettingsRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/dataChangeLog'
     | '/insights'
+    | '/library'
     | '/mappings'
     | '/service'
     | '/settings'
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/dataChangeLog'
     | '/insights'
+    | '/library'
     | '/mappings'
     | '/service'
     | '/settings'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/__authenticated/contacts'
     | '/__authenticated/dataChangeLog'
     | '/__authenticated/insights'
+    | '/__authenticated/library'
     | '/__authenticated/mappings'
     | '/__authenticated/service'
     | '/__authenticated/settings'
@@ -444,6 +456,13 @@ declare module '@tanstack/react-router' {
       path: '/insights'
       fullPath: '/insights'
       preLoaderRoute: typeof _authenticatedInsightsRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/library': {
+      id: '/__authenticated/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof _authenticatedLibraryRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/mappings': {
@@ -588,6 +607,7 @@ interface _authenticatedRouteChildren {
   _authenticatedContactsRoute: typeof _authenticatedContactsRoute
   _authenticatedDataChangeLogRoute: typeof _authenticatedDataChangeLogRoute
   _authenticatedInsightsRoute: typeof _authenticatedInsightsRoute
+  _authenticatedLibraryRoute: typeof _authenticatedLibraryRoute
   _authenticatedMappingsRoute: typeof _authenticatedMappingsRoute
   _authenticatedServiceRoute: typeof _authenticatedServiceRoute
   _authenticatedSettingsRoute: typeof _authenticatedSettingsRoute
@@ -610,6 +630,7 @@ const _authenticatedRouteChildren: _authenticatedRouteChildren = {
   _authenticatedContactsRoute: _authenticatedContactsRoute,
   _authenticatedDataChangeLogRoute: _authenticatedDataChangeLogRoute,
   _authenticatedInsightsRoute: _authenticatedInsightsRoute,
+  _authenticatedLibraryRoute: _authenticatedLibraryRoute,
   _authenticatedMappingsRoute: _authenticatedMappingsRoute,
   _authenticatedServiceRoute: _authenticatedServiceRoute,
   _authenticatedSettingsRoute: _authenticatedSettingsRoute,

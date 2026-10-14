@@ -1,4 +1,4 @@
-import { escapeLucene } from "@helpers/dataGrid/buildFilterQuery";
+import { suppliedByLibraryQuery } from "@helpers/patronRequestScope";
 import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
@@ -8,7 +8,6 @@ import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestExport } from "@/hooks/useExport";
 import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
 import { CleanupProgressDialog } from "@components/DataGrid/components/CleanupProgressDialog";
-import { ExportProgressDialog } from "@components/DataGrid/components/ExportProgressDialog";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -38,9 +37,6 @@ export const Route = createFileRoute("/__authenticated/supplierRequests")({
 	head: () => ({ meta: [{ title: pageTitle("nav.supplier_requests.title") }] }),
 	component: RouteComponent,
 });
-
-const presetQueryFor = (agencyCode: string | undefined) =>
-	"supplyingAgencyCode:" + escapeLucene(agencyCode ?? "");
 
 function RouteComponent() {
 	const { t } = useTranslation();
@@ -78,7 +74,7 @@ function RouteComponent() {
 
 	const { agencyCode: code, agencyCodes } = useAgencyCodes();
 
-	const presetQuery = presetQueryFor(code);
+	const presetQuery = suppliedByLibraryQuery(code);
 	const page = gridPage(
 		grid.appliedFilterModel,
 		grid.paginationModel,
@@ -97,7 +93,7 @@ function RouteComponent() {
 		queryFn: async () => {
 			const queryVariables = {
 				// Already scoped: processGridFilterModel puts the preset query first.
-				query: processGridFilterModel(page.filterModel, presetQueryFor(code), [
+				query: processGridFilterModel(page.filterModel, suppliedByLibraryQuery(code), [
 					"status",
 					"description",
 				]),
@@ -171,7 +167,7 @@ function RouteComponent() {
 				refetch();
 			},
 		});
-	const { exportProgress, exportConfig, cancelExport } = usePatronRequestExport({
+	const { exportProgress, exportConfig } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
 		baseQuery: presetQuery,
@@ -243,6 +239,7 @@ function RouteComponent() {
 					sortingMode="server"
 					sortModel={grid.sortModel}
 					onSortModelChange={grid.handleSortChange}
+					views={grid.views}
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
@@ -253,12 +250,6 @@ function RouteComponent() {
 					parentApiRef={apiRef}
 				/>
 			}
-			<ExportProgressDialog
-				open={exportProgress.isExporting}
-				progress={exportProgress.progress}
-				totalRecords={exportProgress.totalRecords}
-				onCancel={cancelExport}
-			/>
 			<CleanupProgressDialog
 				open={cleanupState.open}
 				isCleaning={cleanupState.isCleaning}

@@ -84,10 +84,11 @@ export const itemColumns: GridColDef[] = [
 		editable: false,
 		filterable: true,
 		sortable: true,
-		valueGetter: (value: any, row: { dueDate: string | null }) => {
-			const dateDue = row?.dueDate;
-			return dateDue ? formatDate(dateDue) : "-";
-		},
+		// A Date, so the column sorts and filters by date: as text "3 Jan" sorted before "22 Sept"
+		type: "date",
+		valueGetter: (_value: unknown, row: { dueDate: string | null }) =>
+			row?.dueDate ? new Date(row.dueDate) : null,
+		valueFormatter: (value: Date | null) => (value ? formatDate(value) : "-"),
 	},
 	{
 		field: "availabilityDate",
@@ -97,10 +98,10 @@ export const itemColumns: GridColDef[] = [
 		editable: false,
 		filterable: true,
 		sortable: true,
-		valueGetter: (value: any, row: { availabilityDate: string | null }) => {
-			const dateAvailable = row?.availabilityDate;
-			return dateAvailable ? formatDate(dateAvailable) : "-";
-		},
+		type: "date",
+		valueGetter: (_value: unknown, row: { availabilityDate: string | null }) =>
+			row?.availabilityDate ? new Date(row.availabilityDate) : null,
+		valueFormatter: (value: Date | null) => (value ? formatDate(value) : "-"),
 	},
 	{
 		field: "canonicalItemType",

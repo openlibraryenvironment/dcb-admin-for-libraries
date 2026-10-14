@@ -1,21 +1,25 @@
 import { describe, expect, it } from "vitest";
+import dayjs from "dayjs";
 import {
 	defaultParseSearch,
 	defaultStringifySearch,
 } from "@tanstack/react-router";
-import type { GridFilterModel } from "@mui/x-data-grid-premium";
+import { GridLogicOperator, type GridFilterModel } from "@mui/x-data-grid-premium";
 
 import {
 	PRIVATE_FILTER_FIELDS,
+	filterToSearch,
+	hasDraftItems,
 	readFilter,
 	readGrid,
 	readSort,
 	serialiseGrid,
 } from "@helpers/dataGrid/gridSearch";
-import { patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
+import { mappingsGrid, patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
 
 const BARCODE = "PATRON-BC-90817";
 const QUICK = "quick-text-55120";
+const NOTE = "please-hold-for-mrs-71";
 
 /** What the router does with the search a navigate is handed, and back. */
 const throughUrl = (search: object) => {
@@ -34,10 +38,11 @@ const statusItem = {
 };
 
 describe("grid state in the URL", () => {
-	it("keeps the patron barcode and quick-search text out of the URL, and everything else in", () => {
+	it("keeps the patron barcode, requester note and quick-search text out of the URL, and everything else in", () => {
 		const filterModel: GridFilterModel = {
 			items: [
 				{ id: 7, field: "patronBarcode", operator: "equals", value: BARCODE },
+				{ id: 8, field: "requesterNote", operator: "contains", value: NOTE },
 				statusItem,
 			],
 			quickFilterValues: [QUICK],
@@ -50,7 +55,7 @@ describe("grid state in the URL", () => {
 		});
 		const { href } = throughUrl(search);
 
-		for (const secret of [BARCODE, QUICK]) {
+		for (const secret of [BARCODE, NOTE, QUICK]) {
 			expect(href).not.toContain(secret);
 			expect(decodeURIComponent(href)).not.toContain(secret);
 		}
@@ -61,11 +66,13 @@ describe("grid state in the URL", () => {
 		expect(search.pageSize).toBe(50);
 
 		expect(JSON.stringify(state)).toContain(BARCODE);
+		expect(JSON.stringify(state)).toContain(NOTE);
 		expect(state?.quickFilterValues).toEqual([QUICK]);
 	});
 
-	it("names every barcode-bearing personal field in one place", () => {
+	it("names every field carrying a patron's barcode or words in one place", () => {
 		expect(PRIVATE_FILTER_FIELDS).toContain("patronBarcode");
+		expect(PRIVATE_FILTER_FIELDS).toContain("requesterNote");
 		expect(PRIVATE_FILTER_FIELDS).not.toContain("itemBarcode");
 	});
 
@@ -131,7 +138,7 @@ describe("grid state in the URL", () => {
 					value: ["2026-09-01T09:15:00.000Z", null],
 				},
 				{ id: 4, field: "pickupRequestStatus", operator: "isAnyOf", value: ["LOANED", "ERROR"] },
-				{ id: 5, field: "outOfSequenceFlag", operator: "equals", value: "true" },
+				{ id: 5, field: "outOfSequenceFlag", operator: "is", value: "true" },
 				{ id: 6, field: "dateUpdated", operator: "last30Days" },
 			],
 			logicOperator: "or" as GridFilterModel["logicOperator"],
@@ -168,16 +175,15 @@ describe("grid state in the URL", () => {
 		expect(state).toBeUndefined();
 	});
 
-	it("records a sort the reader cleared, so it is not mistaken for the default", () => {
+	it("reads a cleared sort as the grid's default, which is what the server sorts by", () => {
 		const { search } = serialiseGrid(patronRequestsGrid, {
 			filterModel: { items: [] },
 			sortModel: [],
 			paginationModel: { page: 0, pageSize: 25 },
 		});
-		const { parsed } = throughUrl(search);
-		expect(readGrid(patronRequestsGrid, parsed, undefined).sortModel).toEqual(
-			[],
-		);
+		expect(search.sort).toBeUndefined();
+		// An older link or saved filter still says "none"
+		expect(readSort(patronRequestsGrid, "none")).toEqual(patronRequestsGrid.defaultSort);
 	});
 
 	it("never takes a private field from history state that the grid cannot filter on", () => {
@@ -192,6 +198,68 @@ describe("grid state in the URL", () => {
 			{ id: 2, field: "patronBarcode", operator: "equals", value: BARCODE },
 		]);
 		expect(back.filterModel.quickFilterValues).toEqual([QUICK]);
+	});
+});
+
+describe("a date the picker chose", () => {
+	const at = "2026-10-01T09:30:00.000Z";
+
+	it("reaches the URL as an ISO string, from a single picker and from a range", () => {
+		const { search } = filterToSearch(patronRequestsGrid, {
+			items: [
+				{ id: 1, field: "dateCreated", operator: "onOrAfter", value: dayjs(at) },
+				{ id: 2, field: "dateUpdated", operator: "luceneDateRange", value: [dayjs(at), null] },
+			],
+		});
+
+		expect(search.filters).toEqual([
+			{ id: 1, field: "dateCreated", operator: "onOrAfter", value: at },
+			{ id: 2, field: "dateUpdated", operator: "luceneDateRange", value: [at, null] },
+		]);
+	});
+});
+
+describe("a date operator", () => {
+	it("takes only a date, even on a column not typed as one", () => {
+		const read = (value: string) =>
+			readFilter(
+				mappingsGrid,
+				{ filters: [{ id: 1, field: "lastImported", operator: "onOrAfter", value }] },
+				undefined,
+			).items;
+
+		expect(read("not a date")).toEqual([]);
+		expect(read("2026-10-01T00:00:00.000Z")).toHaveLength(1);
+	});
+});
+
+describe("an unfinished filter row", () => {
+	it.each([
+		["no value", { id: 1, field: "status", operator: "is" }],
+		["an empty list", { id: 1, field: "status", operator: "isAnyOf", value: [] }],
+		["a cleared range", { id: 1, field: "dateCreated", operator: "luceneDateRange", value: [null, null] }],
+	])("with %s stays out of the URL", (_case, item) => {
+		expect(filterToSearch(patronRequestsGrid, { items: [item] }).search.filters).toBeUndefined();
+	});
+
+	it("is a draft until it is finished", () => {
+		expect(hasDraftItems(patronRequestsGrid, { items: [{ id: 1, field: "status", operator: "is" }] })).toBe(true);
+		expect(hasDraftItems(patronRequestsGrid, { items: [statusItem] })).toBe(false);
+	});
+});
+
+describe("the logic between filters", () => {
+	it("is written only while it joins two or more", () => {
+		const or = (count: number) =>
+			filterToSearch(patronRequestsGrid, {
+				items: Array.from({ length: count }, (_, id) => ({ ...statusItem, id })),
+				logicOperator: GridLogicOperator.Or,
+			}).search.logic;
+
+		expect(or(2)).toBe("or");
+		// "Remove all" keeps MUI's OR on an empty model
+		expect(or(1)).toBeUndefined();
+		expect(or(0)).toBeUndefined();
 	});
 });
 

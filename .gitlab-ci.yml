@@ -92,8 +92,9 @@ verify_performance:
     pull_policy: if-not-present
   script:
     - npm ci --prefer-offline --no-audit --no-fund
-    # Base pinned so chunk names match bundle-budget.json regardless of .env.
-    - VITE_PUBLIC_URL=/ npm run build
+    # Base pinned so chunk names match bundle-budget.json; BUNDLE_BUDGET ignores any .env,
+    # so a local run measures the same build as this one.
+    - BUNDLE_BUDGET=1 VITE_PUBLIC_URL=/ npm run build
     - npm run budget
     # Lighthouse can only reach /login; every other route is behind Keycloak.
     - npm run lighthouse
@@ -239,6 +240,9 @@ deploy_tag_to_s3:
     - release
   script:
     - test -n "$RELEASE_VERSION"
+    # The app's version, read at runtime: the build ran before semantic-release chose it.
+    # docs/release-highlights.md
+    - echo "{\"version\":\"${RELEASE_VERSION}\"}" > dist/release.json
     # Hashed assets, then stable names, then the shell: nothing goes live before the chunks it names.
     # Same three passes as dcb-admin-ui; the reasoning is in its docs/deployment.md.
     - aws s3 sync dist/ "$DEST" --delete --exclude "*" --include "assets/*"
@@ -274,6 +278,8 @@ deploy_release_to_r2:
   script:
     - test -n "$RELEASE_VERSION"
     - echo "Publishing $RELEASE_VERSION to CF R2..."
+    # Beside the bundle, as on S3; under the bootloader the app reads the version from its path too.
+    - echo "{\"version\":\"${RELEASE_VERSION}\"}" > dist/release.json
     # A published version directory is immutable; refuse to overwrite one.
     - test -z "$(aws s3 ls "s3://ki-front-end-bundles/dcb-admin-for-libraries/${RELEASE_VERSION}/" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com" --recursive)"
     - aws s3 cp dist/ "s3://ki-front-end-bundles/dcb-admin-for-libraries/${RELEASE_VERSION}/" --endpoint-url "https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com" --recursive

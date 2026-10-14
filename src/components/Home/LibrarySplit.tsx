@@ -1,0 +1,127 @@
+import { useId, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import {
+	Box,
+	Skeleton,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+	Typography,
+} from "@mui/material";
+import { visuallyHidden } from "@mui/utils";
+
+import { formatNumber } from "@helpers/formatters";
+import {
+	borrowedByLibraryQuery,
+	suppliedByLibraryQuery,
+} from "@helpers/patronRequestScope";
+import { libraryNamesQueryOptions } from "@helpers/libraryNamesQuery";
+import { HOME_COUNTS, type HomeWindow, homeCountsQueryOptions } from "@helpers/home";
+
+// One request of nine counts per library, all at once: a shared system's handful, never a consortium
+const MAX_SPLIT_LIBRARIES = 10;
+
+/** Each of a multi-library user's libraries, over the same window as the page above it. */
+export default function LibrarySplit({
+	apiBase,
+	agencyCodes,
+	span,
+}: {
+	apiBase: string;
+	agencyCodes: string[];
+	/** The page's own window, so the user's own library shares the page's cache entry. */
+	span: HomeWindow;
+}) {
+	const { t } = useTranslation();
+	const headingId = useId();
+	const shown = agencyCodes.slice(0, MAX_SPLIT_LIBRARIES);
+
+	const names = useQuery(libraryNamesQueryOptions(apiBase, agencyCodes));
+	const nameFor = useMemo(() => {
+		const map = new Map<string, string>();
+		for (const library of names.data?.libraries?.content ?? []) {
+			if (library?.agencyCode) map.set(library.agencyCode, library.fullName);
+		}
+		return map;
+	}, [names.data]);
+
+	const rows = useQueries({
+		queries: shown.map((code) =>
+			homeCountsQueryOptions(
+				apiBase,
+				{
+					borrowed: borrowedByLibraryQuery(code, undefined),
+					supplied: suppliedByLibraryQuery(code),
+				},
+				span,
+			),
+		),
+	});
+
+	return (
+		<Box component="section" aria-labelledby={headingId}>
+			<Typography variant="h2" id={headingId} gutterBottom>
+				{t("home.split.title")}
+			</Typography>
+			<Typography gutterBottom>{t("home.split.description")}</Typography>
+			{/* Focusable: at narrow widths it scrolls sideways, and a keyboard must reach that */}
+			<TableContainer tabIndex={0} role="group" aria-labelledby={headingId}>
+				<Table size="small" aria-labelledby={headingId}>
+					<TableHead>
+						<TableRow>
+							<TableCell>{t("home.split.library")}</TableCell>
+							{HOME_COUNTS.map((count) => (
+								<TableCell key={count.id} align="right">
+									{t(`home.split.columns.${count.id}`)}
+								</TableCell>
+							))}
+						</TableRow>
+					</TableHead>
+					<TableBody>
+						{shown.map((code, index) => {
+							const row = rows[index];
+							return (
+								<TableRow key={code}>
+									<TableCell component="th" scope="row">
+										{nameFor.get(code) ?? code}
+									</TableCell>
+									{row.isError ? (
+										<TableCell colSpan={HOME_COUNTS.length}>
+											{t("home.split.failed")}
+										</TableCell>
+									) : (
+										HOME_COUNTS.map((count) => (
+											<TableCell key={count.id} align="right">
+												{!row.data ? (
+													<Skeleton variant="text" width={24} sx={{ ml: "auto" }} />
+												) : row.data.counts[count.id] === null ? (
+													<>
+														<span aria-hidden="true">—</span>
+														<Box component="span" sx={visuallyHidden}>
+															{t("home.split.unknown")}
+														</Box>
+													</>
+												) : (
+													formatNumber(row.data.counts[count.id]!)
+												)}
+											</TableCell>
+										))
+									)}
+								</TableRow>
+							);
+						})}
+					</TableBody>
+				</Table>
+			</TableContainer>
+			{agencyCodes.length > shown.length ? (
+				<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+					{t("home.split.more", { count: agencyCodes.length - shown.length })}
+				</Typography>
+			) : null}
+		</Box>
+	);
+}

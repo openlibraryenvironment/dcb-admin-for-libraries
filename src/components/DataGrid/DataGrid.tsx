@@ -15,6 +15,7 @@ import {
 	GridRowModes,
 	GridRowModesModel,
 	GridRowsProp,
+	GridSortDirection,
 	GridSortModel,
 	useGridApiRef,
 } from "@mui/x-data-grid-premium";
@@ -27,12 +28,14 @@ import { expandedFilterPanelTypes } from "@constants/dataGrid/types";
 import { SxProps, Theme, Tooltip, TooltipProps } from "@mui/material";
 import ExportToolbar from "./components/ExportToolbar";
 import type { GridExportConfig } from "@/hooks/useExport";
+import type { GridViews } from "@/hooks/useSyncedDataGrid";
 
 declare module "@mui/x-data-grid-premium" {
 	interface ToolbarPropsOverrides {
 		exportConfig?: GridExportConfig;
 		allDataLoading?: boolean;
 		onCleanup?: () => void;
+		views?: GridViews;
 	}
 	interface NoRowsOverlayPropsOverrides {
 		noResultsMessage?: string;
@@ -74,6 +77,9 @@ const detailTarget = (
 			return null;
 	}
 };
+
+// The server always orders: an "unsorted" step would show no aria-sort over rows it ordered
+const SERVER_SORTING_ORDER: readonly GridSortDirection[] = ["asc", "desc"];
 
 /**
  * The grid's tooltips describe rather than name: MUI X's sort icon sits in a
@@ -132,6 +138,8 @@ interface DataGridProps {
 	onCleanup?: () => void;
 	exportConfig?: GridExportConfig;
 	isExporting?: boolean;
+	/** A URL-synced grid's view, which its toolbar can share as a link and save. */
+	views?: GridViews;
 }
 export default function DataGrid({
 	autoRowHeight,
@@ -176,6 +184,7 @@ export default function DataGrid({
 	searchText,
 	toolbarVisible,
 	type,
+	views,
 }: DataGridProps) {
 	const { t } = useTranslation();
 	const clock = useClock();
@@ -189,6 +198,7 @@ export default function DataGrid({
 	// The server's count after a filter, sort or page change has settled. The
 	// first settle is the page arriving, which the route title already announced.
 	const settledQuery = useRef<string | null>(null);
+	const settledSort = useRef<string | null>(null);
 	useEffect(() => {
 		if (loading || paginationMode !== "server" || rowCount === undefined) {
 			return;
@@ -199,13 +209,30 @@ export default function DataGrid({
 			paginationModel,
 			rowCount,
 		]);
+		const sort = JSON.stringify(sortModel);
 		if (settledQuery.current === null) {
 			settledQuery.current = query;
+			settledSort.current = sort;
 			return;
 		}
 		if (settledQuery.current === query) return;
 		settledQuery.current = query;
-		announce(t("ui.data_grid.results", { count: rowCount }));
+		const sortChanged = settledSort.current !== sort;
+		settledSort.current = sort;
+		// A sort leaves the count as it was: say what changed, the order
+		const [sorted] = (sortModel ?? []) as GridSortModel;
+		const column = sorted?.sort
+			? columns.find((each) => each.field === sorted.field)?.headerName
+			: undefined;
+		announce(
+			sortChanged && column
+				? t("ui.data_grid.results_sorted", {
+						count: rowCount,
+						column,
+						direction: t(`ui.data_grid.sort_${sorted.sort}`),
+					})
+				: t("ui.data_grid.results", { count: rowCount }),
+		);
 	}, [
 		loading,
 		paginationMode,
@@ -213,6 +240,7 @@ export default function DataGrid({
 		filterModel,
 		sortModel,
 		paginationModel,
+		columns,
 		announce,
 		t,
 	]);
@@ -254,6 +282,11 @@ export default function DataGrid({
 				disableRowGrouping={disableRowGrouping}
 				disableRowSelectionOnClick
 				disablePivoting={disablePivoting}
+				// The server takes one order and the URL holds one sort: a second column would show an arrow nothing applies
+				disableMultipleColumnsSorting={sortingMode === "server"}
+				// Spread, not `undefined`: MUI's defaults are spread under the props, so an explicit
+				// undefined replaces its sorting order and a client-sorted grid crashes
+				{...(sortingMode === "server" ? { sortingOrder: SERVER_SORTING_ORDER } : {})}
 				editMode={editMode}
 				filterMode={filterMode}
 				filterModel={filterModel}
@@ -320,6 +353,7 @@ export default function DataGrid({
 						excelOptions: { disableToolbarButton: true },
 						allDataLoading: isExporting, // Pass the loading state
 						onCleanup: enableCleanup ? onCleanup : undefined, // Pass cleanup handler
+						views,
 					},
 					noRowsOverlay: { noResultsMessage: noResultsText },
 					noResultsOverlay: { noResultsMessage: noResultsText },

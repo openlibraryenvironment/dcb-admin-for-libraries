@@ -121,6 +121,9 @@ The grid is shown what the reader just did at once, not when the URL catches
 up a tick later: MUI X treats a sort or filter it receives late as a fresh
 change and sends the reader back to the first page.
 
+Each of these grids can copy its address as a link and save its filter and sort for the
+tab: [saved-filters.md](saved-filters.md).
+
 Column visibility is a device preference, not a view, so it stays in the
 persisted grid store. That store no longer persists filter, sort or page; the
 client-paged grids (record items, the cleanup dialog) keep theirs in memory for
@@ -132,13 +135,14 @@ A patron barcode is personal data and close to a credential, and a URL is not
 private: every reload or deep link sends the whole URL to the host's request
 logs (Cloudflare, S3), it travels in the Referer of every asset the page
 fetches, it sits in the browser history of a shared library desk, and it goes
-wherever someone pastes it. Quick-search text is free text a member of staff
-can paste a barcode into, so it is treated the same. Filters on the fields in
+wherever someone pastes it. A requester note is text a patron wrote, so a filter on it is
+treated the same, and so is quick-search text, which is free text a member of
+staff can paste a barcode into. Filters on the fields in
 `PRIVATE_FILTER_FIELDS` (`src/helpers/dataGrid/gridSearch.ts`) and quick-search
 values are kept in the tab's history entry instead, keyed by grid. They survive
 back, forward and a reload of that tab, reach `dcb-service` only inside the
 GraphQL request body, and are absent from a copied link. A field that carries a
-patron's barcode is added to that constant, and nowhere else.
+patron's barcode or words is added to that constant, and nowhere else.
 
 ### Adding a grid
 

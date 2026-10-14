@@ -4,6 +4,7 @@ import {
 	escapeLucene,
 } from "@helpers/dataGrid/buildFilterQuery";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
+import { GridLogicOperator } from "@mui/x-data-grid-premium";
 
 describe("escapeLucene", () => {
 	it.each([
@@ -15,6 +16,11 @@ describe("escapeLucene", () => {
 		["a && b", "a \\&\\& b"],
 		["C:\\path", "C\\:\\\\path"],
 		["plain", "plain"],
+		// A bare operator word is a parse error, and the grid would reset
+		["AND", "\\AND"],
+		["OR", "\\OR"],
+		["NOT", "\\NOT"],
+		["ANDROID", "ANDROID"],
 	])("escapes %s", (raw, escaped) => {
 		expect(escapeLucene(raw)).toBe(escaped);
 	});
@@ -45,10 +51,20 @@ describe("buildFilterQuery", () => {
 		);
 	});
 
-	it("escapes the does-not-equal operand", () => {
+	it("escapes the does-not-equal operand, grouped", () => {
 		expect(buildFilterQuery("toValue", "!=", "a:b")).toBe(
-			"*:* AND NOT (toValue:a\\:b)",
+			"(*:* AND NOT (toValue:a\\:b))",
 		);
+	});
+
+	it("keeps a pasted tab or newline inside one term", () => {
+		expect(buildFilterQuery("description", "contains", "two\twords\nhere")).toBe(
+			"description:*two?words?here*",
+		);
+	});
+
+	it.each([[""], [[]]])("treats %j as no filter", (value) => {
+		expect(buildFilterQuery("status", "is", value)).toBeNull();
 	});
 
 	it("leaves a number alone", () => {
@@ -71,6 +87,27 @@ describe("buildFilterQuery", () => {
 });
 
 describe("processGridFilterModel", () => {
+	it("keeps OR across a negated clause", () => {
+		expect(
+			processGridFilterModel(
+				{
+					items: [
+						{ id: 1, field: "status", operator: "is", value: "ERROR" },
+						{ id: 2, field: "status", operator: "not", value: "COMPLETED" },
+					],
+					logicOperator: GridLogicOperator.Or,
+				},
+				"",
+			),
+		).toBe("(status:ERROR OR (*:* AND NOT (status:COMPLETED)))");
+	});
+
+	it("keeps a pasted tab inside one quick-filter term", () => {
+		expect(
+			processGridFilterModel({ items: [], quickFilterValues: ["a\tb"] }, "", ["name"]),
+		).toBe("(name:*a?b*)");
+	});
+
 	it("escapes the quick filter", () => {
 		expect(
 			processGridFilterModel(

@@ -1,6 +1,6 @@
-import { RefObject, useRef, useState } from "react";
+import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import request from "graphql-request";
+import request, { ClientError } from "graphql-request";
 import {
 	GridApiPremium,
 	GridFilterModel,
@@ -11,7 +11,7 @@ import { getFileNameForExport } from "@helpers/dataGrid/getFileNameForExport";
 import {
 	EXPORT_ONLY_COLUMNS,
 	convertFileToString,
-	exportValue,
+	exportCell,
 } from "@helpers/dataGrid/convertFileToString";
 import {
 	type ExportColumn,
@@ -20,6 +20,7 @@ import {
 } from "@helpers/dataGrid/exportOptions";
 import {
 	EXPORT_PAGE_SIZE,
+	ExportIncompleteError,
 	ExportTooLargeError,
 	MAX_EXPORT_ROWS,
 	fetchExportPages,
@@ -41,6 +42,7 @@ import { getAgencyLocationsForExport } from "@queries/getAgencyLocationsForExpor
 import { getLocationForPatronRequestGrid } from "@queries/getLocationForPatronRequestGrid";
 import { getPatronRequestsForExport } from "@queries/getPatronRequestsForExport";
 import { authHeaders } from "@helpers/auth";
+import { currentClock } from "@/hooks/useThemeStore";
 
 /** Whole percent of an export fetched; an empty result is a finished one. */
 export const exportProgressPercent = (loaded: number, total: number): number =>
@@ -53,9 +55,17 @@ export interface ExportResult {
 	text: string;
 }
 
+export interface ExportProgress {
+	isExporting: boolean;
+	progress: number;
+	totalRecords: number;
+}
+
 /** What a request grid hands its toolbar so the export wizard can run. */
 export interface GridExportConfig {
 	run: (options: FileExportOptions) => Promise<void>;
+	cancel: () => void;
+	progress: ExportProgress;
 	defaultFileName: string;
 	/** Fields offered beside the grid's own columns. */
 	extraColumns: ExportColumn[];
@@ -71,6 +81,8 @@ interface UsePatronRequestExportProps {
 	onExportResult: (result: ExportResult) => void;
 	type: string;
 }
+
+const BYTE_ORDER_MARK = String.fromCharCode(0xfeff);
 
 const MIME: Record<"csv" | "tsv", string> = {
 	csv: "text/csv;charset=utf-8",
@@ -100,12 +112,14 @@ export const usePatronRequestExport = ({
 	type,
 }: UsePatronRequestExportProps) => {
 	const { t } = useTranslation();
-	const [exportProgress, setExportProgress] = useState({
+	const [exportProgress, setExportProgress] = useState<ExportProgress>({
 		isExporting: false,
 		progress: 0,
 		totalRecords: 0,
 	});
 	const controllerRef = useRef<AbortController | null>(null);
+	// Leaving the grid stops its export, so no file arrives on another page
+	useEffect(() => () => controllerRef.current?.abort(), []);
 
 	const graphql = async <T>(
 		document: string,
@@ -225,6 +239,7 @@ export const usePatronRequestExport = ({
 			const document = getPatronRequestsForExport();
 			const order = sortModel[0]?.field ?? "dateCreated";
 			const orderBy = sortModel[0]?.sort?.toUpperCase() ?? "DESC";
+			const withBarcode = options.columns.some((column) => column.field === "patronBarcode");
 
 			// A request matched through two suppliers comes back twice; it is exported once.
 			const seen = new Set<string>();
@@ -232,10 +247,11 @@ export const usePatronRequestExport = ({
 				fetchPage: async (pageno) => {
 					const data = await graphql<{ patronRequests?: ExportPage<ExportedRequest> }>(
 						document,
-						{ query, pagesize: EXPORT_PAGE_SIZE, pageno, order, orderBy },
+						{ query, pagesize: EXPORT_PAGE_SIZE, pageno, order, orderBy, withBarcode },
 						signal,
 					);
-					return data.patronRequests ?? { totalSize: 0, content: [] };
+					// No list at all is no count, which fetchExportPages refuses
+					return data.patronRequests ?? { totalSize: null, content: [] };
 				},
 				keep: (row) => {
 					if (!isRequestInExportScope(row, guard)) return false;
@@ -251,6 +267,10 @@ export const usePatronRequestExport = ({
 						progress: exportProgressPercent(loaded, total),
 					}),
 			});
+			if (rows.length === 0) {
+				onExportResult({ severity: "warning", text: t("ui.data_grid.export.empty") });
+				return;
+			}
 			const named = await withPickupLocationNames(rows, signal);
 			signal.throwIfAborted();
 
@@ -259,11 +279,14 @@ export const usePatronRequestExport = ({
 					? await buildXlsx(
 							options.columns,
 							named.map((row) =>
-								options.columns.map((column) => exportValue(row, column.field)),
+								options.columns.map((column) => exportCell(row, column)),
 							),
+							currentClock(),
 						)
 					: new Blob(
 							[
+								// Excel reads a CSV without a byte-order mark in the system code page
+								options.format === "csv" ? BYTE_ORDER_MARK : "",
 								convertFileToString(
 									named,
 									options.format === "csv" ? "," : "\t",
@@ -282,17 +305,27 @@ export const usePatronRequestExport = ({
 			if (signal.aborted) {
 				onExportResult({ severity: "warning", text: t("ui.data_grid.export.cancelled") });
 			} else if (error instanceof ExportTooLargeError) {
+				// An error, so it stays until dismissed: it asks the reader to narrow the export
 				onExportResult({
-					severity: "warning",
+					severity: "error",
 					text: t("ui.data_grid.export.too_large", {
 						count: error.totalSize,
 						max: MAX_EXPORT_ROWS,
 					}),
 				});
+			} else if (error instanceof ExportIncompleteError) {
+				onExportResult({ severity: "error", text: t("ui.data_grid.export.incomplete") });
 			} else if (error instanceof ExportScopeError) {
 				onExportResult({ severity: "error", text: t("ui.data_grid.export.scope_failed") });
 			} else {
-				onExportResult({ severity: "error", text: t("ui.data_grid.export.failed") });
+				// The status carries nothing personal, and tells support a 403 from a 502
+				const status = error instanceof ClientError ? error.response.status : undefined;
+				onExportResult({
+					severity: "error",
+					text: status
+						? t("ui.data_grid.export.failed_status", { status })
+						: t("ui.data_grid.export.failed"),
+				});
 			}
 		} finally {
 			controllerRef.current = null;
@@ -301,12 +334,16 @@ export const usePatronRequestExport = ({
 	};
 
 	const cancelExport = () => controllerRef.current?.abort();
+	// Once per language, not per render: the toolbar memoises the columns it offers on this
+	const extraColumns = useMemo(() => EXPORT_ONLY_COLUMNS(t), [t]);
 
 	const exportConfig: GridExportConfig = {
 		run,
+		cancel: cancelExport,
+		progress: exportProgress,
 		defaultFileName: getFileNameForExport(type),
-		extraColumns: EXPORT_ONLY_COLUMNS(),
+		extraColumns,
 	};
 
-	return { exportProgress, exportConfig, cancelExport };
+	return { exportProgress, exportConfig };
 };

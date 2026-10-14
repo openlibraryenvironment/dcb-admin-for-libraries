@@ -6,7 +6,6 @@ import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestExport } from "@/hooks/useExport";
 import DataGrid from "@components/DataGrid/DataGrid";
-import { ExportProgressDialog } from "@components/DataGrid/components/ExportProgressDialog";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
@@ -176,7 +175,7 @@ function RouteComponent() {
 
 	// No cleanup here: this grid lists what THIS library borrowed, and cleanup belongs to
 	// the library that supplied the request - see supplierRequests.tsx.
-	const { exportProgress, exportConfig, cancelExport } = usePatronRequestExport({
+	const { exportProgress, exportConfig } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
 		baseQuery: borrowedByLibraryQuery(code, userLibraryHostLmsCode),
@@ -250,6 +249,7 @@ function RouteComponent() {
 					sortingMode="server"
 					sortModel={grid.sortModel}
 					onSortModelChange={grid.handleSortChange}
+					views={grid.views}
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
@@ -257,12 +257,6 @@ function RouteComponent() {
 					isExporting={exportProgress.isExporting}
 				/>
 			}
-			<ExportProgressDialog
-				open={exportProgress.isExporting}
-				progress={exportProgress.progress}
-				totalRecords={exportProgress.totalRecords}
-				onCancel={cancelExport}
-			/>
 
 			{
 				<TimedAlert

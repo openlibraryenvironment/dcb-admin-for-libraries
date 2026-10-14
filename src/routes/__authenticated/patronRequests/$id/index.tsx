@@ -34,7 +34,7 @@ import {
 	isGuardedCleanupEnabled,
 } from "@helpers/featureFlags";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import axios from "axios";
 import request from "graphql-request";
 import { useState } from "react";
@@ -70,10 +70,14 @@ import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 import PatronRequestAuditLog from "@components/PatronRequestAuditLog/PatronRequestAuditLog";
 import { z } from "zod";
 
+const requestSearchSchema = z.object({
+	// The open tab, so a shared or restored link to the audit log opens on it
+	tab: z.number().int().min(1).max(5).optional().catch(undefined),
+	audit: gridSearchSchema.optional().catch(undefined),
+});
+
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
-	validateSearch: z.object({
-		audit: gridSearchSchema.optional().catch(undefined),
-	}),
+	validateSearch: requestSearchSchema,
 	head:() => ({ meta: [{ title: pageTitle("patron_request.title") }] }),
 	component: RouteComponent,
 });
@@ -113,8 +117,6 @@ function RouteComponent() {
 					query: "id:" + id,
 					pagesize: 10,
 					pageno: 0,
-					orderBy: "dateUpdated",
-					order: "DESC",
 				},
 				await authHeaders(),
 			),
@@ -331,10 +333,19 @@ function RouteComponent() {
 		},
 	});
 
-	const [activeTab, setActiveTab] = useState(0);
+	const activeTab = Route.useSearch({ select: (search) => search.tab }) ?? 0;
+	const navigate = useNavigate({ from: Route.fullPath });
 
-	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-		setActiveTab(newValue);
+	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+		void navigate({
+			to: ".",
+			search: (previous: z.output<typeof requestSearchSchema>) => ({
+				...previous,
+				tab: newValue === 0 ? undefined : newValue,
+			}),
+			replace: true,
+			resetScroll: false,
+		});
 	};
 
 	if (patronRequestLoading) {

@@ -124,6 +124,8 @@ test("the downloaded file holds only requests one of the user's libraries is par
 
 	const download = await exportFrom(page, "CSV");
 	expect(download.suggestedFilename()).toBe("patronRequests_export.csv");
+	// A UTF-8 byte-order mark, so Excel does not read accented and Welsh titles as mojibake
+	expect([...readFileSync(await download.path()).subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
 	const csv = await contentOf(download);
 	expect(csv).toContain(IN_SCOPE);
 	expect(csv).not.toContain(OUT_OF_SCOPE);
@@ -351,4 +353,168 @@ test("Excel exports under a strict Content-Security-Policy", async ({ app, page 
 		await page.evaluate(() => (window as unknown as { __unhashed?: boolean }).__unhashed),
 	).toBeUndefined();
 	expect((await violations()).slice(before)).toEqual([]);
+});
+
+/** Holds the export's request until the test lets it go; never, if it does not. */
+const holdExport = async (page: Page) => {
+	let release: () => void = () => undefined;
+	const released = new Promise<void>((resolve) => (release = resolve));
+	await page.route(`${API_BASE}/graphql`, async (route: Route) => {
+		if (route.request().postDataJSON()?.operationName !== "LoadPatronRequestsForExport") {
+			return route.fallback();
+		}
+		await released;
+		await route.fallback();
+	});
+	return release;
+};
+
+test("after an export finishes, focus is back on the Export button", async ({ app, page }) => {
+	await mockExport(app);
+	const release = await holdExport(page);
+	await page.goto("/patronRequests");
+	await openWizard(page);
+	const download = page.waitForEvent("download");
+	await submit(page, "CSV");
+
+	// Long enough for the wizard to have closed and unmounted behind the progress dialog
+	const progress = page.getByRole("dialog", { name: "Exporting data" });
+	await expect(progress).toBeVisible();
+	await expect(page.getByRole("dialog", { name: "Export requests" })).toHaveCount(0);
+	release();
+
+	await download;
+	await expect(progress).toBeHidden();
+	await expect(page.getByRole("button", { name: "Export", exact: true })).toBeFocused();
+});
+
+test("a click outside the progress dialog does not cancel; Escape does", async ({ app, page }) => {
+	await mockExport(app);
+	await holdExport(page);
+	await page.goto("/patronRequests");
+	await openWizard(page);
+	await submit(page, "CSV");
+
+	const progress = page.getByRole("dialog", { name: "Exporting data" });
+	await expect(progress).toBeVisible();
+	await page.mouse.click(5, 5);
+	await expect(progress).toBeVisible();
+
+	await page.keyboard.press("Escape");
+	await expect(progress).toBeHidden();
+	await expect(page.getByText("The export was cancelled.")).toBeVisible();
+});
+
+test("leaving the grid during an export stops it, and nothing downloads", async ({
+	app,
+	page,
+}) => {
+	await mockExport(app);
+	await holdExport(page);
+	const downloads: Download[] = [];
+	page.on("download", (download) => downloads.push(download));
+	const aborted = page.waitForEvent(
+		"requestfailed",
+		(failedRequest) =>
+			failedRequest.postDataJSON()?.operationName === "LoadPatronRequestsForExport",
+	);
+	// Back to a page inside the app, so the grid unmounts rather than the app unloading
+	await page.goto("/");
+	await page.getByRole("tab", { name: "Patron requests" }).click();
+	await openWizard(page);
+	await submit(page, "CSV");
+	await expect(page.getByRole("dialog", { name: "Exporting data" })).toBeVisible();
+
+	await page.goBack();
+
+	await aborted;
+	expect(downloads).toHaveLength(0);
+});
+
+test("an export that matches nothing downloads nothing, and says so", async ({ app, page }) => {
+	await mockExport(app, {
+		patronRequests: { totalSize: 0, pageable: { number: 0, offset: 0 }, content: [] },
+	});
+	const downloads: Download[] = [];
+	page.on("download", (download) => downloads.push(download));
+	await page.goto("/patronRequests");
+	await openWizard(page);
+	await submit(page, "CSV");
+
+	await expect(page.getByText("No requests match, so there was nothing to export.")).toBeVisible();
+	expect(downloads).toHaveLength(0);
+});
+
+test("asks for the patron's barcode only when its column is chosen", async ({ app, page }) => {
+	await mockExport(app);
+	const sent = await recordExportQueries(page);
+	await page.goto("/patronRequests");
+	const dialog = await openWizard(page);
+	await dialog.getByRole("button", { name: "Clear all" }).click();
+	await dialog.getByRole("checkbox", { name: "Status", exact: true }).check();
+	await dialog.getByRole("button", { name: "Export", exact: true }).click();
+
+	await expect.poll(() => sent.length).toBeGreaterThan(0);
+	expect(sent[0].withBarcode).toBe(false);
+});
+
+test.describe("an export that fails part-way", () => {
+	const firstPage = {
+		patronRequests: {
+			totalSize: 150,
+			pageable: { number: 0, offset: 0 },
+			content: Array.from({ length: 100 }, (_, index) =>
+				request(`00000000-0000-4000-8000-${String(index).padStart(12, "0")}`, {
+					suppliers: [{ localAgency: AGENCY_CODE }],
+				}),
+			),
+		},
+	};
+
+	const failSecondPage = async (page: Page, failure: (route: Route) => Promise<void>) =>
+		page.route(`${API_BASE}/graphql`, async (route: Route) => {
+			const body = route.request().postDataJSON();
+			if (body?.operationName !== "LoadPatronRequestsForExport") return route.fallback();
+			if (body.variables.pageno === 0) return route.fulfill({ json: { data: firstPage } });
+			return failure(route);
+		});
+
+	test.beforeEach(async ({ app }) => {
+		await mockExport(app);
+	});
+
+	test("downloads nothing, and says so with the server's status until dismissed", async ({
+		page,
+	}) => {
+		await page.clock.install();
+		await failSecondPage(page, (route) =>
+			route.fulfill({ status: 500, json: { errors: [{ message: "boom" }] } }),
+		);
+		const downloads: Download[] = [];
+		page.on("download", (download) => downloads.push(download));
+		await page.goto("/patronRequests");
+		await openWizard(page);
+		await submit(page, "CSV");
+
+		const alert = page.getByRole("alert").filter({ hasText: "The export failed" });
+		await expect(alert).toContainText(
+			"The export failed (the server answered 500), so nothing was downloaded. Try again.",
+		);
+		await expect(page.getByRole("dialog", { name: "Exporting data" })).toBeHidden();
+		// An error waits to be dismissed: past the 6 seconds a success message stays for
+		await page.clock.runFor(10_000);
+		await expect(alert).toBeVisible();
+		expect(downloads).toHaveLength(0);
+	});
+
+	test("with no answer at all, says it failed without a status", async ({ page }) => {
+		await failSecondPage(page, (route) => route.abort("connectionreset"));
+		await page.goto("/patronRequests");
+		await openWizard(page);
+		await submit(page, "CSV");
+
+		await expect(page.getByRole("alert").filter({ hasText: "The export failed" })).toHaveText(
+			/The export failed, so nothing was downloaded\. Try again\./,
+		);
+	});
 });

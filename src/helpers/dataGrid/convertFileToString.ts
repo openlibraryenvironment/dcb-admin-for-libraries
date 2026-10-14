@@ -146,9 +146,10 @@ export const exportSourceField = (field: string): string => {
  * Request fields an export offers that neither request grid shows as a column. A function
  * so the headers are in the language the reader has when they export.
  */
-export const EXPORT_ONLY_COLUMNS = (): ExportColumn[] => [
-	{ field: "pickupLocationCode", headerName: i18n.t("grid.headers.pickup_location") },
-	{ field: "patronHostlmsCode", headerName: i18n.t("grid.headers.patron_library") },
+export const EXPORT_ONLY_COLUMNS = (t: (key: string) => string = i18n.t): ExportColumn[] => [
+	{ field: "pickupLocationCode", headerName: t("grid.headers.pickup_location") },
+	// A Host LMS code, which several libraries can share: not a library
+	{ field: "patronHostlmsCode", headerName: t("patron_request.patron_hostlms") },
 ];
 
 /** A column's value for one request, before a file format is applied. */
@@ -156,6 +157,14 @@ export const exportValue = (item: unknown, field: string): unknown => {
 	const value = getFieldValue(item ?? {}, getFieldMapping(field));
 	return field === "elapsedTimeInCurrentStatus" && typeof value === "number"
 		? formatDuration(value)
+		: value;
+};
+
+/** The value as the grid shows it: a select column's label rather than its code. */
+export const exportCell = (item: unknown, column: ExportColumn): unknown => {
+	const value = exportValue(item, column.field);
+	return column.labels && value !== null && value !== undefined
+		? (column.labels[String(value)] ?? value)
 		: value;
 };
 
@@ -171,7 +180,7 @@ export const convertFileToString = (
 	const rows = data.map((item) =>
 		columns
 			.map((column) =>
-				formatCellValue(exportValue(item, column.field), delimiter, ""),
+				formatCellValue(exportCell(item, column), delimiter, ""),
 			)
 			.join(delimiter),
 	);

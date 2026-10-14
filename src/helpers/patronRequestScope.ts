@@ -1,3 +1,4 @@
+import { escapeLucene } from "@helpers/dataGrid/buildFilterQuery";
 import { isAgencyScopedRequestsEnabled } from "@helpers/featureFlags";
 
 /**
@@ -28,3 +29,7 @@ export const hasBorrowingScope = (
 	hostLmsCode: string | undefined,
 ): boolean =>
 	isAgencyScopedRequestsEnabled() ? !!agencyCode : !!hostLmsCode;
+
+/** "The requests my library supplies": the same field on every release. */
+export const suppliedByLibraryQuery = (agencyCode: string | undefined): string =>
+	"supplyingAgencyCode:" + escapeLucene(agencyCode ?? "");

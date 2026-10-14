@@ -74,7 +74,7 @@ export const CleanupProgressDialog = ({
 	};
 	const currentFilter = cleanupFilterModel["cleanupGridId"] ?? { items: [] };
 	const currentSort = cleanupSortModel["cleanupGridId"] ?? [
-		{ field: "auditDate", sort: "desc" },
+		{ field: "dateCreated", sort: "desc" },
 	];
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const successCleanupGridId = "cleanup-success-grid";

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
 	EXPORT_PAGE_SIZE,
+	ExportIncompleteError,
 	ExportTooLargeError,
 	MAX_EXPORT_ROWS,
 	fetchExportPages,
@@ -79,5 +80,33 @@ describe("fetchExportPages", () => {
 			[200, 250],
 			[250, 250],
 		]);
+	});
+
+	it("refuses a first page that says nothing of the total, rather than export one page of it", async () => {
+		const fetchPage = vi.fn(async () => ({
+			totalSize: null,
+			content: Array.from({ length: EXPORT_PAGE_SIZE }, (_, i) => ({ id: `r${i}` })),
+		}));
+		await expect(
+			fetchExportPages({ fetchPage: fetchPage as never, keep: () => true }),
+		).rejects.toBeInstanceOf(ExportIncompleteError);
+		expect(fetchPage).toHaveBeenCalledTimes(1);
+	});
+
+	it("refuses a page that comes back short before the total: rows moved while it paged", async () => {
+		const fetchPage = vi.fn(async (pageno: number) => ({
+			totalSize: 250,
+			content: Array.from({ length: pageno === 0 ? EXPORT_PAGE_SIZE : 40 }, (_, i) => ({
+				id: `r${pageno}-${i}`,
+			})),
+		}));
+		await expect(fetchExportPages({ fetchPage, keep: () => true })).rejects.toBeInstanceOf(
+			ExportIncompleteError,
+		);
+	});
+
+	it("finishes on a short last page that reaches the total", async () => {
+		const rows = await fetchExportPages({ fetchPage: pageOf(140), keep: () => true });
+		expect(rows).toHaveLength(140);
 	});
 });

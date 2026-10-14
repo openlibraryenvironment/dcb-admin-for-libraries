@@ -12,12 +12,15 @@ const LUCENE_SPECIAL = /[+\-&|!(){}[\]^"~*?:\\/]/g;
  * either fails to parse - which the grid reports as "could not process" and
  * resets - or changes which records the query matches.
  */
-export const escapeLucene = (value: string): string =>
-	value.replace(LUCENE_SPECIAL, "\\$&");
+export const escapeLucene = (value: string): string => {
+	const escaped = value.replace(LUCENE_SPECIAL, "\\$&");
+	// A bare operator word is a parse error, not a term
+	return /^(AND|OR|NOT)$/.test(escaped) ? `\\${escaped}` : escaped;
+};
 
-/** Spaces become the single-character wildcard, so a phrase stays one term. */
-const asTerm = (value: unknown): string =>
-	escapeLucene(String(value)).replaceAll(" ", "?");
+/** Whitespace becomes the single-character wildcard, so a phrase - or a pasted tab - stays one term. */
+export const asTerm = (value: unknown): string =>
+	escapeLucene(String(value)).replace(/\s/g, "?");
 
 export const buildFilterQuery = (
 	field: string,
@@ -39,12 +42,15 @@ export const buildFilterQuery = (
 
 		return `${field}:[${start} TO ${end}]`;
 	}
-	if (!field || !value) {
-		// Handle the case when the field or value is empty
-		if (value != 0) {
-			return null;
-		}
-		// If the value is actually zero, this is valid so don't return null
+	// 0 and false are values; nothing, an empty string and an empty list are not
+	if (
+		!field ||
+		value === undefined ||
+		value === null ||
+		value === "" ||
+		(Array.isArray(value) && value.length === 0)
+	) {
+		return null;
 	}
 	if (operator === "isAnyOf") {
 		if (Array.isArray(value) && value.length > 0) {
@@ -92,19 +98,6 @@ export const buildFilterQuery = (
 			return "";
 		}
 	}
-	if (operator === "last30Days") {
-		const end = dayjs().toISOString();
-		const start = dayjs().subtract(30, "day").toISOString();
-
-		return `${field}:[${start} TO ${end}]`;
-	}
-
-	if (operator === "last90Days") {
-		const end = dayjs().toISOString();
-		const start = dayjs().subtract(90, "day").toISOString();
-
-		return `${field}:[${start} TO ${end}]`;
-	}
 	// Date range handling
 	// We want to handle is ON OR after, is on or before,range,
 	// On or after - range with open bound (Date TO *)
@@ -149,11 +142,12 @@ export const buildFilterQuery = (
 
 	const convertedValue = Number(value) * conversionFieldFactor;
 	const containsQuery = `${field}:*${replacedValue}*`;
-	const doesNotContainQuery = `*:* AND NOT (${containsQuery})`;
+	// Grouped, so an OR beside it cannot split it: `a OR *:* AND NOT b` parses as `+*:* -b a`
+	const doesNotContainQuery = `(*:* AND NOT (${containsQuery}))`;
 	const equalsQuery = isConversionField
 		? `${field}:${convertedValue}`
 		: `${field}:${replacedValue}`;
-	const doesNotEqualQuery = `*:* AND NOT (${equalsQuery})`;
+	const doesNotEqualQuery = `(*:* AND NOT (${equalsQuery}))`;
 	const lessThanQueryInclusive = isConversionField
 		? `${field}:[* TO ${convertedValue}]`
 		: `${field}:[* TO ${replacedValue}]`;

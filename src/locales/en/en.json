@@ -909,7 +909,9 @@
 		},
 		"support_hours": "Support hours",
 		"title": "Information for {{library}}",
-		"type": "Type"
+		"type": "Type",
+		"greeting": "Welcome to DCB Admin for {{library}}, {{name}}.",
+		"information_short": "Your library information"
 	},
 	"location": {
 		"code": "Location code",
@@ -964,9 +966,6 @@
 		"data_change_log": {
 			"title": "Data change log"
 		},
-		"home": {
-			"title": "Home"
-		},
 		"library": {
 			"service": "Service",
 			"title": "Your library"
@@ -995,6 +994,9 @@
 		},
 		"insights": {
 			"title": "Insights"
+		},
+		"home": {
+			"title": "Home"
 		}
 	},
 	"patron_request": {
@@ -1463,7 +1465,8 @@
 			"export": {
 				"complete": "{{percentage}} complete",
 				"current": "Export current page as CSV",
-				"failed": "The data grid export has failed. Please try again.",
+				"failed": "The export failed, so nothing was downloaded. Try again.",
+				"failed_status": "The export failed (the server answered {{status}}), so nothing was downloaded. Try again.",
 				"modal_title": "Exporting data",
 				"print": "Print current page",
 				"wizard": "Export…",
@@ -1493,7 +1496,9 @@
 				"success_other": "Exported {{count}} requests.",
 				"records_one": "Exporting {{count}} request.",
 				"records_other": "Exporting {{count}} requests.",
-				"no_filters": "No filters are applied, so this is every row."
+				"no_filters": "No filters are applied, so this is every row.",
+				"incomplete": "The requests changed while they were being exported, so nothing was exported. Try again.",
+				"empty": "No requests match, so there was nothing to export."
 			},
 			"filters": {
 				"active_description": "{{length}} filter(s) active: {{description}}",
@@ -1528,10 +1533,42 @@
 			"open": "Open",
 			"results_one": "{{count}} result",
 			"results_other": "{{count}} results",
+			"results_sorted_one": "{{count}} result, sorted by {{column}}, {{direction}}",
+			"results_sorted_other": "{{count}} results, sorted by {{column}}, {{direction}}",
+			"sort_asc": "ascending",
+			"sort_desc": "descending",
 			"search_audits": "Search by audit",
 			"search_locations": "Search by location",
 			"search_mappings": "Search by mappings",
-			"search_supplier_requests": "Search supplier patron requests"
+			"search_supplier_requests": "Search supplier patron requests",
+			"views": {
+				"title": "Saved filters",
+				"share": "Copy link to this view",
+				"share_copied": "Link to this view copied.",
+				"share_copied_private": "Link copied. It leaves out patron barcode and requester note filters, and search text.",
+				"share_failed": "The link could not be copied. Copy the address from your browser's address bar instead.",
+				"session_note": "Saved filters stay in this browser tab until you close it or sign out.",
+				"name": "Name",
+				"save": "Save current filters",
+				"name_required": "Give the filters a name.",
+				"name_too_long_other": "Use {{count}} characters or fewer.",
+				"nothing_to_save": "Filter or sort the grid to save it here.",
+				"private_not_saved": "Patron barcode and requester note filters, and search text, are not saved.",
+				"limit_other": "You can save up to {{count}} filters here. Delete one to save another.",
+				"save_failed": "The filters could not be saved.",
+				"list_title": "Your saved filters",
+				"none": "No filters saved yet.",
+				"delete": "Delete {{name}}",
+				"deleted": "Deleted {{name}}.",
+				"saved_as": "Saved as {{name}}.",
+				"applied": "Showing {{name}}.",
+				"no_filter": "No filters",
+				"unsorted": "Not sorted",
+				"sorted_asc": "Sorted by {{field}}, ascending",
+				"sorted_desc": "Sorted by {{field}}, descending",
+				"reset": "Clear filters and sort",
+				"reset_done": "Filters and sort cleared."
+			}
 		},
 		"feedback": {
 			"complete": "{{percentage}} complete",
@@ -1618,12 +1655,6 @@
 			"case_sensitive": "{{field}} is case sensitive"
 		}
 	},
-	"welcome": {
-		"background": "Thank you for participating in the DCB Admin for Libraries pre-release! DCB Admin for Libraries is an all-new part of the DCB experience, tailored to the tasks library staff do every day. Expect this pre-release to change constantly as we add new functionality and continue to improve the product. You can provide feedback <linkComponent>here</linkComponent>.",
-		"library": "Library information for {{library}}",
-		"library_short": "Your library information",
-		"title": "Welcome to DCB Admin for {{library}}, {{name}}."
-	},
 	"workflows": {
 		"RET-STD": "Standard",
 		"RET-EXP": "Walk-up",
@@ -1653,5 +1684,161 @@
 		"publish_failed": "The notice could not be published.",
 		"withdraw_failed": "The notice could not be taken down.",
 		"unavailable": "Announcements are not available on this deployment yet. They need a newer DCB service."
+	},
+	"home": {
+		"title": "Welcome to DCB Admin for {{library}}",
+		"welcome": "DCB Admin for Libraries is the portal for managing your library's OpenRS experience. Find your library's personalised summary below for a quick overview of what's happening in OpenRS.",
+		"summary_for": "Summary for {{library}}",
+		"counting": "Counting requests…",
+		"counted": "Counted from {{since}} to {{until}}.",
+		"refresh": "Refresh counts",
+		"retry": "Try again",
+		"load_failed": "The request counts could not be loaded.",
+		"no_scope": "Your library has no library system recorded, so its requests cannot be counted. Ask your OpenRS team to check your library's set-up.",
+		"unknown": "{{label}}: not known",
+		"insights_link": "Trends, benchmarks and demand are in Insights",
+		"sections": {
+			"waiting": "In progress now",
+			"problems_today": "Problems today",
+			"problems_days_other": "Problems in the last {{count}} days",
+			"problems_visit": "Problems since your last visit",
+			"activity_today": "New today",
+			"activity_days_other": "New in the last {{count}} days",
+			"activity_visit": "New since your last visit"
+		},
+		"counts": {
+			"readyForPickup_one": "request ready for your patron to collect",
+			"readyForPickup_other": "requests ready for your patrons to collect",
+			"inTransitToPickup_one": "request on its way to your patron",
+			"inTransitToPickup_other": "requests placed by your patrons on their way to your library",
+			"notYetSent_one": "request from another library for your item(s), not yet sent",
+			"notYetSent_other": "requests from other libraries, not yet in transit",
+			"returning_one": "item on its way back to you",
+			"returning_other": "items on their way back to you",
+			"failedBorrowed": "of your patrons' requests stopped with an error",
+			"failedSupplied_one": "request you were supplying stopped with an error",
+			"failedSupplied_other": "requests you were supplying stopped with an error",
+			"unfilled_one": "request no library could fill",
+			"unfilled_other": "requests no library could fill",
+			"placed_one": "request placed by your patrons",
+			"placed_other": "requests placed by your patrons",
+			"received_one": "request from another library for items in your collection",
+			"received_other": "requests from other libraries for items in your collection"
+		},
+		"window": {
+			"label": "Count changes over",
+			"today": "Today",
+			"days_other": "Last {{count}} days",
+			"visit": "Since your last visit",
+			"no_visit": "No earlier visit is recorded in this browser yet."
+		},
+		"compare": {
+			"today": {
+				"more": "{{value}} more than the same time last week",
+				"fewer": "{{value}} fewer than the same time last week",
+				"same": "No change from the same time last week"
+			},
+			"week": {
+				"more": "{{value}} more than the 7 days before",
+				"fewer": "{{value}} fewer than the 7 days before",
+				"same": "No change from the 7 days before"
+			}
+		},
+		"pickup": {
+			"title": "Collecting at your locations for other libraries",
+			"description": "Other libraries' patrons collecting their items at your locations. Neither request grid lists these, so they are counted here only.",
+			"load_failed": "These counts could not be loaded.",
+			"no_locations": "Your library has no locations recorded, so there is nothing to count.",
+			"counts": {
+				"ready_one": "request ready for another library's patron to collect",
+				"ready_other": "requests ready for other libraries' patrons to collect",
+				"arriving_one": "request on its way to you for another library's patron",
+				"arriving_other": "requests on their way to you for other libraries' patrons"
+			}
+		},
+		"setup": {
+			"title": "Getting your library ready",
+			"intro": "Your library has not borrowed or supplied anything yet. These parts of its profile are what patrons and other libraries see.",
+			"items": {
+				"address": "Address",
+				"location": "Location on the map",
+				"website": "Website for patrons",
+				"contacts": "At least one contact",
+				"logo": "Logo",
+				"support": "Report a problem link"
+			},
+			"link": "Open your library's profile",
+			"item_done": "{{item}}: done",
+			"item_todo": "{{item}}: not yet"
+		},
+		"notices": {
+			"title": "Notices to your patrons",
+			"load_failed": "Your notices could not be loaded.",
+			"none": "No notices are live.",
+			"live_one": "{{count}} notice is live:",
+			"live_other": "{{count}} notices are live:",
+			"manage": "Manage notices",
+			"live_item": "{{headline}} — until {{date}}"
+		},
+		"split": {
+			"title": "By library",
+			"description": "Each of your libraries, counted the same way. Choose a library in the header to open its requests.",
+			"library": "Library",
+			"failed": "Not loaded",
+			"more_one": "{{count}} more library is not shown.",
+			"more_other": "{{count}} more libraries are not shown.",
+			"columns": {
+				"readyForPickup": "Ready to collect",
+				"inTransitToPickup": "On the way to patrons",
+				"notYetSent": "Not yet sent",
+				"returning": "Coming back",
+				"failedBorrowed": "Error, borrowing",
+				"failedSupplied": "Error, supplying",
+				"unfilled": "No library could fill",
+				"placed": "Placed",
+				"received": "From other libraries"
+			},
+			"unknown": "Not known"
+		},
+		"insights": {
+			"title": "Your last 7 days",
+			"more": "More in Insights"
+		}
+	},
+	"about": {
+		"heading": "About DCB Admin for Libraries",
+		"checking": "Checking which version this is",
+		"version": "Version {{version}}",
+		"build": "Development build {{build}}",
+		"unknown": "Version not known",
+		"release_notes": "Release notes for version {{version}} on GitHub",
+		"release_notes_all": "Release notes on GitHub",
+		"new_tab": "(opens in a new tab)",
+		"whats_new": "Show what's new in this release"
+	},
+	"release_highlights": {
+		"title": "What's new",
+		"title_version": "What's new in version {{version}}",
+		"intro": "The main changes in this release of DCB Admin for Libraries.",
+		"items": {
+			"home": {
+				"heading": "A personalised OpenRS summary for your library",
+				"body": "The Home page now shows a personalised summary of your library's OpenRS activity for today, the last 7 days or the last 30 days."
+			},
+			"views": {
+				"heading": "Share, save and clear a grid's filters",
+				"body": "Copy a link to what a grid is showing, save filters for this browser tab, and clear filters and sorting in one step."
+			},
+			"accessibility": {
+				"heading": "More accessible, and set up the way you work",
+				"body": "In Settings, choose your colour scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change, and Insights charts come with their numbers as a table."
+			},
+			"exports": {
+				"heading": "New and improved exports",
+				"body": "A new export wizard lets you customise your patron request exports."
+			}
+		},
+		"notes_link": "Read the full release notes on GitHub",
+		"close": "Got it"
 	}
 }

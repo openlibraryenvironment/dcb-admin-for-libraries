@@ -73,9 +73,13 @@ ${adapterEntry.code}`;
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-	const env = loadEnv(mode, process.cwd(), "");
+	// The bundle budget measures what CI ships: a local .env inlines its VITE_ values
+	// (471 bytes on one machine). scripts/run-gates.mjs and CI build with BUNDLE_BUDGET set.
+	const envDir = process.env.BUNDLE_BUDGET ? false : process.cwd();
+	const env = loadEnv(mode, envDir, "");
 
 	return {
+		envDir,
 		plugins: [
 			tanstackRouter({
 				target: "react",

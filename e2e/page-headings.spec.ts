@@ -17,8 +17,14 @@ interface Surface {
 
 const SURFACES: Surface[] = [
 	{
-		name: "library profile",
+		name: "home",
 		path: "/",
+		heading: /^welcome to dcb admin for /i,
+		mocks: { LoadLibrary: library },
+	},
+	{
+		name: "library profile",
+		path: "/library",
 		heading: /information for/i,
 		mocks: {
 			LoadLibrary: library,
@@ -66,6 +72,11 @@ for (const surface of SURFACES) {
 		await app.mockGraphQL(surface.mocks);
 		await page.goto(surface.path);
 
+		// The loading state has an h1 of its own; the page's comes after two requests in
+		// turn on some pages, which a busy CI runner took more than 5 s to answer
+		await expect(page.getByRole("heading", { level: 1, name: /^Loading / })).toHaveCount(0, {
+			timeout: 15_000,
+		});
 		const h1 = page.getByRole("heading", { level: 1 });
 		await expect(h1).toHaveCount(1);
 		await expect(h1).toHaveText(surface.heading);

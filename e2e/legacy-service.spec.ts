@@ -75,7 +75,7 @@ test.describe("dcb-service 8.71.0", () => {
 		await app.signIn();
 		await app.mockGraphQL(mocks);
 
-		await page.goto("/");
+		await page.goto("/library");
 
 		await expect(page.getByText("E2E Test Library").first()).toBeVisible();
 
@@ -99,7 +99,7 @@ test.describe("dcb-service 8.71.0", () => {
 		await app.signIn();
 		await app.mockGraphQL(mocks);
 
-		await page.goto("/");
+		await page.goto("/library");
 		await expect(page.getByText("E2E Test Library").first()).toBeVisible();
 
 		await expect(
@@ -117,7 +117,7 @@ test.describe("dcb-service 8.71.0", () => {
 		await app.signIn();
 		await app.mockGraphQL(mocks);
 
-		await page.goto("/");
+		await page.goto("/library");
 		await expect(page.getByText("E2E Test Library").first()).toBeVisible();
 
 		await app.expectNoAccessibilityViolations();
@@ -158,7 +158,7 @@ test.describe("dcb-service 9.0.0 and later", () => {
 			LoadLibraryBasics: branded,
 		});
 
-		await page.goto("/");
+		await page.goto("/library");
 		await expect(page.getByText("E2E Test Library").first()).toBeVisible();
 
 		const loadLibrary = requests.find((body) =>

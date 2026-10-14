@@ -61,8 +61,6 @@ function RouteComponent() {
 					query: "id:" + id,
 					pagesize: 10,
 					pageno: 0,
-					orderBy: "lastUpdated",
-					order: "ASC",
 				},
 				await authHeaders()
 			),

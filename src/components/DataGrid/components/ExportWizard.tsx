@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	Box,
@@ -88,9 +88,16 @@ export default function ExportWizard({
 			return next;
 		});
 
+	const fileNameRef = useRef<HTMLInputElement>(null);
+
 	const handleExport = () => {
 		setSubmitted(true);
-		if (noColumns || fileNameError) return;
+		if (noColumns) return;
+		if (fileNameError) {
+			// The field's error is its description, so moving there reads it out
+			fileNameRef.current?.focus();
+			return;
+		}
 		onExport({
 			scope,
 			format,
@@ -167,6 +174,7 @@ export default function ExportWizard({
 					size="small"
 					sx={{ my: 3 }}
 					label={t("ui.data_grid.export.file_name")}
+					inputRef={fileNameRef}
 					value={fileName}
 					onChange={(event) => setFileName(event.target.value)}
 					error={showFileNameError}

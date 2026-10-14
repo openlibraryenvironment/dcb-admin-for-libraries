@@ -1,5 +1,6 @@
 import { test, expect as strictExpect, type AppFixture } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
+import { DEFAULT_HOME_TOTALS, homeCounts } from "./fixtures/home";
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 import polarisLibrary from "./fixtures-data/library-polaris.json" with { type: "json" };
@@ -139,13 +140,99 @@ const openRequestDialog = async (page: Page) => {
 
 const PAGES: Surface[] = [
 	{
+		// Home, where a library administrator lands. Insights is on and the counts include a
+		// zero and an unknown, so the scan sees links, plain tiles and the extra link at once.
+		name: "home",
+		path: "/",
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadHomeCounts: homeCounts({ ...DEFAULT_HOME_TOTALS, unfilled: null }),
+			});
+		},
+		ready: async (page) => {
+			await expect(page.getByText(/^Counted from /)).toBeVisible();
+		},
+	},
+	{
+		// Home with the optional parts a 9.x deployment can turn on, together: a table, a
+		// toggle group, comparisons, notices and the Insights tiles all in one scan.
+		name: "home, with its 9.x parts on",
+		path: "/",
+		prepare: async (app) => {
+			await app.enableFeatures([
+				"VITE_FEATURE_INSIGHTS",
+				"VITE_FEATURE_HOME_INSIGHTS",
+				"VITE_FEATURE_ANNOUNCEMENTS",
+				"VITE_FEATURE_HOME_ANNOUNCEMENTS",
+				"VITE_FEATURE_AGENCY_SCOPED_REQUESTS",
+				"VITE_FEATURE_HOME_LIBRARY_SPLIT",
+				"VITE_FEATURE_HOME_LAST_WEEK",
+				"VITE_FEATURE_HOME_SINCE_LAST_VISIT",
+			]);
+			await app.signIn({ agencyCode: "e2e-agency,second-agency" });
+			await app.mockStats();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadHomeLastWeek: homeCounts(DEFAULT_HOME_TOTALS),
+				LoadAnnouncements: {
+					announcements: [
+						{
+							id: "live",
+							headline: "Closed on Monday",
+							body: "",
+							urgent: false,
+							dismissible: true,
+							startsAt: new Date(Date.now() - 86_400_000).toISOString(),
+							expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+						},
+					],
+				},
+			});
+		},
+		ready: async (page) => {
+			await expect(page.getByRole("table", { name: "By library" })).toBeVisible();
+			await expect(page.getByText("Requests resolved")).toBeVisible();
+			await expect(page.getByText(/^Closed on Monday — until /)).toBeVisible();
+		},
+	},
+	{
+		// The two parts that belong to an 8.71.0 deployment, or to a library not yet started.
+		name: "home, with its 8.71.0 parts on",
+		path: "/",
+		prepare: async (app) => {
+			await app.enableFeatures([
+				"VITE_FEATURE_HOME_PICKUP_HERE",
+				"VITE_FEATURE_HOME_SETUP_CHECKLIST",
+			]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadHomeHistory: homeCounts({ borrowed: 0, supplied: 0 }),
+				LoadAgencyLocationsForExport: {
+					agencies: {
+						totalSize: 1,
+						content: [{ code: "e2e-agency", locations: [{ id: "loc-1" }] }],
+					},
+				},
+				LoadHomePickupHere: homeCounts({ ready: 5, arriving: 2 }),
+			});
+		},
+		ready: async (page) => {
+			await expect(page.getByRole("heading", { name: "Getting your library ready" })).toBeVisible();
+			await expect(page.getByText("requests ready for other libraries' patrons to collect")).toBeVisible();
+		},
+	},
+	{
 		// The library profile: the biggest FORM in the app and the only surface where an
 		// administrator types. It was not scanned at all, which meant the presence
 		// fields would have gone in unaudited — and a form is where name, label and error
 		// association actually fail. Every backend-gated block is switched on, so the
 		// scan covers the widest shape the page can render rather than the narrowest.
 		name: "library profile",
-		path: "/",
+		path: "/library",
 		prepare: async (app) => {
 			await app.enableFeatures([
 				"VITE_DISCOVERY_ACTIVE",
@@ -390,12 +477,56 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// A release's highlights, as a user sees them on the first page after it ships.
+		name: "release highlights",
+		path: "/",
+		prepare: async (app, page) => {
+			await app.signIn({ releaseHighlightsSeen: false });
+			await app.mockGraphQL({ LoadLibrary: library });
+			await page.route("**/release.json", (route) =>
+				route.fulfill({ json: { version: "v1.14.0" } }),
+			);
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("dialog", { name: "What's new in version 1.14.0" }),
+			).toBeVisible();
+		},
+	},
+	{
+		// Saved filters, with one saved and the name's error on screen.
+		name: "saved filters",
+		path: `/patronRequests?filters=${encodeURIComponent(
+			JSON.stringify([{ id: 1, field: "status", operator: "is", value: "ERROR" }]),
+		)}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraries: library,
+				LoadPatronRequests: patronRequests,
+			});
+		},
+		ready: async (page) => {
+			await expect(
+				page.getByRole("grid", { name: /patron requests/i }),
+			).toBeVisible();
+			await page.getByRole("toolbar").getByRole("button", { name: "Saved filters" }).click();
+			const dialog = page.getByRole("dialog", { name: "Saved filters" });
+			await dialog.getByRole("textbox", { name: "Name" }).fill("Errors");
+			await dialog.getByRole("button", { name: "Save current filters" }).click();
+			await expect(dialog.getByRole("button", { name: /^Errors/ })).toBeVisible();
+			await dialog.getByRole("button", { name: "Save current filters" }).click();
+			await expect(dialog.getByText("Give the filters a name.")).toBeVisible();
+		},
+	},
+	{
 		// The library profile IN EDIT MODE, with a validation error on screen.
 		// Neither state was ever scanned, and between them they carry every
 		// form control and every error message in the application - which is
 		// where error.main sat at 3.85:1 unnoticed.
 		name: "library profile, editing with an error",
-		path: "/",
+		path: "/library",
 		prepare: async (app) => {
 			await app.enableFeatures([
 				"VITE_FEATURE_LIBRARY_BRANDING",

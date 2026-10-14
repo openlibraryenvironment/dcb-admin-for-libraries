@@ -28,6 +28,7 @@ interface LayoutProps {
  */
 const TAB_PATHS = {
 	home: "/",
+	library: "/library",
 	requesting: "/requesting",
 	patronRequests: "/patronRequests",
 	supplierRequests: "/supplierRequests",
@@ -58,6 +59,7 @@ export const Layout = ({ children }: LayoutProps) => {
 		return auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN")
 			? [
 					{ label: t("nav.home.title"), value: TAB_PATHS.home },
+					{ label: t("nav.library.title"), value: TAB_PATHS.library },
 					{
 						label: t("nav.requesting.title"),
 						value: TAB_PATHS.requesting,

@@ -29,7 +29,7 @@ test.describe("the library's presence links", () => {
 	test("both links are shown, and they are different destinations", async ({
 		page,
 	}) => {
-		await page.goto("/");
+		await page.goto("/library");
 
 		await expect(
 			page.getByText("https://library.example.invalid", { exact: true }),
@@ -40,7 +40,7 @@ test.describe("the library's presence links", () => {
 	});
 
 	test("both are editable, and carry the stored value", async ({ page }) => {
-		await page.goto("/");
+		await page.goto("/library");
 		await page.getByRole("button", { name: "Edit" }).click();
 
 		await expect(
@@ -57,7 +57,7 @@ test.describe("the library's presence links", () => {
 		// Without this the administrator meets a 400 with no field attached, and the whole
 		// argument for validating on the server is undone by not saying which box was
 		// wrong.
-		await page.goto("/");
+		await page.goto("/library");
 		await page.getByRole("button", { name: "Edit" }).click();
 
 		const support = page.getByRole("textbox", { name: "Report a problem URL" });
@@ -89,7 +89,7 @@ test.describe("a deployment that cannot store the support link", () => {
 		await app.signIn();
 		await app.mockGraphQL(mocks);
 
-		await page.goto("/");
+		await page.goto("/library");
 
 		await expect(
 			page.getByText("https://library.example.invalid", { exact: true }),

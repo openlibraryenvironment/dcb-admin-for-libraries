@@ -34,6 +34,7 @@ export default function ClusterHistory() {
 			onFilterModelChange={grid.handleFilterChange}
 			sortModel={grid.sortModel}
 			onSortModelChange={grid.handleSortChange}
+			views={grid.views}
 			rows={query.rows}
 			rowCount={query.rowCount}
 			columns={query.columns}

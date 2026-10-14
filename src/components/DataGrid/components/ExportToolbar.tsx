@@ -1,6 +1,7 @@
 import { generateFilterDescription } from "@helpers/dataGrid/utilities";
 import { exportColumnsOf } from "@helpers/dataGrid/exportOptions";
 import type { GridExportConfig } from "@/hooks/useExport";
+import type { GridViews } from "@/hooks/useSyncedDataGrid";
 import {
 	ChecklistRounded,
 	CleaningServicesRounded,
@@ -22,6 +23,7 @@ import {
 	GridFilterListIcon,
 	gridColumnDefinitionsSelector,
 	gridColumnVisibilityModelSelector,
+	gridFilterActiveItemsSelector,
 	gridFilterModelSelector,
 	GridPrintExportMenuItem,
 	gridRowSelectionCountSelector,
@@ -35,11 +37,15 @@ import {
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ExportWizard from "./ExportWizard";
+import { ExportProgressDialog } from "./ExportProgressDialog";
+import { useFilterLabels } from "./useFilterLabels";
+import { ResetViewButton, SavedFiltersButton, ShareViewButton } from "./GridViewControls";
 
 interface ExportToolbarProps {
 	exportConfig?: GridExportConfig;
 	allDataLoading?: boolean;
 	onCleanup?: () => void;
+	views?: GridViews;
 }
 
 /** A child of GridToolbarExportContainer, which hands each child the means to close its menu. */
@@ -72,6 +78,7 @@ export default function ExportToolbar({
 	exportConfig,
 	allDataLoading,
 	onCleanup,
+	views,
 }: ExportToolbarProps) {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
@@ -98,11 +105,16 @@ export default function ExportToolbar({
 	const selectionCount = useGridSelector(apiRef, gridRowSelectionCountSelector);
 	const columnDefinitions = useGridSelector(apiRef, gridColumnDefinitionsSelector);
 	const columnVisibility = useGridSelector(apiRef, gridColumnVisibilityModelSelector);
-	const filterTooltipText = generateFilterDescription(filterModel);
+	// MUI's own active set, which its badge counts: "Last 30 days" has no value and still filters
+	// MUI returns undefined, not [], for a model without items
+	const activeItems = useGridSelector(apiRef, gridFilterActiveItemsSelector) ?? [];
+	const labels = useFilterLabels();
+	const filterTooltipText = generateFilterDescription(
+		{ ...filterModel, items: activeItems },
+		labels,
+	);
 	const hasFilters =
-		filterModel.items.some(
-			(item) => item.value !== undefined && item.value !== null && item.value !== "",
-		) || (filterModel.quickFilterValues ?? []).length > 0;
+		activeItems.length > 0 || (filterModel.quickFilterValues ?? []).length > 0;
 
 	const exportColumns = useMemo(() => {
 		const own = exportColumnsOf(columnDefinitions);
@@ -163,12 +175,25 @@ export default function ExportToolbar({
 				{exportConfig && (
 					<OpenExportWizardMenuItem
 						disabled={allDataLoading}
-						onOpen={() => setWizard(({ key }) => ({ open: true, key: key + 1 }))}
+						// A filter still being typed is written first: the wizard describes, and the
+						// export sends, the filter the grid shows
+						onOpen={() =>
+							void (views?.flush() ?? Promise.resolve()).then(() =>
+								setWizard(({ key }) => ({ open: true, key: key + 1 })),
+							)
+						}
 					/>
 				)}
-				<GridCsvExportMenuItem />
+				<GridCsvExportMenuItem options={{ utf8WithBom: true }} />
 				<GridPrintExportMenuItem />
 			</GridToolbarExportContainer>
+			{views ? (
+				<>
+					<ResetViewButton views={views} />
+					<ShareViewButton views={views} />
+					<SavedFiltersButton views={views} />
+				</>
+			) : null}
 			{exportConfig && (
 				<ExportWizard
 					key={wizard.key}
@@ -185,6 +210,15 @@ export default function ExportToolbar({
 					}
 					selectedCount={selectionCount}
 					onExport={(options) => void exportConfig.run(options)}
+				/>
+			)}
+			{exportConfig && (
+				<ExportProgressDialog
+					open={exportConfig.progress.isExporting}
+					progress={exportConfig.progress.progress}
+					totalRecords={exportConfig.progress.totalRecords}
+					onCancel={exportConfig.cancel}
+					onExited={() => exportButtonRef.current?.focus()}
 				/>
 			)}
 			{onCleanup && (

@@ -12,6 +12,7 @@ export const getPatronRequestsForExport = () => gql`
 		$order: String!
 		$query: String!
 		$orderBy: String!
+		$withBarcode: Boolean!
 	) {
 		patronRequests(
 			pageno: $pageno
@@ -53,7 +54,8 @@ export const getPatronRequestsForExport = () => gql`
 					id
 				}
 				requestingIdentity {
-					localBarcode
+					# A patron's barcode leaves the server only for an export that chose its column
+					localBarcode @include(if: $withBarcode)
 					canonicalPtype
 					${capabilitySelection("agency_scoped_requests", "PatronIdentity")}
 				}

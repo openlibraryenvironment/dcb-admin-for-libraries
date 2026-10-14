@@ -41,7 +41,7 @@ export const locationsGrid = defineGrid({
 	id: "locations",
 	searchKey: null,
 	columns: defaultLocationColumns,
-	defaultSort: [{ field: "lastImported", sort: "desc" }],
+	defaultSort: [{ field: "name", sort: "asc" }],
 	defaultColumnVisibility: standardLocationsColumnVisibility,
 });
 
@@ -49,7 +49,8 @@ export const bibsGrid = defineGrid({
 	id: "bibs",
 	searchKey: null,
 	columns: standardBibColumns,
-	defaultSort: [{ field: "dateCreated", sort: "desc" }],
+	// No bib column sorts, and dcb-service ignores the order for bibs
+	defaultSort: [],
 	defaultColumnVisibility: standardBibColumnVisibility,
 });
 

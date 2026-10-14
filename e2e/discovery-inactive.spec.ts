@@ -69,7 +69,7 @@ test.describe("discovery is not deployed", () => {
 	test("neither discovery block is offered, in view or in edit", async ({
 		page,
 	}) => {
-		await page.goto("/");
+		await page.goto("/library");
 		await expect(page.getByText("E2E Test Library").first()).toBeVisible();
 
 		await expect(
@@ -108,7 +108,7 @@ test.describe("discovery is not deployed", () => {
 		// have changed.
 		const requests = trackGraphQL(page);
 
-		await page.goto("/");
+		await page.goto("/library");
 		await expect(page.getByText("E2E Test Library").first()).toBeVisible();
 
 		const loadLibrary = requests.find((body) => body.includes("LoadLibrary("));
@@ -128,7 +128,7 @@ test.describe("discovery is not deployed", () => {
 	}) => {
 		// Removing two labelled blocks changes heading order and focus order, which is
 		// the kind of change a diff does not show and a scan does.
-		await page.goto("/");
+		await page.goto("/library");
 		await expect(page.getByText("E2E Test Library").first()).toBeVisible();
 
 		await app.expectNoAccessibilityViolations();

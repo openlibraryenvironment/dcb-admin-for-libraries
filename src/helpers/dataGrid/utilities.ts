@@ -3,12 +3,8 @@ import { formatTimestamp } from "@helpers/formatters";
 import {
 	GridFilterModel,
 	GridSortDirection,
-	GridSortModel,
 } from "@mui/x-data-grid-premium";
-import {
-	buildFilterQuery,
-	escapeLucene,
-} from "@helpers/dataGrid/buildFilterQuery";
+import { asTerm, buildFilterQuery } from "@helpers/dataGrid/buildFilterQuery";
 import i18n from "@/i18n";
 
 export const processGridFilterModel = (
@@ -32,7 +28,7 @@ export const processGridFilterModel = (
 				// Create an OR condition for every field provided in quickFilterFields
 				// To be refined into a "universal search" at some point
 				const fieldSearches = quickFilterFields.map(
-					(field) => `${field}:*${escapeLucene(val).replaceAll(" ", "?")}*`,
+					(field) => `${field}:*${asTerm(val)}*`,
 				);
 				return `(${fieldSearches.join(" OR ")})`;
 			})
@@ -50,85 +46,64 @@ export const processGridFilterModel = (
 	return finalQuery;
 };
 
-export const normalizeSortModel = (sortModel: GridSortModel): GridSortModel => {
-	return sortModel.map((sort) => ({
-		...sort,
-		sort: sort.sort?.toUpperCase() === "ASC" ? "asc" : "desc",
-	}));
-};
-
 export const getSortOrderForServer = (sortOrder: GridSortDirection): string => {
 	return sortOrder?.toUpperCase() === "ASC" ? "ASC" : "DESC";
 };
 
-export const checkIfFiltering = (
-	filterModel: GridFilterModel,
-	debouncedFilterModel: GridFilterModel,
-): boolean => {
-	const hasActiveFilters =
-		filterModel.items.some(
-			(item) => item.value && item.value !== "" && item.value !== null,
-		) ||
-		(filterModel.quickFilterValues && filterModel.quickFilterValues.length > 0);
+/** How a description names a column, an operator and a value: the grid's own words, not its ids. */
+export interface FilterLabels {
+	field: (field: string) => string;
+	operator: (field: string, operator: string) => string;
+	value: (field: string, value: unknown) => string;
+}
 
-	// We're filtering if there are active filters but they don't match debounced filters
-	const isDifferent =
-		JSON.stringify(filterModel) !== JSON.stringify(debouncedFilterModel);
-	return !!hasActiveFilters && isDifferent;
+const RAW_LABELS: FilterLabels = {
+	field: (field) => field,
+	operator: (_field, operator) => operator,
+	value: (_field, value) => String(value),
 };
 
-export const generateFilterDescription = (model?: GridFilterModel): string => {
-	const none = i18n.t("ui.data_grid.filters.title");
-	if (!model || !model.items || model.items.length === 0) return none;
+/** Describes every item it is given: the caller passes the active ones. */
+export const generateFilterDescription = (
+	model?: GridFilterModel,
+	labels: FilterLabels = RAW_LABELS,
+): string => {
+	const items = model?.items ?? [];
+	if (items.length === 0) return i18n.t("ui.data_grid.filters.title");
 
-	// Only count filters that actually have a value entered
-	const validItems = model.items.filter(
-		(item) =>
-			item.value !== undefined && item.value !== null && item.value !== "",
-	);
+	const logicOperator = model?.logicOperator || "AND";
 
-	if (validItems.length === 0) return none;
+	const descriptions = items.map((item) => {
+		const field = labels.field(item.field);
+		const value = item.value;
 
-	const logicOperator = model.logicOperator || "AND";
-
-	const descriptions = validItems.map((item) => {
-		let val = item.value;
-		let operator = item.operator || "=";
-
-		// Smart handling for date ranges
-		if (operator === "luceneDateRange" && Array.isArray(val)) {
-			const [start, end] = val;
+		if (item.operator === "luceneDateRange" && Array.isArray(value)) {
+			const [start, end] = value;
 			const hasStart = start !== null && start !== undefined && start !== "";
 			const hasEnd = end !== null && end !== undefined && end !== "";
-			const formattedStart = hasStart
-				? formatTimestamp(start, currentClock())
-				: "";
+			const formattedStart = hasStart ? formatTimestamp(start, currentClock()) : "";
 			const formattedEnd = hasEnd ? formatTimestamp(end, currentClock()) : "";
-
 			if (hasStart && hasEnd) {
-				operator = i18n.t("ui.data_grid.filters.between").toLowerCase();
-				val = `${formattedStart} ${i18n.t("ui.data_grid.filters.and")} ${formattedEnd}`;
-			} else if (hasStart) {
-				operator = i18n.t("ui.data_grid.filters.after").toLowerCase();
-				val = `${formattedStart}`;
-			} else if (hasEnd) {
-				operator = i18n.t("ui.data_grid.filters.before").toLowerCase();
-				val = `${formattedEnd}`;
+				return `${field} ${i18n.t("ui.data_grid.filters.between").toLowerCase()} ${formattedStart} ${i18n.t("ui.data_grid.filters.and")} ${formattedEnd}`;
 			}
-		} else {
-			// Fallback for any other arrays or objects
-			if (Array.isArray(val)) {
-				val = `(${val.join(", ")})`;
-			} else if (typeof val === "object") {
-				val = JSON.stringify(val);
+			if (hasStart) {
+				return `${field} ${i18n.t("ui.data_grid.filters.after").toLowerCase()} ${formattedStart}`;
 			}
+			return `${field} ${i18n.t("ui.data_grid.filters.before").toLowerCase()} ${formattedEnd}`;
 		}
 
-		return `${item.field} ${operator} ${val}`;
+		const operator = labels.operator(item.field, item.operator);
+		if (value === undefined || value === null || value === "") return `${field} ${operator}`;
+		const shown = Array.isArray(value)
+			? `(${value.map((each) => labels.value(item.field, each)).join(", ")})`
+			: typeof value === "object"
+				? JSON.stringify(value)
+				: labels.value(item.field, value);
+		return `${field} ${operator} ${shown}`;
 	});
 
 	return i18n.t("ui.data_grid.filters.active_description", {
-		length: validItems.length,
+		length: items.length,
 		description: descriptions.join(` ${logicOperator.toUpperCase()} `),
 	});
 };
