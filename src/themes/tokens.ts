@@ -69,6 +69,8 @@ export const openRSDark: PaletteOptions = {
 		// #8C8C8C left that number at 3.36:1; this is 4.61:1.
 		inactiveBackground: "#757575",
 		main: "#35B7FF",
+		// A contained button's hover fill. MUI's derived #2580b2 left the button's ink at 4.37:1
+		dark: "#2A92CC",
 		searchResultBackground: "#424242",
 		// The light scheme's #186498 was copied here verbatim, which put it
 		// at 1.59:1 on this card. #90CAF9 is 5.74:1 on the same ground.
