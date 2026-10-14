@@ -16,6 +16,7 @@ interface ExportProgressProps {
 	progress: number;
 	totalRecords: number;
 	onCancel: () => void;
+	onExited: () => void;
 }
 
 export const ExportProgressDialog = ({
@@ -23,6 +24,7 @@ export const ExportProgressDialog = ({
 	progress,
 	totalRecords,
 	onCancel,
+	onExited,
 }: ExportProgressProps) => {
 	const { t } = useTranslation();
 	const titleId = useId();
@@ -30,7 +32,17 @@ export const ExportProgressDialog = ({
 	const announced = Math.floor(progress / 10) * 10;
 
 	return (
-		<Dialog open={open} fullWidth aria-labelledby={titleId} onClose={onCancel}>
+		<Dialog
+			open={open}
+			fullWidth
+			aria-labelledby={titleId}
+			// Only Escape cancels: a stray click outside must not throw a long export away
+			onClose={(_event, reason) => {
+				if (reason === "escapeKeyDown") onCancel();
+			}}
+			// What focus would return to is the wizard's Export button, which has unmounted
+			disableRestoreFocus
+			slotProps={{ transition: { onExited } }}>
 			<DialogTitle id={titleId} variant="modalTitle">
 				{t("ui.data_grid.export.modal_title")}
 			</DialogTitle>

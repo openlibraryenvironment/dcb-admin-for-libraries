@@ -367,6 +367,42 @@ const holdExport = async (page: Page) => {
 	return release;
 };
 
+test("after an export finishes, focus is back on the Export button", async ({ app, page }) => {
+	await mockExport(app);
+	const release = await holdExport(page);
+	await page.goto("/patronRequests");
+	await openWizard(page);
+	const download = page.waitForEvent("download");
+	await submit(page, "CSV");
+
+	// Long enough for the wizard to have closed and unmounted behind the progress dialog
+	const progress = page.getByRole("dialog", { name: "Exporting data" });
+	await expect(progress).toBeVisible();
+	await expect(page.getByRole("dialog", { name: "Export requests" })).toHaveCount(0);
+	release();
+
+	await download;
+	await expect(progress).toBeHidden();
+	await expect(page.getByRole("button", { name: "Export", exact: true })).toBeFocused();
+});
+
+test("a click outside the progress dialog does not cancel; Escape does", async ({ app, page }) => {
+	await mockExport(app);
+	await holdExport(page);
+	await page.goto("/patronRequests");
+	await openWizard(page);
+	await submit(page, "CSV");
+
+	const progress = page.getByRole("dialog", { name: "Exporting data" });
+	await expect(progress).toBeVisible();
+	await page.mouse.click(5, 5);
+	await expect(progress).toBeVisible();
+
+	await page.keyboard.press("Escape");
+	await expect(progress).toBeHidden();
+	await expect(page.getByText("The export was cancelled.")).toBeVisible();
+});
+
 test("leaving the grid during an export stops it, and nothing downloads", async ({
 	app,
 	page,

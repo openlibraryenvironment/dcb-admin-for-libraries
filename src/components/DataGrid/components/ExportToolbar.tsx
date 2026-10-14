@@ -37,6 +37,7 @@ import {
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ExportWizard from "./ExportWizard";
+import { ExportProgressDialog } from "./ExportProgressDialog";
 import { useFilterLabels } from "./useFilterLabels";
 import { ResetViewButton, SavedFiltersButton, ShareViewButton } from "./GridViewControls";
 
@@ -203,6 +204,15 @@ export default function ExportToolbar({
 					}
 					selectedCount={selectionCount}
 					onExport={(options) => void exportConfig.run(options)}
+				/>
+			)}
+			{exportConfig && (
+				<ExportProgressDialog
+					open={exportConfig.progress.isExporting}
+					progress={exportConfig.progress.progress}
+					totalRecords={exportConfig.progress.totalRecords}
+					onCancel={exportConfig.cancel}
+					onExited={() => exportButtonRef.current?.focus()}
 				/>
 			)}
 			{onCleanup && (

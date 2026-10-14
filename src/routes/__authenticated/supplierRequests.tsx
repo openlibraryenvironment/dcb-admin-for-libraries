@@ -8,7 +8,6 @@ import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestExport } from "@/hooks/useExport";
 import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
 import { CleanupProgressDialog } from "@components/DataGrid/components/CleanupProgressDialog";
-import { ExportProgressDialog } from "@components/DataGrid/components/ExportProgressDialog";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -168,7 +167,7 @@ function RouteComponent() {
 				refetch();
 			},
 		});
-	const { exportProgress, exportConfig, cancelExport } = usePatronRequestExport({
+	const { exportProgress, exportConfig } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
 		baseQuery: presetQuery,
@@ -251,12 +250,6 @@ function RouteComponent() {
 					parentApiRef={apiRef}
 				/>
 			}
-			<ExportProgressDialog
-				open={exportProgress.isExporting}
-				progress={exportProgress.progress}
-				totalRecords={exportProgress.totalRecords}
-				onCancel={cancelExport}
-			/>
 			<CleanupProgressDialog
 				open={cleanupState.open}
 				isCleaning={cleanupState.isCleaning}

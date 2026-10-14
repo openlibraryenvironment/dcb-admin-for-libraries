@@ -54,9 +54,17 @@ export interface ExportResult {
 	text: string;
 }
 
+export interface ExportProgress {
+	isExporting: boolean;
+	progress: number;
+	totalRecords: number;
+}
+
 /** What a request grid hands its toolbar so the export wizard can run. */
 export interface GridExportConfig {
 	run: (options: FileExportOptions) => Promise<void>;
+	cancel: () => void;
+	progress: ExportProgress;
 	defaultFileName: string;
 	/** Fields offered beside the grid's own columns. */
 	extraColumns: ExportColumn[];
@@ -101,7 +109,7 @@ export const usePatronRequestExport = ({
 	type,
 }: UsePatronRequestExportProps) => {
 	const { t } = useTranslation();
-	const [exportProgress, setExportProgress] = useState({
+	const [exportProgress, setExportProgress] = useState<ExportProgress>({
 		isExporting: false,
 		progress: 0,
 		totalRecords: 0,
@@ -314,9 +322,11 @@ export const usePatronRequestExport = ({
 
 	const exportConfig: GridExportConfig = {
 		run,
+		cancel: cancelExport,
+		progress: exportProgress,
 		defaultFileName: getFileNameForExport(type),
 		extraColumns: EXPORT_ONLY_COLUMNS(),
 	};
 
-	return { exportProgress, exportConfig, cancelExport };
+	return { exportProgress, exportConfig };
 };
