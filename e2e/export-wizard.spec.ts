@@ -124,6 +124,8 @@ test("the downloaded file holds only requests one of the user's libraries is par
 
 	const download = await exportFrom(page, "CSV");
 	expect(download.suggestedFilename()).toBe("patronRequests_export.csv");
+	// A UTF-8 byte-order mark, so Excel does not read accented and Welsh titles as mojibake
+	expect([...readFileSync(await download.path()).subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
 	const csv = await contentOf(download);
 	expect(csv).toContain(IN_SCOPE);
 	expect(csv).not.toContain(OUT_OF_SCOPE);

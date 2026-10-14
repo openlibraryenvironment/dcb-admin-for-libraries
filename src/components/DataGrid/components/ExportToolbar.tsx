@@ -178,7 +178,7 @@ export default function ExportToolbar({
 						onOpen={() => setWizard(({ key }) => ({ open: true, key: key + 1 }))}
 					/>
 				)}
-				<GridCsvExportMenuItem />
+				<GridCsvExportMenuItem options={{ utf8WithBom: true }} />
 				<GridPrintExportMenuItem />
 			</GridToolbarExportContainer>
 			{views ? (

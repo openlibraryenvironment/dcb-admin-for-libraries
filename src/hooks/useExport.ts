@@ -82,6 +82,8 @@ interface UsePatronRequestExportProps {
 	type: string;
 }
 
+const BYTE_ORDER_MARK = String.fromCharCode(0xfeff);
+
 const MIME: Record<"csv" | "tsv", string> = {
 	csv: "text/csv;charset=utf-8",
 	tsv: "text/tab-separated-values;charset=utf-8",
@@ -282,6 +284,8 @@ export const usePatronRequestExport = ({
 						)
 					: new Blob(
 							[
+								// Excel reads a CSV without a byte-order mark in the system code page
+								options.format === "csv" ? BYTE_ORDER_MARK : "",
 								convertFileToString(
 									named,
 									options.format === "csv" ? "," : "\t",
