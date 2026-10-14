@@ -38,6 +38,8 @@ const NUMERIC = /^-?\d+(\.\d+)?$/;
 type ValueKind = "none" | "scalar" | "list" | "range";
 
 const RANGE_OPERATORS = new Set(["between", "luceneDateRange"]);
+/** Built as dates whatever the column's type, so their values must be dates. */
+const DATE_OPERATORS = new Set(["luceneDateRange", "onOrAfter", "onOrBefore"]);
 
 const kindOf = (operator: GridFilterOperator): ValueKind => {
 	if (operator.value === "isAnyOf") return "list";
@@ -61,6 +63,9 @@ const isEmpty = (value: unknown) =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
 
+const isDateText = (value: unknown) =>
+	typeof value === "string" && value.length <= 64 && !Number.isNaN(Date.parse(value));
+
 const scalarCheck = (column: GridColDef): ((value: unknown) => boolean) => {
 	switch (column.type) {
 		case "number":
@@ -72,10 +77,7 @@ const scalarCheck = (column: GridColDef): ((value: unknown) => boolean) => {
 				typeof value === "boolean" || value === "true" || value === "false";
 		case "date":
 		case "dateTime":
-			return (value) =>
-				typeof value === "string" &&
-				value.length <= 64 &&
-				!Number.isNaN(Date.parse(value));
+			return isDateText;
 		case "singleSelect": {
 			const valueOptions =
 				"valueOptions" in column ? column.valueOptions : undefined;
@@ -145,18 +147,25 @@ const parseItem = (
 		field,
 		operator,
 	};
-	if (kind === "none" || isEmpty(value)) return item;
-	if (kind === "scalar") return rule.accepts(value) ? { ...item, value } : null;
+	// A date operator on a column not typed as a date still builds a date query
+	const accepts = DATE_OPERATORS.has(operator) ? isDateText : rule.accepts;
+	// An item that filters nothing - a row just added, a range cleared - is not carried
+	if (kind === "none") return item;
+	if (kind === "scalar") {
+		return !isEmpty(value) && accepts(value) ? { ...item, value } : null;
+	}
 	if (kind === "list") {
 		return Array.isArray(value) &&
+			value.length > 0 &&
 			value.length <= MAX_LIST_VALUES &&
-			value.every(rule.accepts)
+			value.every(accepts)
 			? { ...item, value }
 			: null;
 	}
 	return Array.isArray(value) &&
 		value.length === 2 &&
-		value.every((bound) => isEmpty(bound) || rule.accepts(bound))
+		value.some((bound) => !isEmpty(bound)) &&
+		value.every((bound) => isEmpty(bound) || accepts(bound))
 		? { ...item, value: value.map((bound) => (isEmpty(bound) ? null : bound)) }
 		: null;
 };
@@ -310,6 +319,12 @@ export const filterToSearch = (
 			quickFilterValues: model.quickFilterValues ?? [],
 		}),
 	};
+};
+
+/** Rows the URL does not carry: one the reader has not finished, or a value its column cannot take. */
+export const hasDraftItems = (grid: GridDefinition, model: GridFilterModel): boolean => {
+	const { search, state } = filterToSearch(grid, model);
+	return (search.filters?.length ?? 0) + (state?.items.length ?? 0) < model.items.length;
 };
 
 const sameSort = (a: GridSortModel, b: GridSortModel) =>

@@ -9,12 +9,13 @@ import type { GridFilterModel } from "@mui/x-data-grid-premium";
 import {
 	PRIVATE_FILTER_FIELDS,
 	filterToSearch,
+	hasDraftItems,
 	readFilter,
 	readGrid,
 	readSort,
 	serialiseGrid,
 } from "@helpers/dataGrid/gridSearch";
-import { patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
+import { mappingsGrid, patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
 
 const BARCODE = "PATRON-BC-90817";
 const QUICK = "quick-text-55120";
@@ -216,6 +217,35 @@ describe("a date the picker chose", () => {
 			{ id: 1, field: "dateCreated", operator: "onOrAfter", value: at },
 			{ id: 2, field: "dateUpdated", operator: "luceneDateRange", value: [at, null] },
 		]);
+	});
+});
+
+describe("a date operator", () => {
+	it("takes only a date, even on a column not typed as one", () => {
+		const read = (value: string) =>
+			readFilter(
+				mappingsGrid,
+				{ filters: [{ id: 1, field: "lastImported", operator: "onOrAfter", value }] },
+				undefined,
+			).items;
+
+		expect(read("not a date")).toEqual([]);
+		expect(read("2026-10-01T00:00:00.000Z")).toHaveLength(1);
+	});
+});
+
+describe("an unfinished filter row", () => {
+	it.each([
+		["no value", { id: 1, field: "status", operator: "is" }],
+		["an empty list", { id: 1, field: "status", operator: "isAnyOf", value: [] }],
+		["a cleared range", { id: 1, field: "dateCreated", operator: "luceneDateRange", value: [null, null] }],
+	])("with %s stays out of the URL", (_case, item) => {
+		expect(filterToSearch(patronRequestsGrid, { items: [item] }).search.filters).toBeUndefined();
+	});
+
+	it("is a draft until it is finished", () => {
+		expect(hasDraftItems(patronRequestsGrid, { items: [{ id: 1, field: "status", operator: "is" }] })).toBe(true);
+		expect(hasDraftItems(patronRequestsGrid, { items: [statusItem] })).toBe(false);
 	});
 });
 

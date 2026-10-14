@@ -23,7 +23,8 @@ export default function DateTimeRangeFilter(props: GridFilterInputValueProps) {
 	const endDate = rawEnd ? dayjs(rawEnd) : null;
 
 	const handleChange = (newValue: [Dayjs | null, Dayjs | null]) => {
-		applyValue({ ...item, value: newValue });
+		// Both ends cleared is no filter: MUI counts any array as an applied one
+		applyValue({ ...item, value: newValue.some(Boolean) ? newValue : undefined });
 	};
 
 	return (
