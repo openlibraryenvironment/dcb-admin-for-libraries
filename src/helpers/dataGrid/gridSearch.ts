@@ -273,12 +273,16 @@ export const parsePrivateState = (
 		: undefined;
 };
 
-/** Values as JSON will carry them, so a draft compares equal to what it becomes. */
+/**
+ * Values as JSON will carry them, so a draft compares equal to what it becomes. The date
+ * pickers hand over Dayjs objects, which like a Date serialise through toJSON (null if invalid).
+ */
 const plainValue = (value: unknown): unknown => {
-	if (value instanceof Date) {
-		return Number.isNaN(value.getTime()) ? null : value.toISOString();
+	if (Array.isArray(value)) return value.map(plainValue);
+	if (typeof (value as { toJSON?: unknown } | null)?.toJSON === "function") {
+		return (value as { toJSON: () => unknown }).toJSON();
 	}
-	return Array.isArray(value) ? value.map(plainValue) : value;
+	return value;
 };
 
 export const filterToSearch = (

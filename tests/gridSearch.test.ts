@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import dayjs from "dayjs";
 import {
 	defaultParseSearch,
 	defaultStringifySearch,
@@ -7,6 +8,7 @@ import type { GridFilterModel } from "@mui/x-data-grid-premium";
 
 import {
 	PRIVATE_FILTER_FIELDS,
+	filterToSearch,
 	readFilter,
 	readGrid,
 	readSort,
@@ -196,6 +198,24 @@ describe("grid state in the URL", () => {
 			{ id: 2, field: "patronBarcode", operator: "equals", value: BARCODE },
 		]);
 		expect(back.filterModel.quickFilterValues).toEqual([QUICK]);
+	});
+});
+
+describe("a date the picker chose", () => {
+	const at = "2026-10-01T09:30:00.000Z";
+
+	it("reaches the URL as an ISO string, from a single picker and from a range", () => {
+		const { search } = filterToSearch(patronRequestsGrid, {
+			items: [
+				{ id: 1, field: "dateCreated", operator: "onOrAfter", value: dayjs(at) },
+				{ id: 2, field: "dateUpdated", operator: "luceneDateRange", value: [dayjs(at), null] },
+			],
+		});
+
+		expect(search.filters).toEqual([
+			{ id: 1, field: "dateCreated", operator: "onOrAfter", value: at },
+			{ id: 2, field: "dateUpdated", operator: "luceneDateRange", value: [at, null] },
+		]);
 	});
 });
 
