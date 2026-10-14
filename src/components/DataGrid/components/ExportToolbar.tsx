@@ -22,6 +22,7 @@ import {
 	GridFilterListIcon,
 	gridColumnDefinitionsSelector,
 	gridColumnVisibilityModelSelector,
+	gridFilterActiveItemsSelector,
 	gridFilterModelSelector,
 	GridPrintExportMenuItem,
 	gridRowSelectionCountSelector,
@@ -35,6 +36,7 @@ import {
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ExportWizard from "./ExportWizard";
+import { useFilterLabels } from "./useFilterLabels";
 
 interface ExportToolbarProps {
 	exportConfig?: GridExportConfig;
@@ -98,11 +100,16 @@ export default function ExportToolbar({
 	const selectionCount = useGridSelector(apiRef, gridRowSelectionCountSelector);
 	const columnDefinitions = useGridSelector(apiRef, gridColumnDefinitionsSelector);
 	const columnVisibility = useGridSelector(apiRef, gridColumnVisibilityModelSelector);
-	const filterTooltipText = generateFilterDescription(filterModel);
+	// MUI's own active set, which its badge counts: "Last 30 days" has no value and still filters
+	// MUI returns undefined, not [], for a model without items
+	const activeItems = useGridSelector(apiRef, gridFilterActiveItemsSelector) ?? [];
+	const labels = useFilterLabels();
+	const filterTooltipText = generateFilterDescription(
+		{ ...filterModel, items: activeItems },
+		labels,
+	);
 	const hasFilters =
-		filterModel.items.some(
-			(item) => item.value !== undefined && item.value !== null && item.value !== "",
-		) || (filterModel.quickFilterValues ?? []).length > 0;
+		activeItems.length > 0 || (filterModel.quickFilterValues ?? []).length > 0;
 
 	const exportColumns = useMemo(() => {
 		const own = exportColumnsOf(columnDefinitions);
