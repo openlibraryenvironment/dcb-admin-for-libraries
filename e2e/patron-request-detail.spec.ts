@@ -2,6 +2,7 @@ import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import sparse from "./fixtures-data/patronRequest-sparse.json" with { type: "json" };
 import audit from "./fixtures-data/audit.json" with { type: "json" };
+import supplierRequests from "./fixtures-data/supplier-requests.json" with { type: "json" };
 
 const REQUEST = sparse.patronRequests.content[0];
 const AUDIT = audit.audits.content[0];
@@ -159,4 +160,27 @@ test.describe("Patron request detail", () => {
 		).toBeVisible();
 		expect(asked).toEqual([]);
 	});
+});
+
+test("a library's ILS and contacts are written out, not left to a hover", async ({
+	app,
+	page,
+}) => {
+	const [alpha] = supplierRequests.patronRequests.content;
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraryBasics: library,
+		LoadPatronRequest: { patronRequests: { totalSize: 1, content: [alpha] } },
+		LoadHostLms: { hostLms: { content: [] } },
+	});
+
+	await page.goto(`/patronRequests/${alpha.id}`);
+
+	const supplier = page
+		.getByRole("term")
+		.filter({ hasText: /^Supplier library$/ })
+		.locator("xpath=following-sibling::dd[1]");
+	await expect(supplier).toContainText("E2E Test Library");
+	await expect(supplier).toContainText("Primary contacts:");
 });

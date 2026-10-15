@@ -80,6 +80,27 @@ const requestSearchSchema = z.object({
 	audit: gridSearchSchema.optional().catch(undefined),
 });
 
+/**
+ * A library, with its ILS and primary contacts written out. They were a tooltip on the
+ * name, which a keyboard or touch user could not reach.
+ */
+function LibraryWithContact({ library }: { library: Library }) {
+	const { t } = useTranslation();
+	return (
+		<>
+			<RenderAttribute attribute={library.fullName} />
+			<Typography variant="body2" color="text.secondary">
+				{t("patron_request.library_ils_contacts", {
+					ils: getILS(library.agency?.hostLms?.lmsClientClass),
+					contact: library.contacts
+						? findPrimaryContacts(library.contacts)
+						: t("library.no_contact"),
+				})}
+			</Typography>
+		</>
+	);
+}
+
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
 	validateSearch: requestSearchSchema,
 	head:() => ({ meta: [{ title: pageTitle("patron_request.title") }] }),
@@ -425,19 +446,7 @@ function RouteComponent() {
 						{patronLibrary?.fullName ? (
 							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 								<Attribute label={t("patron_request.patron_library")}>
-									<Tooltip
-										title={t("patron_request.request_tooltip", {
-											ils: getILS(
-												patronLibrary?.agency?.hostLms?.lmsClientClass,
-											),
-											contact: patronLibrary?.contacts
-												? findPrimaryContacts(patronLibrary?.contacts)
-												: t("library.no_contact"),
-										})}>
-										<span>
-											<RenderAttribute attribute={patronLibrary?.fullName} />
-										</span>
-									</Tooltip>
+									<LibraryWithContact library={patronLibrary} />
 								</Attribute>
 							</Grid>
 						) : patronLibraryLoading ||
@@ -448,19 +457,7 @@ function RouteComponent() {
 						{supplierLibrary?.fullName ? (
 							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 								<Attribute label={t("patron_request.supplier_library")}>
-									<Tooltip
-										title={t("patron_request.request_tooltip", {
-											ils: getILS(
-												supplierLibrary?.agency?.hostLms?.lmsClientClass,
-											),
-											contact: supplierLibrary?.contacts
-												? findPrimaryContacts(supplierLibrary?.contacts)
-												: t("library.no_contact"),
-										})}>
-										<span>
-											<RenderAttribute attribute={supplierLibrary?.fullName} />
-										</span>
-									</Tooltip>
+									<LibraryWithContact library={supplierLibrary} />
 								</Attribute>
 							</Grid>
 						) : supplierLibraryLoading ? (
@@ -469,19 +466,7 @@ function RouteComponent() {
 						{pickupLibrary?.fullName ? (
 							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 								<Attribute label={t("patron_request.pickup_library")}>
-									<Tooltip
-										title={t("patron_request.request_tooltip", {
-											ils: getILS(
-												pickupLibrary?.agency?.hostLms?.lmsClientClass,
-											),
-											contact: pickupLibrary?.contacts
-												? findPrimaryContacts(pickupLibrary?.contacts)
-												: t("library.no_contact"),
-										})}>
-										<span>
-											<RenderAttribute attribute={pickupLibrary?.fullName} />
-										</span>
-									</Tooltip>
+									<LibraryWithContact library={pickupLibrary} />
 								</Attribute>
 							</Grid>
 						) : pickupLibraryLoading ? (

@@ -1107,7 +1107,7 @@
 		"renewal_count_supplier": "Supplier renewal count",
 		"renewal_status": "Renewal status",
 		"request_created": "Request created",
-		"request_tooltip": "This is a {{ils}} library. The primary contact(s) are {{contact}}",
+		"library_ils_contacts": "A {{ils}} library. Primary contacts: {{contact}}",
 		"request_updated": "Request updated",
 		"request_uuid": "Request UUID",
 		"requestor_note": "Requestor note",
