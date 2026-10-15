@@ -10,6 +10,7 @@ import {
 	Typography,
 } from "@mui/material";
 import { LineChartPro } from "@mui/x-charts-pro";
+import { utcBucketAxis } from "./utcBucketAxis";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
@@ -148,7 +149,7 @@ export default function DurationTrendPanel({
 						<>
 							<LineChartPro
 								height={CHART_HEIGHT}
-								xAxis={[{ data: buckets, scaleType: "time" }]}
+								xAxis={[{ ...utcBucketAxis, data: buckets }]}
 								yAxis={[
 									{ valueFormatter: (value: number) => formatTurnaround(value, t) },
 								]}

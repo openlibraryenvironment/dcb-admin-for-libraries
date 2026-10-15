@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, Typography, Chip, Box } from "@mui/material";
 import { LineChartPro } from "@mui/x-charts-pro";
+import { utcBucketAxis } from "./utcBucketAxis";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette, inkOn } from "@/hooks/useChartPalette";
@@ -136,8 +137,8 @@ export default function StatusFlowChart({
 								height={CHART_HEIGHT}
 								xAxis={[
 									{
+										...utcBucketAxis,
 										data: xAxisData,
-										scaleType: "time",
 										zoom: true,
 									},
 								]}
