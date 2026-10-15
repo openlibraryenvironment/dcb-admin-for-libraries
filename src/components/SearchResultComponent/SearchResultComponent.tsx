@@ -229,8 +229,10 @@ export const SearchResult = ({ record }: SearchResultProps) => {
 							<Typography variant="hitCount" sx={{ flexGrow: 1 }}>
 								{requestableCount !== undefined
 									? t("requesting.available_to_request", {
-											number: requestableCount,
-											total: staffRequestingLocationCount,
+											count: requestableCount,
+											institutions: t("requesting.institutions", {
+												count: staffRequestingLocationCount,
+											}),
 										})
 									: t("requesting.live_availability_unavailable")}
 							</Typography>
@@ -269,12 +271,6 @@ export const SearchResult = ({ record }: SearchResultProps) => {
 										: t("requesting.not_available_for_staff_request_description")}
 								</Typography>
 							</Stack>
-							{/* <Typography variant="hitCount">
-							{t("requesting.available_at", {
-								total: availability?.timings?.size ?? 0,
-								list: locationNames,
-							})}
-						</Typography> */}
 							<Stack direction="row" spacing={1} sx={{
                                 alignItems: "center"
                             }}>
@@ -282,7 +278,7 @@ export const SearchResult = ({ record }: SearchResultProps) => {
 
 								<Typography variant="body2">
 									{t("requesting.available_at", {
-										total: locationCount,
+										institutions: t("requesting.institutions", { count: locationCount }),
 									})}
 									{locationCount > 0 && ": "}
 									{locationCount > 2 && !showAllLocations ? (

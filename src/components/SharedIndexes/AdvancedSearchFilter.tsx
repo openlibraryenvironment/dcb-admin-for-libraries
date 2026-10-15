@@ -263,7 +263,7 @@ export const AdvancedSearchFilter = ({
 					<Box>
 						<Typography variant="hitCount">
 							{t("ui.data_grid.active_filters", {
-								number: numberOfActiveFilters,
+								count: numberOfActiveFilters,
 							})}
 						</Typography>
 						<Stack

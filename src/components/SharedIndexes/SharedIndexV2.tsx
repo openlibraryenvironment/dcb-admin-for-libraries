@@ -253,7 +253,7 @@ export function SharedIndexV2() {
 						pages: Math.ceil(totalRecords / pagesize),
 						count: totalRecords,
 					})
-				: t("requesting.titles_found", { number: totalRecords }),
+				: t("requesting.titles_found", { count: totalRecords }),
 		);
 	}, [totalRecords, isFetching, pageno, pagesize, announce, t]);
 
@@ -346,7 +346,7 @@ export function SharedIndexV2() {
 
 				{typeof totalRecords === "number" ? (
 					<Typography variant="hitCount">
-						{t("requesting.titles_found", { number: totalRecords })}
+						{t("requesting.titles_found", { count: totalRecords })}
 					</Typography>
 				) : null}
 			</Stack>

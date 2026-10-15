@@ -136,7 +136,7 @@ export default function ClusterItems() {
 					{!hasZeroItems ? (
 						<Typography variant="h4" component="h2">
 							{t("requesting.shared_index.items_for_cluster", {
-								number: totalItemsCount,
+								count: totalItemsCount,
 							})}
 						</Typography>
 					) : null}

@@ -353,7 +353,8 @@
 			},
 			"cost_avoidance": {
 				"title": "Estimated cost avoided",
-				"basis": "Based on {{count}} successful fulfilments",
+				"basis_one": "Based on {{count}} successful fulfilment",
+				"basis_other": "Based on {{count}} successful fulfilments",
 				"input_label": "Cost per ILL",
 				"input_help": "Your own average interlibrary loan cost"
 			},
@@ -579,7 +580,8 @@
 			"transit_back": "Transit, return",
 			"pair": "p50 {{p50}} · p95 {{p95}}",
 			"median": "median {{value}}",
-			"sample": "· {{count}} observations",
+			"sample_one": "· {{count}} observation",
+			"sample_other": "· {{count}} observations",
 			"not_reported": "Not reported by this system"
 		},
 		"headline": {
@@ -627,8 +629,10 @@
 				"not": "What it does not include",
 				"data": "How much data"
 			},
-			"sample": "{{count}} observations in this window.",
-			"sample_low": "Only {{count}} observations in this window - a single outlier moves this figure.",
+			"sample_one": "{{count}} observation in this window.",
+			"sample_other": "{{count}} observations in this window.",
+			"sample_low_one": "Only {{count}} observation in this window - a single outlier moves this figure.",
+			"sample_low_other": "Only {{count}} observations in this window - a single outlier moves this figure.",
 			"sample_unknown": "This endpoint reports percentiles without a count, so how many requests are behind this figure is not known here.",
 			"requests_fulfilled": {
 				"what": "Requests that reached a settled outcome in the window, whether they were filled or not.",
@@ -1154,10 +1158,13 @@
 		"virtual_patron": "Virtual patron"
 	},
 	"requesting": {
-		"available_at": "Items present at {{total}} institution(s)",
+		"available_at": "Items present at {{institutions}}",
+		"institutions_one": "{{count}} institution",
+		"institutions_other": "{{count}} institutions",
 		"available_for_staff_request_description": "Available for staff requesting: at least one item for this record is available in your consortium.",
 		"available_for_walk_up_description": "Available for walk-up requesting: at least one item for this record is available in your library.",
-		"available_to_request": "{{number}} available items at {{total}} institution(s)",
+		"available_to_request_one": "{{count}} available item at {{institutions}}",
+		"available_to_request_other": "{{count}} available items at {{institutions}}",
 		"barcode": "Barcode",
 		"bib_record": "Bib record",
 		"bib_record_id": "Bib record UUID",
@@ -1327,7 +1334,8 @@
 			"error_connecting": "There was an error connecting to the search service. Please try again later.",
 			"error_connecting_title": "Could not connect to dcb-locate",
 			"items": "Items",
-			"items_for_cluster": "{{number}} item(s) associated with this record.",
+			"items_for_cluster_one": "{{count}} item is associated with this record.",
+			"items_for_cluster_other": "{{count}} items are associated with this record.",
 			"items_not_shown": "{{number}} item(s) unable to be shown",
 			"items_not_shown_helper_item": "Items without an item type are usually the result of a missing or misconfigured item type mapping. Please review the item type mappings for this library.",
 			"items_not_shown_helper_location": "Items without an 'Agency' value are usually the result of a missing or misconfigured Location mapping, or a missing agency. Please review the Location mappings for this library and the agency configuration.",
@@ -1394,7 +1402,8 @@
 		"suppressed": "Suppressed",
 		"page_announce_one": "Page {{page}} of {{pages}}, {{count}} title found.",
 		"page_announce_other": "Page {{page}} of {{pages}}, {{count}} titles found.",
-		"titles_found": "{{number}} titles found",
+		"titles_found_one": "{{count}} title found",
+		"titles_found_other": "{{count}} titles found",
 		"volume_parsed": "Parsed volume statement",
 		"volume_raw": "Raw volume statement",
 		"steps": {
@@ -1458,7 +1467,8 @@
 			"title": "Title"
 		},
 		"data_grid": {
-			"active_filters": "{{number}} Active filters",
+			"active_filters_one": "{{count}} active filter",
+			"active_filters_other": "{{count}} active filters",
 			"cleanup": {
 				"error_count": "Error: {{count}}",
 				"refused_count": "Refused while the item is out: {{count}}",
