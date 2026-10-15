@@ -85,6 +85,18 @@ describe("libraryProfileSchema", () => {
 		expect(await messageFor(schema, {})).toContain("ui.validation.required");
 	});
 
+	it("states the abbreviated name's real limit", async () => {
+		const withValues = ((key: string, values?: object) =>
+			values ? `${key} ${JSON.stringify(values)}` : key) as unknown as TFunction;
+
+		expect(
+			await messageFor(libraryProfileSchema(withValues), {
+				fullName: "Anytown Library",
+				abbreviatedName: "x".repeat(33),
+			}),
+		).toEqual(['ui.validation.max_length {"length":32}']);
+	});
+
 
 	/**
 	 * A library that has never set coordinates arrives here with null, and a
