@@ -1,3 +1,8 @@
+import {
+	borrowedByLibraryQuery,
+	suppliedByLibraryQuery,
+} from "@helpers/patronRequestScope";
+
 export function getPatronRequestModeQuery(
 	mode: string,
 	code: string,
@@ -5,11 +10,10 @@ export function getPatronRequestModeQuery(
 ) {
 	switch (mode) {
 		case "borrowing":
-			return "patronHostlmsCode:" + patronHostLmsCode;
+			return borrowedByLibraryQuery(code, patronHostLmsCode);
 		case "supplying":
-			return "supplyingAgencyCode:" + code;
+			return suppliedByLibraryQuery(code);
 		default:
 			return "";
-		// Pickup coming soon ...
 	}
 }

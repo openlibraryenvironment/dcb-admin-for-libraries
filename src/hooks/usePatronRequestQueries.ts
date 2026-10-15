@@ -21,6 +21,7 @@ import {
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import { getPatronRequestModeQuery } from "@helpers/dataGrid/getPatronRequestModeQuery";
+import { hasBorrowingScope } from "@helpers/patronRequestScope";
 
 interface UsePatronRequestQueriesProps {
 	apiBase: string;
@@ -126,7 +127,7 @@ export const usePatronRequestQueries = ({
 				await authHeaders(),
 			);
 		},
-		enabled: !!apiBase && !!userLibraryHostLmsCode,
+		enabled: !!apiBase && hasBorrowingScope(code, userLibraryHostLmsCode),
 		placeholderData: (previousData) => previousData,
 	});
 
