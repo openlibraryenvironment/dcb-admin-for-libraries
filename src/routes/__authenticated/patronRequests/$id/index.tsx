@@ -42,6 +42,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { isUuidShaped } from "@helpers/isUuidShaped";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
+import Confirmation from "@components/Confirmation/Confirmation";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import { formatDuration } from "@helpers/formatDuration";
 import Loading from "@components/Loading/Loading";
@@ -97,6 +98,7 @@ function RouteComponent() {
 	const [cleanupErrorAlertVisibility, setCleanupErrorAlertVisibility] =
 		useState(false);
 	const [cleanupRefusal, setCleanupRefusal] = useState<string | null>(null);
+	const [confirmCleanup, setConfirmCleanup] = useState(false);
 	const { agencyCodes } = useAgencyCodes();
 	const guardedCleanup = isGuardedCleanupEnabled();
 	const apiBase: string = cfg.VITE_DCB_API_BASE;
@@ -666,7 +668,7 @@ function RouteComponent() {
 										variant="outlined"
 										color="primary"
 										sx={{ marginTop: 1 }}
-										onClick={() => cleanupMutation.mutate()}
+										onClick={() => setConfirmCleanup(true)}
 										aria-describedby="cleanup-reason"
 										disabled={cleanupMutation.isPending || !canCleanup}>
 										{t("patron_request.cleanup")}
@@ -684,6 +686,17 @@ function RouteComponent() {
 											? t("patron_request.cleanup_info")
 											: t("patron_request.cleanup_disabled")}
 									</Typography>
+									<Confirmation
+										open={confirmCleanup}
+										onClose={() => setConfirmCleanup(false)}
+										onConfirm={() => {
+											setConfirmCleanup(false);
+											cleanupMutation.mutate();
+										}}
+										action="cleanup"
+										entityName=""
+										gridEdit={false}
+									/>
 								</>
 							) : null}
 							<TimedAlert

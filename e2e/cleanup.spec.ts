@@ -64,6 +64,10 @@ const selectRow = async (page: Page, title: string) => {
 const runCleanup = async (page: Page) => {
 	await page.getByRole("button", { name: /^Actions/ }).click();
 	await page.getByRole("menuitem", { name: /Cleanup selected/ }).click();
+	await page
+		.getByRole("dialog", { name: /^Clean up/ })
+		.getByRole("button", { name: "Clean up", exact: true })
+		.click();
 };
 
 test.describe("Supplier requests clean up", () => {
@@ -122,6 +126,26 @@ test.describe("Supplier requests clean up", () => {
 		await runCleanup(page);
 
 		await expect(page.getByRole("dialog").getByText(/Not eligible/)).toBeVisible();
+		expect(calls).toEqual([]);
+	});
+
+	test("asks before cleaning up, and Cancel cleans up nothing", async ({ app, page }) => {
+		await app.enableFeatures(["VITE_FEATURE_GUARDED_CLEANUP"]);
+
+		const calls: string[] = [];
+		await recordCleanupCalls(page, calls);
+
+		await page.goto("/supplierRequests");
+		await selectRow(page, DELTA);
+		await page.getByRole("button", { name: /^Actions/ }).click();
+		await page.getByRole("menuitem", { name: /Cleanup selected/ }).click();
+
+		const confirm = page.getByRole("dialog", { name: "Clean up this request?" });
+		await expect(confirm).toContainText("This cannot be undone.");
+		await confirm.getByRole("button", { name: "Cancel" }).click();
+
+		await expect(confirm).toBeHidden();
+		await expect(page.getByRole("button", { name: /^Actions/ })).toBeFocused();
 		expect(calls).toEqual([]);
 	});
 
@@ -222,5 +246,38 @@ test.describe("Supplier requests clean up", () => {
 
 		await expect(page.getByRole("dialog").getByText(/Not eligible/)).toBeVisible();
 		expect(calls).toEqual([]);
+	});
+});
+
+test.describe("Patron request clean up", () => {
+	const [alpha] = supplierRequests.patronRequests.content;
+
+	test("asks before cleaning up, and cleans up only once confirmed", async ({
+		app,
+		page,
+	}) => {
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadPatronRequest: { patronRequests: { totalSize: 1, content: [alpha] } },
+			LoadHostLms: { hostLms: { content: [] } },
+		});
+		const calls: string[] = [];
+		await recordCleanupCalls(page, calls);
+
+		await page.goto(`/patronRequests/${alpha.id}`);
+		const cleanup = page.getByRole("button", { name: "Force clean up" });
+		await cleanup.click();
+
+		const confirm = page.getByRole("dialog", { name: "Clean up this request?" });
+		await confirm.getByRole("button", { name: "Cancel" }).click();
+		await expect(confirm).toBeHidden();
+		await expect(cleanup).toBeFocused();
+		expect(calls).toEqual([]);
+
+		await cleanup.click();
+		await confirm.getByRole("button", { name: "Clean up", exact: true }).click();
+
+		await expect.poll(() => calls).toEqual([expect.stringMatching(/\/transition\/cleanup$/)]);
 	});
 });

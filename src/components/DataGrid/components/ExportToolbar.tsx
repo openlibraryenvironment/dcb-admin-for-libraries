@@ -37,6 +37,7 @@ import {
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ExportWizard from "./ExportWizard";
+import Confirmation from "@components/Confirmation/Confirmation";
 import { ExportProgressDialog } from "./ExportProgressDialog";
 import { useFilterLabels } from "./useFilterLabels";
 import { ResetViewButton, SavedFiltersButton, ShareViewButton } from "./GridViewControls";
@@ -85,6 +86,8 @@ export default function ExportToolbar({
 	// Remounting the wizard on every open starts it from the grid as it is now.
 	const [wizard, setWizard] = useState({ open: false, key: 0 });
 	const exportButtonRef = useRef<HTMLButtonElement>(null);
+	const [confirmCleanup, setConfirmCleanup] = useState(false);
+	const actionsButtonRef = useRef<HTMLButtonElement>(null);
 
 	const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
 		setAnchorEl(event.currentTarget);
@@ -94,8 +97,8 @@ export default function ExportToolbar({
 	};
 
 	const handleCleanupClick = () => {
-		onCleanup?.();
 		handleMenuClose();
+		setConfirmCleanup(true);
 	};
 	const { t } = useTranslation();
 	const apiRef = useGridApiContext();
@@ -224,6 +227,7 @@ export default function ExportToolbar({
 			{onCleanup && (
 				<>
 					<Button
+						ref={actionsButtonRef}
 						id="actions-button"
 						aria-controls={open ? "actions-menu" : undefined}
 						aria-haspopup="true"
@@ -254,6 +258,19 @@ export default function ExportToolbar({
 							</ListItemText>
 						</MenuItem>
 					</Menu>
+					<Confirmation
+						open={confirmCleanup}
+						onClose={() => setConfirmCleanup(false)}
+						onConfirm={() => {
+							setConfirmCleanup(false);
+							onCleanup();
+						}}
+						onExited={() => actionsButtonRef.current?.focus()}
+						action="cleanup"
+						count={selectionCount}
+						entityName=""
+						gridEdit={false}
+					/>
 				</>
 			)}
 		</Toolbar>
