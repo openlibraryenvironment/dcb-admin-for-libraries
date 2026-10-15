@@ -55,6 +55,7 @@ const NOT_FIGURES = new Set([
 	"ExportContext",
 	"PanelExport",
 	"OverviewTiles",
+	"ScrollableTableContainer",
 ]);
 
 describe("the metric registry", () => {
