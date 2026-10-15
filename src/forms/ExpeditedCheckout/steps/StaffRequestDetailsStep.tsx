@@ -162,6 +162,8 @@ export const StaffRequestDetailsStep = ({
 								onChange={(_, newValue) => {
 									onChange(newValue?.value || "");
 									setValue("itemLocalSystemCode", newValue?.hostLmsCode);
+									// The item is one of the old library's; its local id may name another item at the new one
+									setValue("itemLocalId", "", { shouldValidate: true });
 								}}
 								options={itemLibraryOptions}
 								loading={librariesLoading}

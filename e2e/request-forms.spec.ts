@@ -31,12 +31,13 @@ const openForm = async (
 		placeStatus?: number;
 		checkoutStatus?: string;
 		item?: Record<string, unknown>;
+		libraries?: typeof library;
 	} = {},
 ): Promise<Traffic> => {
 	await app.signIn();
 	await app.mockGraphQL({
 		LoadLibrary: library,
-		LoadLibraries: library,
+		LoadLibraries: options.libraries ?? library,
 		LoadLocations: {
 			locations: {
 				totalSize: 1,
@@ -211,6 +212,37 @@ test("opening the item picker does not ask every library again", async ({
 	}
 
 	expect(traffic.availability()).toBeLessThanOrEqual(1);
+});
+
+test("choosing another item library clears the item chosen at the first", async ({
+	app,
+	page,
+}) => {
+	const [own] = library.libraries.content;
+	const other = {
+		...own,
+		id: "lib-2",
+		fullName: "Second Test Library",
+		agencyCode: "second-agency",
+		agency: { ...own.agency, code: "second-agency" },
+	};
+	await openForm(app, page, "staff", {
+		libraries: { libraries: { ...library.libraries, totalSize: 2, content: [own, other] } },
+	});
+
+	await barcode(page).fill("12345");
+	await barcode(page).press("Enter");
+	await choose(page, /pickup location/i, /main desk/i);
+	await page.getByRole("radio", { name: /manual/i }).check();
+	await choose(page, /item library/i, /e2e test library/i);
+	await choose(page, /item local id/i, /30001/);
+	const submit = page.getByRole("button", { name: /^submit$/i });
+	await expect(submit).toBeEnabled();
+
+	await choose(page, /item library/i, /second test library/i);
+
+	await expect(page.getByRole("combobox", { name: /item local id/i })).toHaveValue("");
+	await expect(submit).toBeDisabled();
 });
 
 test("shows the due date once a walk-up checkout completes", async ({
