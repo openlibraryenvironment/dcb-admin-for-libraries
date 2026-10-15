@@ -520,3 +520,21 @@ test("choosing another library while editing does not carry the edit over", asyn
 	await expect(page.getByRole("button", { name: /^save$/i })).toHaveCount(0);
 	expect(updates.sent).toEqual([]);
 });
+
+test("Tab goes from Upload image to the next control, not to a hidden file input", async ({
+	app,
+	page,
+}) => {
+	await app.enableFeatures(["VITE_DISCOVERY_ACTIVE", "VITE_FEATURE_LIBRARY_BRANDING"]);
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library, ...STATS_MOCKS });
+
+	await page.goto("/library");
+	await page.getByRole("button", { name: /^edit$/i }).click();
+	await page.getByRole("button", { name: "Upload image" }).first().focus();
+	await page.keyboard.press("Tab");
+
+	expect(
+		await page.evaluate(() => (document.activeElement as HTMLInputElement | null)?.type),
+	).not.toBe("file");
+});
