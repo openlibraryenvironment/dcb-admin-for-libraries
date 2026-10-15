@@ -138,6 +138,22 @@ export const components: Components<Theme> = {
 			}),
 		},
 	},
+	// Below sm the toolbar is wider than the screen, and its page buttons fell outside it.
+	// Only there: the spacer's 100% basis would push everything onto a second line on a wrapping toolbar.
+	MuiTablePagination: {
+		styleOverrides: {
+			toolbar: ({ theme }) => ({
+				[theme.breakpoints.down("sm")]: {
+					flexWrap: "wrap",
+					rowGap: theme.spacing(1),
+					paddingLeft: 0,
+				},
+			}),
+			spacer: ({ theme }) => ({
+				[theme.breakpoints.down("sm")]: { display: "none" },
+			}),
+		},
+	},
 	MuiListItemButton: {
 		defaultProps: {
 			disableRipple: true,

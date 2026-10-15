@@ -114,3 +114,17 @@ for (const mode of ["simple", "advanced"] as const) {
 		expect(overflow).toBe(0);
 	});
 }
+
+// 320 CSS px is also a 1280px screen at 400% zoom - WCAG 1.4.10
+test("at 320px wide, the page buttons are on screen", async ({ app, page }) => {
+	await page.setViewportSize({ width: 320, height: 800 });
+	await openSearch(app, page, "/requesting?filters=12345");
+
+	for (const name of ["Go to previous page", "Go to next page"]) {
+		const button = page.getByRole("button", { name });
+		await expect(button).toBeVisible();
+		const box = await button.boundingBox();
+		expect(box!.x, name).toBeGreaterThanOrEqual(0);
+		expect(box!.x + box!.width, name).toBeLessThanOrEqual(320);
+	}
+});
