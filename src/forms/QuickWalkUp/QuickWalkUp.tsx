@@ -218,7 +218,9 @@ export default function QuickWalkUpRequest({
 		patronRequestId,
 		bibClusterId: resolvedBibClusterId,
 		checkoutCompleted,
-		isCheckedOutItem: (item) => item.barcode === itemBarcode,
+		// The item is the staff library's: a barcode alone can name another library's copy
+		isCheckedOutItem: (item) =>
+			item.barcode === itemBarcode && item.agency?.code === staffAgencyCode,
 		apiBase: cfg.VITE_DCB_API_BASE,
 	});
 

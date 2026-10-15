@@ -12,9 +12,11 @@ async function placeWalkUp(
 	page: Page,
 	answer: (route: Route) => Promise<void>,
 	roles: string[] = ["CONSORTIUM_ADMIN"],
+	extraMocks: Record<string, unknown> = {},
 ) {
 	await app.signIn({ roles });
 	await app.mockGraphQL({
+		...extraMocks,
 		LoadLibrary: library,
 		LoadLibraries: library,
 		LoadLocations: {
@@ -118,3 +120,47 @@ for (const [who, roles] of [
 		});
 	});
 }
+
+test("the due date shown is this library's copy's, not another with the same barcode", async ({
+	app,
+	page,
+}) => {
+	const copy = (agency: string, dueDate: string) => ({
+		id: `item-${agency}`,
+		barcode: ITEM_BARCODE,
+		status: { code: "LOANED" },
+		agency: { code: agency, description: agency },
+		dueDate,
+	});
+	// Another library's copy first: matched on barcode alone, its due date was shown
+	await page.route("**/items/availability**", (route) =>
+		route.fulfill({
+			json: {
+				itemList: [
+					copy("another-agency", "2026-12-25T17:00:00Z"),
+					copy(AGENCY_CODE, "2026-11-02T17:00:00Z"),
+				],
+				timings: {},
+			},
+		}),
+	);
+
+	const { dialog } = await placeWalkUp(
+		app,
+		page,
+		(route) =>
+			route.fulfill({
+				json: { id: "pr-1", citation: { bibClusterId: "aaaaaaaa-0000-4000-8000-000000000001" } },
+			}),
+		["CONSORTIUM_ADMIN"],
+		{
+			LoadPatronRequestsById: {
+				patronRequests: { totalSize: 1, content: [{ id: "pr-1", status: "LOANED" }] },
+			},
+		},
+	);
+
+	await expect(dialog.getByText(/successfully checked out/i)).toBeVisible({ timeout: 15_000 });
+	await expect(dialog.getByText(/2 November 2026|November 2, 2026|2 Nov 2026|Nov 2, 2026/)).toBeVisible();
+	await expect(dialog.getByText(/December/)).toHaveCount(0);
+});
