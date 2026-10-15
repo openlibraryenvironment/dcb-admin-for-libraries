@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type QueryFunctionContext } from "@tanstack/react-query";
 import { Card, CardContent, Typography } from "@mui/material";
 import { BarChartPro } from "@mui/x-charts-pro";
 
@@ -19,7 +19,7 @@ interface BarStatPanelProps<T> {
 	// A statsApi *QueryOptions(...) result. Built by the parent with the rest client.
 	queryOptions: {
 		queryKey: readonly unknown[];
-		queryFn: () => Promise<T[]>;
+		queryFn: (context: QueryFunctionContext) => Promise<T[]>;
 	};
 	getLabel: (row: T) => string;
 	getValue: (row: T) => number;

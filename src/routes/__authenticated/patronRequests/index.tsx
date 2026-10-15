@@ -135,7 +135,7 @@ function RouteComponent() {
 			{ agencyCode: code ?? "", hostLmsCode: userLibraryHostLmsCode },
 			page,
 		),
-		queryFn: async () => {
+		queryFn: async ({ signal }) => {
 			const baseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
 			const queryVariables = {
 				query:
@@ -148,12 +148,13 @@ function RouteComponent() {
 				order: page.sortField ?? "dateCreated",
 				orderBy: page.sortDirection?.toUpperCase() ?? "DESC",
 			};
-			return request(
-				`${dcbApiBase}/graphql`,
-				getPatronRequests,
-				queryVariables,
-				await authHeaders(),
-			);
+			return request({
+				url: `${dcbApiBase}/graphql`,
+				document: getPatronRequests,
+				variables: queryVariables,
+				requestHeaders: await authHeaders(),
+				signal,
+			});
 		},
 		// Gated on whatever the scope is actually built from. Under the v9 filter that is
 		// the agency claim, which is available immediately; waiting on the Host LMS would

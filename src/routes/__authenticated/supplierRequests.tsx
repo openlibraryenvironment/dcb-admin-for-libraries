@@ -93,7 +93,7 @@ function RouteComponent() {
 		isFetching,
 	} = useQuery<PatronRequestQueryData>({
 		queryKey: queryKeys.supplierRequests.list(dcbApiBase, code ?? "", page),
-		queryFn: async () => {
+		queryFn: async ({ signal }) => {
 			const queryVariables = {
 				// Already scoped: processGridFilterModel puts the preset query first.
 				query: processGridFilterModel(page.filterModel, suppliedByLibraryQuery(code), [
@@ -106,12 +106,13 @@ function RouteComponent() {
 				orderBy: page.sortDirection?.toUpperCase() ?? "DESC",
 			};
 
-			return request(
-				`${dcbApiBase}/graphql`,
-				getPatronRequests,
-				queryVariables,
-				await authHeaders(),
-			);
+			return request({
+				url: `${dcbApiBase}/graphql`,
+				document: getPatronRequests,
+				variables: queryVariables,
+				requestHeaders: await authHeaders(),
+				signal,
+			});
 		},
 		enabled: !!dcbApiBase && !!code,
 		refetchOnWindowFocus: true,

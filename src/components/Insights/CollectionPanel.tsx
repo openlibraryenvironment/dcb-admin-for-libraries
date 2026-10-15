@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type QueryFunctionContext } from "@tanstack/react-query";
 import { Box, Card, CardContent, Typography } from "@mui/material";
 
 import {
@@ -22,7 +22,7 @@ interface CollectionPanelProps<T> {
 	info?: ReactNode;
 	queryOptions: typeof collectionAnalysisPolicy & {
 		queryKey: readonly unknown[];
-		queryFn: () => Promise<T>;
+		queryFn: (context: QueryFunctionContext) => Promise<T>;
 	};
 	isEmpty: (data: T) => boolean;
 	children: (data: T) => ReactNode;

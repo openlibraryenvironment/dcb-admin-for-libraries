@@ -102,7 +102,7 @@ export const usePatronRequestQueries = ({
 			},
 			grid,
 		),
-		queryFn: async () => {
+		queryFn: async ({ signal }) => {
 			const baseQuery = additionalQuery
 				? "(" +
 					getPatronRequestModeQuery(mode, code, userLibraryHostLmsCode) +
@@ -120,12 +120,13 @@ export const usePatronRequestQueries = ({
 				order: grid.sortField ?? "dateCreated",
 				orderBy: grid.sortDirection?.toUpperCase() ?? "DESC",
 			};
-			return request(
-				`${apiBase}/graphql`,
-				getPatronRequests,
-				queryVariables,
-				await authHeaders(),
-			);
+			return request({
+				url: `${apiBase}/graphql`,
+				document: getPatronRequests,
+				variables: queryVariables,
+				requestHeaders: await authHeaders(),
+				signal,
+			});
 		},
 		enabled: !!apiBase && hasBorrowingScope(code, userLibraryHostLmsCode),
 		placeholderData: (previousData) => previousData,

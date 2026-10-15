@@ -124,7 +124,7 @@ function RouteComponent() {
 		isError: mappingsError,
 	} = useQuery<ReferenceValueMappingsQueryData>({
 		queryKey: queryKeys.mappings.list(apiBase, libraryHostLmsCode, page),
-		queryFn: async () => {
+		queryFn: async ({ signal }) => {
 			const baseQuery = `(toContext:"${libraryHostLmsCode}" OR fromContext:${libraryHostLmsCode}) AND NOT deleted:true`;
 			// Second Host LMS to come.
 			const queryVariables = {
@@ -140,12 +140,13 @@ function RouteComponent() {
 				order: page.sortField ?? "lastImported",
 				orderBy: getSortOrderForServer(page.sortDirection) ?? "DESC",
 			};
-			return request(
-				apiBase + "/graphql",
-				getMappings,
-				queryVariables,
-				await authHeaders()
-			);
+			return request({
+				url: apiBase + "/graphql",
+				document: getMappings,
+				variables: queryVariables,
+				requestHeaders: await authHeaders(),
+				signal,
+			});
 		},
 		enabled: !!libraryHostLmsCode,
 		refetchOnWindowFocus: true,

@@ -75,7 +75,7 @@ function RouteComponent() {
 		isFetching,
 	} = useQuery<LocationsQueryData>({
 		queryKey: queryKeys.locations.list(dcbApiBase, agencyId, page),
-		queryFn: async () => {
+		queryFn: async ({ signal }) => {
 			const baseQuery = `agency:${agencyId}`;
 			const queryVariables = {
 				query:
@@ -88,12 +88,13 @@ function RouteComponent() {
 				order: page.sortField ?? "name",
 				orderBy: page.sortDirection?.toUpperCase() ?? "DESC",
 			};
-			return request(
-				`${dcbApiBase}/graphql`,
-				getLocations,
-				queryVariables,
-				await authHeaders()
-			);
+			return request({
+				url: `${dcbApiBase}/graphql`,
+				document: getLocations,
+				variables: queryVariables,
+				requestHeaders: await authHeaders(),
+				signal,
+			});
 		},
 		enabled: !!dcbApiBase && !!agencyId,
 		refetchOnWindowFocus: true,

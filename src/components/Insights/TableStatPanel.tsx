@@ -1,6 +1,6 @@
 import { ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type QueryFunctionContext } from "@tanstack/react-query";
 
 import { methodKeys, type MetricId } from "@helpers/insightsMetrics";
 import MetricInfo from "./MetricInfo";
@@ -40,7 +40,7 @@ interface TableStatPanelProps<T> {
 	subtitleKey: string;
 	queryOptions: {
 		queryKey: readonly unknown[];
-		queryFn: () => Promise<T[]>;
+		queryFn: (context: QueryFunctionContext) => Promise<T[]>;
 	};
 	columns: StatColumn<T>[];
 	getRowKey: (row: T) => string;

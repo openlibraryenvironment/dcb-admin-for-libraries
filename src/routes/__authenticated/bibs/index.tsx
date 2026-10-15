@@ -75,7 +75,7 @@ function RouteComponent() {
 		isFetching,
 	} = useQuery<BibsQueryData>({
 		queryKey: queryKeys.bibs.list(dcbApiBase, sourceSystemId, page),
-		queryFn: async () => {
+		queryFn: async ({ signal }) => {
 			const baseQuery = `sourceSystemId:${sourceSystemId}`;
 			const queryVariables = {
 				query:
@@ -85,12 +85,13 @@ function RouteComponent() {
 				order: page.sortField ?? "dateUpdated",
 				orderBy: page.sortDirection?.toUpperCase() ?? "DESC",
 			};
-			return request(
-				`${dcbApiBase}/graphql`,
-				getBibs,
-				queryVariables,
-				await authHeaders(),
-			);
+			return request({
+				url: `${dcbApiBase}/graphql`,
+				document: getBibs,
+				variables: queryVariables,
+				requestHeaders: await authHeaders(),
+				signal,
+			});
 		},
 		enabled: !!dcbApiBase && !!sourceSystemId,
 		refetchOnWindowFocus: true,

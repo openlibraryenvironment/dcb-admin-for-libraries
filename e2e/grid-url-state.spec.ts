@@ -1,6 +1,6 @@
 import type { Browser, Page } from "@playwright/test";
 import { test, expect } from "./fixtures/test";
-import { injectRuntimeConfig } from "./fixtures/runtime-config";
+import { API_BASE, injectRuntimeConfig } from "./fixtures/runtime-config";
 import { seedAuth } from "./fixtures/auth";
 import { mockGraphQL } from "./fixtures/graphql";
 import library from "./fixtures-data/library.json" with { type: "json" };
@@ -390,4 +390,42 @@ test("a sort from a later page asks once, for the first page", async ({ page }) 
 	await expect.poll(() => sent.length).toBeGreaterThan(before);
 	const after = sent.slice(before);
 	expect(after.map((request) => [request.order, request.pageno])).toEqual([["status", 0]]);
+});
+
+test("a grid's search is cancelled when the user leaves before it answers", async ({
+	app,
+	page,
+}) => {
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraryBasics: library,
+		LoadLibraries: library,
+		LoadSupplierRequests: { patronRequests: { totalSize: 0, content: [] } },
+		LoadPatronRequests: { patronRequests: { totalSize: 0, content: [] } },
+	});
+	let release: () => void = () => undefined;
+	const held = new Promise<void>((resolve) => (release = resolve));
+	let asked = false;
+	await page.route(`${API_BASE}/graphql`, async (route) => {
+		if (route.request().postDataJSON()?.operationName !== "LoadPatronRequests" || asked) {
+			return route.fallback();
+		}
+		asked = true;
+		await held;
+		await route.fulfill({ json: { data: { patronRequests: { totalSize: 0, content: [] } } } }).catch(() => undefined);
+	});
+	const aborted: string[] = [];
+	page.on("requestfailed", (request) => {
+		if (request.postDataJSON()?.operationName === "LoadPatronRequests") {
+			aborted.push(request.failure()?.errorText ?? "");
+		}
+	});
+
+	await page.goto("/patronRequests");
+	await expect.poll(() => asked).toBe(true);
+	await page.getByRole("tab", { name: "Requesting" }).click();
+
+	await expect.poll(() => aborted.length).toBe(1);
+	release();
 });

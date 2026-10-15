@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AxiosInstance } from "axios";
+import type { QueryFunctionContext } from "@tanstack/react-query";
 
 import {
 	LIBRARY_CODE_PARAM,
@@ -19,30 +20,57 @@ import {
  * falls back to the token - so nothing else would catch it.
  * docs/service-compatibility.md.
  */
+const controller = new AbortController();
+const context = { signal: controller.signal } as QueryFunctionContext;
+
 describe("statsApi query parameters", () => {
 	const clientReturning = (): {
 		client: AxiosInstance;
 		sent: () => unknown;
+		signal: () => unknown;
 	} => {
 		let captured: unknown;
+		let signal: unknown;
 
-		const get = vi.fn(async (_url: string, config?: { params?: unknown }) => {
-			captured = config?.params;
-			return { data: [] };
-		});
+		const get = vi.fn(
+			async (_url: string, config?: { params?: unknown; signal?: AbortSignal }) => {
+				captured = config?.params;
+				signal = config?.signal;
+				return { data: [] };
+			},
+		);
 
 		return {
 			client: { get } as unknown as AxiosInstance,
 			sent: () => captured,
+			signal: () => signal,
 		};
 	};
+
+	// A range or filter changed: the superseded aggregation is cancelled, not run to the end
+	it.each([
+		["a panel with parameters", (client: AxiosInstance) =>
+			dashboardMetricsQueryOptions(client, { libraryCode: "LIB_A" }).queryFn(context)],
+		["a paged panel", (client: AxiosInstance) =>
+			topPartnersQueryOptions(client, { libraryCode: "LIB_A", page: 0, size: 10 }).queryFn(
+				context,
+			)],
+		["a collection count", (client: AxiosInstance) =>
+			collectionTotalsQueryOptions(client).queryFn(context)],
+		["a distribution", (client: AxiosInstance) =>
+			clusterSizeDistributionQueryOptions(client).queryFn(context)],
+	])("hands %s's request the query's abort signal", async (_, run) => {
+		const { client, signal } = clientReturning();
+		await run(client);
+		expect(signal()).toBe(controller.signal);
+	});
 
 	it("sends the library filter under the name dcb-service binds", async () => {
 		const { client, sent } = clientReturning();
 
 		await dashboardMetricsQueryOptions(client, {
 			libraryCode: "LIB_A",
-		}).queryFn();
+		}).queryFn(context);
 
 		expect(sent()).toEqual({ [LIBRARY_CODE_PARAM]: "LIB_A" });
 		expect(sent()).not.toHaveProperty("libraryCode");
@@ -54,7 +82,7 @@ describe("statsApi query parameters", () => {
 		await topPartnersQueryOptions(client, {
 			libraryCode: "LIB_A",
 			startDate: "2026-01-01T00:00:00Z",
-		}).queryFn();
+		}).queryFn(context);
 
 		expect(sent()).toEqual({
 			[LIBRARY_CODE_PARAM]: "LIB_A",
@@ -69,7 +97,7 @@ describe("statsApi query parameters", () => {
 			libraryCode: "LIB_A",
 			page: 2,
 			size: 25,
-		}).queryFn();
+		}).queryFn(context);
 
 		expect(sent()).toEqual({
 			[LIBRARY_CODE_PARAM]: "LIB_A",
@@ -89,7 +117,7 @@ describe("statsApi query parameters", () => {
 
 		const page = await topPartnersQueryOptions(client, {
 			libraryCode: "LIB_A",
-		}).queryFn();
+		}).queryFn(context);
 
 		expect(page.totalSize).toBe(37);
 		expect(page.content).toHaveLength(1);
@@ -101,7 +129,7 @@ describe("statsApi query parameters", () => {
 		await dashboardMetricsQueryOptions(client, {
 			libraryCode: "LIB_A",
 			startDate: undefined,
-		}).queryFn();
+		}).queryFn(context);
 
 		expect(sent()).toEqual({ [LIBRARY_CODE_PARAM]: "LIB_A" });
 	});
@@ -135,7 +163,7 @@ describe("collection analysis queries", () => {
 		async (path, factory) => {
 			const { client, url, params } = recordingClient();
 
-			await factory(client).queryFn();
+			await factory(client).queryFn(context);
 
 			expect(url()).toBe(`/insights/${path}`);
 			expect(params()).toBeUndefined();
@@ -164,7 +192,7 @@ describe("collection analysis queries", () => {
 
 		await collectionOverlapQueryOptions(client, {
 			libraryCode: "LIB_A",
-		}).queryFn();
+		}).queryFn(context);
 
 		expect(url()).toBe("/insights/collection-overlap");
 		expect(params()).toEqual({ [LIBRARY_CODE_PARAM]: "LIB_A" });
@@ -175,7 +203,7 @@ describe("collection analysis queries", () => {
 
 		await unfillableDemandQueryOptions(client, {
 			libraryCode: "LIB_A",
-		}).queryFn();
+		}).queryFn(context);
 
 		expect(url()).toBe("/insights/unfillable-demand");
 		expect(params()).toEqual({ [LIBRARY_CODE_PARAM]: "LIB_A" });

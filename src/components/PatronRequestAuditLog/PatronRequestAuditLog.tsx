@@ -37,11 +37,11 @@ export default function PatronRequestAuditLog({
 	const { data, isLoading, isFetching, isError, error } =
 		useQuery<AuditQueryData>({
 			queryKey: queryKeys.audits.forPatronRequest(apiBase, patronRequestId, page),
-			queryFn: async () =>
-				request(
-					`${apiBase}/graphql`,
-					getAuditsByPatronRequest,
-					{
+			queryFn: async ({ signal }) =>
+				request({
+					url: `${apiBase}/graphql`,
+					document: getAuditsByPatronRequest,
+					variables: {
 						query: processGridFilterModel(
 							page.filterModel,
 							`patronRequest:${patronRequestId}`,
@@ -52,8 +52,9 @@ export default function PatronRequestAuditLog({
 						order: page.sortField ?? "auditDate",
 						orderBy: page.sortDirection?.toUpperCase() ?? "DESC",
 					},
-					await authHeaders(),
-				),
+					requestHeaders: await authHeaders(),
+					signal,
+				}),
 			placeholderData: (previousData) => previousData,
 		});
 
