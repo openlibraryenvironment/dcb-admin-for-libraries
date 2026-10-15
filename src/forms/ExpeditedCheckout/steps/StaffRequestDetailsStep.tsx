@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import {
 	Autocomplete,
 	Button,
@@ -67,6 +68,12 @@ export const StaffRequestDetailsStep = ({
 		name: ["selectionType", "itemAgencyCode"],
 	});
 
+	// The Validate button that had focus went with the step before this one
+	const pickupLocationRef = useRef<HTMLInputElement>(null);
+	useEffect(() => {
+		pickupLocationRef.current?.focus();
+	}, []);
+
 	return (
 		<>
 			<Typography variant="body1">
@@ -91,6 +98,7 @@ export const StaffRequestDetailsStep = ({
 						renderInput={(params) => (
 							<TextField
 								{...params}
+								inputRef={pickupLocationRef}
 								margin="normal"
 								required
 								label={t("requesting.staff_request.patron.pickup_location")}

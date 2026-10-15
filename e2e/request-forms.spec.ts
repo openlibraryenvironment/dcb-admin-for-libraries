@@ -134,6 +134,18 @@ test("Enter in the barcode field validates the patron", async ({
 	await expect(page.getByText(/choose a pickup location/i)).toBeVisible();
 });
 
+test("focus moves to the next step's first field once the patron is validated", async ({
+	app,
+	page,
+}) => {
+	await openForm(app, page, "staff");
+
+	await barcode(page).fill("12345");
+	await barcode(page).press("Enter");
+
+	await expect(page.getByRole("combobox", { name: /pickup location/i })).toBeFocused();
+});
+
 test("validates against the patron's library, never the staff member's", async ({
 	app,
 	page,
