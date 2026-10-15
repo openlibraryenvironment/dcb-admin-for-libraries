@@ -1,4 +1,8 @@
+import type { Locator } from "@playwright/test";
+
 import { test, expect } from "./fixtures/test";
+import library from "./fixtures-data/library.json" with { type: "json" };
+import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 
 /**
  * The keyboard focus ring on a contained button was drawn in currentColor,
@@ -25,6 +29,25 @@ const contrast = (a: string, b: string): number => {
 	return (hi + 0.05) / (lo + 0.05);
 };
 
+const ringOf = (target: Locator) =>
+	target.evaluate((element) => {
+		const style = getComputedStyle(element);
+		let ground = "rgb(255, 255, 255)";
+		for (let node = element.parentElement; node; node = node.parentElement) {
+			const background = getComputedStyle(node).backgroundColor;
+			if (background !== "rgba(0, 0, 0, 0)" && background !== "transparent") {
+				ground = background;
+				break;
+			}
+		}
+		return {
+			colour: style.outlineColor,
+			style: style.outlineStyle,
+			offset: parseFloat(style.outlineOffset),
+			ground,
+		};
+	});
+
 for (const scheme of ["light", "dark"] as const) {
 	test(`a focused contained button shows its ring against the card (${scheme})`, async ({
 		app,
@@ -38,26 +61,31 @@ for (const scheme of ["light", "dark"] as const) {
 		await page.keyboard.press("Tab");
 		await expect(button).toBeFocused();
 
-		const ring = await button.evaluate((element) => {
-			const style = getComputedStyle(element);
-			let ground = "rgb(255, 255, 255)";
-			for (let node = element.parentElement; node; node = node.parentElement) {
-				const background = getComputedStyle(node).backgroundColor;
-				if (background !== "rgba(0, 0, 0, 0)" && background !== "transparent") {
-					ground = background;
-					break;
-				}
-			}
-			return {
-				colour: style.outlineColor,
-				style: style.outlineStyle,
-				offset: parseFloat(style.outlineOffset),
-				ground,
-			};
-		});
+		const ring = await ringOf(button);
 
 		expect(ring.style).toBe("solid");
 		expect(ring.offset).toBeGreaterThan(0);
+		expect(contrast(ring.colour, ring.ground)).toBeGreaterThanOrEqual(3);
+	});
+
+	test(`a focused icon button shows its ring (${scheme})`, async ({ app, page }) => {
+		await app.useColorScheme(scheme);
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraries: library,
+			LoadPatronRequests: patronRequests,
+		});
+
+		await page.goto("/patronRequests");
+		const button = page.getByRole("button", { name: "Columns" });
+		await expect(button).toBeVisible();
+		await button.focus();
+		await expect(button).toBeFocused();
+
+		const ring = await ringOf(button);
+
+		expect(ring.style).toBe("solid");
 		expect(contrast(ring.colour, ring.ground)).toBeGreaterThanOrEqual(3);
 	});
 }

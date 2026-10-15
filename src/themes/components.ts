@@ -127,6 +127,16 @@ export const components: Components<Theme> = {
 		defaultProps: {
 			disableRipple: true,
 		},
+		styleOverrides: {
+			// The ripple was MUI's only focus cue for an IconButton; without it there is none
+			root: ({ theme }) => ({
+				"&.Mui-focusVisible": {
+					outline: "2px solid",
+					outlineColor: (theme.vars || theme).palette.primary.outlineColor,
+					outlineOffset: "2px",
+				},
+			}),
+		},
 	},
 	MuiListItemButton: {
 		defaultProps: {
