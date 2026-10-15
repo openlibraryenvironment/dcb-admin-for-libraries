@@ -18,6 +18,9 @@ export function getRequestError(
 	if (first?.code === "DUPLICATE_REQUEST_ATTEMPT") {
 		return t("requesting.staff_request.patron.error.request.duplicate");
 	}
+	if (first?.code === "PREFLIGHT_CHECKS_TIMED_OUT") {
+		return t("requesting.staff_request.patron.error.request.timed_out");
+	}
 	if (first?.code) {
 		return t("requesting.staff_request.patron.error.request.generic", {
 			code: first.code,
