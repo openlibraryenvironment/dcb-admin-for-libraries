@@ -15,6 +15,10 @@ export interface AnnouncementRow {
 	expiresAt: string;
 }
 
+/** Newest first, the order patrons see them in: dcb-service returns the admin list unordered. */
+export const newestFirst = (rows: readonly AnnouncementRow[]): AnnouncementRow[] =>
+	[...rows].sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt));
+
 /** A library's announcements, live or not; the scope is the library's id. */
 export const announcementsQueryOptions = (apiBase: string, scopeId: string) =>
 	queryOptions({
@@ -26,6 +30,7 @@ export const announcementsQueryOptions = (apiBase: string, scopeId: string) =>
 				{ scopeType: "LIBRARY", scopeId },
 				await authHeaders(),
 			),
+		select: (data) => ({ ...data, announcements: newestFirst(data.announcements ?? []) }),
 		// It changes only through the announcements page, whose mutations invalidate it
 		staleTime: 60_000,
 		// An empty scope is a request that can only fail
