@@ -294,9 +294,10 @@ test("a date typed into the picker filters the requests and reaches the URL", as
 
 	const from = page.getByRole("group", { name: "From" });
 	await from.getByRole("spinbutton").first().click();
-	// The picker's own section order, month first, with a meridiem
-	await page.keyboard.type("100120260930a");
-	await expect(from.getByRole("spinbutton", { name: "Meridiem" })).toHaveText("AM");
+	// The en-GB picker's own section order: day first, 24-hour
+	await page.keyboard.type("011020260930");
+	await expect(from.getByRole("spinbutton", { name: "Month" })).toHaveText("10");
+	await expect(from.getByRole("spinbutton", { name: "Minutes" })).toHaveText("30");
 	await page.keyboard.press("Escape");
 
 	await expect

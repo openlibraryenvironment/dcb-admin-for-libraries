@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import "./i18n";
+import { applyLanguage } from "./i18n";
 import { createRouter, type AnyRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { LicenseInfo } from "@mui/x-license";
@@ -11,6 +11,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import App from "@components/App/App";
+import { useLocaleStore } from "@/hooks/useLocaleStore";
 import { classifyServiceError } from "@helpers/serviceErrors";
 import NotFound from "@components/Error/NotFound";
 import RouteError from "@components/Error/RouteError";
@@ -36,6 +37,8 @@ declare global {
 			// Rendered from the container environment by 40-inject-env.sh so a
 			// backend-gated feature can be turned on per environment without a rebuild.
 			VITE_FEATURE_INSIGHTS?: string;
+			// en-US or en-GB; docs/DEPLOYMENT.md, "2c. Locale".
+			VITE_LOCALE?: string;
 			[key: string]: string | undefined;
 		};
 		__DCB_BUNDLE_BASE_URL__?: string;
@@ -65,15 +68,15 @@ export async function getStandaloneConfig() {
 				VITE_KEYCLOAK_ID: String(import.meta.env.VITE_KEYCLOAK_ID),
 				VITE_DCB_API_BASE: String(import.meta.env.VITE_DCB_API_BASE),
 				VITE_DCB_SEARCH_BASE: String(import.meta.env.VITE_DCB_SEARCH_BASE),
+				VITE_LOCALE: import.meta.env.VITE_LOCALE,
 			};
 		}
 
 		return await response.json();
 	} catch {
-		// The only console call in the app. Kept because nothing is mounted at
-		// this point, so a misconfigured deployment has no other symptom - and
-		// reduced to a literal, because an error object here can carry the
-		// response body.
+		// Kept because nothing is mounted at this point, so a misconfigured
+		// deployment has no other symptom - and reduced to a literal, because an
+		// error object here can carry the response body.
 		console.warn(
 			"Could not load inject_env.json; falling back to build-time configuration",
 		);
@@ -112,6 +115,9 @@ export async function mountDcbAdminForLibraries(
 	cfg: Record<string, string | undefined>,
 ): Promise<void> {
 	window.__APP_ENV__ = cfg as Window["__APP_ENV__"];
+	// The locale needs the config, and the first render needs the locale.
+	await applyLanguage();
+	useLocaleStore.subscribe(() => void applyLanguage());
 
 	router = createRouter({
 		routeTree,

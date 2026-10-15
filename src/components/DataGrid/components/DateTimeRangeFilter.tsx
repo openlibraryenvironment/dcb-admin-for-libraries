@@ -1,12 +1,11 @@
 import { GridFilterInputValueProps } from "@mui/x-data-grid-premium";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useTranslation } from "react-i18next";
 import { MultiInputDateTimeRangeField } from "@mui/x-date-pickers-pro/MultiInputDateTimeRangeField";
 import { DateTimeRangePicker } from "@mui/x-date-pickers-pro/DateTimeRangePicker";
 import { useClock } from "@/hooks/useThemeStore";
+import DateLocalizationProvider from "@components/DateLocalization/DateLocalizationProvider";
 
 // The pickers need it to show and take a value in UTC.
 dayjs.extend(utc);
@@ -28,7 +27,7 @@ export default function DateTimeRangeFilter(props: GridFilterInputValueProps) {
 	};
 
 	return (
-		<LocalizationProvider dateAdapter={AdapterDayjs}>
+		<DateLocalizationProvider>
 			<DateTimeRangePicker
 				value={[startDate, endDate]}
 				onChange={handleChange}
@@ -46,6 +45,6 @@ export default function DateTimeRangeFilter(props: GridFilterInputValueProps) {
 					actionBar: { actions: ["clear", "nextOrAccept"] },
 				}}
 			/>
-		</LocalizationProvider>
+		</DateLocalizationProvider>
 	);
 }

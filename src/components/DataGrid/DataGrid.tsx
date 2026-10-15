@@ -1,3 +1,4 @@
+import { useAppLocale } from "@/hooks/useLocaleStore";
 import { useClock } from "@/hooks/useThemeStore";
 import { useAnnounce } from "@/hooks/useAnnouncer";
 import { PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
@@ -188,6 +189,7 @@ export default function DataGrid({
 }: DataGridProps) {
 	const { t } = useTranslation();
 	const clock = useClock();
+	const locale = useAppLocale();
 	const navigate = useNavigate();
 	const expandedFilterPanel = expandedFilterPanelTypes.includes(type);
 	const getDetailPanelHeight = useCallback(() => "auto", []); // Only necessary because master detail is not applicable to all grids yet
@@ -264,7 +266,7 @@ export default function DataGrid({
 		navigate(target.navigate);
 	};
 
-	// Remounted when the clock preference changes, because a column's
+	// Remounted when the clock or the locale changes, because a column's
 	// valueFormatter is a plain function whose output MUI X does not treat as
 	// part of a cell's identity - a re-render alone leaves the old text on
 	// screen. The cost is the grid's scroll position, on a setting nobody
@@ -272,7 +274,7 @@ export default function DataGrid({
 	return (
 		<div style={{ display: "flex", flexDirection: "column" }}>
 			<DataGridPremium
-				key={clock}
+				key={`${clock}|${locale}`}
 				aria-label={label}
 				apiRef={apiRef}
 				checkboxSelection={checkboxSelection}

@@ -145,21 +145,26 @@ Dialog that never fires it never unmounts.
 
 ## 8. Language
 
-One language, deliberately. `es` was wired into `src/i18n.ts` carrying 7 of 969
-keys — 0.4%. i18next renders a missing key as the key itself, so selecting
-Spanish would have put `ui.data_grid.export.current` on the export menu in
-front of a librarian. The `LanguageSwitcher` offering it was never mounted, so
-nobody could; but the resource was one import away from being reachable.
+Two Englishes, `en-US` and `en-GB`, chosen per deployment by `VITE_LOCALE` and per user
+under Settings (`docs/DEPLOYMENT.md`, "2c. Locale"). They are separate files rather than
+one with overrides, so neither is a list of exceptions to the other.
 
-Adding a language back needs four things, none of which exists yet:
+`es` was removed earlier carrying 7 of 969 keys - 0.4%. i18next renders a missing key as
+the key itself, so selecting it would have put `ui.data_grid.export.current` on the export
+menu in front of a librarian. The four things a language needs to be safe to offer are now
+in place, and a third would inherit them:
 
-1. a **complete** bundle — `tests/translationKeys.test.ts` shows the shape;
-2. **lazy-loaded** locales, rather than every locale in the entry chunk;
-3. the choice **persisted**, like the display preferences;
-4. `document.documentElement.lang` written on change — without it assistive
-   technology goes on announcing the new language in English (WCAG 3.1.1).
+1. a **complete** bundle - `tests/localeParity.test.ts` fails on a key one file lacks;
+2. **lazy-loaded** locales - one chunk each, fetched before the first render, so a
+   deployment downloads only its own;
+3. the choice **persisted** and validated on rehydrate, like the display preferences;
+4. `document.documentElement.lang` written on every change, so assistive technology
+   pronounces the page as what it is (WCAG 3.1.1).
 
-`lng` is pinned in `src/i18n.ts` until then.
+**A translation made at module load is frozen at module load.** Column headers and the
+status and workflow filter options call `i18n.t` outside a component. Headers are the same
+in both Englishes; the options are getters, and the grid remounts on a change of locale,
+because their labels are not. `tests/statusLabels.test.ts` holds that.
 
 ## 9. The scheme is painted before the bundle parses
 

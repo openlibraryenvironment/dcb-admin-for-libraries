@@ -33,6 +33,9 @@ export const dcbStatusValueOptions = statusKeys.map((key) => {
 	const translationKey = `patron_request.statuses.${key}`;
 	return {
 		value: key, // The value to filter by (e.g., "SUBMITTED_TO_DCB")
-		label: i18n.t(translationKey), // The translated label (e.g., "Submitted to DCB")
+		// A getter, so a change of locale reaches a grid built before it.
+		get label() {
+			return i18n.t(translationKey);
+		},
 	};
 });

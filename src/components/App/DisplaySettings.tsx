@@ -10,9 +10,16 @@ import RestartAltOutlined from "@mui/icons-material/RestartAltOutlined";
 import { useTranslation } from "react-i18next";
 
 import { useAnnounce } from "@/hooks/useAnnouncer";
+import { useLocaleStore } from "@/hooks/useLocaleStore";
 import { THEME_MODES, useThemeStore } from "@/hooks/useThemeStore";
 import { CLOCKS, DENSITIES, MOTIONS, TEXT_SIZES } from "@/themes/display";
 import { FONTS, FONT_NAMES, type FontName } from "@/themes/fonts";
+import {
+	deploymentLocale,
+	ENDONYMS,
+	LANGUAGE_CHOICES,
+	type LanguageChoice,
+} from "@helpers/locale";
 
 /**
  * "Match my device" is the ABSENCE of a stored mode, not a fourth mode. The
@@ -120,6 +127,49 @@ function TypefacePicker() {
 	);
 }
 
+/**
+ * Each English is named in itself and marked with its own `lang`; the default
+ * names the English it currently resolves to.
+ */
+function LanguagePicker() {
+	const { t } = useTranslation();
+	const choice = useLocaleStore((state) => state.choice);
+	const setChoice = useLocaleStore((state) => state.setChoice);
+	const labelId = "display-language-label";
+	const deployment = deploymentLocale();
+
+	return (
+		<FormControl component="fieldset">
+			<FormLabel component="legend" id={labelId}>
+				{t("display.language.label")}
+			</FormLabel>
+			<RadioGroup
+				aria-labelledby={labelId}
+				name="language"
+				value={choice}
+				onChange={(event) => setChoice(event.target.value as LanguageChoice)}
+			>
+				{LANGUAGE_CHOICES.map((option) => (
+					<FormControlLabel
+						key={option}
+						value={option}
+						control={<Radio />}
+						label={
+							option === "deployment" ? (
+								t("display.language.deployment", {
+									language: ENDONYMS[deployment],
+								})
+							) : (
+								<span lang={option}>{ENDONYMS[option]}</span>
+							)
+						}
+					/>
+				))}
+			</RadioGroup>
+		</FormControl>
+	);
+}
+
 export const DisplaySettings = () => {
 	const { t } = useTranslation();
 	const announce = useAnnounce();
@@ -171,6 +221,7 @@ export const DisplaySettings = () => {
 				value={clock}
 				onChange={setClock}
 			/>
+			<LanguagePicker />
 
 			{/*
 			 * The way back. Somebody who has made the interface unreadable while

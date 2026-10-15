@@ -14,9 +14,12 @@ const BUDGET = JSON.parse(readFileSync("bundle-budget.json", "utf8"));
 const NAME_ABOVE = BUDGET.nameChunksAboveBytes;
 const UNBUDGETED = BUDGET.unbudgeted ?? {};
 
-/** "RequestsGrid-CMPomE8g.js" -> "RequestsGrid.js": the content hash is not identity. */
+/**
+ * "RequestsGrid-CMPomE8g.js" -> "RequestsGrid.js": the content hash is not identity.
+ * Exactly 8: the hash can hold a "-", so "{8,}" turned "en-GB-Djj0QWP7.js" into "en.js".
+ */
 function withoutHash(file) {
-	return file.replace(/-[A-Za-z0-9_-]{8,}(\.[a-z]+)$/, "$1");
+	return file.replace(/-[A-Za-z0-9_-]{8}(\.[a-z]+)$/, "$1");
 }
 
 const measured = readdirSync(ASSETS)

@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import en from "../src/locales/en/en.json";
+import en from "../src/locales/en-US/en-US.json";
 
 /**
- * Every literal translation key in the source must exist in en.json: i18next
- * renders a missing key as the key itself, in front of a librarian. What this
- * deliberately does not cover: docs/testing.md.
+ * Every literal translation key in the source must exist in en-US.json, and
+ * so (tests/localeParity.test.ts) in en-GB.json: i18next renders a missing key
+ * as the key itself, in front of a librarian. What this deliberately does not
+ * cover: docs/testing.md.
  */
 
 const SRC = path.resolve(import.meta.dirname, "../src");
@@ -202,7 +203,7 @@ function findMissingKeys(): Finding[] {
 const AWAITING_WORDING = new Set<string>([]);
 
 describe("translation keys", () => {
-	it("every literal t() key exists in en.json", () => {
+	it("every literal t() key exists in en-US.json", () => {
 		const missing = findMissingKeys().filter(
 			(finding) => !AWAITING_WORDING.has(finding.key),
 		);
@@ -212,7 +213,7 @@ describe("translation keys", () => {
 		expect(
 			missing,
 			missing.length
-				? `${missing.length} translation key(s) referenced but absent from en.json.
+				? `${missing.length} translation key(s) referenced but absent from en-US.json.
 i18next renders the key itself, so each of these is visible text in the UI:
 ${report}`
 				: undefined,

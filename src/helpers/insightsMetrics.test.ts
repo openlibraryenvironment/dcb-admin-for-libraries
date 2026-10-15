@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "fs";
 import { join, resolve } from "path";
 
 import { METRIC_IDS, methodKeys } from "./insightsMetrics";
-import en from "../locales/en/en.json";
+import en from "../locales/en-US/en-US.json";
 
 /**
  * The methodology gate.

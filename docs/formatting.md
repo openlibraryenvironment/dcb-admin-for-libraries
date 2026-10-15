@@ -5,15 +5,19 @@ usefully — what it is deliberately not for.
 
 ## The locale is the browser's, not i18next's
 
-The interface language is pinned to English (`docs/theming.md` §8). The way a
-date or a decimal separator is written is a **regional** convention rather than
-a language one, and the two do not travel together: a librarian in Sheffield
-reading an English interface still expects `22/09/2026`, and `Intl` asked for
-`"en"` will hand them `9/22/2026`.
+The way a date or a decimal separator is written is a **regional** convention
+rather than a language one, and the two do not always travel together. So the
+formatters pass `undefined`, which is how `Intl` is told to use the browser's
+own locale, and every date they write carries a month NAME: `22 Sept 2026` and
+`Sep 22, 2026` cannot be misread whichever the reader expected.
 
-So the formatters pass `undefined`, which is how `Intl` is told to use the
-browser's own locale. When a real second language ships, this is the file that
-decides whether the two should be joined up.
+**The date pickers are the exception, and follow the app's locale instead**
+(`VITE_LOCALE`, or the user's choice; `docs/DEPLOYMENT.md`, "2c. Locale"). A
+typed date is all numbers, so `03/04/2026` is ambiguous unless the field and the
+interface agree on which comes first. Every picker sits inside
+`DateLocalizationProvider`, which gives it that order. It wraps each picker
+rather than the app, so the date adapter loads with the pickers: app-wide, it
+was on every page, the login page included.
 
 Every function takes an explicit locale as its last argument. Nothing in the
 application passes one; `tests/formatters.test.ts` does, because a test that
