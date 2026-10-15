@@ -1,4 +1,6 @@
 import { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { visuallyHidden } from "@mui/utils";
 import {
 	Card,
 	CardContent,
@@ -42,6 +44,7 @@ export default function KpiTile({
 	metric,
 	sampleCount,
 }: KpiTileProps) {
+	const { t } = useTranslation();
 	const hasDelta =
 		deltaPct !== undefined && deltaPct !== null && isFinite(deltaPct);
 	const positive = hasDelta && (deltaPct as number) > 0;
@@ -88,12 +91,24 @@ export default function KpiTile({
 									color={deltaColor}
 									sx={{ display: "flex", alignItems: "center" }}
 								>
-									{positive ? (
-										<ArrowDropUp fontSize="small" />
-									) : (
-										<ArrowDropDown fontSize="small" />
-									)}
-									{formatPercent(Math.abs(deltaPct as number))}
+									{/* The direction in words: the arrow and its colour are not read */}
+									<Box component="span" sx={visuallyHidden}>
+										{t(positive ? "insights.trends.up" : "insights.trends.down", {
+											change: formatPercent(Math.abs(deltaPct as number)),
+										})}
+									</Box>
+									<Box
+										component="span"
+										aria-hidden="true"
+										sx={{ display: "flex", alignItems: "center" }}
+									>
+										{positive ? (
+											<ArrowDropUp fontSize="small" />
+										) : (
+											<ArrowDropDown fontSize="small" />
+										)}
+										{formatPercent(Math.abs(deltaPct as number))}
+									</Box>
 								</Typography>
 							)}
 							{subtitle && (
