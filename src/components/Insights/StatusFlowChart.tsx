@@ -2,8 +2,9 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, Typography, Chip, Box } from "@mui/material";
-import { LineChartPro } from "@mui/x-charts-pro";
+import { LineChartPro, legendClasses } from "@mui/x-charts-pro";
 import { utcBucketAxis } from "./utcBucketAxis";
+import { dcbStatusLabel } from "@constants/statuses/DCBStatuses";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette, inkOn } from "@/hooks/useChartPalette";
@@ -70,14 +71,14 @@ export default function StatusFlowChart({
 			xAxisData: buckets.map((b) => new Date(b)),
 			series: selectedStatuses.map((status) => ({
 				id: status,
-				label: status,
+				label: dcbStatusLabel(status, t),
 				data: byStatus.get(status) ?? [],
 				color: colorForStatus(status),
 				showMark: false,
 				curve: "monotoneX" as const,
 			})),
 		};
-	}, [data, selectedStatuses, colorForStatus]);
+	}, [data, selectedStatuses, colorForStatus, t]);
 
 	const atCap = selectedStatuses.length >= MAX_PLOT_SERIES;
 	const pickerLabel: string = t("insights.charts.status_flow.picker_label");
@@ -104,7 +105,7 @@ export default function StatusFlowChart({
 						return (
 							<Chip
 								key={status}
-								label={status}
+								label={dcbStatusLabel(status, t)}
 								variant={selected ? "filled" : "outlined"}
 								onClick={() => toggleStatus(status)}
 								aria-pressed={selected}
@@ -143,6 +144,12 @@ export default function StatusFlowChart({
 									},
 								]}
 								series={series}
+								// A long status name otherwise widened the chart past its card at 320px
+								slotProps={{
+									legend: {
+										sx: { minWidth: 0, [`& .${legendClasses.label}`]: { overflowWrap: "anywhere" } },
+									},
+								}}
 							/>
 							<ChartDataTable
 								caption={t("insights.charts.status_flow.title")}

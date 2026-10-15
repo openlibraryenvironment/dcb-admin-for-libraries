@@ -527,3 +527,23 @@ for (const subject of ["service", "partners", "collection", "gaps"]) {
 		await app.expectNoAccessibilityViolations();
 	});
 }
+
+test("at 320px, the activity chart fits its card and names statuses as the grids do", async ({
+	app,
+	page,
+}) => {
+	await page.setViewportSize({ width: 320, height: 800 });
+	await app.signIn();
+	await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+	await app.mockStats();
+
+	await page.goto("/insights");
+	await reveal(page, "Requesting activity over time");
+	const card = cardFor(page, "Requesting activity over time");
+
+	await expect(card.getByRole("button", { name: "Loaned", exact: true })).toHaveText("Loaned");
+	await expect(card.locator("svg").first()).toBeVisible();
+	const overflow = await card.evaluate((element) => element.scrollWidth - element.clientWidth);
+	expect(overflow).toBeLessThanOrEqual(0);
+});
