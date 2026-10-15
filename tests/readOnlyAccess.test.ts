@@ -35,13 +35,19 @@ describe("isReadOnlyAllowed", () => {
 		expect(isReadOnlyAllowed("/logout")).toBe(true);
 	});
 
+	it("allows their own preferences and the accessibility statement", () => {
+		expect(isReadOnlyAllowed("/preferences")).toBe(true);
+		expect(isReadOnlyAllowed("/accessibility")).toBe(true);
+	});
+
 	it("refuses everything else", () => {
 		for (const path of [
 			"/",
 			"/insights",
 			"/patronRequests",
 			"/mappings",
-			"/settings",
+			"/service",
+			"/library",
 			"/contacts",
 		]) {
 			expect(isReadOnlyAllowed(path), path).toBe(false);
@@ -51,5 +57,6 @@ describe("isReadOnlyAllowed", () => {
 	it("is not fooled by a path that merely contains the word", () => {
 		expect(isReadOnlyAllowed("/admin/requesting-report")).toBe(false);
 		expect(isReadOnlyAllowed("/logoutish")).toBe(false);
+		expect(isReadOnlyAllowed("/preferencesx")).toBe(false);
 	});
 });

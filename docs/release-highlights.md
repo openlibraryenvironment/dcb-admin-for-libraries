@@ -1,9 +1,9 @@
-# Release highlights and the version in settings
+# Release highlights and the version in Preferences
 
 On the first signed-in page after a release, a dialog lists that release's main changes in a
-few lines, with a link to its full notes on GitHub. Settings has an **About DCB Admin for
+few lines, with a link to its full notes on GitHub. Preferences has an **About DCB Admin for
 Libraries** section: the version this build is, a link to its release notes, and a button that
-shows the highlights again. Read-only users see the dialog too; they have no settings page.
+shows the highlights again. Read-only users see the dialog and Preferences too.
 
 ## Writing a release's highlights
 
@@ -33,7 +33,7 @@ can hold it. The version is read at runtime, in this order (`src/helpers/release
 2. **Otherwise**, from `release.json` beside the bundle, `{"version":"v1.14.0"}`. Both
    `deploy_tag_to_s3` and `deploy_release_to_r2` write it from `$RELEASE_VERSION` before
    uploading. A missing file, or the SPA's own HTML in its place, is no version.
-3. **With neither**, settings shows "Development build" and the commit from the build stamp,
+3. **With neither**, Preferences shows "Development build" and the commit from the build stamp,
    or "Version not known".
 
 What the file says is checked like any other input: only `vX.Y.Z` or `X.Y.Z` is a version.

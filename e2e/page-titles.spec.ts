@@ -25,8 +25,8 @@ const PAGES: Titled[] = [
 		mocks: { LoadLibrary: library },
 	},
 	{
-		path: "/settings",
-		title: /^Settings · DCB Admin for Libraries$/,
+		path: "/preferences",
+		title: /^Preferences · DCB Admin for Libraries$/,
 		mocks: { LoadLibrary: library },
 	},
 ];

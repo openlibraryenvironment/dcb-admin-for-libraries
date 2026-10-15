@@ -14,7 +14,7 @@ test.describe("Route errors", () => {
 		await app.signIn();
 		await app.mockGraphQL({ LoadLibrary: library });
 
-		await page.route("**/assets/settings-*.js", (route) =>
+		await page.route("**/assets/preferences-*.js", (route) =>
 			route.abort("failed"),
 		);
 
@@ -23,7 +23,7 @@ test.describe("Route errors", () => {
 			loads += 1;
 		});
 
-		await page.goto("/settings");
+		await page.goto("/preferences");
 
 		await expect(
 			page.getByRole("heading", { level: 1, name: "Something went wrong" }),
@@ -44,16 +44,16 @@ test.describe("Route errors", () => {
 		await app.signIn();
 		await app.mockGraphQL({ LoadLibrary: library });
 
-		await page.route("**/assets/settings-*.js", (route) =>
+		await page.route("**/assets/preferences-*.js", (route) =>
 			route.abort("failed"),
 		);
 
-		await page.goto("/settings");
+		await page.goto("/preferences");
 
 		await expect(
 			page.getByRole("heading", { level: 1, name: "Something went wrong" }),
 		).toBeVisible();
 		await expect(page.getByText(/Failed to fetch dynamically imported/i)).toHaveCount(0);
-		await expect(page.getByText(/assets\/settings-/)).toHaveCount(0);
+		await expect(page.getByText(/assets\/preferences-/)).toHaveCount(0);
 	});
 });

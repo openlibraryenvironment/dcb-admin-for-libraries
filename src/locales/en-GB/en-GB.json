@@ -127,7 +127,7 @@
 			"comfortable": "Comfortable",
 			"compact": "Compact"
 		},
-		"description": "These settings are yours and are remembered on this device.",
+		"description": "These preferences are yours and are remembered on this device.",
 		"heading": "Display",
 		"language": {
 			"label": "Language",
@@ -146,8 +146,8 @@
 			"full": "Full",
 			"reduced": "Reduced"
 		},
-		"reset": "Reset display settings",
-		"reset_done": "Display settings reset",
+		"reset": "Reset display preferences",
+		"reset_done": "Display preferences reset",
 		"textSize": {
 			"label": "Text size",
 			"small": "Small",
@@ -818,8 +818,8 @@
 			"tested_body": "Automated checks run on every change and block a release if they fail: an axe scan of every screen and dialog in the accessibility gate, in light and dark and at a 320-pixel width, arithmetic over every colour pair in each of the three schemes, and a check that every field label is still attached to its value. Automated testing finds roughly a third of accessibility problems, so it is a floor rather than a guarantee.",
 			"limits_heading": "Where we know we fall short",
 			"limits_body": "Data grids are wide, and reading one on a narrow screen still means scrolling sideways. Some charts convey trends by shape; each carries its figures as a table for screen readers, but the shape itself is not described in words. We have not yet had this interface tested by an external auditor.",
-			"settings_heading": "Settings you can change",
-			"settings_body": "Under Settings you can choose a colour scheme including high contrast, a text size, a typeface including Atkinson Hyperlegible, how tightly the interface is spaced, whether it animates, whether times are shown on your clock or on the service's, and whether it is written in American or British English. These are stored on your own device and are not shared with colleagues.",
+			"settings_heading": "Preferences you can change",
+			"settings_body": "Under Preferences you can choose a colour scheme including high contrast, a text size, a typeface including Atkinson Hyperlegible, how tightly the interface is spaced, whether it animates, whether times are shown on your clock or on the service's, and whether it is written in American or British English. These are stored on your own device and are not shared with colleagues.",
 			"report_heading": "Telling us about a problem",
 			"report_body": "If something here stops you doing your job, tell us and we will treat it as a defect. Email dcb@k-int.com, and say which screen and what you were trying to do.",
 			"report_email": "dcb@k-int.com"
@@ -986,11 +986,11 @@
 			"title": "Patron requests",
 			"tooltip": "The requests made by patrons of your library"
 		},
+		"preferences": {
+			"title": "Preferences"
+		},
 		"requesting": {
 			"title": "Requesting"
-		},
-		"settings": {
-			"title": "Settings"
 		},
 		"supplier_requests": {
 			"title": "Supplier requests",
@@ -1843,7 +1843,7 @@
 			},
 			"accessibility": {
 				"heading": "More accessible, and set up the way you work",
-				"body": "In Settings, choose your colour scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change, and Insights charts come with their numbers as a table."
+				"body": "In Preferences, choose your colour scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change, and Insights charts come with their numbers as a table."
 			},
 			"exports": {
 				"heading": "New and improved exports",

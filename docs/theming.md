@@ -146,7 +146,7 @@ Dialog that never fires it never unmounts.
 ## 8. Language
 
 Two Englishes, `en-US` and `en-GB`, chosen per deployment by `VITE_LOCALE` and per user
-under Settings (`docs/DEPLOYMENT.md`, "2c. Locale"). They are separate files rather than
+under Preferences (`docs/DEPLOYMENT.md`, "2c. Locale"). They are separate files rather than
 one with overrides, so neither is a list of exceptions to the other.
 
 `es` was removed earlier carrying 7 of 969 keys - 0.4%. i18next renders a missing key as

@@ -10,7 +10,7 @@ const TABS = [
 	"/mappings",
 	"/locations",
 	"/bibs",
-	"/settings",
+	"/preferences",
 ] as const;
 
 describe("matchActiveTab", () => {

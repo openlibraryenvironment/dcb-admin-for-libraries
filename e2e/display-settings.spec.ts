@@ -17,7 +17,7 @@ test.beforeEach(async ({ app }) => {
  * look like plausible answers, so this waits for the page to exist first.
  */
 const open = async (page: import("@playwright/test").Page) => {
-	await page.goto("/settings");
+	await page.goto("/preferences");
 	await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 };
 
@@ -40,7 +40,7 @@ test("offers every display preference", async ({ page }) => {
 		page.getByRole("radio", { name: /high contrast/i }),
 	).toBeVisible();
 	await expect(
-		page.getByRole("button", { name: /reset display settings/i }),
+		page.getByRole("button", { name: /reset display preferences/i }),
 	).toBeVisible();
 });
 
@@ -88,7 +88,7 @@ test("text size and spacing change the rendered page", async ({ page }) => {
 	expect(await rootFontSize()).toBe("18px");
 
 	// Reset returns the display settings, and says so.
-	await page.getByRole("button", { name: /reset display settings/i }).click();
+	await page.getByRole("button", { name: /reset display preferences/i }).click();
 	expect(await rootFontSize()).toBe("16px");
 	await expect(page.getByRole("status")).toHaveText(/reset/i);
 });
@@ -157,4 +157,10 @@ test("timestamps name their clock, and the reader can change it", async ({
 
 	// The fixture records 2026-09-01T09:15:00Z.
 	await expect(page.getByText("2026-09-01 09:15 UTC").first()).toBeVisible();
+});
+
+test("an old Settings bookmark arrives at Preferences", async ({ page }) => {
+	await page.goto("/settings");
+	await expect(page).toHaveURL(/\/preferences$/);
+	await expect(page.getByRole("heading", { level: 1, name: "Preferences" })).toBeVisible();
 });

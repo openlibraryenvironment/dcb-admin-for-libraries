@@ -294,8 +294,8 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
-		name: "settings",
-		path: "/settings",
+		name: "preferences",
+		path: "/preferences",
 		prepare: async (app) => {
 			await app.signIn();
 			await app.mockGraphQL({ LoadLibrary: library });
@@ -629,7 +629,7 @@ const PAGES: Surface[] = [
 	{
 		// The library selector renders only for a multi-agency claim; no other surface has one.
 		name: "header with library selector",
-		path: "/settings",
+		path: "/preferences",
 		prepare: async (app) => {
 			await app.signIn({ agencyCode: "e2e-agency,e2e-agency-2" });
 			await app.mockGraphQL({ LoadLibrary: library });

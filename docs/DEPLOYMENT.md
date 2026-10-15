@@ -153,7 +153,7 @@ Admin. Any other value — including `en-us` in lower case — also means `en-GB
 browser console says so once. A consortium that wants American text and month-first dates
 sets `en-US`.
 
-**Each user can override it** under Settings, Display, Language: "Consortium default"
+**Each user can override it** under Preferences, Display, Language: "Consortium default"
 follows this variable, and either English can be chosen instead. The choice is kept on
 that device, like the other display settings.
 
@@ -349,9 +349,9 @@ through them before the release pipeline runs, and the checks after it.
 To see which build a host is serving, `curl -s https://<host>/dcb-admin-for-libraries/ | grep dcb-admin-for-libraries-build`
 prints the commit it was built from; the build job asserts the stamp is there. The version is
 in `release.json` beside it, `curl -s https://<host>/dcb-admin-for-libraries/release.json`,
-which the deploy job writes and settings shows ([release-highlights.md](release-highlights.md)).
+which the deploy job writes and Preferences shows ([release-highlights.md](release-highlights.md)).
 A deployment that does not come from these jobs, a Docker image included, has none, and
-settings says the version is not known.
+Preferences says the version is not known.
 
 1. The R2 bucket `ki-front-end-bundles/dcb-admin-for-libraries/` holds `v<version>/`, and
    `latest.json` reads `{"version":"v<version>"}`. Before 2.0, no release had ever reached R2.

@@ -37,7 +37,7 @@ const TAB_PATHS = {
 	locations: "/locations",
 	bibs: "/bibs",
 	insights: "/insights",
-	settings: "/settings",
+	preferences: "/preferences",
 } as const;
 
 export const Layout = ({ children }: LayoutProps) => {
@@ -50,11 +50,11 @@ export const Layout = ({ children }: LayoutProps) => {
 	const tabsReadOnly = useMemo(() => {
 		return [
 			{ label: t("nav.requesting.title"), value: TAB_PATHS.requesting },
+			{ label: t("nav.preferences.title"), value: TAB_PATHS.preferences },
 		];
 	}, [t]);
 
-	// Library admin check makes sure only requesting tabs show up for non-admin users.
-	// Then we need to put the redirect in to make sure they only get directed to that tab.
+	// Non-admin users see only the read-only tabs; the route guard keeps them to those pages.
 	const tabsConfig = useMemo(() => {
 		return auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN")
 			? [
@@ -82,7 +82,7 @@ export const Layout = ({ children }: LayoutProps) => {
 					...(isInsightsEnabled()
 						? [{ label: t("nav.insights.title"), value: TAB_PATHS.insights }]
 						: []),
-					{ label: t("nav.settings.title"), value: TAB_PATHS.settings },
+					{ label: t("nav.preferences.title"), value: TAB_PATHS.preferences },
 				]
 			: tabsReadOnly;
 	}, [auth?.user?.profile?.roles, t, tabsReadOnly]);

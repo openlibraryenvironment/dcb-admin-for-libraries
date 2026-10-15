@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
-/** A release's highlights on the first sign-in after it, and again from settings. */
+/** A release's highlights on the first sign-in after it, and again from preferences. */
 
 const RELEASE_NOTES = "https://github.com/openlibraryenvironment/dcb-admin-for-libraries/releases";
 
@@ -86,7 +86,7 @@ test("a user who has seen them is not shown them again", async ({ app, page }) =
 	await expect(highlights(page)).toHaveCount(0);
 });
 
-test.describe("settings", () => {
+test.describe("preferences", () => {
 	test.beforeEach(async ({ app }) => {
 		await app.signIn();
 		await app.mockGraphQL({ LoadLibrary: library });
@@ -96,7 +96,7 @@ test.describe("settings", () => {
 		page,
 	}) => {
 		await deployedAs(page, "v1.14.0");
-		await page.goto("/settings");
+		await page.goto("/preferences");
 
 		const about = page.getByRole("heading", { name: "About DCB Admin for Libraries" });
 		await expect(about).toBeVisible();
@@ -119,7 +119,7 @@ test.describe("settings", () => {
 		page,
 	}) => {
 		await servedWithBuildStamp(page, "abc1234");
-		await page.goto("/settings");
+		await page.goto("/preferences");
 
 		await expect(page.getByText("Development build abc1234", { exact: true })).toBeVisible();
 		await expect(
@@ -131,7 +131,7 @@ test.describe("settings", () => {
 		page,
 	}) => {
 		await servedWithBuildStamp(page, "local");
-		await page.goto("/settings");
+		await page.goto("/preferences");
 
 		await expect(page.getByText("Version not known", { exact: true })).toBeVisible();
 	});

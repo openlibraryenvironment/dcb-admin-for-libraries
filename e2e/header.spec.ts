@@ -17,7 +17,7 @@ test.describe("Header", () => {
 		await app.signIn({ agencyCode: "e2e-agency,e2e-agency-2" });
 		await app.mockGraphQL({ LoadLibrary: library });
 
-		await page.goto("/settings");
+		await page.goto("/preferences");
 		await expect(page.getByRole("combobox", { name: /library/i })).toBeVisible();
 		await expect(page.getByRole("button", { name: /logout/i })).toBeVisible();
 
@@ -39,7 +39,7 @@ test.describe("Header", () => {
 			LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
 		});
 
-		await page.goto("/settings");
+		await page.goto("/preferences");
 		await page.evaluate(() => {
 			(window as unknown as { __sameDocument: boolean }).__sameDocument = true;
 		});
@@ -69,7 +69,7 @@ test.describe("Header", () => {
 		await app.signIn({ agencyCode: "" });
 		await app.mockGraphQL({ LoadLibrary: library });
 
-		await page.goto("/settings");
+		await page.goto("/preferences");
 		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 		await expect(page.getByRole("banner")).toContainText(
 			"DCB Admin for Libraries",
