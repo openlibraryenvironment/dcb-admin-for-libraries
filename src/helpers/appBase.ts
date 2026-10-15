@@ -58,7 +58,8 @@ export const assetUrl = (path = ""): string => {
 		typeof window === "undefined"
 			? import.meta.env.BASE_URL
 			: (window.__DCB_BUNDLE_BASE_URL__ ?? appBase);
-	return new URL(path.replace(/^\//, ""), window.location.origin + base).href;
+	// The bootloader's base is already absolute (import.meta.url); the standalone one is a path
+	return new URL(path.replace(/^\//, ""), new URL(base, window.location.origin)).href;
 };
 
 /**
