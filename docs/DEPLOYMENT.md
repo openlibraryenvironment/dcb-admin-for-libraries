@@ -253,7 +253,7 @@ Using "staging" as an example environment.
 
 **Architecture:** Similar to Cloudflare, this uses a runtime-config approach. The provided Dockerfile (`docker/production/Dockerfile`) builds the app and serves it via an Nginx alpine container (`nginx:stable-alpine`). On boot, nginx's own template mechanism renders `docker/production/default.conf.template` into the live server config, and a script in `/docker-entrypoint.d/` (`docker/production/40-inject-env.sh`) uses `envsubst` on `docker/production/inject_env.json.template` to render `/inject_env.json` from the container's environment variables. Client-side routes (deep links/refreshes) fall back to `index.html`, and both `index.html` and `inject_env.json` are served with `Cache-Control: no-store, no-cache, must-revalidate` so redeployed containers are never masked by a stale cache.
 
-**Security Note**: The Dockerfile deliberately uses floating minor-version tags (e.g., node:22-alpine, nginx:stable-alpine) rather than pinned patch versions. This ensures that every time the image is rebuilt, it automatically picks up the latest base-OS security patches.
+**Security Note**: The Dockerfile deliberately uses floating minor-version tags (e.g., node:24-alpine, nginx:stable-alpine) rather than pinned patch versions. This ensures that every time the image is rebuilt, it automatically picks up the latest base-OS security patches.
 
 **Deployment Steps:**
 
