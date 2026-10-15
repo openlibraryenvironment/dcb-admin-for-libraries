@@ -46,6 +46,8 @@ test.describe("Patron request detail", () => {
 			.locator("xpath=following-sibling::dd[1]");
 		await expect(changed).toBeVisible();
 		await expect(changed).not.toHaveText(/\d{4}-\d{2}-\d{2}/);
+		// Read as empty, not skipped: a dash alone is hidden from a screen reader
+		await expect(changed).toContainText("This field is empty");
 	});
 
 	test("names statuses as the grids do, not by their codes", async ({ page }) => {
