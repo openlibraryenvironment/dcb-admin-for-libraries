@@ -160,3 +160,16 @@ test("a new page of results is announced, and says which page", async ({ app, pa
 
 	await expect(announcer).toHaveText(/Page 2 of 3, 60 titles found\./);
 });
+
+test("a failed search is reported in the page, under its one heading", async ({ app, page }) => {
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraries: library });
+	await page.route("**/search/instances**", (route) => route.fulfill({ status: 500, json: {} }));
+
+	await page.goto("/requesting?filters=12345");
+
+	await expect(page.getByRole("alert")).toContainText("error connecting to the search service", {
+		timeout: 15_000,
+	});
+	await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+});

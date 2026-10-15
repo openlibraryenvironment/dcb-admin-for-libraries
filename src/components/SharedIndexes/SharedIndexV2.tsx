@@ -12,6 +12,8 @@ import { queryKeys } from "@helpers/queryKeys";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import LinearProgress from "@mui/material/LinearProgress";
@@ -36,7 +38,6 @@ import {
 } from "@models/SearchTypes";
 import { buildQuery } from "@helpers/search/queryBuilder";
 import { SearchResult } from "@components/SearchResultComponent/SearchResultComponent";
-import Error from "@components/Error/Error";
 import { useSearchGridStore } from "@/hooks/useSearchGridStore";
 import { parseQuery } from "@helpers/search/queryParser";
 import type { RequestingSearch } from "@helpers/requestingSearch";
@@ -350,12 +351,12 @@ export function SharedIndexV2() {
 					</Typography>
 				) : null}
 			</Stack>
+			{/* In the page, not a page of its own: the page's h1 is already "Requesting" */}
 			{isError && (
-				<Error
-					title={t("requesting.shared_index.error_connecting_title")}
-					message={t("requesting.shared_index.error_connecting")}
-					action={t("ui.actions.go_back")}
-					goBack="/"></Error>
+				<Alert severity="error" sx={{ mt: 2 }}>
+					<AlertTitle>{t("requesting.shared_index.error_connecting_title")}</AlertTitle>
+					{t("requesting.shared_index.error_connecting")}
+				</Alert>
 			)}
 			{/* A LIST, not a one-column grid. These are search results: rendering
 			    them through DataGridPremium with a null column header announced
