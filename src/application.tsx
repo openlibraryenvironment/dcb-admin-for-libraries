@@ -17,7 +17,7 @@ import NotFound from "@components/Error/NotFound";
 import RouteError from "@components/Error/RouteError";
 import { User } from "oidc-client-ts";
 import { createUserManager } from "@helpers/auth";
-import { safeReturnPath } from "@helpers/returnPath";
+import { safeReturnPath, signInReturnPath } from "@helpers/returnPath";
 import {
 	appPath,
 	appUrl,
@@ -170,14 +170,15 @@ export async function mountDcbAdminForLibraries(
 		const afterLoginRedirectPath = sessionStorage.getItem(
 			storageKey("afterLoginRedirectPath"),
 		);
-		if (readOnly) {
-			window.location.replace(appPath("requesting"));
-			return;
-		}
 		sessionStorage.removeItem(storageKey("afterLoginRedirectPath"));
-		const returnTo = safeReturnPath(afterLoginRedirectPath, getAppBase());
+		const returnTo = signInReturnPath(
+			safeReturnPath(afterLoginRedirectPath, getAppBase()),
+			readOnly,
+		);
 		if (returnTo) {
 			window.location.replace(returnTo);
+		} else if (readOnly) {
+			window.location.replace(appPath("requesting"));
 		} else {
 			window.history.replaceState(
 				{},
