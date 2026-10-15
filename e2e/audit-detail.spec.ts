@@ -89,7 +89,7 @@ test.describe("Audit entry", () => {
 	}) => {
 		await page.goto(`/patronRequests/audits/${ENTRY.id}`);
 		await expect(
-			page.getByRole("heading", { level: 1, name: ENTRY.id }),
+			page.getByRole("heading", { level: 1, name: ENTRY.briefDescription }),
 		).toBeVisible();
 
 		await page.getByRole("button", { name: /return/i }).click();
@@ -100,6 +100,12 @@ test.describe("Audit entry", () => {
 			"aria-selected",
 			"true",
 		);
+	});
+
+	test("is headed by what happened, not by its id", async ({ page }) => {
+		await page.goto(`/patronRequests/audits/${ENTRY.id}`);
+
+		await expect(page.getByRole("heading", { level: 1 })).toHaveText("Moved to ERROR");
 	});
 
 	test("finds its neighbours with one row each, not by reading the whole history", async ({
@@ -146,7 +152,7 @@ test.describe("Audit entry", () => {
 
 		await page.goto(`/patronRequests/audits/${ENTRY.id}`);
 		await expect(
-			page.getByRole("heading", { level: 1, name: ENTRY.id }),
+			page.getByRole("heading", { level: 1, name: ENTRY.briefDescription }),
 		).toBeVisible();
 		await expect(page.getByRole("button", { name: "Older" })).toBeDisabled();
 

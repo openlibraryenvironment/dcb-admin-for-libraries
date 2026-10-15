@@ -179,7 +179,7 @@ function AuditDetailsComponent() {
 			spacing={{ xs: 2, md: 3 }}
 			columns={DETAIL_COLUMNS}>
             <Grid size={FULL_ROW}>
-				<Typography variant="h1">{audit.id}</Typography>
+				<Typography variant="h1">{audit.briefDescription || t("audit.audit_entry")}</Typography>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("audit.uuid")}>
