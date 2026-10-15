@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { QueryClient } from "@tanstack/react-query";
 
-import { invalidateRequestLists } from "../src/helpers/sharedQueries";
+import { invalidateLibrary, invalidateRequestLists } from "../src/helpers/sharedQueries";
 import { gridPage, queryKeys } from "../src/helpers/queryKeys";
 
 /**
@@ -60,5 +60,31 @@ describe("a request's audit log", () => {
 			client.getQueryState(key)?.isInvalidated ?? false;
 		expect(pages.map(stale)).toEqual([true, true]);
 		expect(stale(other)).toBe(false);
+	});
+});
+
+describe("invalidateLibrary", () => {
+	it("refreshes everywhere the library's name is shown, and leaves other libraries", async () => {
+		const client = new QueryClient();
+		const ours = [
+			queryKeys.library.detail("api", "lib"),
+			queryKeys.library.own("api", "lib"),
+			queryKeys.library.basics("api", "lib"),
+			queryKeys.library.name("api", "lib"),
+			queryKeys.library.names("api", ["lib", "other"]),
+			queryKeys.libraries.all("api"),
+		];
+		const theirs = [
+			queryKeys.library.name("api", "other"),
+			queryKeys.library.names("api", ["other"]),
+		];
+		for (const key of [...ours, ...theirs]) client.setQueryData(key, { ok: true });
+
+		await invalidateLibrary(client, "api", "lib");
+
+		const stale = (key: readonly unknown[]) =>
+			client.getQueryState(key)?.isInvalidated ?? false;
+		expect(ours.map(stale)).toEqual(ours.map(() => true));
+		expect(theirs.map(stale)).toEqual([false, false]);
 	});
 });

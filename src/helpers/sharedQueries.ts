@@ -20,6 +20,26 @@ export const invalidateRequestLists = (queryClient: QueryClient) =>
 		queryClient.invalidateQueries({ queryKey: queryKeys.supplierRequests.lists() }),
 	]);
 
+/** Everything that shows this library's name or profile: after the profile is saved. */
+export const invalidateLibrary = (
+	queryClient: QueryClient,
+	apiBase: string,
+	agencyCode: string,
+) =>
+	Promise.all([
+		...[
+			queryKeys.library.detail,
+			queryKeys.library.own,
+			queryKeys.library.basics,
+			queryKeys.library.name,
+		].map((key) => queryClient.invalidateQueries({ queryKey: key(apiBase, agencyCode) })),
+		queryClient.invalidateQueries({
+			queryKey: ["library", "names", apiBase],
+			predicate: ({ queryKey }) => (queryKey[3] as readonly string[]).includes(agencyCode),
+		}),
+		queryClient.invalidateQueries({ queryKey: queryKeys.libraries.all(apiBase) }),
+	]);
+
 // Queries asked for in the same shape from more than one place: one definition each,
 // so the callers share a cache entry rather than asking again under a different key.
 
