@@ -138,9 +138,12 @@ test("deletes a saved view, keeping focus in the dialog", async ({ app, page }) 
 	const dialog = await openSavedFilters(page);
 	await dialog.getByRole("textbox", { name: "Name" }).fill("Errors");
 	await dialog.getByRole("button", { name: "Save current filters" }).click();
+	// Inside the dialog: while it is open, nothing outside it is read
+	await expect(dialog.getByRole("status")).toHaveText("Saved as Errors.");
 
 	await dialog.getByRole("button", { name: "Delete Errors" }).click();
 
+	await expect(dialog.getByRole("status")).toHaveText("Deleted Errors.");
 	await expect(dialog.getByText("No filters saved yet.")).toBeVisible();
 	await expect(dialog.getByRole("heading", { name: "Your saved filters" })).toBeFocused();
 });
