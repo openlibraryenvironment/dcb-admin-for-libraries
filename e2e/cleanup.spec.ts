@@ -164,6 +164,15 @@ test.describe("Supplier requests clean up", () => {
 			expect.stringContaining("/update"),
 			expect.stringMatching(/\/transition\/cleanup$/),
 		]);
+
+		// Told when it finishes, from inside the dialog, where a screen reader is listening
+		const dialog = page.getByRole("dialog");
+		await expect(dialog.getByRole("status")).toHaveText("Cleanup complete");
+		const repeated = await dialog.locator("[id]").evaluateAll((elements) => {
+			const ids = elements.map((element) => element.id);
+			return ids.filter((id, index) => ids.indexOf(id) !== index);
+		});
+		expect(repeated).toEqual([]);
 	});
 
 	/**

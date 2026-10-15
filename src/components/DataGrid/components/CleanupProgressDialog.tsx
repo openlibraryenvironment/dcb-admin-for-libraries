@@ -2,6 +2,7 @@ import {
 	Accordion,
 	AccordionDetails,
 	AccordionSummary,
+	Box,
 	Button,
 	Dialog,
 	DialogActions,
@@ -17,6 +18,7 @@ import {
 	ExpandMore,
 	WarningAmber,
 } from "@mui/icons-material";
+import { visuallyHidden } from "@mui/utils";
 import { useTranslation } from "react-i18next";
 import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
 import { cleanupPatronRequestVisibility } from "@helpers/dataGrid/columnVisibility/cleanupPatronRequestVisibility";
@@ -95,6 +97,10 @@ export const CleanupProgressDialog = ({
 					: t("patron_request.cleanup_complete")}
 			</DialogTitle>
             <DialogContent>
+				{/* In the dialog: MUI hides #root, and the app's live region with it, while it is open */}
+				<Box role="status" aria-live="polite" sx={visuallyHidden}>
+					{isCleaning ? "" : t("patron_request.cleanup_complete")}
+				</Box>
 				<Stack direction="column" spacing={1}>
 					<Stack direction="column" spacing={1}>
 						<Stack direction="row" spacing={1} sx={{
@@ -129,8 +135,8 @@ export const CleanupProgressDialog = ({
 									sx={{ mt: 2 }}>
 									<AccordionSummary
 										expandIcon={<ExpandMore />}
-										aria-controls="success-rows-show-content"
-										id="success-rows-show-content">
+										aria-controls="success-rows-content"
+										id="success-rows-header">
 										<Stack direction={"row"} spacing={1}>
 											<CheckCircleOutlined color="success" />
 											<Typography variant="h3" sx={{ fontWeight: "bold" }}>
@@ -196,8 +202,8 @@ export const CleanupProgressDialog = ({
 								sx={{ mt: 2 }}>
 								<AccordionSummary
 									expandIcon={<ExpandMore />}
-									aria-controls="error-rows-show-content"
-									id="error-rows-show-content">
+									aria-controls="error-rows-content"
+									id="error-rows-header">
 									<Stack direction={"row"} spacing={1}>
 										<ErrorOutlined color="error" />
 										<Typography variant="h3" sx={{ fontWeight: "bold" }}>
@@ -269,8 +275,8 @@ export const CleanupProgressDialog = ({
 								sx={{ mt: 2 }}>
 								<AccordionSummary
 									expandIcon={<ExpandMore />}
-									aria-controls="skipped-rows-show-content"
-									id="skipped-rows-show-content">
+									aria-controls="skipped-rows-content"
+									id="skipped-rows-header">
 									<Stack direction={"row"} spacing={1}>
 										<WarningAmber color="warning" />
 										<Typography variant="h3" sx={{ fontWeight: "bold" }}>
