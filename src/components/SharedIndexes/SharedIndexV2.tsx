@@ -242,12 +242,20 @@ export function SharedIndexV2() {
 
 	// The result count changes on screen and nothing else says so - the count
 	// renders into a span, and the grid below it redraws silently. WCAG 4.1.3.
-	// Announcing on the settled value rather than on each keystroke: isFetching
-	// would narrate every intermediate state of a debounced search.
+	// Announced once a search or a page has settled, not for each state on the way. A
+	// new page keeps the count, so it says which page it is.
 	useEffect(() => {
-		if (typeof totalRecords !== "number") return;
-		announce(t("requesting.titles_found", { number: totalRecords }));
-	}, [totalRecords, announce, t]);
+		if (typeof totalRecords !== "number" || isFetching) return;
+		announce(
+			pageno > 0
+				? t("requesting.page_announce", {
+						page: pageno + 1,
+						pages: Math.ceil(totalRecords / pagesize),
+						count: totalRecords,
+					})
+				: t("requesting.titles_found", { number: totalRecords }),
+		);
+	}, [totalRecords, isFetching, pageno, pagesize, announce, t]);
 
 	return (
 		<Box sx={{ width: "100%" }}>

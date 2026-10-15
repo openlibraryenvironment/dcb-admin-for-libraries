@@ -142,3 +142,21 @@ test("a result says why it can or cannot be requested, without a hover", async (
 		page.getByText(/^Not available for staff requesting: there is currently no available item/).first(),
 	).toBeVisible();
 });
+
+test("a new page of results is announced, and says which page", async ({ app, page }) => {
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraries: library });
+	await page.route("**/search/instances**", (route) =>
+		route.fulfill({ json: { ...DEFAULT_SEARCH, totalRecords: 60 } }),
+	);
+	await page.route("**/items/availability**", (route) =>
+		route.fulfill({ json: { itemList: [], timings: {} } }),
+	);
+	await page.goto("/requesting?filters=12345");
+	const announcer = page.getByRole("status").filter({ hasText: /\S/ });
+	await expect(announcer).toHaveText(/60 titles found/);
+
+	await page.getByRole("button", { name: "Go to next page" }).click();
+
+	await expect(announcer).toHaveText(/Page 2 of 3, 60 titles found\./);
+});
