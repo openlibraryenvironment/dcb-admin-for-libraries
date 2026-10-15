@@ -27,7 +27,9 @@ import DataGrid from "../DataGrid";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import {
 	GridPaginationModel,
+	GridFilterModel,
 	GridRowModesModel,
+	GridSortModel,
 } from "@mui/x-data-grid-premium";
 
 interface CleanupProgressDialogProps {
@@ -45,6 +47,10 @@ interface CleanupProgressDialogProps {
 }
 
 // Translation keys and more refinement needed
+const CLEANUP_PAGINATION = { page: 0, pageSize: 25 };
+const NO_FILTER: GridFilterModel = { items: [] };
+const CLEANUP_SORT: GridSortModel = [{ field: "dateCreated", sort: "desc" }];
+
 export const CleanupProgressDialog = ({
 	open,
 	isCleaning,
@@ -62,26 +68,22 @@ export const CleanupProgressDialog = ({
 	const [isSuccessRowsExpanded, setIsSuccessRowsExpanded] = useState(false);
 	const [isErrorRowsExpanded, setIsErrorRowsExpanded] = useState(false);
 	const [isSkippedRowsExpanded, setIsSkippedRowsExpanded] = useState(false);
-	const {
-		paginationModel: cleanupPaginationModel,
-		setPaginationModel: setCleanupPaginationModel,
-		filterModel: cleanupFilterModel,
-		setFilterModel: setCleanupFilterModel,
-		sortModel: cleanupSortModel,
-		setSortModel: setCleanupSortModel,
-	} = useGridStore();
-	const currentPagination = cleanupPaginationModel["cleanupGridId"] ?? {
-		page: 0,
-		pageSize: 25,
-	};
-	const currentFilter = cleanupFilterModel["cleanupGridId"] ?? { items: [] };
-	const currentSort = cleanupSortModel["cleanupGridId"] ?? [
-		{ field: "dateCreated", sort: "desc" },
-	];
+	const paginationModels = useGridStore((state) => state.paginationModel);
+	const filterModels = useGridStore((state) => state.filterModel);
+	const sortModels = useGridStore((state) => state.sortModel);
+	const setCleanupPaginationModel = useGridStore((state) => state.setPaginationModel);
+	const setCleanupFilterModel = useGridStore((state) => state.setFilterModel);
+	const setCleanupSortModel = useGridStore((state) => state.setSortModel);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const successCleanupGridId = "cleanup-success-grid";
 	const skippedCleanupGridId = "cleanup-skipped-grid";
 	const failedCleanupGridId = "cleanup-error-grid";
+	// Each grid's own state, under the id it is written to
+	const modelsFor = (gridId: string) => ({
+		paginationModel: paginationModels[gridId] ?? CLEANUP_PAGINATION,
+		filterModel: filterModels[gridId] ?? NO_FILTER,
+		sortModel: sortModels[gridId] ?? CLEANUP_SORT,
+	});
 
 	return (
         <Dialog
@@ -177,14 +179,14 @@ export const CleanupProgressDialog = ({
 											listViewEnabled={false}
 											pivotingEnabled
 											loading={isCleaning}
-											paginationModel={currentPagination}
-											filterModel={currentFilter}
+											paginationModel={modelsFor(successCleanupGridId).paginationModel}
+											filterModel={modelsFor(successCleanupGridId).filterModel}
 											rowModesModel={rowModesModel}
 											onRowModesModelChange={setRowModesModel}
 											onSortModelChange={(newModel) =>
 												setCleanupSortModel(successCleanupGridId, newModel)
 											}
-											sortModel={currentSort}
+											sortModel={modelsFor(successCleanupGridId).sortModel}
 											sortingMode="client"
 											noResultsText={t("patron_request.no_requests")}
 											searchText=""
@@ -239,14 +241,14 @@ export const CleanupProgressDialog = ({
 										listViewEnabled={false}
 										pivotingEnabled
 										loading={isCleaning}
-										paginationModel={currentPagination}
-										filterModel={currentFilter}
+										paginationModel={modelsFor(failedCleanupGridId).paginationModel}
+										filterModel={modelsFor(failedCleanupGridId).filterModel}
 										rowModesModel={rowModesModel}
 										onRowModesModelChange={setRowModesModel}
 										onSortModelChange={(newModel) =>
 											setCleanupSortModel(failedCleanupGridId, newModel)
 										}
-										sortModel={currentSort}
+										sortModel={modelsFor(failedCleanupGridId).sortModel}
 										sortingMode="client"
 										noResultsText={t("patron_request.no_requests")}
 										searchText=""
@@ -312,14 +314,14 @@ export const CleanupProgressDialog = ({
 										listViewEnabled={false}
 										pivotingEnabled
 										loading={isCleaning}
-										paginationModel={currentPagination}
-										filterModel={currentFilter}
+										paginationModel={modelsFor(skippedCleanupGridId).paginationModel}
+										filterModel={modelsFor(skippedCleanupGridId).filterModel}
 										rowModesModel={rowModesModel}
 										onRowModesModelChange={setRowModesModel}
 										onSortModelChange={(newModel) =>
 											setCleanupSortModel(skippedCleanupGridId, newModel)
 										}
-										sortModel={currentSort}
+										sortModel={modelsFor(skippedCleanupGridId).sortModel}
 										sortingMode="client"
 										noResultsText={t("patron_request.no_requests")}
 										searchText=""

@@ -181,6 +181,35 @@ test.describe("Supplier requests clean up", () => {
 	 * cannot change the answer. cleanupPatronRequest.test.ts asserts the helper
 	 * skips it; this asserts the grid does, which is where the flag is read.
 	 */
+	test("more results than fit on a page can be paged through", async ({ app, page }) => {
+		const [alpha] = supplierRequests.patronRequests.content;
+		const many = Array.from({ length: 30 }, (_, n) => ({
+			...alpha,
+			id: `aa${String(n).padStart(6, "0")}-1111-5111-9111-111111111111`,
+			clusterRecord: { ...alpha.clusterRecord, title: `Title ${n + 1}` },
+		}));
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadLibraries: library,
+			LoadPatronRequests: { patronRequests: { totalSize: 30, content: many } },
+		});
+		await recordCleanupCalls(page, []);
+
+		await page.goto("/supplierRequests?pageSize=50");
+		await page.getByRole("checkbox", { name: /select all/i }).check();
+		await expect(page.getByRole("button", { name: "Actions (30)" })).toBeVisible();
+		await runCleanup(page);
+
+		const dialog = page.getByRole("dialog");
+		await dialog.getByRole("button", { name: /Successful: 30/ }).click();
+		const results = dialog.getByRole("region", { name: /Successful: 30/ });
+		await expect(results.getByText("1–25 of 30")).toBeVisible();
+		await results.getByRole("button", { name: "Go to next page" }).click();
+
+		await expect(results.getByText("26–30 of 30")).toBeVisible();
+	});
+
 	test("does not check for updates on a status the service stopped tracking", async ({
 		app,
 		page,
