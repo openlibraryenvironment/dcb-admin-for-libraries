@@ -55,7 +55,7 @@ export default function ReleaseHighlightsDialog({
 					))}
 				</Box>
 				<Link href={releaseNotesUrl(version)} target="_blank" rel="noopener noreferrer">
-					{t("release_highlights.notes_link")} {t("about.new_tab")}
+					{t("release_highlights.notes_link")}
 				</Link>
 			</DialogContent>
 			<DialogActions>

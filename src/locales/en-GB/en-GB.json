@@ -1839,9 +1839,8 @@
 		"version": "Version {{version}}",
 		"build": "Development build {{build}}",
 		"unknown": "Version not known",
-		"release_notes": "Release notes for version {{version}} on GitHub",
-		"release_notes_all": "Release notes on GitHub",
-		"new_tab": "(opens in a new tab)",
+		"release_notes": "Release notes for version {{version}} on GitHub (opens in a new tab)",
+		"release_notes_all": "Release notes on GitHub (opens in a new tab)",
 		"whats_new": "Show what's new in this release"
 	},
 	"release_highlights": {
@@ -1870,7 +1869,7 @@
 				"body": "A new export wizard lets you customise your patron request exports."
 			}
 		},
-		"notes_link": "Read the full release notes on GitHub",
+		"notes_link": "Read the full release notes on GitHub (opens in a new tab)",
 		"close": "Got it"
 	}
 }

@@ -43,7 +43,9 @@ test.describe("a user who has not seen this release's highlights", () => {
 		await expect(dialog.getByRole("listitem")).toHaveCount(4);
 		// The wording is rewritten each release; each item has its heading
 		await expect(dialog.getByRole("heading", { level: 3 })).toHaveCount(4);
-		const notes = dialog.getByRole("link", { name: /full release notes on GitHub/ });
+		const notes = dialog.getByRole("link", {
+			name: "Read the full release notes on GitHub (opens in a new tab)",
+		});
 		await expect(notes).toHaveAttribute("href", `${RELEASE_NOTES}/tag/v1.14.0`);
 		await expect(notes).toHaveAttribute("target", "_blank");
 
