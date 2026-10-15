@@ -452,14 +452,17 @@ function HomeComponent() {
 					<Alert severity="error">{t("library.load_failed")}</Alert>
 				</Grid>
 			)}
-            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography>
-					{t("library.greeting", {
-						library: library?.fullName,
-						name: auth.user?.profile?.name,
-					})}
-				</Typography>
-			</Grid>
+            {/* Not "Welcome to DCB Admin for , …" while the library loads, or if it fails */}
+            {library?.fullName ? (
+				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+					<Typography>
+						{t("library.greeting", {
+							library: library.fullName,
+							name: auth.user?.profile?.name,
+						})}
+					</Typography>
+				</Grid>
+			) : null}
             {editingEnabled ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 					<>

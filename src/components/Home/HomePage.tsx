@@ -139,9 +139,10 @@ export default function HomePage() {
 		<Stack spacing={3}>
 			<Box>
 				<Typography variant="h1" gutterBottom>
-					{t("home.title", {
-						library: library?.fullName,
-					})}
+					{/* Not "Welcome to DCB Admin for " while the library loads, or if it fails */}
+					{library?.fullName
+						? t("home.title", { library: library.fullName })
+						: t("nav.home.title")}
 				</Typography>
 
 				<Typography sx={{ maxWidth: "75ch" }}>
