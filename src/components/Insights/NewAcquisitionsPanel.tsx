@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -10,7 +10,6 @@ import {
 	Table,
 	TableBody,
 	TableCell,
-	TableContainer,
 	TableHead,
 	TableRow,
 } from "@mui/material";
@@ -22,6 +21,7 @@ import { newAcquisitionsQueryOptions, StatsParams } from "@helpers/statsApi";
 
 import PanelState from "./PanelState";
 import DateLocalizationProvider from "@components/DateLocalization/DateLocalizationProvider";
+import ScrollableTableContainer from "./ScrollableTableContainer";
 
 const PANEL_MIN_HEIGHT = 280;
 
@@ -37,6 +37,7 @@ export default function NewAcquisitionsPanel({
 	libraryCode: string;
 }) {
 	const { t } = useTranslation();
+	const headingId = useId();
 	const client = useDcbRestClient();
 	const [typed, setTyped] = useState<Dayjs | null>(aYearAgo);
 	// The last real date: the field publishes an Invalid Date for an impossible day, and toISOString throws on one
@@ -61,7 +62,7 @@ export default function NewAcquisitionsPanel({
 					sx={{ justifyContent: "space-between", alignItems: "flex-start" }}
 				>
 					<Box>
-						<Typography variant="h6" component="h3" gutterBottom>
+						<Typography variant="h6" component="h3" id={headingId} gutterBottom>
 							{t("insights.charts.new_acquisitions.title")}
 						</Typography>
 						<Typography variant="body2" color="text.secondary" gutterBottom>
@@ -91,7 +92,7 @@ export default function NewAcquisitionsPanel({
 					height={PANEL_MIN_HEIGHT}
 				>
 					{() => (
-						<TableContainer sx={{ maxHeight: 420 }}>
+						<ScrollableTableContainer labelledBy={headingId} sx={{ maxHeight: 420 }}>
 							<Table size="small" stickyHeader>
 								<TableHead>
 									<TableRow>
@@ -116,7 +117,7 @@ export default function NewAcquisitionsPanel({
 									))}
 								</TableBody>
 							</Table>
-						</TableContainer>
+						</ScrollableTableContainer>
 					)}
 				</PanelState>
 			</CardContent>

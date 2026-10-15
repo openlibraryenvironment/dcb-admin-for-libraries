@@ -1,10 +1,9 @@
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	Table,
 	TableBody,
 	TableCell,
-	TableContainer,
 	TableHead,
 	TableRow,
 	Typography,
@@ -18,6 +17,7 @@ import {
 import { formatNumber } from "@helpers/formatters";
 import CollectionPanel from "./CollectionPanel";
 import MetricInfo from "./MetricInfo";
+import ScrollableTableContainer from "./ScrollableTableContainer";
 
 const ROW_LIMIT = 25;
 
@@ -63,6 +63,7 @@ function OverlapTable({
 	libraryCode: string;
 }) {
 	const { t } = useTranslation();
+	const captionId = useId();
 
 	// The pair is emitted once, unordered, so the partner is whichever side is not us.
 	const partners = useMemo(
@@ -82,9 +83,9 @@ function OverlapTable({
 	);
 
 	return (
-		<TableContainer sx={{ maxHeight: 420 }}>
+		<ScrollableTableContainer labelledBy={captionId} sx={{ maxHeight: 420 }}>
 			<Table size="small" stickyHeader>
-				<caption style={{ captionSide: "bottom" }}>
+				<caption id={captionId} style={{ captionSide: "bottom" }}>
 					<Typography variant="caption" color="text.secondary">
 						{t("insights.collection.overlap.caption", {
 							shown: partners.length,
@@ -113,6 +114,6 @@ function OverlapTable({
 					))}
 				</TableBody>
 			</Table>
-		</TableContainer>
+		</ScrollableTableContainer>
 	);
 }

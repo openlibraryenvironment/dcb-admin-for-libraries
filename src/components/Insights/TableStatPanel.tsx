@@ -14,10 +14,10 @@ import {
 	Table,
 	TableBody,
 	TableCell,
-	TableContainer,
 	TableHead,
 	TableRow,
 } from "@mui/material";
+import ScrollableTableContainer from "./ScrollableTableContainer";
 
 const PANEL_MIN_HEIGHT = 280;
 
@@ -100,7 +100,7 @@ export default function TableStatPanel<T>({
 					height={PANEL_MIN_HEIGHT}
 				>
 					{() => (
-						<TableContainer sx={{ maxHeight: 420 }}>
+						<ScrollableTableContainer labelledBy={titleId} sx={{ maxHeight: 420 }}>
 							<Table size="small" stickyHeader aria-labelledby={titleId}>
 								<TableHead>
 									<TableRow>
@@ -129,7 +129,7 @@ export default function TableStatPanel<T>({
 									))}
 								</TableBody>
 							</Table>
-						</TableContainer>
+						</ScrollableTableContainer>
 					)}
 				</PanelState>
 			</CardContent>

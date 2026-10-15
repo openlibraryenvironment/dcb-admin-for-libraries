@@ -502,3 +502,28 @@ test("at 320px wide, both ends of the date range are on screen", async ({ app, p
 		expect(box!.x + box!.width, name).toBeLessThanOrEqual(320);
 	}
 });
+
+// The tables scroll only below desktop width, so the desktop axe gate never saw them
+for (const subject of ["service", "partners", "collection", "gaps"]) {
+	test(`at 320px, every table that scrolls on ${subject} can be reached by keyboard`, async ({
+		app,
+		page,
+	}) => {
+		await page.setViewportSize({ width: 320, height: 800 });
+		await app.signIn();
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+		await app.mockStats();
+
+		await page.goto(`/insights?tab=${subject}`);
+		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+		// Panels below the fold mount as they are scrolled to
+		for (let i = 0; i < 20; i++) {
+			await page.mouse.wheel(0, 1200);
+			await expect(page.locator("body")).toBeVisible();
+		}
+		await expect(page.getByRole("progressbar")).toHaveCount(0);
+
+		await app.expectNoAccessibilityViolations();
+	});
+}
