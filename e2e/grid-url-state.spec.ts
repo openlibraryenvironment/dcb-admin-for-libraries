@@ -455,3 +455,37 @@ test("the request grids ask for library names and codes, not every library's ful
 	expect(operations).toContain("LoadLibraryFilterOptions");
 	expect(operations).not.toContain("LoadLibraries");
 });
+
+test("with agency scoping, the patron request grid searches once on a cold load", async ({
+	app,
+	page,
+}) => {
+	await app.signIn();
+	await app.enableFeatures(["VITE_FEATURE_AGENCY_SCOPED_REQUESTS"]);
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraryBasics: library,
+		LoadPatronRequests: patronRequests,
+	});
+	let librariesAnswered = false;
+	await page.route(`${API_BASE}/graphql`, async (route) => {
+		if (route.request().postDataJSON()?.operationName !== "LoadLibraryFilterOptions") {
+			return route.fallback();
+		}
+		// Later than the search, as a list of every library is
+		await new Promise((resolve) => setTimeout(resolve, 500));
+		librariesAnswered = true;
+		await route.fulfill({ json: { data: library } });
+	});
+	let searches = 0;
+	page.on("request", (request) => {
+		if (request.postDataJSON?.()?.operationName === "LoadPatronRequests") searches += 1;
+	});
+
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+	await expect.poll(() => librariesAnswered).toBe(true);
+	await expect(page.getByRole("link", { name: /2026-09-01/ }).first()).toBeVisible();
+
+	expect(searches).toBe(1);
+});

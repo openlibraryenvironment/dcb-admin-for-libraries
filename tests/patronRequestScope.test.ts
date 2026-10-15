@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 
 import {
 	borrowedByLibraryQuery,
+	borrowingScopeHostLms,
 	hasBorrowingScope,
 } from "../src/helpers/patronRequestScope";
 import { getPatronRequestModeQuery } from "../src/helpers/dataGrid/getPatronRequestModeQuery";
@@ -81,5 +82,17 @@ describe("getPatronRequestModeQuery", () => {
 		expect(getPatronRequestModeQuery("borrowing", "springfield", "SHARED-KOHA")).toBe(
 			"patronHostlmsCode:SHARED-KOHA",
 		);
+	});
+});
+
+describe("borrowingScopeHostLms", () => {
+	it("keeps the Host LMS out of the key when the scope does not use it", () => {
+		withFlag("true");
+		expect(borrowingScopeHostLms("SHARED-KOHA")).toBeUndefined();
+	});
+
+	it("keys on it when the scope is built from it", () => {
+		withFlag(undefined);
+		expect(borrowingScopeHostLms("SHARED-KOHA")).toBe("SHARED-KOHA");
 	});
 });

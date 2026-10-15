@@ -13,6 +13,7 @@ import { patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import {
 	borrowedByLibraryQuery,
+	borrowingScopeHostLms,
 	hasBorrowingScope,
 } from "@helpers/patronRequestScope";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
@@ -128,10 +129,10 @@ function RouteComponent() {
 		error,
 		isFetching,
 	} = useQuery<PatronRequestQueryData>({
-		// Both the agency and the Host LMS feed the scope this query runs under.
+		// What the scope this query runs under is built from.
 		queryKey: queryKeys.patronRequests.list(
 			dcbApiBase,
-			{ agencyCode: code ?? "", hostLmsCode: userLibraryHostLmsCode },
+			{ agencyCode: code ?? "", hostLmsCode: borrowingScopeHostLms(userLibraryHostLmsCode) },
 			page,
 		),
 		queryFn: async ({ signal }) => {
