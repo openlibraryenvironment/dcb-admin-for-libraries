@@ -252,6 +252,40 @@ test.describe("Supplier requests clean up", () => {
 test.describe("Patron request clean up", () => {
 	const [alpha] = supplierRequests.patronRequests.content;
 
+	test("a request cleaned up from the grid is fetched again when it is opened", async ({
+		app,
+		page,
+	}) => {
+		let detailFetches = 0;
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadLibraries: library,
+			LoadPatronRequests: supplierRequests,
+			LoadPatronRequest: () => {
+				detailFetches += 1;
+				return { patronRequests: { totalSize: 1, content: [alpha] } };
+			},
+			LoadHostLms: { hostLms: { content: [] } },
+		});
+		await recordCleanupCalls(page, []);
+
+		await page.goto(`/patronRequests/${alpha.id}`);
+		await expect(page.getByRole("button", { name: "Force clean up" })).toBeVisible();
+		await page.getByRole("tab", { name: "Supplier requests" }).click();
+		await selectRow(page, ALPHA);
+		await runCleanup(page);
+		const progress = page.getByRole("dialog");
+		await expect(progress.getByText(/Successful/)).toBeVisible();
+		await progress.getByRole("button", { name: "Close" }).click();
+
+		await page.getByRole("row", { name: new RegExp(ALPHA) }).getByRole("link").first().click();
+
+		await expect(page.getByRole("button", { name: "Force clean up" })).toBeVisible();
+		await expect.poll(() => detailFetches).toBe(2);
+	});
+
 	test("asks before cleaning up, and cleans up only once confirmed", async ({
 		app,
 		page,

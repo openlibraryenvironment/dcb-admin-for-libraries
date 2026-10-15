@@ -23,9 +23,12 @@ import {
 } from "@mui/x-data-grid-premium";
 import { gridPage, queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
-import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
+import {
+	allLibrariesQueryOptions,
+	invalidateRequestLists,
+} from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import request from "graphql-request";
 import { useMemo, useState } from "react";
@@ -43,6 +46,7 @@ function RouteComponent() {
 	const { cfg } = useRouter().options.context as { cfg: any };
 
 	const dcbApiBase = cfg?.VITE_DCB_API_BASE;
+	const queryClient = useQueryClient();
 	const apiRef = useGridApiRef();
 
 	const grid = useSyncedDataGrid(supplierRequestsGrid, Route.useSearch());
@@ -87,7 +91,6 @@ function RouteComponent() {
 		isError: isPatronRequestError,
 		error,
 		isFetching,
-		refetch,
 	} = useQuery<PatronRequestQueryData>({
 		queryKey: queryKeys.supplierRequests.list(dcbApiBase, code ?? "", page),
 		queryFn: async () => {
@@ -163,8 +166,13 @@ function RouteComponent() {
 			apiRef,
 			dcbApiBase,
 			agencyCodes,
-			onSuccess: () => {
-				refetch();
+			onSuccess: (cleanedIds) => {
+				void invalidateRequestLists(queryClient);
+				for (const id of cleanedIds) {
+					void queryClient.invalidateQueries({
+						queryKey: queryKeys.patronRequests.detail(dcbApiBase, id),
+					});
+				}
 			},
 		});
 	const { exportProgress, exportConfig } = usePatronRequestExport({

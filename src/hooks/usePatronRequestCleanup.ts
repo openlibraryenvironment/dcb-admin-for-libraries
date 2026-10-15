@@ -14,7 +14,8 @@ interface UsePatronRequestCleanupProps {
 	dcbApiBase: string;
 	/** The agencies this user administers; only requests they supplied are eligible. */
 	agencyCodes: readonly string[];
-	onSuccess?: () => void;
+	/** With the ids it cleaned up: at most one page of selection. */
+	onSuccess?: (cleanedIds: string[]) => void;
 }
 
 interface CleanupState {
@@ -90,6 +91,7 @@ export const usePatronRequestCleanup = ({
 
 		let processed = 0;
 		const batchSize = 5;
+		const cleanedIds: string[] = [];
 
 		for (let i = 0; i < eligibleRows.length; i += batchSize) {
 			const batch = eligibleRows.slice(i, i + batchSize);
@@ -107,6 +109,7 @@ export const usePatronRequestCleanup = ({
 
 					if (outcome.kind === "cleaned") {
 						batchSuccess.push(row);
+						cleanedIds.push(row.id);
 					} else if (outcome.kind === "refused") {
 						batchRefused.push(row);
 					} else {
@@ -127,7 +130,7 @@ export const usePatronRequestCleanup = ({
 
 		setCleanupState((prev) => ({ ...prev, isCleaning: false }));
 
-		if (onSuccess) onSuccess();
+		if (onSuccess) onSuccess(cleanedIds);
 
 		if (apiRef?.current) {
 			apiRef.current.setRowSelectionModel({ type: "include", ids: new Set() });
