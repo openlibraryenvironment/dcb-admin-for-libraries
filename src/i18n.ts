@@ -32,6 +32,8 @@ export async function applyLanguage(): Promise<void> {
 	if (!i18n.hasResourceBundle(language, "translation")) {
 		const { default: bundle } = await BUNDLES[language]();
 		i18n.addResourceBundle(language, "translation", bundle);
+		// Another choice made while this bundle loaded has been applied already; this one is stale
+		if (currentLocale() !== language) return;
 	}
 	await i18n.changeLanguage(language);
 	// Screen readers pronounce by it (WCAG 3.1.1).
