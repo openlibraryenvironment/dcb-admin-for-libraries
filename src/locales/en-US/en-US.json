@@ -28,6 +28,7 @@
 		"uuid": "Audit UUID"
 	},
 	"bibs": {
+		"no_results": "No bib records match. Try changing your search or filters.",
 		"author": "Author",
 		"canonical_metadata": "Canonical metadata",
 		"cluster_uuid": "Bib cluster UUID",
@@ -922,6 +923,7 @@
 		"information_short": "Your library information"
 	},
 	"location": {
+		"no_results": "No locations match. Try changing your search or filters.",
 		"code": "Location code",
 		"latitude": "Latitude",
 		"local_id": "Local ID",
@@ -949,6 +951,7 @@
 		"title": "Log in to DCB Admin for Libraries"
 	},
 	"mappings": {
+		"no_results": "No mappings match. Try changing your search or filters.",
 		"category": "Category",
 		"delete_failed": "The mapping was not deleted.",
 		"delete_failed_reason": "The mapping was not deleted: {{reason}}",

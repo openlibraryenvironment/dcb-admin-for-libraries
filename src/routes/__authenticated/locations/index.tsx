@@ -154,7 +154,7 @@ function RouteComponent() {
 					disableRowGrouping={true}
 					loading={shouldShowLoading} // Show loading when filtering or fetching
 					listViewEnabled={false}
-					noResultsText={t("audit.no_results")}
+					noResultsText={t("location.no_results")}
 					pagination
 					pivotingEnabled={false}
 					toolbarVisible

@@ -151,7 +151,7 @@ function RouteComponent() {
 					disableRowGrouping={true}
 					loading={shouldShowLoading}
 					listViewEnabled={false}
-					noResultsText={t("audit.no_results")}
+					noResultsText={t("bibs.no_results")}
 					pagination
 					pivotingEnabled={false}
 					toolbarVisible

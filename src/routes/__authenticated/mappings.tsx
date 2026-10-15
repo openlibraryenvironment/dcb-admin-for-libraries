@@ -479,7 +479,7 @@ function RouteComponent() {
 					pivotingEnabled={false}
 					pagination
 					toolbarVisible
-					noResultsText={t("audit.no_results")}
+					noResultsText={t("mappings.no_results")}
 					searchText={t("ui.data_grid.search_mappings")}
 				/>
 			}
