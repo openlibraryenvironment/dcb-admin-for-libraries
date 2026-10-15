@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import i18n from "@/i18n";
 export enum DCBStatus {
 	SUBMITTED_TO_DCB,
@@ -28,6 +29,13 @@ export enum DCBStatus {
 	ERROR,
 	ARCHIVED,
 }
+
+/** A status as the grids name it; a code this app does not know is shown as it came. */
+export const dcbStatusLabel = (
+	code: string | null | undefined,
+	t: TFunction,
+): string | undefined =>
+	code ? t(`patron_request.statuses.${code}`, { defaultValue: code }) : undefined;
 
 const statusKeys = Object.keys(DCBStatus).filter((key) => isNaN(Number(key)));
 

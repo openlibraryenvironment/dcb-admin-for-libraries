@@ -33,6 +33,7 @@ import { getAuditById } from "@queries/getAuditById";
 import { getAuditNeighbours } from "@queries/getAuditNeighbours";
 import { queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
+import { dcbStatusLabel } from "@constants/statuses/DCBStatuses";
 
 type AuditNeighbour = Pick<AuditItem, "id" | "briefDescription">;
 
@@ -201,12 +202,12 @@ function AuditDetailsComponent() {
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("audit.from_status")}>
-					<RenderAttribute attribute={audit?.fromStatus} />
+					<RenderAttribute attribute={dcbStatusLabel(audit?.fromStatus, t)} />
 				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
 				<Attribute label={t("audit.to_status")}>
-					<RenderAttribute attribute={audit?.toStatus} />
+					<RenderAttribute attribute={dcbStatusLabel(audit?.toStatus, t)} />
 				</Attribute>
 			</Grid>
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>

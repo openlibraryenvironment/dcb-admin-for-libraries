@@ -70,6 +70,7 @@ import {
 } from "@helpers/cleanupPatronRequest";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
+import { dcbStatusLabel } from "@constants/statuses/DCBStatuses";
 import PatronRequestAuditLog from "@components/PatronRequestAuditLog/PatronRequestAuditLog";
 import { z } from "zod";
 
@@ -611,7 +612,7 @@ function RouteComponent() {
 							{untracked ? (
 								<Typography variant="body2" id="check-for-updates-reason">
 									{t("patron_request.check_for_updates_disabled", {
-										status: patronRequest?.status,
+										status: dcbStatusLabel(patronRequest?.status, t),
 									})}
 								</Typography>
 							) : null}
@@ -658,12 +659,12 @@ function RouteComponent() {
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.previous_status")}>
-								<RenderAttribute attribute={patronRequest?.previousStatus} />
+								<RenderAttribute attribute={dcbStatusLabel(patronRequest?.previousStatus, t)} />
 							</Attribute>
 						</Grid>
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.status")}>
-								<RenderAttribute attribute={patronRequest?.status} />
+								<RenderAttribute attribute={dcbStatusLabel(patronRequest?.status, t)} />
 							</Attribute>
 							{auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
 								<>
@@ -716,7 +717,7 @@ function RouteComponent() {
 						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
 							<Attribute label={t("patron_request.next_expected_status")}>
 								<RenderAttribute
-									attribute={patronRequest?.nextExpectedStatus?.toString()}
+									attribute={dcbStatusLabel(patronRequest?.nextExpectedStatus?.toString(), t)}
 								/>
 							</Attribute>
 						</Grid>

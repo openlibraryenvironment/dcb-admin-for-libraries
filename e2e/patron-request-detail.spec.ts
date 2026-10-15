@@ -47,13 +47,25 @@ test.describe("Patron request detail", () => {
 		await expect(changed).not.toHaveText(/\d{4}-\d{2}-\d{2}/);
 	});
 
+	test("names statuses as the grids do, not by their codes", async ({ page }) => {
+		await page.goto(`/patronRequests/${REQUEST.id}`);
+		const value = (term: string) =>
+			page
+				.getByRole("term")
+				.filter({ hasText: new RegExp(`^${term}$`) })
+				.locator("xpath=following-sibling::dd[1]");
+
+		await expect(value("Current status")).toHaveText("Error");
+		await expect(value("Previous status")).toHaveText("Resolved");
+	});
+
 	test("says why an action is unavailable, in text the button points at", async ({
 		page,
 	}) => {
 		await page.goto(`/patronRequests/${REQUEST.id}`);
 		await expect(
 			page.getByRole("button", { name: "Check for updates" }),
-		).toHaveAccessibleDescription(/You cannot check for updates .* ERROR/);
+		).toHaveAccessibleDescription(/You cannot check for updates .* status Error\./);
 		await expect(
 			page.getByText(/You cannot check for updates when/),
 		).toBeVisible();

@@ -1033,7 +1033,7 @@
 			"title_one": "Clean up this request?",
 			"title_other": "Clean up {{count}} requests?"
 		},
-		"cleanup_disabled": "Clean up is only available for requests supplied by your library that are either in an ERROR state, or have not yet been shipped.",
+		"cleanup_disabled": "Clean up is only available for requests supplied by your library that are in error, or have not yet been shipped.",
 		"cleanup_failed": "Requests that could not be cleaned up",
 		"cleanup_in_progress": "Cleanup in progress",
 		"cleanup_info": "Check this request for updates, then close it and delete its temporary records.",
