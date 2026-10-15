@@ -136,7 +136,7 @@ test("a result says why it can or cannot be requested, without a hover", async (
 	await openSearch(app, page, "/requesting?filters=12345");
 
 	await expect(
-		page.getByText(/^Not available for walk up requesting: there is currently no available item/).first(),
+		page.getByText(/^Not available for walk-up requesting: there is currently no available item/).first(),
 	).toBeVisible();
 	await expect(
 		page.getByText(/^Not available for staff requesting: there is currently no available item/).first(),

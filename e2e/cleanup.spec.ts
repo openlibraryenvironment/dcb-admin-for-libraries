@@ -63,7 +63,7 @@ const selectRow = async (page: Page, title: string) => {
 
 const runCleanup = async (page: Page) => {
 	await page.getByRole("button", { name: /^Actions/ }).click();
-	await page.getByRole("menuitem", { name: /Cleanup selected/ }).click();
+	await page.getByRole("menuitem", { name: /Clean up selected/ }).click();
 	await page
 		.getByRole("dialog", { name: /^Clean up/ })
 		.getByRole("button", { name: "Clean up", exact: true })
@@ -91,7 +91,7 @@ test.describe("Supplier requests clean up", () => {
 
 		await page.getByRole("button", { name: /^Actions/ }).click();
 		await expect(
-			page.getByRole("menuitem", { name: "Cleanup selected requests (0)" }),
+			page.getByRole("menuitem", { name: "Clean up selected requests (0)" }),
 		).toBeDisabled();
 		await page.keyboard.press("Escape");
 
@@ -101,7 +101,7 @@ test.describe("Supplier requests clean up", () => {
 		await expect(page.getByRole("button", { name: "Actions (4)" })).toBeVisible();
 		await page.getByRole("button", { name: /^Actions/ }).click();
 		await expect(
-			page.getByRole("menuitem", { name: "Cleanup selected requests (4)" }),
+			page.getByRole("menuitem", { name: "Clean up selected requests (4)" }),
 		).toBeEnabled();
 	});
 
@@ -138,7 +138,7 @@ test.describe("Supplier requests clean up", () => {
 		await page.goto("/supplierRequests");
 		await selectRow(page, DELTA);
 		await page.getByRole("button", { name: /^Actions/ }).click();
-		await page.getByRole("menuitem", { name: /Cleanup selected/ }).click();
+		await page.getByRole("menuitem", { name: /Clean up selected/ }).click();
 
 		const confirm = page.getByRole("dialog", { name: "Clean up this request?" });
 		await expect(confirm).toContainText("This cannot be undone.");
@@ -167,7 +167,7 @@ test.describe("Supplier requests clean up", () => {
 
 		// Told when it finishes, from inside the dialog, where a screen reader is listening
 		const dialog = page.getByRole("dialog");
-		await expect(dialog.getByRole("status")).toHaveText("Cleanup complete");
+		await expect(dialog.getByRole("status")).toHaveText("Clean-up complete");
 		const repeated = await dialog.locator("[id]").evaluateAll((elements) => {
 			const ids = elements.map((element) => element.id);
 			return ids.filter((id, index) => ids.indexOf(id) !== index);
@@ -339,7 +339,7 @@ test.describe("Patron request clean up", () => {
 		await recordCleanupCalls(page, []);
 
 		await page.goto(`/patronRequests/${alpha.id}`);
-		await expect(page.getByRole("button", { name: "Force clean up" })).toBeVisible();
+		await expect(page.getByRole("button", { name: "Clean up", exact: true })).toBeVisible();
 		await page.getByRole("tab", { name: "Supplier requests" }).click();
 		await selectRow(page, ALPHA);
 		await runCleanup(page);
@@ -349,7 +349,7 @@ test.describe("Patron request clean up", () => {
 
 		await page.getByRole("row", { name: new RegExp(ALPHA) }).getByRole("link").first().click();
 
-		await expect(page.getByRole("button", { name: "Force clean up" })).toBeVisible();
+		await expect(page.getByRole("button", { name: "Clean up", exact: true })).toBeVisible();
 		await expect.poll(() => detailFetches).toBe(2);
 	});
 
@@ -368,7 +368,7 @@ test.describe("Patron request clean up", () => {
 		await recordCleanupCalls(page, calls);
 
 		await page.goto(`/patronRequests/${alpha.id}`);
-		const cleanup = page.getByRole("button", { name: "Force clean up" });
+		const cleanup = page.getByRole("button", { name: "Clean up", exact: true });
 		await cleanup.click();
 
 		const confirm = page.getByRole("dialog", { name: "Clean up this request?" });
