@@ -47,6 +47,7 @@ import {
 	getStepColors,
 	getStepLabelFontWeight,
 } from "@helpers/getStepLabelStyles";
+import { isReadOnly } from "@helpers/readOnlyAccess";
 
 export default function StaffRequest({
 	onClose,
@@ -83,7 +84,7 @@ export default function StaffRequest({
 		t("requesting.expedited_checkout.steps.patron_validation"),
 		t("requesting.expedited_checkout.steps.request_creation"),
 	];
-	const isReadOnly = auth.user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
+	const readOnly = isReadOnly(auth.user?.profile?.roles);
 
 	const validationSchema = useMemo(() => staffRequestSchema(t), [t]);
 
@@ -503,7 +504,7 @@ export default function StaffRequest({
 				    closes it: WCAG 2.2.1. */}
 				{placedRequestId ? (
 					<Alert severity="success" sx={{ mt: 2 }}>
-						{isReadOnly ? (
+						{readOnly ? (
 							t("requesting.staff_request.patron.success.request_requesting_only")
 						) : (
 							<Trans

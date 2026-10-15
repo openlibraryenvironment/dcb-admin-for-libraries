@@ -106,3 +106,17 @@ test("can set their own preferences, and reach the accessibility statement", asy
 	await page.getByRole("link", { name: /^accessibility/i }).click();
 	await expect(page).toHaveURL(/\/accessibility$/);
 });
+
+test("a user with no library role is read-only too, and is kept off the service page", async ({
+	app,
+	page,
+}) => {
+	await app.signIn({ roles: ["CONSORTIUM_ADMIN"] });
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+	await app.mockSearch();
+
+	await page.goto("/service");
+
+	await expect(page).toHaveURL(/\/requesting$/);
+	await expect(page.getByRole("tab", { name: "Service" })).toHaveCount(0);
+});

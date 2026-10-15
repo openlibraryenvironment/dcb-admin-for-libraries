@@ -18,6 +18,7 @@ import { LibrariesQueryData } from "@models/ReactQueryHelperTypes";
 import { assetUrl } from "@helpers/appBase";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { LibrarySelector } from "@components/Header/LibrarySelector";
+import { isReadOnly } from "@helpers/readOnlyAccess";
 
 export const Header = () => {
 	const navigate = useNavigate();
@@ -26,7 +27,7 @@ export const Header = () => {
 	// The library currently being looked at, which for almost everybody is their only
 	// one - see useAgencyCodes
 	const { agencyCode: code } = useAgencyCodes();
-	const isReadOnly = auth.user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
+	const readOnly = isReadOnly(auth.user?.profile?.roles);
 
 	const { cfg } = useRouter().options.context as { cfg: any };
 
@@ -78,7 +79,7 @@ export const Header = () => {
 						overflowWrap: "anywhere",
 						color: (theme.vars || theme).palette.primary.headerText,
 					}}>
-					{isReadOnly
+					{readOnly
 						? t("header.title_requesting", { library: libraryName })
 						: t("header.title", { library: libraryName })}
 				</Typography>

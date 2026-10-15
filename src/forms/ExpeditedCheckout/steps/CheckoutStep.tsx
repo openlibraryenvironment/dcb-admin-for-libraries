@@ -2,6 +2,7 @@ import { formatLongDateTime } from "@helpers/formatters";
 import { Box, Button, LinearProgress, Stack, Typography } from "@mui/material";
 import { TFunction } from "i18next";
 import { useAuth } from "react-oidc-context";
+import { isReadOnly } from "@helpers/readOnlyAccess";
 
 interface CheckoutStep {
 	checkoutCompleted: boolean;
@@ -32,8 +33,7 @@ export const CheckoutStep = ({
 		return "primary";
 	};
 	const auth = useAuth();
-	const roles = auth?.user?.profile?.roles ? auth?.user?.profile?.roles : [];
-	const isReadOnly = roles.includes("LIBRARY_READ_ONLY");
+	const readOnly = isReadOnly(auth?.user?.profile?.roles);
 	const displayDueDate = dueDate
 		? formatLongDateTime(dueDate)
 		: dueDateUnavailable
@@ -42,7 +42,7 @@ export const CheckoutStep = ({
 
 	const failureText = checkoutFailed
 		? t("requesting.expedited_checkout.steps.checkout_error")
-		: isReadOnly
+		: readOnly
 			? t("requesting.expedited_checkout.steps.checkout_failure_request_only")
 			: t("requesting.expedited_checkout.steps.checkout_failure");
 
@@ -83,7 +83,7 @@ export const CheckoutStep = ({
 					width: "100%",
 					pt: 2,
 				}}>
-				{isReadOnly ? (
+				{readOnly ? (
 					<Button
 						variant="contained"
 						onClick={handleReadOnlyReturn}

@@ -25,6 +25,7 @@ import {
 	storageKey,
 	toRoutePath,
 } from "@helpers/appBase";
+import { isReadOnly } from "@helpers/readOnlyAccess";
 
 declare global {
 	interface Window {
@@ -165,11 +166,11 @@ export async function mountDcbAdminForLibraries(
 	});
 
 	const onSigninCallback = (_user: User | void): void => {
-		const isReadOnly = _user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
+		const readOnly = isReadOnly(_user?.profile?.roles);
 		const afterLoginRedirectPath = sessionStorage.getItem(
 			storageKey("afterLoginRedirectPath"),
 		);
-		if (isReadOnly) {
+		if (readOnly) {
 			window.location.replace(appPath("requesting"));
 			return;
 		}

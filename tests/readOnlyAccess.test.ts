@@ -7,12 +7,16 @@ import {
 } from "../src/helpers/readOnlyAccess";
 
 describe("isReadOnly", () => {
-	it("reads the role, and tolerates an absent list", () => {
-		expect(isReadOnly(["LIBRARY_READ_ONLY"])).toBe(true);
-		expect(isReadOnly(["LIBRARY_ADMIN", "LIBRARY_READ_ONLY"])).toBe(true);
+	it("gives full access to a library administrator alone", () => {
 		expect(isReadOnly(["LIBRARY_ADMIN"])).toBe(false);
-		expect(isReadOnly([])).toBe(false);
-		expect(isReadOnly(undefined)).toBe(false);
+		expect(isReadOnly(["LIBRARY_ADMIN", "LIBRARY_READ_ONLY"])).toBe(true);
+		expect(isReadOnly(["LIBRARY_READ_ONLY"])).toBe(true);
+	});
+
+	it("denies by default: a role it does not know, or none, is read-only", () => {
+		expect(isReadOnly(["CONSORTIUM_ADMIN"])).toBe(true);
+		expect(isReadOnly([])).toBe(true);
+		expect(isReadOnly(undefined)).toBe(true);
 	});
 });
 

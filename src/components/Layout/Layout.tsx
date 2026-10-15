@@ -14,6 +14,7 @@ import { MAIN_CONTENT_ID } from "@constants/landmarks";
 import { SkipLink } from "./SkipLink";
 import { useRouteAnnouncement } from "@/hooks/useRouteAnnouncement";
 import { InsideMainContext } from "@/hooks/useInsideMain";
+import { isReadOnly } from "@helpers/readOnlyAccess";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -56,7 +57,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
 	// Non-admin users see only the read-only tabs; the route guard keeps them to those pages.
 	const tabsConfig = useMemo(() => {
-		return auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN")
+		return !isReadOnly(auth?.user?.profile?.roles)
 			? [
 					{ label: t("nav.home.title"), value: TAB_PATHS.home },
 					{ label: t("nav.library.title"), value: TAB_PATHS.library },
