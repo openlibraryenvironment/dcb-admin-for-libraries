@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { test, expect } from "./fixtures/test";
+import { READ_ONLY_ROLES } from "./fixtures/auth";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /** A release's highlights on the first sign-in after it, and again from preferences. */
@@ -74,6 +75,22 @@ test.describe("a user who has not seen this release's highlights", () => {
 			highlights(page).getByRole("link", { name: /full release notes on GitHub/ }),
 		).toHaveAttribute("href", RELEASE_NOTES);
 	});
+});
+
+test("a read-only user is shown only what they can use", async ({ app, page }) => {
+	await app.signIn({ roles: READ_ONLY_ROLES, releaseHighlightsSeen: false });
+	await app.mockGraphQL({ LoadLibrary: library });
+	await app.mockSearch();
+	await deployedAs(page, "v1.14.0");
+	await page.goto("/requesting");
+
+	const dialog = highlights(page);
+	await expect(dialog.getByRole("heading", { level: 3 })).toHaveText([
+		"Share, save and clear a grid's filters",
+		"More accessible, and set up the way you work",
+	]);
+	await expect(dialog).toContainText("In Preferences, choose your colour scheme");
+	await expect(dialog).not.toContainText(/Home page|Insights|export/i);
 });
 
 test("a user who has seen them is not shown them again", async ({ app, page }) => {

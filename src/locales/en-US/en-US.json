@@ -1845,6 +1845,10 @@
 				"heading": "More accessible, and set up the way you work",
 				"body": "In Preferences, choose your color scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change, and Insights charts come with their numbers as a table."
 			},
+			"accessibility_read_only": {
+				"heading": "More accessible, and set up the way you work",
+				"body": "In Preferences, choose your color scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change."
+			},
 			"exports": {
 				"heading": "New and improved exports",
 				"body": "A new export wizard lets you customize your patron request exports."

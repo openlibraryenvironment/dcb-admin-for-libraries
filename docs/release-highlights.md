@@ -3,7 +3,8 @@
 On the first signed-in page after a release, a dialog lists that release's main changes in a
 few lines, with a link to its full notes on GitHub. Preferences has an **About DCB Admin for
 Libraries** section: the version this build is, a link to its release notes, and a button that
-shows the highlights again. Read-only users see the dialog and Preferences too.
+shows the highlights again. Read-only users see the dialog and Preferences too, with their
+own shorter list of highlights.
 
 ## Writing a release's highlights
 
@@ -13,9 +14,14 @@ commit, which is what release notes are for. In `src/constants/releaseHighlights
 1. Raise `HIGHLIGHTS_GENERATION` by one. Every browser that has seen an older generation is
    shown the new one once.
 2. Set `HIGHLIGHTS` to the keys of three to five changes, in the order they are shown.
-3. In `src/locales/en/en.json`, under `release_highlights.items`, give each key a `heading`
-   (a few words) and a `body` (one or two sentences, in what the library sees, not in the
-   code's terms). Remove the previous release's items.
+3. Set `READ_ONLY_HIGHLIGHTS` to the ones a read-only user can use. They have Requesting
+   and Preferences only: no Home, Insights, library pages or exports. Where an item is
+   true for them only in part, give it a key of its own, as `accessibility_read_only` is,
+   rather than tell them about a page they cannot open.
+4. In `src/locales/en-GB/en-GB.json` and `src/locales/en-US/en-US.json`, under
+   `release_highlights.items`, give each key a `heading` (a few words) and a `body` (one or
+   two sentences, in what the library sees, not in the code's terms). Remove the previous
+   release's items. `tests/localeParity.test.ts` fails if the two files differ.
 
 Do this in the change that lands the feature, or just before the release. A release whose
 changes are not worth a dialog leaves the generation alone, and nobody is interrupted.
