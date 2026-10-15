@@ -474,7 +474,8 @@ export default function InsightsDashboard({
 								titleKey="insights.charts.top_titles.title"
 								subtitleKey="insights.charts.top_titles.subtitle"
 								queryOptions={topRequestedTitlesQueryOptions(client, params)}
-								getRowKey={(r) => r.title}
+								// Titles repeat across editions; the cluster is the work counted
+								getRowKey={(r) => r.clusterId ?? r.title}
 								columns={[
 									{
 										headerKey: "insights.charts.top_titles.col_title",

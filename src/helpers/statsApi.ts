@@ -151,6 +151,8 @@ export interface CollectionSummaryStat {
 export interface RequestedTitleStat {
 	title: string;
 	requestCount: number;
+	/** Absent before dcb-service carried it. */
+	clusterId?: string;
 }
 export interface PickupLocationDemandStat {
 	pickupLocationCode: string;
