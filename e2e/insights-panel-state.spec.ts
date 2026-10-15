@@ -225,6 +225,23 @@ test.describe("Insights panel states", () => {
 		);
 	});
 
+	test("typing a year asks for that year, not for each digit on the way to it", async ({
+		page,
+	}) => {
+		await page.goto("/insights?from=2026-09-01&to=2026-09-15");
+		const from = page.getByRole("group", { name: "From" });
+		await expect(from.getByRole("spinbutton", { name: "Day" })).toHaveText("01");
+
+		const views: string[] = [];
+		page.on("framenavigated", (frame) => views.push(frame.url()));
+		await from.getByRole("spinbutton", { name: "Year" }).click();
+		await page.keyboard.type("2025");
+
+		await expect(page).toHaveURL(/from=2025-09-01/);
+		// Not "from" dropped, so the page fell back to its preset, nor from=0202-09-01
+		expect(views.filter((url) => !/from=(2026|2025)-09-01/.test(url))).toEqual([]);
+	});
+
 	test("an acquired-since date that does not exist leaves the page standing", async ({
 		page,
 	}) => {

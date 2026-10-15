@@ -154,8 +154,8 @@ export default function InsightsDashboard({
 		: t(`insights.range.${rangePreset}`);
 
 	// Changing the range rewrites every panel below it, and a screen-reader user was
-	// told none of that - WCAG 2.2 SC 4.1.3. Announced on the settled view: the control
-	// only emits when the choice is complete, so there is nothing to debounce.
+	// told none of that - WCAG 2.2 SC 4.1.3. Announced on the settled view: only a
+	// complete, valid range reaches the URL (the onChange below).
 	const announcement = t("insights.announce.view", { range: window });
 	useEffect(() => {
 		announce(announcement);
@@ -238,17 +238,21 @@ export default function InsightsDashboard({
 									? [dayjs(customRange.startDate), dayjs(customRange.endDate)]
 									: [null, null]
 							}
-							onChange={(value) => {
+							onChange={(value, context) => {
 								const [start, end] = value;
-								// The URL holds calendar days; statsWindow makes them instants.
-								if (start && end) {
-									setCustomRange({
-										startDate: start.format("YYYY-MM-DD"),
-										endDate: end.format("YYYY-MM-DD"),
-									});
-								} else if (!start && !end) {
+								if (!start && !end) {
 									setCustomRange(null);
+									return;
 								}
+								// The field publishes each section as it is typed: years 2, 20 and 202 on the way to 2025
+								if (!start || !end || context.validationError.some((error) => error !== null)) {
+									return;
+								}
+								// The URL holds calendar days; statsWindow makes them instants.
+								setCustomRange({
+									startDate: start.format("YYYY-MM-DD"),
+									endDate: end.format("YYYY-MM-DD"),
+								});
 							}}
 							disableFuture
 							// Two labelled inputs and the same actions as the data grid's date
