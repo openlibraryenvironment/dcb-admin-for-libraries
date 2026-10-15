@@ -296,6 +296,8 @@ test.describe("Patron request clean up", () => {
 		await app.signIn();
 		await app.mockGraphQL({
 			LoadLibrary: library,
+			// The supplier's library: unanswered, the page went to Network error mid-test
+			LoadLibraryBasics: library,
 			LoadPatronRequest: { patronRequests: { totalSize: 1, content: [delta] } },
 			LoadHostLms: { hostLms: { content: [] } },
 			GetAuditsByPatronRequest: () => {
@@ -358,6 +360,7 @@ test.describe("Patron request clean up", () => {
 		await app.signIn();
 		await app.mockGraphQL({
 			LoadLibrary: library,
+			LoadLibraryBasics: library,
 			LoadPatronRequest: { patronRequests: { totalSize: 1, content: [alpha] } },
 			LoadHostLms: { hostLms: { content: [] } },
 		});
