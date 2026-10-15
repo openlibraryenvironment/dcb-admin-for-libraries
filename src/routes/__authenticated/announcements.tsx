@@ -168,6 +168,8 @@ function Announcements() {
 	};
 
 	const loadError = libraryQuery.error ?? announcements.error;
+	// Answered, but with no library: nothing can be listed or published, and the page says why
+	const noLibrary = libraryQuery.isSuccess && !scopeId;
 	const loading = libraryQuery.isLoading || announcements.isLoading;
 
 	return (
@@ -180,6 +182,12 @@ function Announcements() {
 					{t("announcements.scope_help")}
 				</Typography>
 			</Grid>
+
+			{noLibrary && (
+				<Grid size={FULL_WIDTH}>
+					<Alert severity="error">{t("announcements.no_library")}</Alert>
+				</Grid>
+			)}
 
 			{publish.isError && (
 				<Grid size={FULL_WIDTH}>
@@ -252,7 +260,7 @@ function Announcements() {
 					<Alert severity="error">
 						{serverMessage(loadError, t("announcements.load_failed"))}
 					</Alert>
-				) : rows.length === 0 ? (
+				) : noLibrary ? null : rows.length === 0 ? (
 					<Typography color="text.secondary">
 						{t("announcements.none")}
 					</Typography>

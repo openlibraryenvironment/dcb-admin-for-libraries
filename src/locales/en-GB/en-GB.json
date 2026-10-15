@@ -1695,6 +1695,7 @@
 		"dismissible": "Patrons can dismiss this",
 		"publish": "Publish",
 		"current": "Your notices",
+		"no_library": "Your library could not be found, so its notices cannot be shown or published. Contact your library administrator.",
 		"none": "Nothing published.",
 		"expired": "Finished",
 		"until": "Shows until {{date}}",

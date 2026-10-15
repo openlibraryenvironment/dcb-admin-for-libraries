@@ -209,3 +209,20 @@ test("explains itself, under a heading, when the flag is off", async ({
 	).toBeVisible();
 	await expect(page.getByText(/not available on this deployment/i)).toBeVisible();
 });
+
+test("says why nothing can be published when the library cannot be found", async ({
+	app,
+	page,
+}) => {
+	await app.enableFeatures(["VITE_FEATURE_ANNOUNCEMENTS"]);
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraryBasics: { libraries: { totalSize: 0, content: [] } },
+	});
+
+	await page.goto("/announcements");
+
+	await expect(page.getByRole("alert")).toContainText("Your library could not be found");
+	await expect(page.getByText("Nothing published.")).toHaveCount(0);
+});
