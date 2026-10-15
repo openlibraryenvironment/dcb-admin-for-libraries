@@ -4,6 +4,7 @@ import {
 	currencySymbol,
 	formatCurrency,
 	formatDate,
+	formatDayOfWeek,
 	formatHourOfDay,
 	formatLongDateTime,
 	formatNumber,
@@ -86,6 +87,24 @@ describe("dates", () => {
 		// "dddd, MMMM D, YYYY h:mm A" was hardcoded, so every reader got this one.
 		expect(formatLongDateTime(when, "en-US")).toContain("September 22, 2026");
 		expect(formatLongDateTime(when, "en-GB")).toContain("22 September 2026");
+	});
+});
+
+describe("days of the week", () => {
+	it("numbers them from Sunday, as Postgres does", () => {
+		expect(formatDayOfWeek(0, "en-GB")).toBe("Sun");
+		expect(formatDayOfWeek(6, "en-GB")).toBe("Sat");
+	});
+
+	it("does not name the day before west of UTC", () => {
+		const zone = process.env.TZ;
+		process.env.TZ = "America/New_York";
+		try {
+			expect(formatDayOfWeek(0, "en-US")).toBe("Sun");
+		} finally {
+			if (zone === undefined) delete process.env.TZ;
+			else process.env.TZ = zone;
+		}
 	});
 });
 

@@ -7,22 +7,14 @@ import { Heatmap } from "@mui/x-charts-pro";
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
 import { useChartPalette } from "@/hooks/useChartPalette";
 import { demandHeatmapQueryOptions, StatsParams } from "@helpers/statsApi";
-import { formatHourOfDay, formatNumber } from "@helpers/formatters";
+import { formatDayOfWeek, formatHourOfDay, formatNumber } from "@helpers/formatters";
 
 import ChartDataTable from "./ChartDataTable";
 import PanelState from "./PanelState";
 
 const CHART_HEIGHT = 300;
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
-
-// Localised short weekday names, index 0 = Sunday (matches Postgres DOW). Jan 1
-// 2023 was a Sunday, so we offset from there - no hardcoded English day names.
-function weekdayLabels(): string[] {
-	const fmt = new Intl.DateTimeFormat(undefined, { weekday: "short" });
-	return Array.from({ length: 7 }, (_, d) =>
-		fmt.format(new Date(Date.UTC(2023, 0, 1 + d))),
-	);
-}
+const DAYS = Array.from({ length: 7 }, (_, d) => d);
 
 export default function DemandHeatmapChart({
 	params,
@@ -37,7 +29,7 @@ export default function DemandHeatmapChart({
 		demandHeatmapQueryOptions(client, params),
 	);
 
-	const days = useMemo(() => weekdayLabels(), []);
+	const days = useMemo(() => DAYS.map((day) => formatDayOfWeek(day)), []);
 
 	const { series, maxCount, tableRows } = useMemo(() => {
 		const cells = data ?? [];
