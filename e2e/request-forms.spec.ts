@@ -242,7 +242,7 @@ test("choosing another item library clears the item chosen at the first", async 
 		agencyCode: "second-agency",
 		agency: { ...own.agency, code: "second-agency" },
 	};
-	await openForm(app, page, "staff", {
+	const traffic = await openForm(app, page, "staff", {
 		libraries: { libraries: { ...library.libraries, totalSize: 2, content: [own, other] } },
 	});
 
@@ -252,13 +252,13 @@ test("choosing another item library clears the item chosen at the first", async 
 	await page.getByRole("radio", { name: /manual/i }).check();
 	await choose(page, /item library/i, /e2e test library/i);
 	await choose(page, /item local id/i, /30001/);
-	const submit = page.getByRole("button", { name: /^submit$/i });
-	await expect(submit).toBeEnabled();
-
 	await choose(page, /item library/i, /second test library/i);
 
-	await expect(page.getByRole("combobox", { name: /item local id/i })).toHaveValue("");
-	await expect(submit).toBeDisabled();
+	const item = page.getByRole("combobox", { name: /item local id/i });
+	await expect(item).toHaveValue("");
+	await page.getByRole("button", { name: /^submit$/i }).click();
+	await expect(item).toHaveAttribute("aria-invalid", "true");
+	expect(traffic.placed).toEqual([]);
 });
 
 test("an on-site request's description keeps its note apart from its kind", async ({

@@ -38,7 +38,6 @@ interface StaffRequestDetailsStepProps {
 	isSubmitting: boolean;
 	/** Placed already: a second submission would be a duplicate request. */
 	isPlaced: boolean;
-	isValid: boolean;
 	t: TFunction;
 }
 
@@ -57,7 +56,6 @@ export const StaffRequestDetailsStep = ({
 	handleClose,
 	isSubmitting,
 	isPlaced,
-	isValid,
 	t,
 }: StaffRequestDetailsStepProps) => {
 	// useWatch rather than the form's watch: the subscription belongs to
@@ -250,7 +248,8 @@ export const StaffRequestDetailsStep = ({
 					type="submit"
 					color="primary"
 					variant="contained"
-					disabled={!isValid || isSubmitting || isPlaced}>
+					// Enabled while incomplete: submitting says what is missing, field by field
+					disabled={isSubmitting || isPlaced}>
 					{isSubmitting ? t("ui.actions.submitting") : t("ui.actions.submit")}
 				</Button>
 			</Stack>

@@ -58,7 +58,7 @@ const Confirmation = ({
 		control,
 		handleSubmit,
 		reset,
-		formState: { errors, isValid, isDirty, isSubmitting },
+		formState: { errors, isSubmitting },
 	} = useForm<ConfirmationForm>({
 		defaultValues: {
 			reason: "",
@@ -297,9 +297,8 @@ const Confirmation = ({
 							color={destructive ? "error" : "primary"}
 							variant="contained"
 							onClick={handleSubmit(onSubmit)}
-							disabled={
-								!isValid || !isDirty || isSubmitting
-							}>
+							// Enabled while incomplete: submitting says what is missing, field by field
+							disabled={isSubmitting}>
 							{getButtonText()}
 							{isSubmitting ? (
 								<CircularProgress

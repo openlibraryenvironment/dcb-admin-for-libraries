@@ -93,7 +93,7 @@ export default function StaffRequest({
 		handleSubmit,
 		reset,
 		setValue,
-		formState: { errors, isValid },
+		formState: { errors },
 	} = useForm<StaffRequestFormData>({
 		defaultValues: {
 			patronBarcode: "",
@@ -445,7 +445,6 @@ export default function StaffRequest({
 						handleClose={handleClose}
 						isSubmitting={placeRequestMutation.isPending}
 						isPlaced={placeRequestMutation.isSuccess}
-						isValid={isValid}
 						t={t}
 					/>
 				);
