@@ -25,12 +25,13 @@ test("offers every display preference", async ({ page }) => {
 	await open(page);
 
 	for (const group of [
-		/colour scheme/i,
+		/colou?r scheme/i,
 		/text size/i,
 		/typeface/i,
 		/spacing/i,
 		/animation/i,
 		/times and dates shown in/i,
+		/language/i,
 	]) {
 		await expect(page.getByRole("radiogroup", { name: group })).toBeVisible();
 	}

@@ -14,8 +14,6 @@ import {
 	ToggleButtonGroup,
 	Typography,
 } from "@mui/material";
-import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateRangePicker } from "@mui/x-date-pickers-pro";
 import { MultiInputDateRangeField } from "@mui/x-date-pickers-pro/MultiInputDateRangeField";
 import dayjs from "dayjs";
@@ -81,6 +79,7 @@ import {
 	isInsightsTrendsEnabled,
 	isInsightsWalkUpEnabled,
 } from "@helpers/featureFlags";
+import DateLocalizationProvider from "@components/DateLocalization/DateLocalizationProvider";
 
 const RANGE_PRESETS: RangePreset[] = ["7d", "30d", "90d", "365d"];
 
@@ -232,7 +231,7 @@ export default function InsightsDashboard({
 							</ToggleButton>
 						))}
 					</ToggleButtonGroup>
-					<LocalizationProvider dateAdapter={AdapterDayjs}>
+					<DateLocalizationProvider>
 						<DateRangePicker
 							value={
 								customRange
@@ -264,7 +263,7 @@ export default function InsightsDashboard({
 								end: t("insights.range.to"),
 							}}
 						/>
-					</LocalizationProvider>
+					</DateLocalizationProvider>
 				</Stack>
 
 

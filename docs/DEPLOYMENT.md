@@ -137,6 +137,37 @@ supported release and dcb-service main.
 
 ---
 
+## 2c. Locale: `VITE_LOCALE`
+
+Which English the interface is written in, and the order in which a date is typed. Read
+at runtime like the flags above, so it changes with a restart rather than a rebuild; under
+the KI bootloader it is one more key in the host's configuration.
+
+| Value | Text | Date pickers |
+| --- | --- | --- |
+| `en-US` | American: color, organization, canceled | Month/Day/Year, weeks from Sunday |
+| `en-GB` (the default) | British: colour, organisation, cancelled | Day/Month/Year, weeks from Monday |
+
+Unset or empty means `en-GB`, the British English this app has always used, matching DCB
+Admin. Any other value — including `en-us` in lower case — also means `en-GB`, and the
+browser console says so once. A consortium that wants American text and month-first dates
+sets `en-US`.
+
+**Each user can override it** under Settings, Display, Language: "Consortium default"
+follows this variable, and either English can be chosen instead. The choice is kept on
+that device, like the other display settings.
+
+**What it does not change.** Recorded timestamps keep their ISO form
+(`2026-09-01 09:15 UTC`), and dates and numbers shown with month names follow the
+reader's browser; `docs/formatting.md` says why.
+
+**Adding a third.** A locale is a translation file under `src/locales/<locale>/`, an entry
+in `SUPPORTED_LOCALES` and `DAYJS_LOCALES` in `src/helpers/locale.ts`, and a loader in
+`src/i18n.ts`. `tests/localeParity.test.ts` fails until the new file carries every key the
+others do.
+
+---
+
 ## 3. Deployment Pathways
 
 Choose the deployment method that matches your infrastructure.
@@ -241,6 +272,7 @@ docker run -p 8080:80 \
   -e VITE_DCB_SEARCH_BASE="https://search..." \
   -e VITE_PUBLIC_URL="/libraries-admin/" \
   -e VITE_DISCOVERY_ACTIVE="true" \
+  -e VITE_LOCALE="en-GB" \
   -e VITE_FEATURE_LIBRARY_BRANDING="true" \
   -e VITE_FEATURE_INSIGHTS="true" \
   dcb-admin-libraries

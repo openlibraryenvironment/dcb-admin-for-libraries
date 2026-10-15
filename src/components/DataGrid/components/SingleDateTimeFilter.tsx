@@ -1,9 +1,10 @@
 import { GridFilterInputValueProps } from "@mui/x-data-grid-premium";
-import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DateTimePicker } from "@mui/x-date-pickers";
+
 import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useClock } from "@/hooks/useThemeStore";
+import DateLocalizationProvider from "@components/DateLocalization/DateLocalizationProvider";
 
 // The pickers need it to show and take a value in UTC.
 dayjs.extend(utc);
@@ -20,7 +21,7 @@ export default function SingleDateTimeFilter(props: GridFilterInputValueProps) {
 	};
 
 	return (
-		<LocalizationProvider dateAdapter={AdapterDayjs}>
+		<DateLocalizationProvider>
 			<DateTimePicker
 				value={value}
 				onChange={handleChange}
@@ -34,6 +35,6 @@ export default function SingleDateTimeFilter(props: GridFilterInputValueProps) {
 					actionBar: { actions: ["clear", "today"] },
 				}}
 			/>
-		</LocalizationProvider>
+		</DateLocalizationProvider>
 	);
 }

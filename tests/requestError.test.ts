@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getRequestError } from "../src/helpers/getRequestError";
-import en from "../src/locales/en/en.json";
+import en from "../src/locales/en-GB/en-GB.json";
 
 /** Renders against the real English file, so a missing key or value shows up as text. */
 const t = (key: string, options: Record<string, unknown> = {}): string => {

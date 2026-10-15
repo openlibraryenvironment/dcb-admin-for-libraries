@@ -14,6 +14,9 @@ export const dcbWorkflowOptions = Object.values(Workflow).map((value) => {
 
 	return {
 		value: value,
-		label: i18n.t(translationKey),
+		// A getter, so a change of locale reaches a grid built before it.
+		get label() {
+			return i18n.t(translationKey);
+		},
 	};
 });

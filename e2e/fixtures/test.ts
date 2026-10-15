@@ -1,5 +1,5 @@
 import { test as base, expect } from "@playwright/test";
-import { injectRuntimeConfig } from "./runtime-config";
+import { configure, injectRuntimeConfig } from "./runtime-config";
 import { seedAuth, type FakeUserOptions } from "./auth";
 import { mockGraphQL, type OperationMocks } from "./graphql";
 import { mockStats, type StatsMocks } from "./stats";
@@ -25,6 +25,8 @@ export interface AppFixture {
 	mockSearch(override?: Partial<SearchMock>): Promise<void>;
 	/** Turn runtime feature flags on for this spec. Call before goto. */
 	enableFeatures(flags: string[]): Promise<void>;
+	/** Set other runtime config, such as VITE_LOCALE. Call before goto. */
+	configure(settings: Record<string, string>): Promise<void>;
 	/** Boot the app in a given colour scheme. Call before goto. */
 	useColorScheme(scheme: ColorScheme): Promise<void>;
 	/** Assert zero WCAG 2.2 AA violations on the current page. */
@@ -49,6 +51,7 @@ export const test = base.extend<{ app: AppFixture; runtimeConfig: void }>({
 			mockStats: (overrides) => mockStats(page, overrides),
 			mockSearch: (override) => mockSearch(page, override),
 			enableFeatures: (flags) => enableFeatures(page, flags),
+			configure: (settings) => configure(page, settings),
 			useColorScheme: (scheme) => useColorScheme(page, scheme),
 			expectNoAccessibilityViolations: async () => {
 				const { violations, incomplete } = await analyse(page);

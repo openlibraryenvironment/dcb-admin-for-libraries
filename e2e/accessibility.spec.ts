@@ -304,7 +304,7 @@ const PAGES: Surface[] = [
 			// Four radiogroups now, so this names one. The high-contrast option is
 			// the reason this page is scanned at all.
 			await expect(
-				page.getByRole("radiogroup", { name: /colour scheme/i }),
+				page.getByRole("radiogroup", { name: /colou?r scheme/i }),
 			).toBeVisible();
 			await expect(
 				page.getByRole("radio", { name: /high contrast/i }),

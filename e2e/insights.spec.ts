@@ -91,10 +91,10 @@ test.describe("Library insights", () => {
 		// asserting against a page that has not finished loading yet.
 		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-		// The two card headings, by their real names: "Your patrons' favourite
+		// The two card headings, by their real names: "Your patrons' favorite
 		// titles this month" and "Top requesters this month".
 		await expect(
-			page.getByRole("heading", { name: /favourite titles|top requesters/i }),
+			page.getByRole("heading", { name: /favou?rite titles|top requesters/i }),
 		).toHaveCount(0);
 		expect(statsRequests, paths(statsRequests)).toHaveLength(0);
 	});
@@ -114,7 +114,7 @@ test.describe("Library insights", () => {
 		await page.goto("/library");
 
 		await expect(
-			page.getByRole("heading", { name: /favourite titles/i }),
+			page.getByRole("heading", { name: /favou?rite titles/i }),
 		).toBeVisible();
 		await expect(
 			page.getByRole("heading", { name: /top requesters/i }),

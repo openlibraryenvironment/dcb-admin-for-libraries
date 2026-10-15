@@ -45,9 +45,11 @@ gate**, so that family stays off until it can be turned on and left green.
 
 Each is what was measured plus 2%, unless its note in the file argues for more. Never raise
 one to make a build pass: cut the weight, or bring a written argument in the same change.
-`initialBytes` is a held ceiling instead (270,000 since 2026-10-14): five raises to exactly
-the measured size, for strings and bundler regrouping, had left it failing on the next
-string. Its note in `bundle-budget.json` says when it is re-derived.
+`initialBytes` is a held ceiling instead, re-derived only with a written reason: five raises to
+exactly the measured size, for strings and bundler regrouping, had left it failing on the next
+string. It was last re-derived when the translation catalogue moved out of the first load
+(252,100); its note in `bundle-budget.json` has the history. The catalogue is budgeted per
+locale (`en-GB.js`, `en-US.js`) with 10% room, since the first-load count cannot see it.
 
 **Measure with `BUNDLE_BUDGET=1`.** It makes `vite.config.ts` ignore `.env`, whose `VITE_`
 values are inlined into the bundle: a local `.env` added 471 bytes to the same commit. The

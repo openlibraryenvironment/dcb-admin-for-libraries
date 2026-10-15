@@ -30,3 +30,16 @@ export async function injectRuntimeConfig(page: Page): Promise<void> {
 		window.__APP_ENV__ = config;
 	}, RUNTIME_CONFIG as Record<string, string>);
 }
+
+/** Adds settings to the injected config, as a deployment's environment would. Call before goto. */
+export async function configure(
+	page: Page,
+	settings: Record<string, string>,
+): Promise<void> {
+	await page.addInitScript((values: Record<string, string>) => {
+		window.__APP_ENV__ = {
+			...(window.__APP_ENV__ ?? {}),
+			...values,
+		} as Window["__APP_ENV__"];
+	}, settings);
+}
