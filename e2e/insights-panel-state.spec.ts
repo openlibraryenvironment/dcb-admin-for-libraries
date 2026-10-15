@@ -225,6 +225,29 @@ test.describe("Insights panel states", () => {
 		);
 	});
 
+	test("an acquired-since date that does not exist leaves the page standing", async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on("pageerror", (error) => errors.push(error.message));
+
+		await page.goto("/insights?tab=gaps");
+		await reveal(page, "New acquisitions performance");
+		const field = cardFor(page, "New acquisitions performance").getByRole("group", {
+			name: "Acquired since",
+		});
+
+		await field.getByRole("spinbutton", { name: "Day" }).click();
+		// The en-GB picker's own section order, day then month: 30 February
+		await page.keyboard.type("3002");
+
+		await expect(field.getByRole("spinbutton", { name: "Month" })).toHaveText("02");
+		await expect(
+			page.getByRole("heading", { level: 3, name: "New acquisitions performance" }),
+		).toBeVisible();
+		expect(errors).toEqual([]);
+	});
+
 	test("a failed panel says it failed, and offers a retry that works", async ({
 		page,
 	}) => {

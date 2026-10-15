@@ -25,6 +25,8 @@ import DateLocalizationProvider from "@components/DateLocalization/DateLocalizat
 
 const PANEL_MIN_HEIGHT = 280;
 
+const aYearAgo = () => dayjs().subtract(1, "year").startOf("day");
+
 // How newly-acquired titles are performing in the network. Library scope (the endpoint
 // needs a libraryCode) and driven by an "acquired since" date the user picks.
 export default function NewAcquisitionsPanel({
@@ -36,9 +38,9 @@ export default function NewAcquisitionsPanel({
 }) {
 	const { t } = useTranslation();
 	const client = useDcbRestClient();
-	const [acquiredSince, setAcquiredSince] = useState<Dayjs>(() =>
-		dayjs().subtract(1, "year"),
-	);
+	const [typed, setTyped] = useState<Dayjs | null>(aYearAgo);
+	// The last real date: the field publishes an Invalid Date for an impossible day, and toISOString throws on one
+	const [acquiredSince, setAcquiredSince] = useState<Dayjs>(aYearAgo);
 
 	const { data, isLoading, isError, refetch, isFetching } = useQuery(
 		newAcquisitionsQueryOptions(client, {
@@ -69,8 +71,11 @@ export default function NewAcquisitionsPanel({
 					<DateLocalizationProvider>
 						<DatePicker
 							label={t("insights.charts.new_acquisitions.acquired_since")}
-							value={acquiredSince}
-							onChange={(value) => value && setAcquiredSince(value)}
+							value={typed}
+							onChange={(value) => {
+								setTyped(value);
+								if (value?.isValid()) setAcquiredSince(value.startOf("day"));
+							}}
 							slotProps={{ textField: { size: "small" } }}
 							disableFuture
 						/>
