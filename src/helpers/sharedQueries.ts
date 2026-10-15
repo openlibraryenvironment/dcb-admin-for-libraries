@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import request from "graphql-request";
 
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
@@ -12,6 +12,13 @@ import { getLibrary } from "@queries/getLibrary";
 import { getLibraryBasics } from "@queries/getLibraryBasics";
 import { getLocation } from "@queries/getLocation";
 import { queryKeys } from "@helpers/queryKeys";
+
+/** Every request grid, record history included: after a request is placed or changed. */
+export const invalidateRequestLists = (queryClient: QueryClient) =>
+	Promise.all([
+		queryClient.invalidateQueries({ queryKey: queryKeys.patronRequests.lists() }),
+		queryClient.invalidateQueries({ queryKey: queryKeys.supplierRequests.lists() }),
+	]);
 
 // Queries asked for in the same shape from more than one place: one definition each,
 // so the callers share a cache entry rather than asking again under a different key.

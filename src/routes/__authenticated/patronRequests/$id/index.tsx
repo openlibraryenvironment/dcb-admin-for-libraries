@@ -55,6 +55,7 @@ import { authHeaders } from "@helpers/auth";
 import {
 	libraryBasicsQueryOptions,
 	locationQueryOptions,
+	invalidateRequestLists,
 } from "@helpers/sharedQueries";
 import { Library } from "@models/Library";
 import { getILS } from "@helpers/getILS";
@@ -292,8 +293,7 @@ function RouteComponent() {
 		queryClient.invalidateQueries({
 			queryKey: queryKeys.patronRequests.detail(apiBase, id),
 		});
-		queryClient.invalidateQueries({ queryKey: queryKeys.patronRequests.lists() });
-		queryClient.invalidateQueries({ queryKey: queryKeys.supplierRequests.lists() });
+		void invalidateRequestLists(queryClient);
 	};
 
 	// Mutation for updating the patron request

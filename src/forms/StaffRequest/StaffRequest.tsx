@@ -18,7 +18,7 @@ import { Trans, useTranslation } from "react-i18next";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import { queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
-import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
+import { allLibrariesQueryOptions, invalidateRequestLists } from "@helpers/sharedQueries";
 import { getLocations } from "@queries/getLocations";
 import axios, { AxiosError } from "axios";
 import { useAuth } from "react-oidc-context";
@@ -35,7 +35,7 @@ import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocomple
 import { PatronLookupResponse } from "@models/PatronLookupResponse";
 import { PlaceRequestResponse } from "@models/PlaceRequestResponse";
 import { StaffRequestFormData } from "@models/StaffRequestFormData";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import request from "graphql-request";
 import { LocationsQueryData } from "@models/ReactQueryHelperTypes";
 import { StaffRequestDetailsStep } from "@forms/ExpeditedCheckout/steps/StaffRequestDetailsStep";
@@ -53,6 +53,7 @@ export default function StaffRequest({
 	bibClusterId,
 }: PatronRequestFormType) {
 	const { t } = useTranslation();
+	const queryClient = useQueryClient();
 	const auth = useAuth();
 	const router = useRouter();
 	const { cfg } = router.options.context;
@@ -314,6 +315,7 @@ export default function StaffRequest({
 				.then((res) => res.data),
 		onSuccess: () => {
 			setStepError(null);
+			void invalidateRequestLists(queryClient);
 		},
 		onError: (error: any) => {
 			setAlert({
