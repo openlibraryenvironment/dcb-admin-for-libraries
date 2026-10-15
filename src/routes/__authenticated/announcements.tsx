@@ -53,6 +53,7 @@ const FULL_WIDTH = { xs: 4, sm: 8, md: 12 } as const;
 
 function AnnouncementsRoute() {
 	const { t } = useTranslation();
+	const { agencyCode } = useAgencyCodes();
 
 	if (!isAnnouncementsEnabled()) {
 		return (
@@ -65,7 +66,8 @@ function AnnouncementsRoute() {
 		);
 	}
 
-	return <Announcements />;
+	// Per library, as the profile is: a draft must not be published to the next one chosen
+	return <Announcements key={agencyCode ?? ""} />;
 }
 
 /**

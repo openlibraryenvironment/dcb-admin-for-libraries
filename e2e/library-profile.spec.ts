@@ -495,3 +495,28 @@ test.describe("statistics", () => {
 		release();
 	});
 });
+
+test("choosing another library while editing does not carry the edit over", async ({
+	app,
+	page,
+}) => {
+	const updates = recordUpdates();
+	await app.signIn({ agencyCode: "e2e-agency,e2e-agency-2" });
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraryBasics: library,
+		LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
+		LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
+		UpdateLibrary: updates.responder,
+	});
+	await page.goto("/library");
+	await page.getByRole("button", { name: /^edit$/i }).click();
+	await page.getByRole("textbox", { name: /full name/i }).first().fill("Edited elsewhere");
+
+	await page.getByRole("combobox", { name: /library/i }).click();
+	await page.getByRole("option").nth(1).click();
+
+	await expect(page.getByRole("button", { name: /^edit$/i })).toBeVisible();
+	await expect(page.getByRole("button", { name: /^save$/i })).toHaveCount(0);
+	expect(updates.sent).toEqual([]);
+});

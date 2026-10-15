@@ -86,8 +86,15 @@ const ProfileField = ({
 
 export const Route = createFileRoute("/__authenticated/library")({
 	head: () => ({ meta: [{ title: pageTitle("nav.library.title") }] }),
-	component: HomeComponent,
+	component: LibraryRoute,
 });
+
+// Remounted per library: choosing another in the header is not a navigation, and an
+// edit begun on one library must not be saved onto the next
+function LibraryRoute() {
+	const { agencyCode } = useAgencyCodes();
+	return <HomeComponent key={agencyCode ?? ""} />;
+}
 
 /**
  * Whether an edit actually changed a field.
