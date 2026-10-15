@@ -73,7 +73,11 @@ export default function HomePage() {
 				: { kind: "today" }
 			: { kind: search.window ?? "today" };
 
-	const libraryQuery = useQuery(libraryQueryOptions(apiBase, code ?? ""));
+	// Without a code it would ask for "agencyCode:" and show whichever library came first
+	const libraryQuery = useQuery({
+		...libraryQueryOptions(apiBase, code ?? ""),
+		enabled: !!apiBase && !!code,
+	});
 	const library = libraryQuery.data?.libraries?.content?.[0];
 	const hostLmsCode = library?.agency?.hostLms?.code;
 
