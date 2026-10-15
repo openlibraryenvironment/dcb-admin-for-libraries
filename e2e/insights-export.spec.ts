@@ -53,6 +53,28 @@ test.describe("Insights export", () => {
 		expect(csv).toMatch(/Generated,\d{4}-\d{2}-\d{2}T/);
 	});
 
+	test("a panel with a stated method carries it into its CSV", async ({ page }) => {
+		await page.goto("/insights?tab=demand&range=30d");
+
+		const button = page.getByRole("button", {
+			name: "Download Demand nothing could supply as CSV",
+		});
+		for (let i = 0; i < 12 && !(await button.isVisible()); i++) {
+			await page.mouse.wheel(0, 1200);
+			await expect(page.locator("body")).toBeVisible();
+		}
+
+		const download = page.waitForEvent("download");
+		await button.click();
+		const stream = await (await download).createReadStream();
+		const chunks: Buffer[] = [];
+		for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+
+		expect(Buffer.concat(chunks).toString("utf8")).toContain(
+			'Method,"Requests whose previous status was that no item was selectable',
+		);
+	});
+
 	test("the export button is named for its panel, not just Download", async ({
 		page,
 	}) => {

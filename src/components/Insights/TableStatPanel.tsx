@@ -2,7 +2,7 @@ import { ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 
-import type { MetricId } from "@helpers/insightsMetrics";
+import { methodKeys, type MetricId } from "@helpers/insightsMetrics";
 import MetricInfo from "./MetricInfo";
 import PanelState from "./PanelState";
 import PanelExport from "./PanelExport";
@@ -78,6 +78,7 @@ export default function TableStatPanel<T>({
 					<PanelExport
 						rows={rows}
 						panel={t(titleKey)}
+						method={metric ? t(methodKeys(metric).how) : undefined}
 						columns={columns
 							.filter((col) => col.text)
 							.map((col) => ({
