@@ -483,3 +483,22 @@ test.describe("Insights subjects", () => {
 		).toBeVisible();
 	});
 });
+
+// 320 CSS px is also a 1280px screen at 400% zoom - WCAG 1.4.10
+test("at 320px wide, both ends of the date range are on screen", async ({ app, page }) => {
+	await page.setViewportSize({ width: 320, height: 800 });
+	await app.signIn();
+	await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+	await app.mockStats();
+
+	await page.goto("/insights?from=2026-09-01&to=2026-09-15");
+
+	for (const name of ["From", "To"]) {
+		const field = page.getByRole("group", { name, exact: true });
+		await expect(field).toBeVisible();
+		const box = await field.boundingBox();
+		expect(box!.x, name).toBeGreaterThanOrEqual(0);
+		expect(box!.x + box!.width, name).toBeLessThanOrEqual(320);
+	}
+});

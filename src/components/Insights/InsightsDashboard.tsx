@@ -15,7 +15,10 @@ import {
 	Typography,
 } from "@mui/material";
 import { DateRangePicker } from "@mui/x-date-pickers-pro";
-import { MultiInputDateRangeField } from "@mui/x-date-pickers-pro/MultiInputDateRangeField";
+import {
+	MultiInputDateRangeField,
+	type MultiInputDateRangeFieldProps,
+} from "@mui/x-date-pickers-pro/MultiInputDateRangeField";
 import dayjs from "dayjs";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
@@ -119,6 +122,17 @@ function Section({
 	);
 }
 
+// From above To on a phone: side by side, the pair is wider than a 320px screen
+function StackedRangeField(props: MultiInputDateRangeFieldProps) {
+	return (
+		<MultiInputDateRangeField
+			{...props}
+			direction={{ xs: "column", sm: "row" }}
+			sx={[{ maxWidth: "100%" }, ...(Array.isArray(props.sx) ? props.sx : [props.sx])]}
+		/>
+	);
+}
+
 export default function InsightsDashboard({
 	libraryCode,
 	view,
@@ -208,7 +222,8 @@ export default function InsightsDashboard({
 					direction="row"
 					spacing={2}
 					sx={{
-						justifyContent: "flex-end",
+						// End-aligned, a row too wide for a phone overflowed off its left edge
+						justifyContent: { xs: "flex-start", sm: "flex-end" },
 						alignItems: "center",
 						flexWrap: "wrap",
 						rowGap: 1,
@@ -257,7 +272,7 @@ export default function InsightsDashboard({
 							disableFuture
 							// Two labelled inputs and the same actions as the data grid's date
 							// filter, rather than one combined field with neither.
-							slots={{ field: MultiInputDateRangeField }}
+							slots={{ field: StackedRangeField }}
 							slotProps={{
 								textField: { size: "small" },
 								actionBar: { actions: ["clear", "nextOrAccept"] },
