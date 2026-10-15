@@ -293,6 +293,9 @@ function RouteComponent() {
 		queryClient.invalidateQueries({
 			queryKey: queryKeys.patronRequests.detail(apiBase, id),
 		});
+		queryClient.invalidateQueries({
+			queryKey: queryKeys.audits.forPatronRequestAll(apiBase, id),
+		});
 		void invalidateRequestLists(queryClient);
 	};
 

@@ -108,6 +108,9 @@ export const queryKeys = {
 			["supplierRequests", "list", apiBase, agencyCode, grid] as const,
 	},
 	audits: {
+		/** Every page of one request's audit log. */
+		forPatronRequestAll: (apiBase: string, patronRequestId: string) =>
+			["audits", "forPatronRequest", apiBase, patronRequestId] as const,
 		forPatronRequest: (apiBase: string, patronRequestId: string, grid: GridPage) =>
 			["audits", "forPatronRequest", apiBase, patronRequestId, grid] as const,
 		detail: (apiBase: string, auditId: string) =>

@@ -251,6 +251,33 @@ test.describe("Supplier requests clean up", () => {
 
 test.describe("Patron request clean up", () => {
 	const [alpha] = supplierRequests.patronRequests.content;
+	const delta = supplierRequests.patronRequests.content[3];
+
+	test("the audit log shows what Check for updates wrote", async ({ app, page }) => {
+		let auditFetches = 0;
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadPatronRequest: { patronRequests: { totalSize: 1, content: [delta] } },
+			LoadHostLms: { hostLms: { content: [] } },
+			GetAuditsByPatronRequest: () => {
+				auditFetches += 1;
+				return { audits: { totalSize: 0, content: [] } };
+			},
+		});
+		await recordCleanupCalls(page, []);
+
+		await page.goto(`/patronRequests/${delta.id}`);
+		await page.getByRole("tab", { name: "Audit log" }).click();
+		await expect.poll(() => auditFetches).toBe(1);
+
+		await page.getByRole("tab", { name: "General" }).click();
+		await page.getByRole("button", { name: "Check for updates" }).click();
+		await expect(page.getByText("Check complete")).toBeVisible();
+		await page.getByRole("tab", { name: "Audit log" }).click();
+
+		await expect.poll(() => auditFetches).toBe(2);
+	});
 
 	test("a request cleaned up from the grid is fetched again when it is opened", async ({
 		app,

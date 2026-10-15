@@ -34,3 +34,31 @@ describe("invalidateRequestLists", () => {
 		expect(stale(unrelated)).toBe(false);
 	});
 });
+
+describe("a request's audit log", () => {
+	it("is invalidated, every page of it, by the request-wide key", async () => {
+		const client = new QueryClient();
+		const pages = [0, 1].map((n) =>
+			queryKeys.audits.forPatronRequest(
+				"api",
+				"pr-1",
+				gridPage({ items: [] }, { page: n, pageSize: 25 }, []),
+			),
+		);
+		const other = queryKeys.audits.forPatronRequest(
+			"api",
+			"pr-2",
+			gridPage({ items: [] }, { page: 0, pageSize: 25 }, []),
+		);
+		for (const key of [...pages, other]) client.setQueryData(key, { ok: true });
+
+		await client.invalidateQueries({
+			queryKey: queryKeys.audits.forPatronRequestAll("api", "pr-1"),
+		});
+
+		const stale = (key: readonly unknown[]) =>
+			client.getQueryState(key)?.isInvalidated ?? false;
+		expect(pages.map(stale)).toEqual([true, true]);
+		expect(stale(other)).toBe(false);
+	});
+});
