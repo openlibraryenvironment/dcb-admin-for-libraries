@@ -127,6 +127,7 @@ function AuditDetailsComponent() {
 			navigate({
 				to: "/patronRequests/$id",
 				params: { id: patronRequestId },
+				search: { tab: 5 },
 				hash: "auditlog",
 			});
 		}
