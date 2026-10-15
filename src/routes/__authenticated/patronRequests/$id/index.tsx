@@ -41,6 +41,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { isUuidShaped } from "@helpers/isUuidShaped";
+import { onlyMatch } from "@helpers/onlyMatch";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import Confirmation from "@components/Confirmation/Confirmation";
 import ExpandMore from "@mui/icons-material/ExpandMore";
@@ -176,8 +177,7 @@ function RouteComponent() {
 			),
 	});
 
-	const pickupPatronIdentity =
-		patronIdentitiesData?.patronIdentities?.content?.[0];
+	const pickupPatronIdentity = onlyMatch(patronIdentitiesData?.patronIdentities);
 
 	const {
 		data: pickupLocationData,
