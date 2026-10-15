@@ -26,15 +26,12 @@ import { getAggregatedErrorMessage } from "@helpers/liveAvailabilityErrorMapper"
 import { itemColumns } from "@helpers/dataGrid/columns/itemColumns";
 import { DEFAULT_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { useClusterDetail } from "@/hooks/useClusterDetail";
-import { useGridStore } from "@/hooks/useDataGridStore";
 
 const route = getRouteApi("/__authenticated/requesting/$recordId/items/");
 
 const ITEMS_GRID = "ClusterRecordItems";
 const ITEMS_NOT_SHOWN_GRID = "ClusterRecordItemsNotShown";
 
-// Module constants: a fallback built inside a Zustand selector is a new object on
-// every read, which the store treats as a change and re-renders forever.
 const DEFAULT_PAGINATION: GridPaginationModel = {
 	page: 0,
 	pageSize: DEFAULT_PAGE_SIZE,
@@ -42,28 +39,24 @@ const DEFAULT_PAGINATION: GridPaginationModel = {
 const DEFAULT_FILTER: GridFilterModel = { items: [] };
 const DEFAULT_SORT: GridSortModel = [{ field: "availabilityDate", sort: "desc" }];
 
-/** One grid's persisted state, read by its own id. */
-const useItemsGridState = (gridId: string) => {
-	const paginationModel =
-		useGridStore((state) => state.paginationModel[gridId]) ??
-		DEFAULT_PAGINATION;
-	const filterModel =
-		useGridStore((state) => state.filterModel[gridId]) ?? DEFAULT_FILTER;
-	const sortModel =
-		useGridStore((state) => state.sortModel[gridId]) ?? DEFAULT_SORT;
-	const setPaginationModel = useGridStore((state) => state.setPaginationModel);
-	const setFilterModel = useGridStore((state) => state.setFilterModel);
-	const setSortModel = useGridStore((state) => state.setSortModel);
+/**
+ * One record's items grid state. Local to the record, which the route remounts this for:
+ * held in the app-wide grid store under a fixed id, a filter on one record's items applied
+ * to the next record's, which then showed none.
+ */
+const useItemsGridState = () => {
+	const [paginationModel, onPaginationModelChange] =
+		useState<GridPaginationModel>(DEFAULT_PAGINATION);
+	const [filterModel, onFilterModelChange] = useState<GridFilterModel>(DEFAULT_FILTER);
+	const [sortModel, onSortModelChange] = useState<GridSortModel>(DEFAULT_SORT);
 
 	return {
 		paginationModel,
 		filterModel,
 		sortModel,
-		onPaginationModelChange: (model: GridPaginationModel) =>
-			setPaginationModel(gridId, model),
-		onFilterModelChange: (model: GridFilterModel) =>
-			setFilterModel(gridId, model),
-		onSortModelChange: (model: GridSortModel) => setSortModel(gridId, model),
+		onPaginationModelChange,
+		onFilterModelChange,
+		onSortModelChange,
 	};
 };
 
@@ -82,8 +75,8 @@ export default function ClusterItems() {
 		responseErrors,
 	} = useClusterDetail(recordId, { mode: "items" });
 
-	const itemsGrid = useItemsGridState(ITEMS_GRID);
-	const itemsNotShownGrid = useItemsGridState(ITEMS_NOT_SHOWN_GRID);
+	const itemsGrid = useItemsGridState();
+	const itemsNotShownGrid = useItemsGridState();
 
 	if (isLoading) {
 		return (
