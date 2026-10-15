@@ -1,6 +1,7 @@
 import type { Locator } from "@playwright/test";
 
 import { test, expect } from "./fixtures/test";
+import { contrast } from "./fixtures/contrast";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 
@@ -9,25 +10,6 @@ import patronRequests from "./fixtures-data/patronRequests.json" with { type: "j
  * which is the button's contrast text: white on a white card in light mode,
  * near-black on a near-black one in dark. WCAG 2.4.7 and 1.4.11.
  */
-
-const channels = (colour: string): number[] => {
-	const match = colour.match(/rgba?\(([^)]+)\)/);
-	if (!match) throw new Error(`not a measurable colour: ${colour}`);
-	return match[1].split(",").map((part) => parseFloat(part));
-};
-
-const luminance = (colour: string): number => {
-	const [r, g, b] = channels(colour).map((value) => {
-		const s = value / 255;
-		return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-	});
-	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-};
-
-const contrast = (a: string, b: string): number => {
-	const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-	return (hi + 0.05) / (lo + 0.05);
-};
 
 const ringOf = (target: Locator) =>
 	target.evaluate((element) => {

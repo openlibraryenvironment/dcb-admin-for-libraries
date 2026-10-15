@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { test, expect, type AppFixture } from "./fixtures/test";
 import { AGENCY_CODE } from "./fixtures/auth";
+import { contrast } from "./fixtures/contrast";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 const RECORD = "aaaaaaaa-0000-4000-8000-000000000001";
@@ -305,5 +306,31 @@ for (const type of ["staff", "walk-up"] as const) {
 		await expect(option).toContainText("Volume: Vol [ 22].(1990)");
 		// The comparison key dcb-service matches volumes by, not something a library wrote
 		await expect(option).not.toContainText("v22y1990");
+	});
+}
+
+// WCAG 1.4.11: an icon is a graphical object, and axe does not measure it
+for (const scheme of ["light", "dark", "highContrast"] as const) {
+	test(`the requesting dialog's close icon stands out from the dialog (${scheme})`, async ({
+		app,
+		page,
+	}) => {
+		await app.useColorScheme(scheme);
+		await openForm(app, page, "staff");
+
+		const close = page.getByRole("dialog").getByRole("button", { name: /close/i });
+		const { icon, ground } = await close.evaluate((element) => {
+			let ground = "rgb(255, 255, 255)";
+			for (let node = element.parentElement; node; node = node.parentElement) {
+				const background = getComputedStyle(node).backgroundColor;
+				if (background !== "rgba(0, 0, 0, 0)" && background !== "transparent") {
+					ground = background;
+					break;
+				}
+			}
+			return { icon: getComputedStyle(element).color, ground };
+		});
+
+		expect(contrast(icon, ground)).toBeGreaterThanOrEqual(3);
 	});
 }
