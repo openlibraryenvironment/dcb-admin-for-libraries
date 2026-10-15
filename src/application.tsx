@@ -12,7 +12,7 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import App from "@components/App/App";
 import { useLocaleStore } from "@/hooks/useLocaleStore";
-import { classifyServiceError } from "@helpers/serviceErrors";
+import { classifyServiceError, retryTransientOnce } from "@helpers/serviceErrors";
 import NotFound from "@components/Error/NotFound";
 import RouteError from "@components/Error/RouteError";
 import { User } from "oidc-client-ts";
@@ -97,7 +97,7 @@ const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
 			staleTime: 1000 * 60 * 5,
-			retry: 1,
+			retry: retryTransientOnce,
 		},
 	},
 	// Mutations are absent on purpose: a user's action reports its own failure where it was

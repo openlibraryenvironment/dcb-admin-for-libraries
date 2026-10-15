@@ -15,5 +15,14 @@ export function classifyServiceError(error: unknown): ServiceFailure {
 	return null;
 }
 
+/**
+ * Once, and only for a failure that may pass: no answer at all, or a server fault. A 4xx,
+ * or a GraphQL error carried on a 200, will be the same answer the second time.
+ */
+export const retryTransientOnce = (failureCount: number, error: unknown): boolean => {
+	const status = (error as { response?: { status?: number } } | undefined)?.response?.status;
+	return failureCount < 1 && (status === undefined || status >= 500);
+};
+
 /** For a query whose page can explain its own failure: it never sends the whole app to an error page. */
 export const OPTIONAL_QUERY = { optional: true } as const;
