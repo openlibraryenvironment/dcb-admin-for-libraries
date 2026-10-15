@@ -5,9 +5,11 @@ import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { authHeaders } from "@helpers/auth";
 import {
 	LibrariesQueryData,
+	LibraryFilterOptionsQueryData,
 	LocationsQueryData,
 } from "@models/ReactQueryHelperTypes";
 import { getLibraries } from "@queries/getLibraries";
+import { getLibraryFilterOptions } from "@queries/getLibraryFilterOptions";
 import { getLibrary } from "@queries/getLibrary";
 import { getLibraryBasics } from "@queries/getLibraryBasics";
 import { getLocation } from "@queries/getLocation";
@@ -38,6 +40,7 @@ export const invalidateLibrary = (
 			predicate: ({ queryKey }) => (queryKey[3] as readonly string[]).includes(agencyCode),
 		}),
 		queryClient.invalidateQueries({ queryKey: queryKeys.libraries.all(apiBase) }),
+		queryClient.invalidateQueries({ queryKey: queryKeys.libraries.filterOptions(apiBase) }),
 	]);
 
 // Queries asked for in the same shape from more than one place: one definition each,
@@ -67,6 +70,25 @@ export const allLibrariesQueryOptions = (apiBase: string) =>
 			request<LibrariesQueryData>(
 				`${apiBase}/graphql`,
 				getLibraries,
+				{
+					query: "",
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
+					pageno: 0,
+					order: "fullName",
+					orderBy: "ASC",
+				},
+				await authHeaders(),
+			),
+	});
+
+/** Every library, as the request grids filter by it: up to REFERENCE_LIST_PAGE_SIZE. */
+export const libraryFilterOptionsQueryOptions = (apiBase: string) =>
+	queryOptions({
+		queryKey: queryKeys.libraries.filterOptions(apiBase),
+		queryFn: async () =>
+			request<LibraryFilterOptionsQueryData>(
+				`${apiBase}/graphql`,
+				getLibraryFilterOptions,
 				{
 					query: "",
 					pagesize: REFERENCE_LIST_PAGE_SIZE,

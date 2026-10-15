@@ -25,6 +25,8 @@ export type OperationMocks = Record<string, GraphQLResponder>;
  */
 const DEFAULT_MOCKS: OperationMocks = {
 	LoadHomeCounts: homeCounts(DEFAULT_HOME_TOTALS),
+	// Every request grid asks for it, and no spec has needed another answer
+	LoadLibraryFilterOptions: library,
 	LoadLibraryNames: {
 		libraries: {
 			content: library.libraries.content.map(({ id, fullName, agencyCode }) => ({

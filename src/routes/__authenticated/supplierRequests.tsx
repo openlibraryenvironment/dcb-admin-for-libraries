@@ -24,8 +24,8 @@ import {
 import { gridPage, queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
 import {
-	allLibrariesQueryOptions,
 	invalidateRequestLists,
+	libraryFilterOptionsQueryOptions,
 } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -121,7 +121,7 @@ function RouteComponent() {
 	});
 
 	const { data: librariesData } = useQuery({
-		...allLibrariesQueryOptions(dcbApiBase),
+		...libraryFilterOptionsQueryOptions(dcbApiBase),
 		enabled: !!dcbApiBase,
 		refetchOnWindowFocus: false,
 	});

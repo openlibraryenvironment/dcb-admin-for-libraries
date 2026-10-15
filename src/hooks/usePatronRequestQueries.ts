@@ -8,7 +8,7 @@ import request from "graphql-request";
 import { useMemo } from "react";
 import { gridPage, queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
-import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
+import { libraryFilterOptionsQueryOptions } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
@@ -50,7 +50,7 @@ export const usePatronRequestQueries = ({
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery(allLibrariesQueryOptions(apiBase));
+	} = useQuery(libraryFilterOptionsQueryOptions(apiBase));
 
 	// Memoised because `?? []` allocates a new array on every render, which made
 	// every memo keyed on it recompute every render.

@@ -26,6 +26,18 @@ export interface PatronIdentitiesQueryData {
 	};
 }
 
+/** A library as the request grids' filters know it. */
+export interface LibraryFilterOption {
+	id: string;
+	fullName: string;
+	agencyCode: string;
+	agency?: { id: string; code: string; hostLms?: { id: string; code: string } | null } | null;
+}
+
+export interface LibraryFilterOptionsQueryData {
+	libraries: { content: LibraryFilterOption[]; totalSize: number };
+}
+
 export interface LibrariesQueryData {
 	libraries: {
 		content: Library[];

@@ -429,3 +429,29 @@ test("a grid's search is cancelled when the user leaves before it answers", asyn
 	await expect.poll(() => aborted.length).toBe(1);
 	release();
 });
+
+test("the request grids ask for library names and codes, not every library's full record", async ({
+	app,
+	page,
+}) => {
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraryBasics: library,
+		LoadLibraries: library,
+		LoadPatronRequests: patronRequests,
+	});
+	const operations: string[] = [];
+	page.on("request", (request) => {
+		const name = request.postDataJSON?.()?.operationName;
+		if (name) operations.push(name);
+	});
+
+	for (const path of ["/patronRequests", "/supplierRequests"]) {
+		await page.goto(path);
+		await expect(page.getByRole("grid")).toBeVisible();
+	}
+
+	expect(operations).toContain("LoadLibraryFilterOptions");
+	expect(operations).not.toContain("LoadLibraries");
+});

@@ -50,6 +50,7 @@ export const queryKeys = {
 	},
 	libraries: {
 		all: (apiBase: string) => ["libraries", "all", apiBase] as const,
+		filterOptions: (apiBase: string) => ["libraries", "filterOptions", apiBase] as const,
 	},
 	requestStats: {
 		supplied: (apiBase: string, agencyCode: string) =>

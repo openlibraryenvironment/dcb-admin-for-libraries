@@ -73,6 +73,7 @@ describe("invalidateLibrary", () => {
 			queryKeys.library.name("api", "lib"),
 			queryKeys.library.names("api", ["lib", "other"]),
 			queryKeys.libraries.all("api"),
+			queryKeys.libraries.filterOptions("api"),
 		];
 		const theirs = [
 			queryKeys.library.name("api", "other"),

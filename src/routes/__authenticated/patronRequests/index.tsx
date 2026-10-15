@@ -15,7 +15,6 @@ import {
 	borrowedByLibraryQuery,
 	hasBorrowingScope,
 } from "@helpers/patronRequestScope";
-import { Library } from "@models/Library";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import {
 	GridColDef,
@@ -24,7 +23,7 @@ import {
 } from "@mui/x-data-grid-premium";
 import { gridPage, queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
-import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
+import { libraryFilterOptionsQueryOptions } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -78,7 +77,7 @@ function RouteComponent() {
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery(allLibrariesQueryOptions(dcbApiBase));
+	} = useQuery(libraryFilterOptionsQueryOptions(dcbApiBase));
 
 	// All libraries, supplied to the filters. Memoised because `?? []` allocates
 	// a new array on every render, which made every memo keyed on it recompute
@@ -94,7 +93,7 @@ function RouteComponent() {
 	const libraryFilterOptions = useMemo(() => {
 		if (!libraries) return [];
 
-		return libraries.map((lib: Library) => ({
+		return libraries.map((lib) => ({
 			value: lib.agencyCode, // The value to be used in the filter (e.g., 'agency-code-123')
 			label: lib.fullName, // The human-readable name (e.g., 'Main Library')
 		}));
