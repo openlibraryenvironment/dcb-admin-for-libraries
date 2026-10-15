@@ -45,14 +45,28 @@ describe("buildWalkUpPayload", () => {
 describe("walkUpRefusal", () => {
 	it("names each walk-up refusal the service can make", () => {
 		expect(walkUpRefusal(400, [{ code: "WALK_UP_SAME_LIBRARY" }], t)).toBe(
-			"requesting.quick_walk_up.errors.walk_up_same_library",
+			'requesting.quick_walk_up.errors.walk_up_same_library {"description":""}',
 		);
 		expect(walkUpRefusal(400, [{ code: "ITEM_NOT_FOUND" }], t)).toBe(
-			"requesting.quick_walk_up.errors.item_not_found",
+			'requesting.quick_walk_up.errors.item_not_found {"description":""}',
 		);
 		expect(
 			walkUpRefusal(400, [{ code: "WALK_UP_ITEM_ALREADY_REQUESTED" }], t),
-		).toBe("requesting.quick_walk_up.errors.walk_up_item_already_requested");
+		).toBe(
+			'requesting.quick_walk_up.errors.walk_up_item_already_requested {"description":""}',
+		);
+	});
+
+	it("passes the description to a walk-up refusal's message", () => {
+		expect(
+			walkUpRefusal(
+				400,
+				[{ code: "SUPPLIER_CANNOT_SUPPLY", description: "Host LMS ALTOONA refused the credentials" }],
+				t,
+			),
+		).toBe(
+			'requesting.quick_walk_up.errors.supplier_cannot_supply {"description":"Host LMS ALTOONA refused the credentials"}',
+		);
 	});
 
 	it("says why a 403 refused it", () => {

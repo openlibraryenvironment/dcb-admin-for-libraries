@@ -1256,6 +1256,7 @@
 				"item_not_found": "No item with that barcode was found at your library. Check the barcode and try again.",
 				"item_not_in_shared_index": "This item's record is not in the shared catalog yet, so it cannot be lent through a walk-up.",
 				"request_limits_unchecked": "The patron's request limits could not be checked. Try again in a moment.",
+				"supplier_cannot_supply": "Your library cannot lend through DCB at the moment because of a problem with its DCB setup. {{description}}",
 				"walk_up_item_already_requested": "This item is already part of a request that is still in progress. Finish or cancel that request before lending the item again.",
 				"walk_up_item_agency_mismatch": "Your library is not on the library system recorded for this item. Ask your OpenRS team to check your library's set-up.",
 				"walk_up_pickup_elsewhere": "Choose a pickup location at your library: a walk-up is collected where the item is.",
@@ -1355,6 +1356,7 @@
 					"request": {
 						"duplicate": "A request already exists for this patron at this library within the time window of 900 seconds.",
 						"generic": "Error: {{code}}. More info: {{description}}",
+						"supplier_cannot_supply": "The library that holds this copy cannot supply it because of a problem with its DCB setup. {{description}} Choose another copy, or ask that library's DCB administrator to correct it.",
 						"failed": "The request could not be placed. Please try again, and contact your administrator if this keeps happening."
 					},
 					"validation_failure": "We were unable to validate this patron. Please correct the barcode and/or affiliated institution, and try again.",
