@@ -21,6 +21,7 @@ interface Traffic {
 	/** Availability calls made after the requesting dialog opened. */
 	availability: () => number;
 	lookups: Record<string, unknown>[];
+	placed: Record<string, unknown>[];
 }
 
 const openForm = async (
@@ -85,7 +86,9 @@ const openForm = async (
 			},
 		});
 	});
+	const placedBodies: Record<string, unknown>[] = [];
 	await page.route("**/patrons/requests/place**", (route) => {
+		placedBodies.push(route.request().postDataJSON());
 		if (options.placeStatus) {
 			return route.fulfill({ status: options.placeStatus, json: {} });
 		}
@@ -106,7 +109,7 @@ const openForm = async (
 	await page.getByRole("button", { name: /continue/i }).click();
 
 	const before = availabilityCalls;
-	return { availability: () => availabilityCalls - before, lookups };
+	return { availability: () => availabilityCalls - before, lookups, placed: placedBodies };
 };
 
 const barcode = (page: Page) =>
@@ -243,6 +246,23 @@ test("choosing another item library clears the item chosen at the first", async 
 
 	await expect(page.getByRole("combobox", { name: /item local id/i })).toHaveValue("");
 	await expect(submit).toBeDisabled();
+});
+
+test("an on-site request's description keeps its note apart from its kind", async ({
+	app,
+	page,
+}) => {
+	const traffic = await openForm(app, page, "walk-up");
+
+	await barcode(page).fill("12345");
+	await barcode(page).press("Enter");
+	await choose(page, /pickup location/i, /main desk/i);
+	await choose(page, /item local id/i, /30001/);
+	await page.getByRole("textbox", { name: /requester note/i }).fill("Please hold");
+	await page.getByRole("button", { name: /create request/i }).click();
+
+	await expect.poll(() => traffic.placed.length).toBe(1);
+	expect(traffic.placed[0].description).toBe("On site borrowing request: Please hold");
 });
 
 test("shows the due date once a walk-up checkout completes", async ({

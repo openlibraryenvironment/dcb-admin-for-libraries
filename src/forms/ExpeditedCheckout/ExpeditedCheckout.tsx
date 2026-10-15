@@ -402,7 +402,9 @@ export default function ExpeditedCheckout({
 					agencyCode: patronData.agencyCode,
 				},
 				pickupLocation: { code: selectedLocation?.value || "" },
-				description: "On site borrowing request" + data.requesterNote,
+				description: data.requesterNote
+					? `On site borrowing request: ${data.requesterNote}`
+					: "On site borrowing request",
 				requesterNote: data.requesterNote || "On site borrowing request",
 				item: {
 					localId: data.itemLocalId || "",
