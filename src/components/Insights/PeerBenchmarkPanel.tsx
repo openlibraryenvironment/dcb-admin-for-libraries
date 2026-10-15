@@ -33,7 +33,7 @@ function median(values: number[]): number | null {
 }
 
 // Ranks every library's borrower-side performance and marks the current library, with
-// the consortium median as the benchmark line. The competitive gap vs LibraryIQ.
+// the consortium median as the benchmark line.
 export default function PeerBenchmarkPanel({
 	params,
 	libraryCode,
