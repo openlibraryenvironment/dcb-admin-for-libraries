@@ -1,4 +1,5 @@
 export interface ReferenceValueMapping {
+	id: string;
 	fromCategory: string;
 	fromContext: string;
 	fromValue: string;

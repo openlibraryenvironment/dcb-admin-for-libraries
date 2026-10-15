@@ -16,7 +16,12 @@ import {
 	Typography,
 } from "@mui/material";
 
-import { announcementsQueryOptions, isExpired } from "@helpers/announcements";
+import {
+	announcementsQueryOptions,
+	isExpired,
+	type AnnouncementRow,
+} from "@helpers/announcements";
+import Confirmation from "@components/Confirmation/Confirmation";
 import {
 	createAnnouncement,
 	deleteAnnouncement,
@@ -122,6 +127,7 @@ function Announcements() {
 		},
 	});
 
+	const [withdrawing, setWithdrawing] = useState<AnnouncementRow | null>(null);
 	const withdraw = useMutation({
 		mutationFn: async (id: string) =>
 			request(
@@ -272,7 +278,7 @@ function Announcements() {
 								</Typography>
 								<Button
 									size="small"
-									onClick={() => withdraw.mutate(row.id)}
+									onClick={() => setWithdrawing(row)}
 									disabled={withdraw.isPending}
 									aria-label={t("announcements.withdraw_named", {
 										headline: row.headline,
@@ -285,6 +291,17 @@ function Announcements() {
 						))}
 					</Stack>
 				)}
+				<Confirmation
+					open={withdrawing !== null}
+					onClose={() => setWithdrawing(null)}
+					onConfirm={() => {
+						if (withdrawing) withdraw.mutate(withdrawing.id);
+						setWithdrawing(null);
+					}}
+					action="withdraw"
+					entityName={withdrawing?.headline ?? ""}
+					gridEdit={false}
+				/>
 			</Grid>
 		</Grid>
 	);

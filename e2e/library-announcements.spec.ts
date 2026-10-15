@@ -74,6 +74,54 @@ test.describe("Announcements", () => {
 		).toBeVisible();
 	});
 
+	test("taking a notice down asks first, and Cancel leaves it up", async ({ app, page }) => {
+		let deleted = 0;
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadAnnouncements: { announcements: NOTICES },
+			DeleteAnnouncement: () => {
+				deleted += 1;
+				return { deleteAnnouncement: { success: true } };
+			},
+		});
+		await page.goto("/announcements");
+
+		await page.getByRole("button", { name: "Take down: Requesting paused" }).click();
+		const confirm = page.getByRole("dialog", { name: "Take down “Requesting paused”?" });
+		await expect(confirm).toContainText("This cannot be undone.");
+		await confirm.getByRole("button", { name: "Cancel" }).click();
+		await expect(confirm).toBeHidden();
+		expect(deleted).toBe(0);
+
+		await page.getByRole("button", { name: "Take down: Requesting paused" }).click();
+		await confirm.getByRole("button", { name: "Take down", exact: true }).click();
+		await expect.poll(() => deleted).toBe(1);
+	});
+
+	// Its confirm button is the error colour, which the other scans never open
+	for (const scheme of ["light", "dark", "highContrast"] as const) {
+		test(`the take-down confirmation meets the floor (${scheme})`, async ({ app, page }) => {
+			await app.useColorScheme(scheme);
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraryBasics: library,
+				LoadAnnouncements: { announcements: NOTICES },
+			});
+			await page.goto("/announcements");
+			await page.getByRole("button", { name: "Take down: Requesting paused" }).click();
+			const confirm = page.getByRole("dialog");
+			// Scanned once its fade-in ends, or axe measures the button blended with the backdrop
+			await expect
+				.poll(() =>
+					confirm.evaluate((node) => getComputedStyle(node.parentElement as Element).opacity),
+				)
+				.toBe("1");
+
+			await app.expectNoAccessibilityViolations();
+		});
+	}
+
 	test("publishes until the end of the chosen local day, says so, and clears the form", async ({
 		app,
 		page,

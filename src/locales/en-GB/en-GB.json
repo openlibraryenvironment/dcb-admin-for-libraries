@@ -1700,6 +1700,10 @@
 		"until": "Shows until {{date}}",
 		"withdraw": "Take down",
 		"withdraw_named": "Take down: {{headline}}",
+		"withdraw_confirm": {
+			"title": "Take down “{{headline}}”?",
+			"body": "Patrons will stop seeing this notice straight away. This cannot be undone."
+		},
 		"published": "Notice published",
 		"withdrawn": "Notice taken down",
 		"loading": "Loading your notices",

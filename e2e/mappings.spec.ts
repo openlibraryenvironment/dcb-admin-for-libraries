@@ -122,6 +122,8 @@ test.describe("Mappings", () => {
 			.click();
 
 		const dialog = page.getByRole("dialog");
+		const { fromValue, toValue } = mappings.referenceValueMappings.content[0];
+		await expect(dialog.getByRole("heading")).toContainText(`${fromValue} → ${toValue}`);
 		await dialog.getByRole("combobox", { name: /Change category/ }).click();
 		await page.getByRole("option", { name: "Error correction" }).click();
 		await dialog

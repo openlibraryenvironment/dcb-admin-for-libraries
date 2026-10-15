@@ -36,7 +36,8 @@ const Confirmation = ({
 }: ConfirmationType) => {
 	const { t } = useTranslation();
 	// The rest are changes to shared records, and ask for a reason for the data change log
-	const recordsChange = action !== "unsavedChanges" && action !== "cleanup";
+	const recordsChange = !["unsavedChanges", "cleanup", "withdraw"].includes(action);
+	const destructive = ["deletion", "cleanup", "withdraw"].includes(action);
 
 	const getCharCountHelperText = (
 		value: string,
@@ -99,6 +100,8 @@ const Confirmation = ({
 				return t("ui.unsaved_changes.title");
 			case "cleanup":
 				return t("patron_request.cleanup_confirm.title", { count });
+			case "withdraw":
+				return t("announcements.withdraw_confirm.title", { headline: entityName });
 		}
 	};
 
@@ -135,6 +138,12 @@ const Confirmation = ({
 						{t("patron_request.cleanup_confirm.body", { count })}
 					</Typography>
 				);
+			case "withdraw":
+				return (
+					<Typography variant="body1">
+						{t("announcements.withdraw_confirm.body")}
+					</Typography>
+				);
 		}
 	};
 	const getButtonText = () => {
@@ -148,6 +157,8 @@ const Confirmation = ({
 				return t("ui.unsaved_changes.leave");
 			case "cleanup":
 				return t("patron_request.cleanup_confirm.confirm");
+			case "withdraw":
+				return t("announcements.withdraw");
 		}
 	};
 	const onSubmit = async (data: ConfirmationForm) => {
@@ -276,14 +287,14 @@ const Confirmation = ({
 								onConfirm("", "", "");
 								reset();
 							}}
-							color="primary"
+							color={destructive ? "error" : "primary"}
 							variant="contained">
 							{getButtonText()}
 						</Button>
 					) : (
 						<Button
 							type="submit"
-							color="primary"
+							color={destructive ? "error" : "primary"}
 							variant="contained"
 							onClick={handleSubmit(onSubmit)}
 							disabled={

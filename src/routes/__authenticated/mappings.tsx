@@ -233,6 +233,10 @@ function RouteComponent() {
 		[rowModesModel]
 	);
 
+	const mappingToDelete = mappingsData?.referenceValueMappings?.content?.find(
+		(mapping) => mapping.id === deleteConfirmationId,
+	);
+
 	const handleDeleteClick = (id: GridRowId) => () => {
 		setDeleteConfirmationId(id);
 	};
@@ -500,7 +504,8 @@ function RouteComponent() {
 					onClose={() => setDeleteConfirmationId(null)}
 					onConfirm={handleConfirmDelete}
 					gridEdit={false}
-					entityName="ReferenceValueMapping"
+					entityType={t("entities.reference_value_mapping")}
+					entityName={mappingToDelete ? `${mappingToDelete.fromValue} → ${mappingToDelete.toValue}` : ""}
 					action="deletion"
 				/>
 			}
