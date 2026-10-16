@@ -37,6 +37,8 @@ function ServiceComponent() {
 				{ query: "agencyCode:" + code },
 				await authHeaders()
 			),
+		// Without a code it asked for "agencyCode:undefined"
+		enabled: Boolean(code) && Boolean(cfg.VITE_DCB_API_BASE),
 	});
 	const library: Library = data?.libraries?.content?.[0];
 	const firstHostLms: HostLMS = library?.agency?.hostLms;
