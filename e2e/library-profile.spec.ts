@@ -538,3 +538,12 @@ test("Tab goes from Upload image to the next control, not to a hidden file input
 		await page.evaluate(() => (document.activeElement as HTMLInputElement | null)?.type),
 	).not.toBe("file");
 });
+
+test("greets a user whose profile has no name without a gap where it would be", async ({
+	app,
+	page,
+}) => {
+	await signedInOnProfile(app, page);
+
+	await expect(page.getByText(/^Welcome to DCB Admin for E2E Test Library, User\.$/)).toBeVisible();
+});

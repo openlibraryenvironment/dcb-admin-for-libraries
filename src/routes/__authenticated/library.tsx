@@ -458,7 +458,7 @@ function HomeComponent() {
 					<Typography>
 						{t("library.greeting", {
 							library: library.fullName,
-							name: auth.user?.profile?.name,
+							name: auth.user?.profile?.name || t("header.user_fallback"),
 						})}
 					</Typography>
 				</Grid>
