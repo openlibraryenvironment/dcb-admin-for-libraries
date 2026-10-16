@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, type ReactNode } from "react";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, useColorScheme } from "@mui/material/styles";
 
@@ -17,7 +17,8 @@ import { motionAttribute } from "@/themes/display";
 const ColorSchemeSync = ({ mode }: { mode: ThemeMode }) => {
 	const { setColorScheme } = useColorScheme();
 
-	useEffect(() => {
+	// Before paint: after it, a scheme MUI restored from its own storage could show for a frame
+	useLayoutEffect(() => {
 		setColorScheme(mode);
 	}, [mode, setColorScheme]);
 
