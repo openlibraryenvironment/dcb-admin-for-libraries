@@ -235,10 +235,15 @@ that say why.
 |---|---|
 | A push to a branch with no merge request | `quick`: naming, static, secrets, and the report |
 | A push to a branch with an open merge request | nothing: the merge request pipeline checks it |
-| **A merge request** | **the merge gate**: every check, the build, and the report; the image only when its files change |
+| **A merge request** | **the merge gate**: every check, the build, and the report; the image only when its files change. One that changes only documentation, Markdown or unit tests skips the browser gates, the speed checks and the build |
 | `main` | the merge gate again, then the dev deploys |
 | `release` | the merge gate, the image, then the release and its deploys |
 | A schedule | nothing that releases or deploys |
+
+A skipped check is never the only check of a change: `main` and `release` run the
+whole gate whatever changed. The list that decides it is `&app_paths`, and
+`tests/ciChangePaths.test.ts` fails on a tracked file that list does not account
+for, so a new kind of file runs the gates until someone decides otherwise.
 
 "Pipelines must succeed" judges a merge request by its merge request pipeline, so
 that pipeline carries the whole gate. `main` runs it again because, on GitLab Free,

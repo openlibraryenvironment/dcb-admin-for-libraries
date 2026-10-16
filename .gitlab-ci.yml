@@ -62,6 +62,20 @@ workflow:
   gate:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_PIPELINE_SOURCE != "schedule" && $CI_COMMIT_BRANCH =~ /^(main|release)$/
+  # The gate, but a merge request that changes nothing the app is built or tested from (only
+  # docs, Markdown or unit tests) skips it. tests/ciChangePaths.test.ts keeps this list whole.
+  app:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths: &app_paths
+          - src/**/*
+          - e2e*/**/*
+          - public/**/*
+          - scripts/**/*
+          - docker/**/*
+          - "*.{json,ts,cjs,mjs,html,graphqls,yml,yaml,toml}"
+          - ".*"
+    - if: $CI_PIPELINE_SOURCE != "schedule" && $CI_COMMIT_BRANCH =~ /^(main|release)$/
 
 # How each check ended, for the report job: an artifact, kept whether the check passed or not.
 .records_status:
@@ -109,7 +123,7 @@ verify_dependencies:
 verify_e2e:
   extends: .records_status
   stage: verify
-  rules: !reference [.rules, gate]
+  rules: !reference [.rules, app]
   timeout: 30m
   image:
     name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
@@ -131,7 +145,7 @@ verify_e2e:
 verify_performance:
   extends: .records_status
   stage: verify
-  rules: !reference [.rules, gate]
+  rules: !reference [.rules, app]
   timeout: 30m
   # lighthouserc.cjs points CHROME_PATH at the Chrome @playwright/test pins.
   image:
@@ -157,7 +171,7 @@ verify_performance:
 verify_base_path:
   extends: .records_status
   stage: verify
-  rules: !reference [.rules, gate]
+  rules: !reference [.rules, app]
   timeout: 20m
   image:
     name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
@@ -178,7 +192,7 @@ verify_base_path:
 verify_ki_bootstrap:
   extends: .records_status
   stage: verify
-  rules: !reference [.rules, gate]
+  rules: !reference [.rules, app]
   timeout: 20m
   image:
     name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
@@ -320,7 +334,7 @@ report:
 
 build:
   stage: build
-  rules: !reference [.rules, gate]
+  rules: !reference [.rules, app]
   timeout: 15m
   script:
     - npm ci --prefer-offline --no-audit --no-fund
