@@ -126,7 +126,7 @@ export default defineConfig(
 		// a BROWSER console; these never run in a browser, and a budget check that
 		// cannot name the chunk it is failing on is useless. Node globals are
 		// declared for the same reason the .cjs block below declares `module`.
-		files: ["scripts/**/*.{mjs,js}"],
+		files: ["scripts/**/*.{mjs,js,ts}"],
 		languageOptions: {
 			globals: {
 				console: "readonly",

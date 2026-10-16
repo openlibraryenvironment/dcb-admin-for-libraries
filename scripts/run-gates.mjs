@@ -3,6 +3,7 @@
 //
 // Usage: npm run gates [-- --only naming,static] [-- --skip e2e,performance] [-- --list]
 import { spawnSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
 
 /**
  * Fastest first, so a failure surfaces in seconds rather than after the browser gates.
@@ -149,6 +150,9 @@ for (const gate of selected) {
 	}
 
 	results.push({ ...gate, status, seconds: Math.round((Date.now() - started) / 1000) });
+	// As each CI job records its own, so `npm run report` can be run after this
+	mkdirSync("reports/status", { recursive: true });
+	writeFileSync(`reports/status/${gate.job}.json`, JSON.stringify({ job: gate.job, status }));
 }
 
 console.log(`\n${"=".repeat(70)}\n  Summary\n${"=".repeat(70)}`);

@@ -22,6 +22,8 @@ export default defineConfig({
 				["list"],
 				["html", { open: "never" }],
 				["junit", { outputFile: "reports/e2e-junit.xml" }],
+				// What scripts/release-report.ts reads: each test's tags, annotations and axe results
+				["json", { outputFile: "reports/e2e.json" }],
 			]
 		: "html",
 
