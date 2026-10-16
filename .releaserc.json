@@ -4,7 +4,12 @@
 		"@semantic-release/commit-analyzer",
 		"@semantic-release/release-notes-generator",
 		"@semantic-release/changelog",
-		"@semantic-release/gitlab",
+		[
+			"@semantic-release/gitlab",
+			{
+				"assets": [{ "path": "reports/release-report.html", "label": "Release report: checks and accessibility" }]
+			}
+		],
 		[
 			"@semantic-release/npm",
 			{

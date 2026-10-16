@@ -35,11 +35,20 @@ default:
 
 stages:
   - verify
+  - report
   - build
   - release
   - deploy
 
+# How each check ended, for the report job: an artifact, kept whether the check passed or not.
+.records_status:
+  after_script:
+    - mkdir -p reports/status
+    - |
+      echo "{\"job\":\"$CI_JOB_NAME\",\"status\":\"$CI_JOB_STATUS\"}" > "reports/status/$CI_JOB_NAME.json"
+
 verify_static:
+  extends: .records_status
   stage: verify
   timeout: 15m
   script:
@@ -52,19 +61,28 @@ verify_static:
     - npx vitest run --reporter=default --reporter=junit --outputFile.junit=reports/unit-junit.xml
   artifacts:
     when: always
+    paths:
+      - reports/
     reports:
       junit: reports/unit-junit.xml
     expire_in: 1 week
 
 verify_dependencies:
+  extends: .records_status
   stage: verify
   timeout: 10m
   cache: []
   script:
     - npm audit --omit=dev --audit-level=high
     - node scripts/check-licences.mjs
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    expire_in: 1 week
 
 verify_e2e:
+  extends: .records_status
   stage: verify
   timeout: 30m
   image:
@@ -79,11 +97,13 @@ verify_e2e:
     expose_as: "E2E and accessibility report"
     paths:
       - playwright-report/
+      - reports/
     reports:
       junit: reports/e2e-junit.xml
     expire_in: 1 week
 
 verify_performance:
+  extends: .records_status
   stage: verify
   timeout: 30m
   # lighthouserc.cjs points CHROME_PATH at the Chrome @playwright/test pins.
@@ -103,11 +123,12 @@ verify_performance:
     expose_as: "Lighthouse report"
     paths:
       - .lighthouseci/
-      - reports/bundle-budget.md
+      - reports/
     expire_in: 1 week
 
 # verify_e2e pins the base to "/", so this is the job that runs the shipped base.
 verify_base_path:
+  extends: .records_status
   stage: verify
   timeout: 20m
   image:
@@ -121,11 +142,13 @@ verify_base_path:
     expose_as: "Base-path report"
     paths:
       - playwright-report/
+      - reports/
     reports:
       junit: reports/base-path-junit.xml
     expire_in: 1 week
 
 verify_ki_bootstrap:
+  extends: .records_status
   stage: verify
   timeout: 20m
   image:
@@ -139,12 +162,14 @@ verify_ki_bootstrap:
     expose_as: "Bootloader report"
     paths:
       - playwright-report/
+      - reports/
     reports:
       junit: reports/ki-bootstrap-junit.xml
     expire_in: 1 week
 
 # Rules are data in naming-gate.json; what they catch and why is in docs/testing.md.
 verify_naming:
+  extends: .records_status
   stage: verify
   timeout: 5m
   cache: []
@@ -154,9 +179,15 @@ verify_naming:
     # A branch pipeline fetches only its own ref; without origin/main the message scan skips.
     - git fetch --no-tags --quiet origin "+refs/heads/main:refs/remotes/origin/main"
     - node scripts/check-naming.mjs --messages origin/main..HEAD
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    expire_in: 1 week
 
 # Every secret ever committed stays readable in history; only rotation un-leaks it.
 verify_secrets:
+  extends: .records_status
   stage: verify
   timeout: 10m
   cache: []
@@ -173,11 +204,13 @@ verify_secrets:
     when: always
     paths:
       - gitleaks.sarif
+      - reports/
     expire_in: 1 month
 
 # Nothing else here builds the image: on node 22 it stopped at `npm ci` while every job passed.
 # In the verify stage, so a release branch whose image cannot build does not release.
 verify_image:
+  extends: .records_status
   stage: verify
   timeout: 20m
   cache: []
@@ -214,6 +247,39 @@ verify_image:
       done
       docker info >/dev/null || { echo "No Docker daemon at $DOCKER_HOST: this job needs a runner that permits privileged containers."; exit 1; }
     - docker build -f docker/production/Dockerfile -t "dcb-admin-for-libraries:$CI_COMMIT_SHORT_SHA" .
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    expire_in: 1 week
+
+# Every check's result in plain language, for people who do not read code: docs/testing.md,
+# "The release report". `when: always`, so a failed pipeline is explained too.
+report:
+  stage: report
+  timeout: 10m
+  cache: []
+  when: always
+  needs:
+    - job: verify_static
+    - job: verify_dependencies
+    - job: verify_e2e
+    - job: verify_performance
+    - job: verify_base_path
+    - job: verify_ki_bootstrap
+    - job: verify_naming
+    - job: verify_secrets
+    # Absent from a pipeline that does not change the image's files
+    - job: verify_image
+      optional: true
+  script:
+    - node scripts/release-report.ts
+  artifacts:
+    when: always
+    expose_as: "Release report"
+    paths:
+      - reports/release-report.html
+    expire_in: 1 month
 
 build:
   stage: build
@@ -243,7 +309,8 @@ release:
     - if: '$CI_COMMIT_BRANCH == "release"'
       when: on_success
     - when: never
-  dependencies: []
+  # The report, which .releaserc.json attaches to the GitLab Release
+  dependencies: [report]
   script:
     - echo " { \"releaseDate\":\"`date +"%Y-%m-%dT%H:%M:%S%z"`\", \"RELEASED_AT\":\"$RELEASED_AT\" } " > ./release-info.json
     - npm ci --prefer-offline --no-audit --no-fund

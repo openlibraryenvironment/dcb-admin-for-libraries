@@ -16,7 +16,9 @@ What the gates are, and the two ways each of them can lie to you.
 | Naming | `npm run naming` | no name that only means something inside this workspace |
 | Secrets | `npm run gates -- --only secrets` | gitleaks over the whole history; needs a binary or Docker |
 | Dependencies | `npm run gates -- --only dependencies` | no high or critical advisory in production dependencies; every production licence on the allow-list in `scripts/check-licences.mjs` |
-| **Everything** | **`npm run gates`** | **all eight CI gates, in about eight minutes** |
+| Image | `npm run gates -- --only image` | the production Docker image builds; needs Docker |
+| **Everything** | **`npm run gates`** | **all nine CI gates** |
+| Release report | `npm run report`, after the gates | nothing: it explains them. See "The release report" |
 
 ### react-hooks/exhaustive-deps is an error, not a warning
 
@@ -154,7 +156,9 @@ Confirm with `--workers=1` before believing it.
 
 `e2e/accessibility.spec.ts` is where WCAG 2.2 AA is enforced rather than
 asserted: zero axe violations on every listed surface, in **both** colour
-schemes, because a palette that passes in light routinely fails in dark. It
+schemes, because a palette that passes in light routinely fails in dark, and
+again at 320 CSS px, where it also fails on a page that scrolls sideways or cuts
+content off at its left edge (WCAG 1.4.10). It
 also asserts axe's *incomplete* results, minus a small documented set that axe
 cannot decide.
 
@@ -220,6 +224,40 @@ emitted on an older deployment, and naming the flag is what makes the claim revi
 A silent skip would be a hole in the gate; this is a documented door.
 
 Announcements are the whole of it today — see [announcements.md](announcements.md).
+
+## The release report
+
+`reports/release-report.html` says what every check in a pipeline found, for a
+reader who does not read code: a verdict, each check with what it checks and why
+it matters, and accessibility set out page by page and criterion by criterion.
+
+The `report` job builds it after the verify stage, whether or not the checks
+passed, and every merge request links to it as **Release report**. Job artifacts
+expire, so `.releaserc.json` also attaches it to each GitLab Release, where it
+stays. That copy is as visible as the release page.
+
+It reads what the checks leave in `reports/`: how each job ended
+(`reports/status/`, written by `.records_status`), Playwright's JSON report, the
+JUnit files, `bundle-budget.json` and `.lighthouseci/`. To make one locally, run
+`npm run gates` and then `npm run report`; anything a gate did not produce is
+reported as not run.
+
+What it says comes from beside the checks themselves, so it changes when they do:
+
+- **Each accessibility test** says what it checks, and the WCAG success criteria
+  it is evidence for, through `covers()` in `e2e/fixtures/coverage.ts`.
+  `tests/accessibilityCoverage.test.ts` fails on one that does not.
+- **Each axe scan** attaches every rule's outcome and the criteria the rule
+  tests, which is how a criterion is reported as checked automatically.
+- **Each pipeline check** is explained in `scripts/gates.json`.
+  `tests/gateCatalogue.test.ts` fails when a `verify_*` job has no entry.
+- **A criterion nothing automated checks** is reported as assessed by hand, with
+  the conformance the VPAT states for it, read from that document's tables, so
+  a VPAT row must open with its criterion in bold, linked, and give its
+  conformance in the next cell.
+
+`e2e/release-report.spec.ts` holds the report to WCAG 2.2 AA in both colour
+schemes: it is offered as accessibility evidence.
 
 ## The harness
 
