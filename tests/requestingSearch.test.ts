@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { requestingSearchSchema } from "../src/helpers/requestingSearch";
-import { MAX_PAGE_SIZE } from "../src/constants/dataGrid/pagination";
+import { MAX_PAGE, MAX_PAGE_SIZE } from "../src/constants/dataGrid/pagination";
 
 const parse = (search: Record<string, unknown>) =>
 	requestingSearchSchema.parse(search);
@@ -23,6 +23,11 @@ describe("the requesting search, in the URL", () => {
 		expect(parse({ pageno: "abc" }).pageno).toBeUndefined();
 		expect(parse({ pageno: -1 }).pageno).toBeUndefined();
 		expect(parse({ pageno: 1.5 }).pageno).toBeUndefined();
+	});
+
+	it("drops a page past any a person pages to, which is an offset of millions", () => {
+		expect(parse({ pageno: MAX_PAGE }).pageno).toBe(MAX_PAGE);
+		expect(parse({ pageno: 200000 }).pageno).toBeUndefined();
 	});
 
 	it("reads a number-shaped filter as text rather than crashing the parser", () => {

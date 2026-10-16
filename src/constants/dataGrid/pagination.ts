@@ -10,6 +10,13 @@ export const PAGE_SIZE_OPTIONS: number[] = [5, 10, 20, 25, 30, 40, 50, 100];
 export const DEFAULT_PAGE_SIZE = 25;
 
 /**
+ * The highest page a URL may ask for: past it, a hand-typed ?page=200000 asked dcb-service
+ * for an offset of millions of rows. 10,000 pages of 100 is still past anything a person
+ * pages through.
+ */
+export const MAX_PAGE = 9_999;
+
+/**
  * A page size from storage or from a hand-typed URL, brought back inside the
  * list. An unrecognised size is not an error the user can act on: it is a value
  * an older build wrote, or one they never chose.

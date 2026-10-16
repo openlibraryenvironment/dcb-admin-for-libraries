@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
+import { MAX_PAGE, PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
 
 /**
  * The requesting search, in the URL. Every field `.catch()`es to absent, so a
@@ -17,7 +17,7 @@ export const requestingSearchSchema = z.object({
 		)
 		.optional()
 		.catch(undefined),
-	pageno: z.coerce.number().int().min(0).optional().catch(undefined),
+	pageno: z.coerce.number().int().min(0).max(MAX_PAGE).optional().catch(undefined),
 	pagesize: z.coerce
 		.number()
 		.refine((size) => PAGE_SIZE_OPTIONS.includes(size))

@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { gridSearchSchema } from "../src/helpers/dataGrid/gridSearchSchema";
+import { MAX_PAGE } from "../src/constants/dataGrid/pagination";
 import dayjs from "dayjs";
 import {
 	defaultParseSearch,
@@ -286,3 +288,10 @@ describe("a URL that passed the route's shape check", () => {
 	});
 });
 
+
+describe("a grid's page in the URL", () => {
+	it("is dropped past any a person pages to, which is an offset of millions", () => {
+		expect(gridSearchSchema.parse({ page: MAX_PAGE }).page).toBe(MAX_PAGE);
+		expect(gridSearchSchema.parse({ page: 200000 }).page).toBeUndefined();
+	});
+});
