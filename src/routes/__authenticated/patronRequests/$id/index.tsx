@@ -691,7 +691,6 @@ function RouteComponent() {
 							<TimedAlert
 								open={cleanupRefusal !== null}
 								severityType="warning"
-								autoHideDuration={10000}
 								alertText={t("patron_request.cleanup_refused", {
 									detail: cleanupRefusal ?? "",
 								})}
