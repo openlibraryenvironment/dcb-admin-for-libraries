@@ -175,6 +175,43 @@ verify_secrets:
       - gitleaks.sarif
     expire_in: 1 month
 
+# Nothing else here builds the image: on node 22 it stopped at `npm ci` while every job passed.
+# In the verify stage, so a release branch whose image cannot build does not release.
+verify_image:
+  stage: verify
+  timeout: 20m
+  cache: []
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "release"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        paths: &image_paths
+          - docker/**/*
+          - .dockerignore
+          - package.json
+          - package-lock.json
+    - changes:
+        paths: *image_paths
+        compare_to: refs/heads/main
+  image:
+    name: docker:27
+    pull_policy: if-not-present
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    # dind can still be starting; without this the first symptom is a build error about the daemon.
+    - |
+      for attempt in $(seq 1 30); do
+        docker info >/dev/null 2>&1 && break
+        sleep 2
+      done
+      docker info >/dev/null || { echo "No Docker daemon at $DOCKER_HOST: this job needs a runner that permits privileged containers."; exit 1; }
+    - docker build -f docker/production/Dockerfile -t "dcb-admin-for-libraries:$CI_COMMIT_SHORT_SHA" .
+
 build:
   stage: build
   timeout: 15m

@@ -441,6 +441,7 @@ that is broken, and exits non-zero if any gate failed.
   PASS  e2e             93s  (verify_e2e)
   PASS  base-path       45s  (verify_base_path)
   PASS  ki-bootstrap    35s  (verify_ki_bootstrap)
+  PASS  image           90s  (verify_image)
 ```
 
 **Two gaps closed when this was written, and both had already cost a red pipeline.**
@@ -448,7 +449,11 @@ that is broken, and exits non-zero if any gate failed.
 failed in CI twice - never ran locally at all. It now carries the same range CI uses.
 And `verify_secrets` had no local path of any kind, because gitleaks is not an npm
 package: the runner uses a `gitleaks` binary if there is one, Docker if the daemon is
-up, and otherwise reports **SKIP** rather than counting a gate it did not run.
+up, and otherwise reports **SKIP** rather than counting a gate it did not run. The
+`image` gate, `docker build` of `docker/production/Dockerfile`, skips the same way
+without a daemon. Nothing else builds the image, and it once stopped at `npm ci` while
+every other gate passed; CI runs it on the `release` branch, and wherever `docker/`,
+`.dockerignore` or the package files change.
 
 **The runner sets `CI=1`**, because the pipeline has it set and both Playwright configs
 read it: workers 1 rather than 4, retries 2 rather than 0, and `reuseExistingServer`

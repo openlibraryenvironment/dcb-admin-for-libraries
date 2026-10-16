@@ -45,6 +45,12 @@ const GATES = [
 	{ name: "e2e", job: "verify_e2e", steps: [["npm", ["run", "e2e"]]] },
 	{ name: "base-path", job: "verify_base_path", steps: [["npm", ["run", "e2e:base-path"]]] },
 	{ name: "ki-bootstrap", job: "verify_ki_bootstrap", steps: [["npm", ["run", "e2e:ki-bootstrap"]]] },
+	{
+		name: "image",
+		job: "verify_image",
+		needsDocker: true,
+		steps: [["docker", ["build", "-f", "docker/production/Dockerfile", "-t", "dcb-admin-for-libraries:gates", "."]]],
+	},
 ];
 
 const GITLEAKS_IMAGE = "zricethezav/gitleaks:v8.30.1";
@@ -85,6 +91,8 @@ const run = (command, args, env) =>
 		env: { ...process.env, CI: "1", ...(env ?? {}) },
 	});
 
+const dockerUp = () => spawnSync("docker", ["info"], { stdio: "ignore" }).status === 0;
+
 const has = (command) =>
 	spawnSync(command, ["--version"], { stdio: "ignore", shell: needsShell(command) }).status === 0;
 
@@ -100,8 +108,7 @@ function runSecrets() {
 	const args = ["git", "--redact", "--exit-code", "1", "--config", ".gitleaks.toml", "."];
 	if (has("gitleaks")) return run("gitleaks", args);
 
-	const dockerUp = spawnSync("docker", ["info"], { stdio: "ignore" }).status === 0;
-	if (!dockerUp) return { status: "skipped" };
+	if (!dockerUp()) return { status: "skipped" };
 
 	return run("docker", [
 		"run",
@@ -128,6 +135,9 @@ for (const gate of selected) {
 			console.log(`  SKIPPED: no gitleaks on PATH and no Docker daemon.`);
 			console.log(`  Install gitleaks, or start Docker and this runs ${GITLEAKS_IMAGE}.`);
 		}
+	} else if (gate.needsDocker && !dockerUp()) {
+		status = "skipped";
+		console.log("  SKIPPED: no Docker daemon. Start Docker and this builds the image.");
 	} else {
 		for (const [command, args, env] of gate.steps) {
 			const outcome = run(command, args, env);
