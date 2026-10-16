@@ -39,7 +39,7 @@ Scenarios were tested using a range of manual and automated testing methods, suc
 
 Automated testing was undertaken with Axe Dev-Tools to the WCAG 2.2 AA standard.
 
-Automated testing is a continuous gate rather than a one-off exercise: `e2e/accessibility.spec.ts` runs axe-core against the WCAG 2.0, 2.1 and 2.2 A and AA rule sets on every pipeline, over every surface listed in that file, in both light and dark colour schemes and again at a 320 CSS px viewport for reflow (WCAG 1.4.10), and the build fails on any violation. The surfaces covered are listed in that file. It asserts axe’s *incomplete* results too, not only its violations.
+Automated testing is a continuous gate rather than a one-off exercise: `e2e/accessibility.spec.ts` runs axe-core against the WCAG 2.0, 2.1 and 2.2 A and AA rule sets on every pipeline, over every surface listed in that file, in both light and dark colour schemes and again at a 320 CSS px viewport, where it also fails on a page that scrolls sideways or cuts content off at its left edge (WCAG 1.4.10). The build fails on any violation. The surfaces covered are listed in that file. It asserts axe’s *incomplete* results too, not only its violations.
 
 Two things automated rules cannot see are checked by tests of our own, because both were real defects here rather than hypotheses:
 

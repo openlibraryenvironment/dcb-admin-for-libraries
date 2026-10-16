@@ -921,47 +921,67 @@ for (const scheme of SCHEMES) {
 	});
 }
 
-/** The widest elements past the right edge, so a failure names what to fix. */
+/**
+ * What lies past either edge of the page, so a failure names what to fix. Past the right
+ * edge the page scrolls; past the left it cannot, so whatever is cut off there is out of reach.
+ */
 async function horizontalOverflow(page: Page) {
 	return page.evaluate(() => {
 		const root = document.documentElement;
 		const limit = root.clientWidth;
-		const offenders = [...document.body.querySelectorAll<HTMLElement>("*")]
+		// Inside its own scroller (a tab strip, a grid) an element does not move the page.
+		const outsideScrollers = (el: HTMLElement) => {
+			for (let up = el.parentElement; up && up !== document.body; up = up.parentElement) {
+				if (getComputedStyle(up).overflowX !== "visible") return false;
+			}
+			return true;
+		};
+		const describe = (el: HTMLElement) => {
+			const id = el.id ? `#${el.id}` : "";
+			const cls = [...el.classList].slice(0, 2).map((c) => `.${c}`).join("");
+			const box = el.getBoundingClientRect();
+			return `${el.tagName.toLowerCase()}${id}${cls} left=${Math.round(box.left)} right=${Math.round(box.right)}`;
+		};
+		const elements = [...document.body.querySelectorAll<HTMLElement>("*")];
+		const pastRight = elements
 			.filter((el) => el.getBoundingClientRect().right > limit + 1)
+			.filter(outsideScrollers);
+		// Straddling the edge, not wholly past it: the skip link waits at left -9999 until focused
+		const cutOffLeft = elements
 			.filter((el) => {
-				// Inside its own scroller (a tab strip, a grid) it does not move the page.
-				for (let up = el.parentElement; up && up !== document.body; up = up.parentElement) {
-					if (getComputedStyle(up).overflowX !== "visible") return false;
-				}
-				return true;
+				const box = el.getBoundingClientRect();
+				return box.left < -1 && box.right > 0 && box.width > 1 && el.checkVisibility();
 			})
-			.slice(0, 8)
-			.map((el) => {
-				const id = el.id ? `#${el.id}` : "";
-				const cls = [...el.classList].slice(0, 2).map((c) => `.${c}`).join("");
-				return `${el.tagName.toLowerCase()}${id}${cls} right=${Math.round(el.getBoundingClientRect().right)}`;
-			});
-		return { overflow: root.scrollWidth - limit, offenders };
+			.filter(outsideScrollers);
+		return {
+			overflow: root.scrollWidth - limit,
+			pastRight: pastRight.slice(0, 8).map(describe),
+			cutOffLeft: cutOffLeft.slice(0, 8).map(describe),
+		};
 	});
 }
 
 // WCAG 1.4.10: content reflows at 320 CSS px with no horizontal page scroll. A data grid
-// may scroll inside itself; the page around it may not.
-test.describe("WCAG 2.2 AA - 1.4.10 reflow at 320 CSS px", () => {
+// may scroll inside itself; the page around it may not. The scans above run at desktop
+// width, and below it the layout is another one: scrolling tables, wrapped toolbars.
+test.describe("WCAG 2.2 AA at 320 CSS px", () => {
 	test.use({ viewport: { width: 320, height: 640 } });
 
 	for (const surface of PAGES) {
-		test(`${surface.name} does not scroll horizontally`, async ({ app, page }) => {
+		test(`${surface.name} reflows, with no violations`, async ({ app, page }) => {
 			await surface.prepare?.(app, page);
 			await page.goto(surface.path);
 			await surface.reveal?.(page);
 			await surface.ready(page);
 
-			const { overflow, offenders } = await horizontalOverflow(page);
+			const { overflow, pastRight, cutOffLeft } = await horizontalOverflow(page);
 			expect(
 				overflow,
-				`the page is ${overflow}px wider than the viewport:\n  ${offenders.join("\n  ")}`,
+				`the page is ${overflow}px wider than the viewport:\n  ${pastRight.join("\n  ")}`,
 			).toBeLessThanOrEqual(0);
+			expect(cutOffLeft, "cut off by the left edge, where the page cannot scroll").toEqual([]);
+
+			await app.expectNoAccessibilityViolations();
 		});
 	}
 });
