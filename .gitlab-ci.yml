@@ -120,10 +120,31 @@ verify_dependencies:
       - reports/
     expire_in: 1 week
 
+# The build verify_e2e and verify_performance test, made once: in CI, with no .env and the base
+# at the root, the three builds they made between them were identical.
+verify_build:
+  extends: .records_status
+  stage: verify
+  rules: !reference [.rules, app]
+  timeout: 15m
+  script:
+    - npm ci --prefer-offline --no-audit --no-fund
+    # BUNDLE_BUDGET ignores any .env, so `npm run budget:build` on a laptop measures this build
+    - BUNDLE_BUDGET=1 VITE_PUBLIC_URL=/ npm run build
+  artifacts:
+    when: always
+    paths:
+      - dist/
+      - reports/
+    expire_in: 1 day
+
 verify_e2e:
   extends: .records_status
   stage: verify
   rules: !reference [.rules, app]
+  needs: [verify_build]
+  variables:
+    USE_EXISTING_BUILD: "1"
   timeout: 30m
   image:
     name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
@@ -146,6 +167,9 @@ verify_performance:
   extends: .records_status
   stage: verify
   rules: !reference [.rules, app]
+  needs: [verify_build]
+  variables:
+    USE_EXISTING_BUILD: "1"
   timeout: 30m
   # lighthouserc.cjs points CHROME_PATH at the Chrome @playwright/test pins.
   image:
@@ -153,9 +177,7 @@ verify_performance:
     pull_policy: if-not-present
   script:
     - npm ci --prefer-offline --no-audit --no-fund
-    # Base pinned and BUNDLE_BUDGET ignores any .env, so `npm run budget:build` on a laptop
-    # measures the same build as this one. Only the first load fails; the rest is reported.
-    - BUNDLE_BUDGET=1 VITE_PUBLIC_URL=/ npm run build
+    # Only the first load fails; the rest is reported.
     - npm run budget
     # Lighthouse can only reach /login; every other route is behind Keycloak.
     - npm run lighthouse
@@ -312,6 +334,8 @@ report:
     - job: verify_naming
     - job: verify_secrets
     - job: verify_dependencies
+      optional: true
+    - job: verify_build
       optional: true
     - job: verify_e2e
       optional: true

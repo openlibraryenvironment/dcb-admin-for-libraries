@@ -22,7 +22,8 @@ const run = (command, args, env) =>
 		);
 	});
 
-await run("npm", ["run", "build"], { VITE_PUBLIC_URL: "/" });
+// CI builds once, in verify_build, and hands this job its dist/; its base is checked below either way
+if (!process.env.USE_EXISTING_BUILD) await run("npm", ["run", "build"], { VITE_PUBLIC_URL: "/" });
 
 // Belt and braces: assert what was actually produced rather than trusting the
 // env var reached vite.

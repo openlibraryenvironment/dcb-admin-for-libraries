@@ -40,8 +40,8 @@ export default defineConfig({
 	],
 
 	webServer: {
-		command:
-			"npm run build && npm run preview -- --port 4174 --strictPort",
+		// CI builds once, in verify_build, and hands this job its dist/
+		command: `${process.env.USE_EXISTING_BUILD ? "" : "npm run build && "}npm run preview -- --port 4174 --strictPort`,
 		url: "http://localhost:4174",
 		reuseExistingServer: !process.env.CI,
 		env: {

@@ -4,6 +4,11 @@
 		"checks": "The code compiles, follows the project's coding rules with no warnings, and passes its unit tests.",
 		"matters": "Catches mistakes before anyone uses the application."
 	},
+	"verify_build": {
+		"title": "The application builds",
+		"checks": "Builds the application once, as it is served in testing, for the browser tests and the speed checks to use.",
+		"matters": "What is tested is one build, the same for every check that uses it."
+	},
 	"verify_e2e": {
 		"title": "Browser tests, including accessibility",
 		"checks": "Uses the application in a real browser the way library staff do (searching, requesting, editing) with the service it talks to simulated. Includes the automated accessibility checks on every page, in light mode, dark mode and at phone width.",

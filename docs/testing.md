@@ -245,6 +245,13 @@ whole gate whatever changed. The list that decides it is `&app_paths`, and
 `tests/ciChangePaths.test.ts` fails on a tracked file that list does not account
 for, so a new kind of file runs the gates until someone decides otherwise.
 
+The browser tests and the speed checks test one build, made by `verify_build`
+and handed to them as an artifact; `USE_EXISTING_BUILD` tells
+`playwright.config.ts` and `scripts/preview-for-lighthouse.mjs` to serve it
+rather than build their own. Locally, nothing sets it and each builds as before.
+The base-path and bootloader gates still build their own: each tests a
+different base.
+
 "Pipelines must succeed" judges a merge request by its merge request pipeline, so
 that pipeline carries the whole gate. `main` runs it again because, on GitLab Free,
 two merge requests can each pass and still break `main` together; merged-results
