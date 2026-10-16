@@ -113,7 +113,9 @@ export const Layout = ({ children }: LayoutProps) => {
 					<Tabs
 						value={activeTab}
 						variant="scrollable"
-						scrollButtons="auto">
+						scrollButtons="auto"
+						// MUI hides them below sm unless asked, and the cut-off tab was the only sign there was more
+						allowScrollButtonsMobile>
 						{tabsConfig.map((tab) => (
 							<Tab
 								key={tab.value}

@@ -79,3 +79,15 @@ test.describe("Header", () => {
 		expect(scopes.filter((scope) => scope.includes("undefined"))).toEqual([]);
 	});
 });
+
+test("at 320px, the main tabs show that they scroll", async ({ app, page }) => {
+	await page.setViewportSize({ width: 320, height: 640 });
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library });
+
+	await page.goto("/preferences");
+	const tabs = page.getByRole("navigation", { name: /main navigation/i });
+	await expect(tabs.getByRole("tab", { name: "Preferences" })).toBeVisible();
+
+	await expect(tabs.locator(".MuiTabs-scrollButtons").first()).toBeVisible();
+});
