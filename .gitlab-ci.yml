@@ -92,8 +92,8 @@ verify_performance:
     pull_policy: if-not-present
   script:
     - npm ci --prefer-offline --no-audit --no-fund
-    # Base pinned so chunk names match bundle-budget.json; BUNDLE_BUDGET ignores any .env,
-    # so a local run measures the same build as this one.
+    # Base pinned and BUNDLE_BUDGET ignores any .env, so `npm run budget:build` on a laptop
+    # measures the same build as this one. Only the first load fails; the rest is reported.
     - BUNDLE_BUDGET=1 VITE_PUBLIC_URL=/ npm run build
     - npm run budget
     # Lighthouse can only reach /login; every other route is behind Keycloak.
@@ -103,6 +103,7 @@ verify_performance:
     expose_as: "Lighthouse report"
     paths:
       - .lighthouseci/
+      - reports/bundle-budget.md
     expire_in: 1 week
 
 # verify_e2e pins the base to "/", so this is the job that runs the shipped base.

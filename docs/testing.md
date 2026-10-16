@@ -11,7 +11,7 @@ What the gates are, and the two ways each of them can lie to you.
 | Unit | `npx vitest run` | **not** `npm run test`, which is watch mode |
 | E2E | `npx playwright test` | the production build under `vite preview` |
 | Accessibility | `npx playwright test e2e/accessibility.spec.ts` | zero axe violations on every surface, both schemes |
-| Bundle | `node scripts/check-bundle-budget.mjs` | gzipped budgets for what every page loads first, the whole build, and each named chunk, after a build |
+| Bundle | `npm run budget:build` | fails if what every page loads first is over budget; reports what each route and on-demand feature adds |
 | Lighthouse | `npx lhci autorun` | transfer, CLS and the category scores |
 | Naming | `npm run naming` | no name that only means something inside this workspace |
 | Secrets | `npm run gates -- --only secrets` | gitleaks over the whole history; needs a binary or Docker |
@@ -34,29 +34,41 @@ gate**, so that family stays off until it can be turned on and left green.
 
 ## What the bundle budget measures
 
-`bundle-budget.json` holds three kinds of number, all gzipped, all checked by
-`scripts/check-bundle-budget.mjs` against the build in `dist/`:
+`scripts/check-bundle-budget.mjs` reads the build manifest and measures gzipped scripts and
+stylesheets against `bundle-budget.json`. It prints a report and writes it to
+`reports/bundle-budget.md`, which CI keeps as an artefact of `verify_performance`.
 
-| Budget | Measures | Why it exists |
+| Budget | Measures | When over |
 |---|---|---|
-| `initialBytes` | what every page loads before its own route code: the entry, the app shell it boots, and their static imports, read from the build manifest | the cost every user pays, `/login` included |
-| `totalBytes` | every script and stylesheet the build emits | growth anywhere, including code only some users load |
-| `chunks` | each chunk over `nameChunksAboveBytes` | which chunk grew, by name |
+| `firstLoad` | what every page loads before its own route code: the entry, the app shell it boots, and their static imports | **fails the build** |
+| `routes` | what a page adds to that: its route file, the layout routes above it, and their static imports | reported |
+| `onDemand` | what a feature adds to the first load, from its entry point: Excel export, each translation catalogue, the saved filters dialog | reported |
+| the total | everything the build emits | printed, never budgeted |
 
-Each is what was measured plus 2%, unless its note in the file argues for more. Never raise
-one to make a build pass: cut the weight, or bring a written argument in the same change.
-`initialBytes` is a held ceiling instead, re-derived only with a written reason: five raises to
-exactly the measured size, for strings and bundler regrouping, had left it failing on the next
-string. It was last re-derived when the translation catalogue moved out of the first load
-(252,100); its note in `bundle-budget.json` has the history. The catalogue is budgeted per
-locale (`en-GB.js`, `en-US.js`) with 10% room, since the first-load count cannot see it.
+Routes and features are named by their source file, not by the chunk the bundler happens to
+name, so a regrouping does not move a budget. A route or feature that is no longer built is
+reported, so a budget nobody checks does not linger.
 
-**Measure with `BUNDLE_BUDGET=1`.** It makes `vite.config.ts` ignore `.env`, whose `VITE_`
-values are inlined into the bundle: a local `.env` added 471 bytes to the same commit. The
-performance gate (`npm run gates -- --only performance`) and CI set it. By hand:
-`BUNDLE_BUDGET=1 VITE_PUBLIC_URL=/ npm run build && npm run budget`.
+**Why only the first load fails.** It is what every user pays, `/login` included, and it is
+where both of 2.0's real regressions landed. Route and feature budgets are a report: a route
+that grows by tens of KB shows as over in every run until someone cuts it or argues a new
+number, but it does not hold up an unrelated change. The total is not a budget at all. It
+counted the Excel library, which only an export loads, and it failed a change that took 65 KB
+off every grid page because splitting code adds a little to the total.
 
-**`initialBytes` was added after both 2.0 regressions slipped past a total-only budget.**
+**The numbers.** `firstLoad` is a held ceiling, 252,100: what was measured when the
+translation catalogue left the first load, plus 2%. Routes and features were set on
+16 October 2026 to what was measured plus 5%, rounded up to 100: room for strings and
+dependency patches, none for tens of KB. Never raise one to make a build pass or to sit just
+above it: cut the weight, or write the argument in `bundle-budget.json` and the commit.
+
+**Run it locally with `npm run budget:build`.** It builds as CI does, with `BUNDLE_BUDGET=1`
+and `VITE_PUBLIC_URL=/`, then measures. `BUNDLE_BUDGET=1` makes `vite.config.ts` ignore `.env`,
+whose `VITE_` values are inlined into the bundle: a local `.env` adds about 450 bytes, and a
+`dist/` left by the e2e build has it. `npm run budget` measures whatever is already in `dist/`.
+The performance gate (`npm run gates -- --only performance`) builds and measures the same way.
+
+**The first-load budget was added after both 2.0 regressions slipped past a total-only budget.**
 The Insights dashboard joined `/login`'s initial load (+190 KB) through a pending component
 that shared its module, and every grid's column definitions joined it (+40 KB) through
 `validateSearch`. The total barely moved in either case, because the code moved rather than
@@ -80,10 +92,8 @@ the initial load from 305,377 on `main` to 258,099, with no feature removed:
 - Route loaders loaded with the route tree, which put `axios` and the Insights statistics
   client on every page (36 KB). They now load with their page.
 
-The total is set for the 2.0 release rather than for this branch alone: it adds what the two
-pending feature branches measured against their base (insights-collection +4,440,
-deployment-locale +22,225). Weight that remains and could go later: `axios` (18.6 KB, could be
-`fetch`), and `yup` beside `zod` (24.5 KB, two validation libraries).
+Weight that remains and could go later: `axios` (18.6 KB, could be `fetch`), and `yup` beside
+`zod` (24.5 KB, two validation libraries).
 
 ## Readiness is not the assertion
 

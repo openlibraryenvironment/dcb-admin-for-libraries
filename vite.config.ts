@@ -111,7 +111,7 @@ export default defineConfig(({ mode }) => {
 		build: {
 			// Never inline a font: each subset is fetched only for a page that draws its
 			// characters, and inlined they were 27.6 KB of base64 in CSS every page blocks on.
-			// For scripts/check-bundle-budget.mjs, which budgets what every page loads first.
+			// For scripts/check-bundle-budget.mjs, which reads what each page loads from it.
 			manifest: true,
 			assetsInlineLimit: (filePath) =>
 				/\.(woff2?|ttf|otf)$/.test(filePath) ? false : undefined,
