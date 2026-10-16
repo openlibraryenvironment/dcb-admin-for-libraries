@@ -1,6 +1,7 @@
 import type { Components, Theme } from "@mui/material/styles";
 import type {} from "@mui/x-data-grid/themeAugmentation";
 
+import { dialogClasses } from "@mui/material/Dialog";
 import "./augmentation";
 
 /**
@@ -134,6 +135,23 @@ export const components: Components<Theme> = {
 					outline: "2px solid",
 					outlineColor: (theme.vars || theme).palette.primary.outlineColor,
 					outlineOffset: "2px",
+				},
+			}),
+		},
+	},
+	// MUI keeps 32px either side of a dialog, which at 320px leaves 256px for its content
+	MuiDialog: {
+		styleOverrides: {
+			paper: ({ theme }) => ({
+				[theme.breakpoints.down("sm")]: {
+					[`&:not(.${dialogClasses.paperFullScreen})`]: {
+						margin: theme.spacing(1),
+						maxHeight: `calc(100% - ${theme.spacing(2)})`,
+						maxWidth: `calc(100% - ${theme.spacing(2)})`,
+					},
+					[`&.${dialogClasses.paperFullWidth}`]: {
+						width: `calc(100% - ${theme.spacing(2)})`,
+					},
 				},
 			}),
 		},

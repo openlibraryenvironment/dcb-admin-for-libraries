@@ -346,3 +346,13 @@ for (const scheme of ["light", "dark", "highContrast"] as const) {
 		expect(contrast(icon, ground)).toBeGreaterThanOrEqual(3);
 	});
 }
+
+test("at 320px, the requesting dialog uses the width of the screen", async ({ app, page }) => {
+	await page.setViewportSize({ width: 320, height: 800 });
+	await openForm(app, page, "staff");
+
+	const width = await page
+		.getByRole("dialog")
+		.evaluate((element) => element.getBoundingClientRect().width);
+	expect(width).toBeGreaterThanOrEqual(300);
+});
