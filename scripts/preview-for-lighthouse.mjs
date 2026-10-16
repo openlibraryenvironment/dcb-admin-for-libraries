@@ -7,6 +7,7 @@
 // with the base pinned to "/" and then serves it.
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { stripVTControlCharacters } from "node:util";
 
 const PORT = "4194";
 
@@ -63,7 +64,9 @@ const preview = spawn(
 let announced = false;
 preview.stdout.on("data", (chunk) => {
 	process.stdout.write(chunk);
-	if (!announced && chunk.toString().includes(`localhost:${PORT}`)) {
+	// Uncoloured first: vite colours the port separately, CI included, and the match never held
+	const text = stripVTControlCharacters(chunk.toString());
+	if (!announced && text.includes(`localhost:${PORT}`)) {
 		announced = true;
 		console.log("LIGHTHOUSE_PREVIEW_READY");
 	}
