@@ -76,6 +76,9 @@ workflow:
           - "*.{json,ts,cjs,mjs,html,graphqls,yml,yaml,toml}"
           - ".*"
     - if: $CI_PIPELINE_SOURCE != "schedule" && $CI_COMMIT_BRANCH =~ /^(main|release)$/
+  # A scheduled pipeline, set up in CI/CD > Schedules: docs/testing.md, "Nightly"
+  nightly:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
 
 # How each check ended, for the report job: an artifact, kept whether the check passed or not.
 .records_status:
@@ -108,7 +111,10 @@ verify_static:
 verify_dependencies:
   extends: .records_status
   stage: verify
-  rules: !reference [.rules, gate]
+  # Nightly too: an advisory can land against code nobody has changed
+  rules:
+    - !reference [.rules, gate]
+    - !reference [.rules, nightly]
   timeout: 10m
   cache: []
   script:
@@ -317,6 +323,29 @@ verify_image:
     paths:
       - reports/
     expire_in: 1 week
+
+# The browser tests several times over with no retries, so a test that passes only sometimes
+# fails here, where CI's `retries: 2` would have retried it into a pass.
+nightly_flake_hunt:
+  stage: verify
+  rules: !reference [.rules, nightly]
+  timeout: 3h
+  image:
+    name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
+    pull_policy: if-not-present
+  variables:
+    FLAKE_REPEAT: "3"
+  script:
+    - npm ci --prefer-offline --no-audit --no-fund
+    - npx playwright test --repeat-each="$FLAKE_REPEAT" --retries=0
+  artifacts:
+    when: always
+    expose_as: "Flake hunt report"
+    paths:
+      - playwright-report/
+    reports:
+      junit: reports/e2e-junit.xml
+    expire_in: 2 weeks
 
 # Every check's result in plain language, for people who do not read code: docs/testing.md,
 # "The release report". `when: always`, so a failed pipeline is explained too.

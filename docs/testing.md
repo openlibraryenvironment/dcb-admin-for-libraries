@@ -238,7 +238,7 @@ that say why.
 | **A merge request** | **the merge gate**: every check, the build, and the report; the image only when its files change. One that changes only documentation, Markdown or unit tests skips the browser gates, the speed checks and the build |
 | `main` | the merge gate again, then the dev deploys |
 | `release` | the merge gate, the image, then the release and its deploys |
-| A schedule | nothing that releases or deploys |
+| A schedule | the dependency audit and the flake hunt; nothing that releases or deploys |
 
 A skipped check is never the only check of a change: `main` and `release` run the
 whole gate whatever changed. The list that decides it is `&app_paths`, and
@@ -259,6 +259,21 @@ pipelines and merge trains, which would catch that first, are Premium.
 
 A rule with no `if` matches a merge request pipeline as well as a branch one,
 which is how `verify_image` once made a merge request pipeline of one job.
+
+## Nightly
+
+Two jobs run only in a scheduled pipeline:
+
+- **`verify_dependencies`**, because an advisory can land against code nobody
+  has changed, and would otherwise be found by the next merge request.
+- **`nightly_flake_hunt`**, the browser suite `FLAKE_REPEAT` times over (3 by
+  default) with no retries. In a merge request `retries: 2` turns a test that
+  passes only sometimes into a pass; here it fails, and the report names it.
+
+A failed scheduled pipeline is emailed to the schedule's owner. The schedule
+itself is set up in GitLab, not in this repository: **CI/CD > Schedules > New
+schedule**, target branch `main`, and a nightly time such as `0 2 * * *` in
+Europe/London. `FLAKE_REPEAT` can be overridden there as a schedule variable.
 
 ## The release report
 
