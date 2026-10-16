@@ -186,3 +186,26 @@ test("a library's ILS and contacts are written out, not left to a hover", async 
 	await expect(supplier).toContainText("E2E Test Library");
 	await expect(supplier).toContainText("Primary contacts:");
 });
+
+test("on a phone, each of a request's details takes the whole row", async ({ app, page }) => {
+	await page.setViewportSize({ width: 320, height: 800 });
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadPatronRequest: sparse,
+		LoadHostLms: { hostLms: { content: [] } },
+	});
+
+	await page.goto(`/patronRequests/${REQUEST.id}`);
+	const item = page
+		.getByRole("term")
+		.filter({ hasText: /^Current status$/ })
+		.locator("xpath=ancestor::div[contains(@class,'MuiGrid-root')][1]");
+	await expect(item).toBeVisible();
+
+	const { own, row } = await item.evaluate((element) => ({
+		own: element.getBoundingClientRect().width,
+		row: (element.parentElement as HTMLElement).getBoundingClientRect().width,
+	}));
+	expect(own / row).toBeGreaterThan(0.9);
+});

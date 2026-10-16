@@ -19,6 +19,7 @@ import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import { useClusterDetail } from "@/hooks/useClusterDetail";
 import { Attribute } from "@components/Attribute/Attribute";
 import { useState } from "react";
+import { DETAIL_ITEM, DETAIL_COLUMNS } from "@constants/detailGrid";
 
 const route = getRouteApi("/__authenticated/requesting/$recordId/");
 
@@ -59,12 +60,12 @@ export default function ClusterRecordInfo() {
         <Grid
 			container
 			spacing={{ xs: 2, md: 3 }}
-			columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
+			columns={DETAIL_COLUMNS}>
             <Grid
 				container
 				spacing={{ xs: 2, md: 3 }}
-				columns={{ xs: 3, sm: 6, md: 9, lg: 12 }}>
-				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				columns={DETAIL_COLUMNS}>
+				<Grid size={DETAIL_ITEM}>
 					<Attribute
 						label={t("requesting.contributors")}
 						children={clusterDetail?.contributors
@@ -72,7 +73,7 @@ export default function ClusterRecordInfo() {
 							.join(", ")}
 					/>
 				</Grid>
-				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Grid size={DETAIL_ITEM}>
 					<Attribute
 						label={t("requesting.format_title")}
 						children={
@@ -80,7 +81,7 @@ export default function ClusterRecordInfo() {
 						}
 					/>
 				</Grid>
-				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Grid size={DETAIL_ITEM}>
 					<Attribute
 						label={t("requesting.publication_year")}
 						children={
@@ -88,7 +89,7 @@ export default function ClusterRecordInfo() {
 						}
 					/>
 				</Grid>
-				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Grid size={DETAIL_ITEM}>
 					<Attribute
 						label={t("requesting.description")}
 						children={
@@ -96,7 +97,7 @@ export default function ClusterRecordInfo() {
 						}
 					/>
 				</Grid>
-				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Grid size={DETAIL_ITEM}>
 					<Attribute
 						label={t("requesting.languages")}
 						children={
@@ -104,7 +105,7 @@ export default function ClusterRecordInfo() {
 						}
 					/>
 				</Grid>
-				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Grid size={DETAIL_ITEM}>
 					<Attribute
 						label={t("requesting.publisher")}
 						children={clusterDetail?.publication
@@ -112,13 +113,13 @@ export default function ClusterRecordInfo() {
 							.join(", ")}
 					/>
 				</Grid>
-				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Grid size={DETAIL_ITEM}>
 					<Attribute
 						label={t("requesting.physical_descriptions")}
 						children={clusterDetail?.physicalDescriptions}
 					/>
 				</Grid>
-				<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+				<Grid size={DETAIL_ITEM}>
 					<Attribute
 						label={t("requesting.notes")}
 						children={clusterDetail?.notes

@@ -22,7 +22,7 @@ import request from "graphql-request";
 import { useAuth } from "react-oidc-context";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
 import { isUuidShaped } from "@helpers/isUuidShaped";
-import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
+import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE, DETAIL_ITEM } from "@constants/detailGrid";
 
 import RenderAttribute from "@/components/RenderAttribute/RenderAttribute";
 import Loading from "@/components/Loading/Loading";
@@ -181,12 +181,12 @@ function AuditDetailsComponent() {
             <Grid size={FULL_ROW}>
 				<Typography variant="h1">{audit.briefDescription || t("audit.audit_entry")}</Typography>
 			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={DETAIL_ITEM}>
 				<Attribute label={t("audit.uuid")}>
 					<RenderAttribute attribute={audit?.id} />
 				</Attribute>
 			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={DETAIL_ITEM}>
 				<Attribute label={t("audit.date")}>
 					<RenderAttribute
 						attribute={formatTimestamp(audit?.auditDate, clock, {
@@ -195,22 +195,22 @@ function AuditDetailsComponent() {
 					/>
 				</Attribute>
 			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={DETAIL_ITEM}>
 				<Attribute label={t("audit.description")}>
 					<RenderAttribute attribute={audit?.briefDescription} />
 				</Attribute>
 			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={DETAIL_ITEM}>
 				<Attribute label={t("audit.from_status")}>
 					<RenderAttribute attribute={dcbStatusLabel(audit?.fromStatus, t)} />
 				</Attribute>
 			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={DETAIL_ITEM}>
 				<Attribute label={t("audit.to_status")}>
 					<RenderAttribute attribute={dcbStatusLabel(audit?.toStatus, t)} />
 				</Attribute>
 			</Grid>
-            <Grid size={{ xs: 2, sm: 4, md: 4 }}>
+            <Grid size={DETAIL_ITEM}>
 				<Attribute label={t("patron_request.patron_request_uuid")}>
 					<RenderAttribute attribute={audit?.patronRequest?.id} />
 				</Attribute>
