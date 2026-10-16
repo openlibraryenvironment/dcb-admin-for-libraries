@@ -124,6 +124,6 @@ reach. `e2e/export-wizard.spec.ts` serves the page under
 that an Excel export completes with no violation, so no worker or extra CSP source
 is needed.
 
-That page does report one violation at start-up, from zod rather than Excel: zod
-probes `Function("")` once, inside a `try`, and falls back when it is refused.
-`z.config({ jitless: true })` would stop the probe.
+The same test holds start-up to no violation. zod probes `Function("")` once as it
+loads, which a strict policy reports; `src/helpers/zodConfig.ts` runs zod jitless,
+set from each entry before any schema is built, so the probe never runs.
