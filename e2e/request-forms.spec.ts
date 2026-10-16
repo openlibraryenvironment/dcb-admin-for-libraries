@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { test, expect, type AppFixture } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import { AGENCY_CODE } from "./fixtures/auth";
 import { contrast } from "./fixtures/contrast";
 import library from "./fixtures-data/library.json" with { type: "json" };
@@ -323,7 +324,7 @@ for (const type of ["staff", "walk-up"] as const) {
 
 // WCAG 1.4.11: an icon is a graphical object, and axe does not measure it
 for (const scheme of ["light", "dark", "highContrast"] as const) {
-	test(`the requesting dialog's close icon stands out from the dialog (${scheme})`, async ({
+	test(`the requesting dialog's close icon stands out from the dialog (${scheme})`, covers(`The requesting dialog's close button stands out from the dialog, in ${scheme} mode.`, ["1.4.11"]), async ({
 		app,
 		page,
 	}) => {
@@ -347,7 +348,7 @@ for (const scheme of ["light", "dark", "highContrast"] as const) {
 	});
 }
 
-test("at 320px, the requesting dialog uses the width of the screen", async ({ app, page }) => {
+test("at 320px, the requesting dialog uses the width of the screen", covers("On a phone-width screen, the requesting dialog uses the whole width of the screen.", ["1.4.10"]), async ({ app, page }) => {
 	await page.setViewportSize({ width: 320, height: 800 });
 	await openForm(app, page, "staff");
 

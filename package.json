@@ -25,6 +25,7 @@
 		"lighthouse": "lhci autorun",
 		"budget": "node scripts/check-bundle-budget.mjs",
 		"budget:build": "node scripts/check-bundle-budget.mjs --build",
+		"report": "node scripts/release-report.ts",
 		"naming": "node scripts/check-naming.mjs --messages origin/main..HEAD",
 		"gates": "node scripts/run-gates.mjs"
 	},

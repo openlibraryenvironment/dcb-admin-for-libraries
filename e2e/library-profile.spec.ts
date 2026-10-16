@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import { API_BASE } from "./fixtures/runtime-config";
 
@@ -186,7 +187,7 @@ test.describe("a library with no coordinates", () => {
  * "Full name" and then "E2E Test Library" with nothing saying they belonged
  * together. WCAG 1.3.1, and invisible to axe.
  */
-test.describe("field labels are attached to their values", () => {
+test.describe("field labels are attached to their values", covers("Each field's label is read out together with its value.", ["1.3.1"]), () => {
 	const pairs = (page: import("@playwright/test").Page) =>
 		page.evaluate(() =>
 			Array.from(document.querySelectorAll("dl")).map((list) => ({

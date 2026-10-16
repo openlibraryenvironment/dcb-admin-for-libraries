@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 
@@ -10,7 +11,7 @@ import patronRequests from "./fixtures-data/patronRequests.json" with { type: "j
  * The leading cell is now the row's link, so this walks the journey a keyboard
  * user actually takes rather than asserting the markup.
  */
-test("a patron request opens from the keyboard alone", async ({ app, page }) => {
+test("a patron request opens from the keyboard alone", covers("A request can be opened from a table with the keyboard alone.", ["2.1.1"]), async ({ app, page }) => {
 	await app.signIn();
 	await app.mockGraphQL({
 		LoadLibrary: library,
@@ -39,7 +40,7 @@ test("a patron request opens from the keyboard alone", async ({ app, page }) => 
 	await expect(page).toHaveURL(/\/patronRequests\/11111111-1111-1111-1111-111111111111/);
 });
 
-test("a cell reached by arrow key shows a focus outline", async ({
+test("a cell reached by arrow key shows a focus outline", covers("A table cell reached with the arrow keys shows where the focus is.", ["2.4.7"]), async ({
 	app,
 	page,
 }) => {

@@ -22,6 +22,8 @@ export default defineConfig({
 				["list"],
 				["html", { open: "never" }],
 				["junit", { outputFile: "reports/e2e-junit.xml" }],
+				// What scripts/release-report.ts reads: each test's tags, annotations and axe results
+				["json", { outputFile: "reports/e2e.json" }],
 			]
 		: "html",
 
@@ -38,8 +40,8 @@ export default defineConfig({
 	],
 
 	webServer: {
-		command:
-			"npm run build && npm run preview -- --port 4174 --strictPort",
+		// CI builds once, in verify_build, and hands this job its dist/
+		command: `${process.env.USE_EXISTING_BUILD ? "" : "npm run build && "}npm run preview -- --port 4174 --strictPort`,
 		url: "http://localhost:4174",
 		reuseExistingServer: !process.env.CI,
 		env: {

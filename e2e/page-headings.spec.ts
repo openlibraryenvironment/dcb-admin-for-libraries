@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
@@ -64,7 +65,7 @@ const SURFACES: Surface[] = [
 ];
 
 for (const surface of SURFACES) {
-	test(`${surface.name} has exactly one h1, and it names the page`, async ({
+	test(`${surface.name} has exactly one h1, and it names the page`, covers(`The ${surface.name} page has one main heading, and it names the page.`, ["1.3.1"]), async ({
 		app,
 		page,
 	}) => {

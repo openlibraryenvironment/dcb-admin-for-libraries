@@ -1,0 +1,52 @@
+{
+	"verify_static": {
+		"title": "Code checks and unit tests",
+		"checks": "The code compiles, follows the project's coding rules with no warnings, and passes its unit tests.",
+		"matters": "Catches mistakes before anyone uses the application."
+	},
+	"verify_build": {
+		"title": "The application builds",
+		"checks": "Builds the application once, as it is served in testing, for the browser tests and the speed checks to use.",
+		"matters": "What is tested is one build, the same for every check that uses it."
+	},
+	"verify_e2e": {
+		"title": "Browser tests, including accessibility",
+		"checks": "Uses the application in a real browser the way library staff do (searching, requesting, editing) with the service it talks to simulated. Includes the automated accessibility checks on every page, in light mode, dark mode and at phone width.",
+		"matters": "Shows the journeys staff depend on still work, and still work for people using assistive technology."
+	},
+	"verify_performance": {
+		"title": "Speed and download size",
+		"checks": "Measures what every page downloads before it can be used, against a fixed budget, and runs Google Lighthouse on the sign-in page.",
+		"matters": "Keeps the application quick to open, including on a slow connection."
+	},
+	"verify_base_path": {
+		"title": "Served from its real address",
+		"checks": "Runs browser tests with the application served from the web address it is deployed under, not the root of a test server.",
+		"matters": "A build that works in testing but breaks once hosted is caught before release."
+	},
+	"verify_ki_bootstrap": {
+		"title": "Started by the hosting loader",
+		"checks": "Checks the application starts correctly when the hosting platform's loader starts it, as it does in production.",
+		"matters": "The way the application is started in production is tested, not only the way it is started in development."
+	},
+	"verify_naming": {
+		"title": "Wording fit to publish",
+		"checks": "Checks the code and commit messages for internal names that must not appear in a repository the public can read.",
+		"matters": "The source code is published; this keeps internal names out of it."
+	},
+	"verify_secrets": {
+		"title": "No secrets in the code",
+		"checks": "Scans the code and its whole history for passwords, keys and tokens.",
+		"matters": "A secret committed once stays readable until it is changed."
+	},
+	"verify_dependencies": {
+		"title": "Third-party libraries",
+		"checks": "Checks the libraries the application ships for known serious security vulnerabilities, and that every licence is one we may use.",
+		"matters": "Most of the code that runs is written by others; this is where their problems would become ours."
+	},
+	"verify_image": {
+		"title": "Docker image builds",
+		"checks": "Builds the production Docker image. Runs on the release branch, and when the image's own files change.",
+		"matters": "An image that cannot be built cannot be deployed, and nothing else builds it."
+	}
+}

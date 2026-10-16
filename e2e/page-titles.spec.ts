@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import mappings from "./fixtures-data/mappings.json" with { type: "json" };
 import type { OperationMocks } from "./fixtures/graphql";
@@ -32,7 +33,7 @@ const PAGES: Titled[] = [
 ];
 
 for (const page_ of PAGES) {
-	test(`${page_.path} titles itself`, async ({ app, page }) => {
+	test(`${page_.path} titles itself`, covers(`The ${page_.path} page has its own title in the browser tab.`, ["2.4.2"]), async ({ app, page }) => {
 		await app.signIn();
 		await app.mockGraphQL(page_.mocks);
 		await page.goto(page_.path);
@@ -47,14 +48,14 @@ const BARE_PAGES = [
 ];
 
 for (const bare of BARE_PAGES) {
-	test(`${bare.path} titles itself and is a main landmark`, async ({ page }) => {
+	test(`${bare.path} titles itself and is a main landmark`, covers(`The ${bare.path} page has its own title in the browser tab, and marks out its main content.`, ["2.4.2", "1.3.1"]), async ({ page }) => {
 		await page.goto(bare.path);
 		await expect(page).toHaveTitle(bare.title);
 		await expect(page.getByRole("main")).toHaveCount(1);
 	});
 }
 
-test("the title changes when the route does", async ({ app, page }) => {
+test("the title changes when the route does", covers("The browser tab's title changes when you move to another page.", ["2.4.2"]), async ({ app, page }) => {
 	await app.signIn();
 	await app.mockGraphQL({ LoadLibrary: library, LoadMappings: mappings });
 

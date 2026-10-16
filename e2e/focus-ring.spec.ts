@@ -1,6 +1,7 @@
 import type { Locator } from "@playwright/test";
 
 import { test, expect } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import { contrast } from "./fixtures/contrast";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
@@ -31,7 +32,7 @@ const ringOf = (target: Locator) =>
 	});
 
 for (const scheme of ["light", "dark"] as const) {
-	test(`a focused contained button shows its ring against the card (${scheme})`, async ({
+	test(`a focused contained button shows its ring against the card (${scheme})`, covers(`A focused button shows a focus ring that stands out from its background, in ${scheme} mode.`, ["2.4.7", "1.4.11"]), async ({
 		app,
 		page,
 	}) => {
@@ -50,7 +51,7 @@ for (const scheme of ["light", "dark"] as const) {
 		expect(contrast(ring.colour, ring.ground)).toBeGreaterThanOrEqual(3);
 	});
 
-	test(`a focused icon button shows its ring (${scheme})`, async ({ app, page }) => {
+	test(`a focused icon button shows its ring (${scheme})`, covers(`A focused icon button shows a focus ring that stands out from its background, in ${scheme} mode.`, ["2.4.7", "1.4.11"]), async ({ app, page }) => {
 		await app.useColorScheme(scheme);
 		await app.signIn();
 		await app.mockGraphQL({

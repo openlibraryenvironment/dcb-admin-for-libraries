@@ -14,6 +14,7 @@ import {
 	type ColorScheme,
 } from "./fixtures/color-scheme";
 import { scrollUntilPresent } from "./fixtures/lazy";
+import { covers } from "./fixtures/coverage";
 import { AGENCY_CODE } from "./fixtures/auth";
 import type { Page } from "@playwright/test";
 
@@ -888,35 +889,43 @@ const SCHEMES: ColorScheme[] = ["light", "dark"];
 for (const scheme of SCHEMES) {
 	test.describe(`WCAG 2.2 AA - ${scheme} mode`, () => {
 		for (const surface of PAGES) {
-			test(`${surface.name} has no violations`, async ({ app, page }) => {
-				await app.useColorScheme(scheme);
-				await surface.prepare?.(app, page);
+			test(
+				`${surface.name} has no violations`,
+				covers(
+					`Every check axe can automate for WCAG 2.2 A and AA passes, in ${scheme} mode.`,
+					[],
+					{ page: surface.name, view: scheme },
+				),
+				async ({ app, page }) => {
+					await app.useColorScheme(scheme);
+					await surface.prepare?.(app, page);
 
-				await page.goto(surface.path);
-				await surface.reveal?.(page);
-				await surface.ready(page);
+					await page.goto(surface.path);
+					await surface.reveal?.(page);
+					await surface.ready(page);
 
-				// Guards the gate itself: if the scheme never applied, a "passing"
-				// dark run would just be a second light run.
-				await expect(page.locator("html")).toHaveAttribute(
-					colorSchemeAttribute(scheme),
-				);
+					// Guards the gate itself: if the scheme never applied, a "passing"
+					// dark run would just be a second light run.
+					await expect(page.locator("html")).toHaveAttribute(
+						colorSchemeAttribute(scheme),
+					);
 
-				// Contrast is judged at rest: a button fading from disabled to enabled was sampled mid-way.
-				await expect
-					.poll(() =>
-						page.evaluate(
-							() =>
-								document
-									.getAnimations()
-									.filter((a) => a instanceof CSSTransition && a.playState === "running")
-									.length,
-						),
-					)
-					.toBe(0);
+					// Contrast is judged at rest: a button fading from disabled to enabled was sampled mid-way.
+					await expect
+						.poll(() =>
+							page.evaluate(
+								() =>
+									document
+										.getAnimations()
+										.filter((a) => a instanceof CSSTransition && a.playState === "running")
+										.length,
+							),
+						)
+						.toBe(0);
 
-				await app.expectNoAccessibilityViolations();
-			});
+					await app.expectNoAccessibilityViolations();
+				},
+			);
 		}
 	});
 }
@@ -968,20 +977,28 @@ test.describe("WCAG 2.2 AA at 320 CSS px", () => {
 	test.use({ viewport: { width: 320, height: 640 } });
 
 	for (const surface of PAGES) {
-		test(`${surface.name} reflows, with no violations`, async ({ app, page }) => {
-			await surface.prepare?.(app, page);
-			await page.goto(surface.path);
-			await surface.reveal?.(page);
-			await surface.ready(page);
+		test(
+			`${surface.name} reflows, with no violations`,
+			covers(
+				"Works on a phone-width screen without scrolling sideways or cutting anything off, and every check axe can automate passes there too.",
+				["1.4.10"],
+				{ page: surface.name, view: "phone width" },
+			),
+			async ({ app, page }) => {
+				await surface.prepare?.(app, page);
+				await page.goto(surface.path);
+				await surface.reveal?.(page);
+				await surface.ready(page);
 
-			const { overflow, pastRight, cutOffLeft } = await horizontalOverflow(page);
-			expect(
-				overflow,
-				`the page is ${overflow}px wider than the viewport:\n  ${pastRight.join("\n  ")}`,
-			).toBeLessThanOrEqual(0);
-			expect(cutOffLeft, "cut off by the left edge, where the page cannot scroll").toEqual([]);
+				const { overflow, pastRight, cutOffLeft } = await horizontalOverflow(page);
+				expect(
+					overflow,
+					`the page is ${overflow}px wider than the viewport:\n  ${pastRight.join("\n  ")}`,
+				).toBeLessThanOrEqual(0);
+				expect(cutOffLeft, "cut off by the left edge, where the page cannot scroll").toEqual([]);
 
-			await app.expectNoAccessibilityViolations();
-		});
+				await app.expectNoAccessibilityViolations();
+			},
+		);
 	}
 });

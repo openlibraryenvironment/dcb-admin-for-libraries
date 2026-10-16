@@ -6,7 +6,7 @@ import { mockStats, type StatsMocks } from "./stats";
 import { mockSearch, type SearchMock } from "./search";
 import { enableFeatures } from "./features";
 import { useColorScheme, type ColorScheme } from "./color-scheme";
-import { analyse, formatViolations } from "./axe";
+import { analyse, formatViolations, summarise } from "./axe";
 
 /**
  * The app harness. Every spec imports `test` and `expect` from here, so that
@@ -54,7 +54,13 @@ export const test = base.extend<{ app: AppFixture; runtimeConfig: void }>({
 			configure: (settings) => configure(page, settings),
 			useColorScheme: (scheme) => useColorScheme(page, scheme),
 			expectNoAccessibilityViolations: async () => {
-				const { violations, incomplete } = await analyse(page);
+				const findings = await analyse(page);
+				const { violations, incomplete } = findings;
+				// Before the assertions, so a failing scan is in the release report too
+				await base.info().attach("axe", {
+					body: JSON.stringify(summarise(findings)),
+					contentType: "application/json",
+				});
 				expect(
 					violations,
 					violations.length

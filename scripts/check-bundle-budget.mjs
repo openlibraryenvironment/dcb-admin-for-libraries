@@ -12,6 +12,8 @@ import { dirname, join, posix } from "node:path";
 const BUDGET = JSON.parse(readFileSync("bundle-budget.json", "utf8"));
 const MANIFEST = join("dist", ".vite", "manifest.json");
 const REPORT = join("reports", "bundle-budget.md");
+// The same figures for scripts/release-report.ts to read
+const REPORT_JSON = join("reports", "bundle-budget.json");
 
 if (process.argv.includes("--build")) {
 	// The build CI measures: no local .env inlined into it, and the base its budgets assume
@@ -118,6 +120,16 @@ lines.push("", `Everything the build emits: ${total}. For information; not a bud
 const report = lines.join("\n");
 mkdirSync(dirname(REPORT), { recursive: true });
 writeFileSync(REPORT, report);
+const entry = ({ name, budget, size }) => ({ name, budget, size });
+writeFileSync(
+	REPORT_JSON,
+	JSON.stringify({
+		firstLoad: { size: firstLoad, budget: BUDGET.firstLoad.budget },
+		routes: routes.map(entry),
+		onDemand: onDemand.map(entry),
+		total,
+	}),
+);
 console.log(report);
 console.log(`Written to ${REPORT}.`);
 

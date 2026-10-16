@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 // The layout rendered a header, a ten-tab strip and a Container - none of them a
@@ -16,7 +17,7 @@ test.beforeEach(async ({ app }) => {
 	});
 });
 
-test("the page has a main and a named navigation landmark", async ({ page }) => {
+test("the page has a main and a named navigation landmark", covers("Every page marks out its main content and its navigation for assistive technology.", ["1.3.1", "2.4.1"]), async ({ page }) => {
 	await page.goto("/");
 	await expect(page.getByRole("main")).toHaveCount(1);
 	await expect(
@@ -28,7 +29,7 @@ test("the page has a main and a named navigation landmark", async ({ page }) => 
 	).toHaveCount(0);
 });
 
-test("the first Tab reaches a skip link that moves focus to main", async ({
+test("the first Tab reaches a skip link that moves focus to main", covers("The first press of Tab offers a link that skips the navigation and goes to the page content.", ["2.4.1"]), async ({
 	page,
 }) => {
 	await page.goto("/");

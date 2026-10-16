@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { test, expect, type AppFixture } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import { DEFAULT_SEARCH } from "./fixtures/search";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
@@ -95,7 +96,7 @@ test("every icon button on the page has a name", async ({ app, page }) => {
 });
 
 for (const mode of ["simple", "advanced"] as const) {
-	test(`the ${mode} search reflows at 320px`, async ({ app, page }) => {
+	test(`the ${mode} search reflows at 320px`, covers(`The ${mode} search works on a phone-width screen without scrolling sideways.`, ["1.4.10"]), async ({ app, page }) => {
 		await page.setViewportSize({ width: 320, height: 640 });
 		await openSearch(app, page, "/requesting?filters=keyword%3Amiddlemarch");
 		if (mode === "advanced") {
@@ -116,7 +117,7 @@ for (const mode of ["simple", "advanced"] as const) {
 }
 
 // 320 CSS px is also a 1280px screen at 400% zoom - WCAG 1.4.10
-test("at 320px wide, the page buttons are on screen", async ({ app, page }) => {
+test("at 320px wide, the page buttons are on screen", covers("On a phone-width screen, the previous and next page buttons are on screen.", ["1.4.10"]), async ({ app, page }) => {
 	await page.setViewportSize({ width: 320, height: 800 });
 	await openSearch(app, page, "/requesting?filters=12345");
 

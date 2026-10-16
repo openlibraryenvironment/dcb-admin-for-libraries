@@ -58,6 +58,38 @@ export interface AxeFindings {
 	 * a green gate: the assertion read `violations` alone.
 	 */
 	incomplete: Result[];
+	passes: Result[];
+}
+
+/** One axe rule's outcome on a page, as the release report reads it from a test's attachment. */
+export interface AxeRuleOutcome {
+	id: string;
+	help: string;
+	outcome: "passed" | "failed" | "undecided";
+	criteria: string[];
+}
+
+/** The WCAG success criteria an axe rule tests, from its tags: "wcag1410" is 1.4.10. */
+export function criteriaOf(result: Pick<Result, "tags">): string[] {
+	return result.tags.flatMap((tag) => {
+		const match = /^wcag(\d)(\d)(\d+)$/.exec(tag);
+		return match ? [`${match[1]}.${match[2]}.${match[3]}`] : [];
+	});
+}
+
+export function summarise(findings: AxeFindings): AxeRuleOutcome[] {
+	const outcome = (results: Result[], label: AxeRuleOutcome["outcome"]) =>
+		results.map((result) => ({
+			id: result.id,
+			help: result.help,
+			outcome: label,
+			criteria: criteriaOf(result),
+		}));
+	return [
+		...outcome(findings.passes, "passed"),
+		...outcome(findings.violations, "failed"),
+		...outcome(findings.incomplete, "undecided"),
+	];
 }
 
 export async function analyse(page: Page): Promise<AxeFindings> {
@@ -73,10 +105,11 @@ export async function analyse(page: Page): Promise<AxeFindings> {
 	for (const selector of VENDOR_EXCLUSIONS) {
 		builder = builder.exclude(selector);
 	}
-	const { violations, incomplete } = await builder.analyze();
+	const { violations, incomplete, passes } = await builder.analyze();
 	return {
 		violations,
 		incomplete: incomplete.filter((result) => !UNDECIDABLE.has(result.id)),
+		passes,
 	};
 }
 

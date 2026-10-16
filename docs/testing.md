@@ -16,7 +16,9 @@ What the gates are, and the two ways each of them can lie to you.
 | Naming | `npm run naming` | no name that only means something inside this workspace |
 | Secrets | `npm run gates -- --only secrets` | gitleaks over the whole history; needs a binary or Docker |
 | Dependencies | `npm run gates -- --only dependencies` | no high or critical advisory in production dependencies; every production licence on the allow-list in `scripts/check-licences.mjs` |
-| **Everything** | **`npm run gates`** | **all eight CI gates, in about eight minutes** |
+| Image | `npm run gates -- --only image` | the production Docker image builds; needs Docker |
+| **Everything** | **`npm run gates`** | **all nine CI gates** |
+| Release report | `npm run report`, after the gates | nothing: it explains them. See "The release report" |
 
 ### react-hooks/exhaustive-deps is an error, not a warning
 
@@ -154,7 +156,9 @@ Confirm with `--workers=1` before believing it.
 
 `e2e/accessibility.spec.ts` is where WCAG 2.2 AA is enforced rather than
 asserted: zero axe violations on every listed surface, in **both** colour
-schemes, because a palette that passes in light routinely fails in dark. It
+schemes, because a palette that passes in light routinely fails in dark, and
+again at 320 CSS px, where it also fails on a page that scrolls sideways or cuts
+content off at its left edge (WCAG 1.4.10). It
 also asserts axe's *incomplete* results, minus a small documented set that axe
 cannot decide.
 
@@ -220,6 +224,90 @@ emitted on an older deployment, and naming the flag is what makes the claim revi
 A silent skip would be a hole in the gate; this is a documented door.
 
 Announcements are the whole of it today — see [announcements.md](announcements.md).
+
+## Which pipeline runs what
+
+`workflow:rules` in `.gitlab-ci.yml` makes one pipeline per event, and every job
+takes one of two rule sets, `.rules.quick` or `.rules.gate`, or rules of its own
+that say why.
+
+| Pipeline | Runs |
+|---|---|
+| A push to a branch with no merge request | `quick`: naming, static, secrets, and the report |
+| A push to a branch with an open merge request | nothing: the merge request pipeline checks it |
+| **A merge request** | **the merge gate**: every check, the build, and the report; the image only when its files change. One that changes only documentation, Markdown or unit tests skips the browser gates, the speed checks and the build |
+| `main` | the merge gate again, then the dev deploys |
+| `release` | the merge gate, the image, then the release and its deploys |
+| A schedule | the dependency audit and the flake hunt; nothing that releases or deploys |
+
+A skipped check is never the only check of a change: `main` and `release` run the
+whole gate whatever changed. The list that decides it is `&app_paths`, and
+`tests/ciChangePaths.test.ts` fails on a tracked file that list does not account
+for, so a new kind of file runs the gates until someone decides otherwise.
+
+The browser tests and the speed checks test one build, made by `verify_build`
+and handed to them as an artifact; `USE_EXISTING_BUILD` tells
+`playwright.config.ts` and `scripts/preview-for-lighthouse.mjs` to serve it
+rather than build their own. Locally, nothing sets it and each builds as before.
+The base-path and bootloader gates still build their own: each tests a
+different base.
+
+"Pipelines must succeed" judges a merge request by its merge request pipeline, so
+that pipeline carries the whole gate. `main` runs it again because, on GitLab Free,
+two merge requests can each pass and still break `main` together; merged-results
+pipelines and merge trains, which would catch that first, are Premium.
+
+A rule with no `if` matches a merge request pipeline as well as a branch one,
+which is how `verify_image` once made a merge request pipeline of one job.
+
+## Nightly
+
+Two jobs run only in a scheduled pipeline:
+
+- **`verify_dependencies`**, because an advisory can land against code nobody
+  has changed, and would otherwise be found by the next merge request.
+- **`nightly_flake_hunt`**, the browser suite `FLAKE_REPEAT` times over (3 by
+  default) with no retries. In a merge request `retries: 2` turns a test that
+  passes only sometimes into a pass; here it fails, and the report names it.
+
+A failed scheduled pipeline is emailed to the schedule's owner. The schedule
+itself is set up in GitLab, not in this repository: **CI/CD > Schedules > New
+schedule**, target branch `main`, and a nightly time such as `0 2 * * *` in
+Europe/London. `FLAKE_REPEAT` can be overridden there as a schedule variable.
+
+## The release report
+
+`reports/release-report.html` says what every check in a pipeline found, for a
+reader who does not read code: a verdict, each check with what it checks and why
+it matters, and accessibility set out page by page and criterion by criterion.
+
+The `report` job builds it after the verify stage, whether or not the checks
+passed, and every merge request links to it as **Release report**. Job artifacts
+expire, so `.releaserc.json` also attaches it to each GitLab Release, where it
+stays. That copy is as visible as the release page.
+
+It reads what the checks leave in `reports/`: how each job ended
+(`reports/status/`, written by `.records_status`), Playwright's JSON report, the
+JUnit files, `bundle-budget.json` and `.lighthouseci/`. To make one locally, run
+`npm run gates` and then `npm run report`; anything a gate did not produce is
+reported as not run.
+
+What it says comes from beside the checks themselves, so it changes when they do:
+
+- **Each accessibility test** says what it checks, and the WCAG success criteria
+  it is evidence for, through `covers()` in `e2e/fixtures/coverage.ts`.
+  `tests/accessibilityCoverage.test.ts` fails on one that does not.
+- **Each axe scan** attaches every rule's outcome and the criteria the rule
+  tests, which is how a criterion is reported as checked automatically.
+- **Each pipeline check** is explained in `scripts/gates.json`.
+  `tests/gateCatalogue.test.ts` fails when a `verify_*` job has no entry.
+- **A criterion nothing automated checks** is reported as assessed by hand, with
+  the conformance the VPAT states for it, read from that document's tables, so
+  a VPAT row must open with its criterion in bold, linked, and give its
+  conformance in the next cell.
+
+`e2e/release-report.spec.ts` holds the report to WCAG 2.2 AA in both colour
+schemes: it is offered as accessibility evidence.
 
 ## The harness
 

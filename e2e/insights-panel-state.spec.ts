@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { test, expect } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
@@ -341,7 +342,7 @@ test.describe("Insights panel states", () => {
 		await expect(panel).toContainText("Not reported by this system");
 	});
 
-	test("a figure explains where it came from, by keyboard alone", async ({
+	test("a figure explains where it came from, by keyboard alone", covers("An Insights figure's explanation opens and closes with the keyboard, and stays open until it is dismissed.", ["1.4.13", "2.1.1"]), async ({
 		page,
 	}) => {
 		await page.goto("/insights");
@@ -485,7 +486,7 @@ test.describe("Insights subjects", () => {
 });
 
 // 320 CSS px is also a 1280px screen at 400% zoom - WCAG 1.4.10
-test("at 320px wide, both ends of the date range are on screen", async ({ app, page }) => {
+test("at 320px wide, both ends of the date range are on screen", covers("On a phone-width screen, both ends of the Insights date range are on screen.", ["1.4.10"]), async ({ app, page }) => {
 	await page.setViewportSize({ width: 320, height: 800 });
 	await app.signIn();
 	await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
@@ -505,7 +506,7 @@ test("at 320px wide, both ends of the date range are on screen", async ({ app, p
 
 // The tables scroll only below desktop width, so the desktop axe gate never saw them
 for (const subject of ["service", "partners", "collection", "gaps"]) {
-	test(`at 320px, every table that scrolls on ${subject} can be reached by keyboard`, async ({
+	test(`at 320px, every table that scrolls on ${subject} can be reached by keyboard`, covers(`On a phone-width screen, every scrolling table in the ${subject} view can be reached with the keyboard.`, ["2.1.1", "1.4.10"]), async ({
 		app,
 		page,
 	}) => {
@@ -528,7 +529,7 @@ for (const subject of ["service", "partners", "collection", "gaps"]) {
 	});
 }
 
-test("at 320px, the activity chart fits its card and names statuses as the grids do", async ({
+test("at 320px, the activity chart fits its card and names statuses as the grids do", covers("On a phone-width screen, the activity chart fits its card.", ["1.4.10"]), async ({
 	app,
 	page,
 }) => {

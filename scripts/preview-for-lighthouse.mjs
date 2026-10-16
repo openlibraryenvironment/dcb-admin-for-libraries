@@ -7,6 +7,7 @@
 // with the base pinned to "/" and then serves it.
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { stripVTControlCharacters } from "node:util";
 
 const PORT = "4194";
 
@@ -22,7 +23,8 @@ const run = (command, args, env) =>
 		);
 	});
 
-await run("npm", ["run", "build"], { VITE_PUBLIC_URL: "/" });
+// CI builds once, in verify_build, and hands this job its dist/; its base is checked below either way
+if (!process.env.USE_EXISTING_BUILD) await run("npm", ["run", "build"], { VITE_PUBLIC_URL: "/" });
 
 // Belt and braces: assert what was actually produced rather than trusting the
 // env var reached vite.
@@ -62,7 +64,9 @@ const preview = spawn(
 let announced = false;
 preview.stdout.on("data", (chunk) => {
 	process.stdout.write(chunk);
-	if (!announced && chunk.toString().includes(`localhost:${PORT}`)) {
+	// Uncoloured first: vite colours the port separately, CI included, and the match never held
+	const text = stripVTControlCharacters(chunk.toString());
+	if (!announced && text.includes(`localhost:${PORT}`)) {
 		announced = true;
 		console.log("LIGHTHOUSE_PREVIEW_READY");
 	}
