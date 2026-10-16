@@ -190,7 +190,10 @@ verify_image:
           - .dockerignore
           - package.json
           - package-lock.json
-    - changes:
+    # Branch pipelines only, as every other job: a rule with no `if` also matches a merge
+    # request pipeline, which then held this job alone and stood in for the whole pipeline.
+    - if: '$CI_COMMIT_BRANCH'
+      changes:
         paths: *image_paths
         compare_to: refs/heads/main
   image:
