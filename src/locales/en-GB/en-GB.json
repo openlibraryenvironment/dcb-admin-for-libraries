@@ -1158,7 +1158,19 @@
 		"title": "Patron request",
 		"view": "View",
 		"virtual_item": "Virtual item",
-		"virtual_patron": "Virtual patron"
+		"virtual_patron": "Virtual patron",
+		"confirm_returned": {
+			"button": "Confirm item is back",
+			"info": "Your library has not reported this item back on its shelf. Confirm it once it is.",
+			"disabled": "Only a request your library supplied, whose item is on its way back to you, can be confirmed back.",
+			"title": "Confirm this item is back on your shelf?",
+			"body": "Do this once the item is back at your library. DCB then releases the request as if your library system had reported it: a cancelled request finishes as cancelled, and a returned loan completes.",
+			"confirm": "Confirm item is back",
+			"successful": "The item was confirmed back, and the request has been released.",
+			"refused": "The item was not confirmed back. {{detail}}",
+			"forbidden": "Only the library that supplied this request can confirm its item is back.",
+			"unsuccessful": "Confirming the item is back failed, and the request is unchanged. Its audit log says why."
+		}
 	},
 	"requesting": {
 		"available_at": "Items present at {{institutions}}",

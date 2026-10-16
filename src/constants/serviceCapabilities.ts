@@ -115,6 +115,13 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		fields: {},
 	},
 	{
+		// A REST route, so nothing to select. In no release yet.
+		id: "confirm_item_returned",
+		flag: "VITE_FEATURE_CONFIRM_ITEM_RETURNED",
+		since: null,
+		fields: {},
+	},
+	{
 		// Which library a patron request belongs to. PatronIdentity gained resolvedAgency
 		// in 9.0.0; before it the only recorded answer was patronHostlmsCode, which names
 		// the system rather than the library and so cannot distinguish co-tenants on a

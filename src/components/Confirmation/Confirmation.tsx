@@ -36,7 +36,7 @@ const Confirmation = ({
 }: ConfirmationType) => {
 	const { t } = useTranslation();
 	// The rest are changes to shared records, and ask for a reason for the data change log
-	const recordsChange = !["unsavedChanges", "cleanup", "withdraw"].includes(action);
+	const recordsChange = !["unsavedChanges", "cleanup", "withdraw", "confirmReturned"].includes(action);
 	const destructive = ["deletion", "cleanup", "withdraw"].includes(action);
 
 	const getCharCountHelperText = (
@@ -100,6 +100,8 @@ const Confirmation = ({
 				return t("ui.unsaved_changes.title");
 			case "cleanup":
 				return t("patron_request.cleanup_confirm.title", { count });
+			case "confirmReturned":
+				return t("patron_request.confirm_returned.title");
 			case "withdraw":
 				return t("announcements.withdraw_confirm.title", { headline: entityName });
 		}
@@ -138,6 +140,12 @@ const Confirmation = ({
 						{t("patron_request.cleanup_confirm.body", { count })}
 					</Typography>
 				);
+			case "confirmReturned":
+				return (
+					<Typography variant="body1">
+						{t("patron_request.confirm_returned.body")}
+					</Typography>
+				);
 			case "withdraw":
 				return (
 					<Typography variant="body1">
@@ -157,6 +165,8 @@ const Confirmation = ({
 				return t("ui.unsaved_changes.leave");
 			case "cleanup":
 				return t("patron_request.cleanup_confirm.confirm");
+			case "confirmReturned":
+				return t("patron_request.confirm_returned.confirm");
 			case "withdraw":
 				return t("announcements.withdraw");
 		}

@@ -31,6 +31,7 @@ import { getPatronIdentities } from "@queries/getPatronIdentities";
 import { getPatronRequest } from "@queries/getPatronRequest";
 import {
 	isAgencyScopedRequestsEnabled,
+	isConfirmItemReturnedEnabled,
 	isGuardedCleanupEnabled,
 } from "@helpers/featureFlags";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -69,6 +70,11 @@ import {
 	isCleanupEligible,
 } from "@helpers/cleanupPatronRequest";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
+import {
+	confirmItemReturned,
+	confirmReturnStatuses,
+	isConfirmReturnEligible,
+} from "@helpers/confirmItemReturned";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 import { dcbStatusLabel } from "@constants/statuses/DCBStatuses";
 import PatronRequestAuditLog from "@components/PatronRequestAuditLog/PatronRequestAuditLog";
@@ -123,6 +129,9 @@ function RouteComponent() {
 		useState(false);
 	const [cleanupRefusal, setCleanupRefusal] = useState<string | null>(null);
 	const [confirmCleanup, setConfirmCleanup] = useState(false);
+	const [confirmReturnOpen, setConfirmReturnOpen] = useState(false);
+	const [confirmReturnSuccess, setConfirmReturnSuccess] = useState(false);
+	const [confirmReturnError, setConfirmReturnError] = useState<string | null>(null);
 	const { agencyCodes } = useAgencyCodes();
 	const guardedCleanup = isGuardedCleanupEnabled();
 	const apiBase: string = cfg.VITE_DCB_API_BASE;
@@ -359,6 +368,32 @@ function RouteComponent() {
 			setCleanupErrorAlertVisibility(true);
 		},
 	});
+
+	const confirmReturnMutation = useMutation({
+		mutationFn: () => confirmItemReturned(apiBase, patronRequest?.id),
+		onSuccess: (outcome) => {
+			if (outcome.kind === "confirmed") {
+				invalidateRequest();
+				setConfirmReturnSuccess(true);
+				return;
+			}
+
+			setConfirmReturnError(
+				outcome.kind === "refused"
+					? t("patron_request.confirm_returned.refused", { detail: outcome.detail ?? "" })
+					: outcome.kind === "forbidden"
+						? t("patron_request.confirm_returned.forbidden")
+						: t("patron_request.confirm_returned.unsuccessful"),
+			);
+		},
+		onError: () => {
+			setConfirmReturnError(t("patron_request.confirm_returned.unsuccessful"));
+		},
+	});
+	const offerConfirmReturn =
+		isConfirmItemReturnedEnabled() &&
+		confirmReturnStatuses.includes(String(patronRequest?.status));
+	const canConfirmReturn = isConfirmReturnEligible(patronRequest, agencyCodes);
 
 	const activeTab = Route.useSearch({ select: (search) => search.tab }) ?? 0;
 	const navigate = useNavigate({ from: Route.fullPath });
@@ -686,8 +721,60 @@ function RouteComponent() {
 										entityName=""
 										gridEdit={false}
 									/>
+									{offerConfirmReturn ? (
+										<>
+											<Button
+												variant="outlined"
+												color="primary"
+												sx={{ marginTop: 1 }}
+												onClick={() => setConfirmReturnOpen(true)}
+												aria-describedby="confirm-returned-reason"
+												disabled={confirmReturnMutation.isPending || !canConfirmReturn}>
+												{t("patron_request.confirm_returned.button")}
+												{confirmReturnMutation.isPending ? (
+													<CircularProgress
+														color="inherit"
+														size={13}
+														sx={{ ml: 1 }}
+														aria-label={t("ui.info.loading.value")}
+													/>
+												) : null}
+											</Button>
+											<Typography variant="body2" id="confirm-returned-reason">
+												{canConfirmReturn
+													? t("patron_request.confirm_returned.info")
+													: t("patron_request.confirm_returned.disabled")}
+											</Typography>
+											<Confirmation
+												open={confirmReturnOpen}
+												onClose={() => setConfirmReturnOpen(false)}
+												onConfirm={() => {
+													setConfirmReturnOpen(false);
+													confirmReturnMutation.mutate();
+												}}
+												action="confirmReturned"
+												entityName=""
+												gridEdit={false}
+											/>
+										</>
+									) : null}
 								</>
 							) : null}
+							<TimedAlert
+								open={confirmReturnSuccess}
+								severityType="success"
+								alertText={t("patron_request.confirm_returned.successful")}
+								key="confirm-returned-success-alert"
+								onCloseFunc={() => setConfirmReturnSuccess(false)}
+							/>
+							<TimedAlert
+								open={confirmReturnError !== null}
+								severityType="error"
+								autoHideDuration={10000}
+								alertText={confirmReturnError ?? ""}
+								key="confirm-returned-error-alert"
+								onCloseFunc={() => setConfirmReturnError(null)}
+							/>
 							<TimedAlert
 								open={cleanupRefusal !== null}
 								severityType="warning"
