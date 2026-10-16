@@ -27,4 +27,8 @@ describe.each([
 	it("spells clean-up as the locale does", () => {
 		expect(all.filter((text) => otherNoun.test(text))).toEqual([]);
 	});
+
+	it("names no service the user cannot see", () => {
+		expect(all.filter((text) => /\bdcb-(service|locate)\b/i.test(text))).toEqual([]);
+	});
 });

@@ -722,7 +722,7 @@
 			},
 			"walk_up_diversion": {
 				"what": "How many requests the reader collected in person at the supplying library, and how many travelled to their own.",
-				"how": "dcb-service splits each library’s requests by whether the item moved and writes both counts, so they sum to the total and nothing here has to interpret an unset expedited-checkout flag.",
+				"how": "Each request is counted once, by whether its item moved: collected at the supplying library if it did not, delivered to the reader’s own if it did. The two counts add up to the total.",
 				"not": "Volume, not money. A per-van cost would be a confident number nobody could source, which is why the saving beside it multiplies a figure the librarian types in."
 			},
 			"collection_totals": {
@@ -1335,7 +1335,7 @@
 				"simple": "Simple"
 			},
 			"error_connecting": "There was an error connecting to the search service. Please try again later.",
-			"error_connecting_title": "Could not connect to dcb-locate",
+			"error_connecting_title": "Search is not available",
 			"items": "Items",
 			"items_for_cluster_one": "{{count}} item is associated with this record.",
 			"items_for_cluster_other": "{{count}} items are associated with this record.",
