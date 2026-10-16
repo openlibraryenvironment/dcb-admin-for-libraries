@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 
@@ -7,7 +8,7 @@ import patronRequests from "./fixtures-data/patronRequests.json" with { type: "j
 // then nothing beneath it, which leaves a screen-reader user no way to move
 // between sections of an 1800-line page. WCAG 1.3.1.
 
-test("patron request sections are headings, not spans", async ({
+test("patron request sections are headings, not spans", covers("A request's sections are real headings, so screen-reader users can move between them.", ["1.3.1"]), async ({
 	app,
 	page,
 }) => {
@@ -32,7 +33,7 @@ test("patron request sections are headings, not spans", async ({
 	).toBeVisible({ timeout: 15000 });
 });
 
-test("the loading screen's title is its h1", async ({ page }) => {
+test("the loading screen's title is its h1", covers("The loading screen's title is a heading.", ["1.3.1"]), async ({ page }) => {
 	// Reached before sign-in, where the app shows its initialising screen.
 	await page.goto("/");
 	const heading = page.getByRole("heading", { level: 1 });

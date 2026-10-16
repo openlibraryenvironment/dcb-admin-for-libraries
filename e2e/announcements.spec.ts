@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 // A search changed the grid and the count on screen and said nothing: the count
@@ -13,7 +14,7 @@ const SEARCH_RESULTS = {
 	],
 };
 
-test("a search announces how many titles it found", async ({ app, page }) => {
+test("a search announces how many titles it found", covers("A search tells screen-reader users how many titles it found.", ["4.1.3"]), async ({ app, page }) => {
 	await app.signIn();
 	await app.mockGraphQL({ LoadLibrary: library });
 	await page.route("**/search/instances**", (route) =>
@@ -42,7 +43,7 @@ test("a search announces how many titles it found", async ({ app, page }) => {
 	await expect(page.getByRole("grid")).toHaveCount(0);
 });
 
-test("a navigation announces the page it arrived at", async ({ app, page }) => {
+test("a navigation announces the page it arrived at", covers("Moving to another page tells screen-reader users which page they arrived at.", ["4.1.3"]), async ({ app, page }) => {
 	await app.signIn();
 	await app.mockGraphQL({ LoadLibrary: library });
 

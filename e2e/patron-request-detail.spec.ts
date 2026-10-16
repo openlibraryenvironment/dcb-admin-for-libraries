@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import sparse from "./fixtures-data/patronRequest-sparse.json" with { type: "json" };
 import audit from "./fixtures-data/audit.json" with { type: "json" };
@@ -187,7 +188,7 @@ test("a library's ILS and contacts are written out, not left to a hover", async 
 	await expect(supplier).toContainText("Primary contacts:");
 });
 
-test("on a phone, each of a request's details takes the whole row", async ({ app, page }) => {
+test("on a phone, each of a request's details takes the whole row", covers("On a phone-width screen, each of a request's details takes the whole row.", ["1.4.10"]), async ({ app, page }) => {
 	await page.setViewportSize({ width: 320, height: 800 });
 	await app.signIn();
 	await app.mockGraphQL({

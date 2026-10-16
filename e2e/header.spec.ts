@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test";
+import { covers } from "./fixtures/coverage";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 const libraryNameRequests = (page: import("@playwright/test").Page) => {
@@ -11,7 +12,7 @@ const libraryNameRequests = (page: import("@playwright/test").Page) => {
 };
 
 test.describe("Header", () => {
-	test("wraps at 320px rather than scrolling sideways", async ({ app, page }) => {
+	test("wraps at 320px rather than scrolling sideways", covers("On a phone-width screen, the header wraps rather than scrolling sideways.", ["1.4.10"]), async ({ app, page }) => {
 		await page.setViewportSize({ width: 320, height: 640 });
 		// Two agencies, so the library selector renders: it is the widest control.
 		await app.signIn({ agencyCode: "e2e-agency,e2e-agency-2" });
@@ -80,7 +81,7 @@ test.describe("Header", () => {
 	});
 });
 
-test("at 320px, the main tabs show that they scroll", async ({ app, page }) => {
+test("at 320px, the main tabs show that they scroll", covers("On a phone-width screen, the main tabs show that there are more to scroll to.", ["1.4.10"]), async ({ app, page }) => {
 	await page.setViewportSize({ width: 320, height: 640 });
 	await app.signIn();
 	await app.mockGraphQL({ LoadLibrary: library });
