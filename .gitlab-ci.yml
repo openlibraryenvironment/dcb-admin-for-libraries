@@ -40,6 +40,29 @@ stages:
   - release
   - deploy
 
+# One pipeline per event. A merge request is checked in its own pipeline, so a push to its
+# branch does not start a second; main and release run on every push, as merges land there.
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_COMMIT_BRANCH !~ /^(main|release)$/
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+# Which pipelines a job joins. Every job takes one of these, or rules of its own that say why.
+.rules:
+  # Every pipeline but a schedule: cheap enough to tell any push what it broke
+  quick:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - when: on_success
+  # The merge gate: a merge request, and main and release once a merge lands
+  gate:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE != "schedule" && $CI_COMMIT_BRANCH =~ /^(main|release)$/
+
 # How each check ended, for the report job: an artifact, kept whether the check passed or not.
 .records_status:
   after_script:
@@ -50,6 +73,7 @@ stages:
 verify_static:
   extends: .records_status
   stage: verify
+  rules: !reference [.rules, quick]
   timeout: 15m
   script:
     - npm ci --prefer-offline --no-audit --no-fund
@@ -70,6 +94,7 @@ verify_static:
 verify_dependencies:
   extends: .records_status
   stage: verify
+  rules: !reference [.rules, gate]
   timeout: 10m
   cache: []
   script:
@@ -84,6 +109,7 @@ verify_dependencies:
 verify_e2e:
   extends: .records_status
   stage: verify
+  rules: !reference [.rules, gate]
   timeout: 30m
   image:
     name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
@@ -105,6 +131,7 @@ verify_e2e:
 verify_performance:
   extends: .records_status
   stage: verify
+  rules: !reference [.rules, gate]
   timeout: 30m
   # lighthouserc.cjs points CHROME_PATH at the Chrome @playwright/test pins.
   image:
@@ -130,6 +157,7 @@ verify_performance:
 verify_base_path:
   extends: .records_status
   stage: verify
+  rules: !reference [.rules, gate]
   timeout: 20m
   image:
     name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
@@ -150,6 +178,7 @@ verify_base_path:
 verify_ki_bootstrap:
   extends: .records_status
   stage: verify
+  rules: !reference [.rules, gate]
   timeout: 20m
   image:
     name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
@@ -171,6 +200,7 @@ verify_ki_bootstrap:
 verify_naming:
   extends: .records_status
   stage: verify
+  rules: !reference [.rules, quick]
   timeout: 5m
   cache: []
   variables:
@@ -189,6 +219,7 @@ verify_naming:
 verify_secrets:
   extends: .records_status
   stage: verify
+  rules: !reference [.rules, quick]
   timeout: 10m
   cache: []
   image:
@@ -214,21 +245,19 @@ verify_image:
   stage: verify
   timeout: 20m
   cache: []
+  # Always before a release; otherwise only when the image's own files change. A merge
+  # request's `changes` are compared with its target branch.
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == "release"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
-        paths: &image_paths
+        paths:
           - docker/**/*
           - .dockerignore
           - package.json
           - package-lock.json
-    # Branch pipelines only, as every other job: a rule with no `if` also matches a merge
-    # request pipeline, which then held this job alone and stood in for the whole pipeline.
-    - if: '$CI_COMMIT_BRANCH'
-      changes:
-        paths: *image_paths
-        compare_to: refs/heads/main
   image:
     name: docker:27
     pull_policy: if-not-present
@@ -259,17 +288,25 @@ report:
   stage: report
   timeout: 10m
   cache: []
-  when: always
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - when: always
+  # Optional: a push with no merge request runs only the quick checks
   needs:
     - job: verify_static
-    - job: verify_dependencies
-    - job: verify_e2e
-    - job: verify_performance
-    - job: verify_base_path
-    - job: verify_ki_bootstrap
     - job: verify_naming
     - job: verify_secrets
-    # Absent from a pipeline that does not change the image's files
+    - job: verify_dependencies
+      optional: true
+    - job: verify_e2e
+      optional: true
+    - job: verify_performance
+      optional: true
+    - job: verify_base_path
+      optional: true
+    - job: verify_ki_bootstrap
+      optional: true
     - job: verify_image
       optional: true
   script:
@@ -283,6 +320,7 @@ report:
 
 build:
   stage: build
+  rules: !reference [.rules, gate]
   timeout: 15m
   script:
     - npm ci --prefer-offline --no-audit --no-fund
@@ -306,7 +344,7 @@ release:
   timeout: 15m
   # No `needs`: it would let this start before the verify stage has passed.
   rules:
-    - if: '$CI_COMMIT_BRANCH == "release"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule"'
       when: on_success
     - when: never
   # The report, which .releaserc.json attaches to the GitLab Release
@@ -330,7 +368,7 @@ deploy_tag_to_s3:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "release"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule"'
       when: on_success
     - when: never
   image:
@@ -370,7 +408,7 @@ deploy_release_to_r2:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "release"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule"'
       when: on_success
     - when: never
   image:
@@ -401,7 +439,7 @@ deploy_dev_to_s3:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule"'
       when: on_success
     - when: never
   image:
@@ -429,7 +467,7 @@ deploy_dev_to_r2:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule"'
       when: on_success
     - when: never
   image:

@@ -225,6 +225,29 @@ A silent skip would be a hole in the gate; this is a documented door.
 
 Announcements are the whole of it today — see [announcements.md](announcements.md).
 
+## Which pipeline runs what
+
+`workflow:rules` in `.gitlab-ci.yml` makes one pipeline per event, and every job
+takes one of two rule sets, `.rules.quick` or `.rules.gate`, or rules of its own
+that say why.
+
+| Pipeline | Runs |
+|---|---|
+| A push to a branch with no merge request | `quick`: naming, static, secrets, and the report |
+| A push to a branch with an open merge request | nothing: the merge request pipeline checks it |
+| **A merge request** | **the merge gate**: every check, the build, and the report; the image only when its files change |
+| `main` | the merge gate again, then the dev deploys |
+| `release` | the merge gate, the image, then the release and its deploys |
+| A schedule | nothing that releases or deploys |
+
+"Pipelines must succeed" judges a merge request by its merge request pipeline, so
+that pipeline carries the whole gate. `main` runs it again because, on GitLab Free,
+two merge requests can each pass and still break `main` together; merged-results
+pipelines and merge trains, which would catch that first, are Premium.
+
+A rule with no `if` matches a merge request pipeline as well as a branch one,
+which is how `verify_image` once made a merge request pipeline of one job.
+
 ## The release report
 
 `reports/release-report.html` says what every check in a pipeline found, for a
