@@ -2,6 +2,7 @@ import { parse, visit, type ValueNode } from "graphql";
 import { test, expect } from "./fixtures/test";
 import { API_BASE } from "./fixtures/runtime-config";
 import library from "./fixtures-data/library.json" with { type: "json" };
+import sparse from "./fixtures-data/patronRequest-sparse.json" with { type: "json" };
 
 const REQUEST_ID = "33333333-3333-4333-8333-333333333333";
 const ENTRY = {
@@ -78,7 +79,8 @@ test.describe("Audit entry", () => {
 			GetAuditsByPatronRequest: {
 				audits: { content: [ENTRY], totalSize: HISTORY_SIZE },
 			},
-			LoadPatronRequest: { patronRequests: { content: [] } },
+			LoadPatronRequest: sparse,
+			LoadHostLms: { hostLms: { content: [] } },
 		});
 	});
 
@@ -87,13 +89,23 @@ test.describe("Audit entry", () => {
 	}) => {
 		await page.goto(`/patronRequests/audits/${ENTRY.id}`);
 		await expect(
-			page.getByRole("heading", { level: 1, name: ENTRY.id }),
+			page.getByRole("heading", { level: 1, name: ENTRY.briefDescription }),
 		).toBeVisible();
 
 		await page.getByRole("button", { name: /return/i }).click();
 		await expect(page).toHaveURL(
-			new RegExp(`/patronRequests/${REQUEST_ID}#auditlog$`),
+			new RegExp(`/patronRequests/${REQUEST_ID}\\?tab=5#auditlog$`),
 		);
+		await expect(page.getByRole("tab", { name: /audit log/i })).toHaveAttribute(
+			"aria-selected",
+			"true",
+		);
+	});
+
+	test("is headed by what happened, not by its id", async ({ page }) => {
+		await page.goto(`/patronRequests/audits/${ENTRY.id}`);
+
+		await expect(page.getByRole("heading", { level: 1 })).toHaveText("Moved to ERROR");
 	});
 
 	test("finds its neighbours with one row each, not by reading the whole history", async ({
@@ -140,7 +152,7 @@ test.describe("Audit entry", () => {
 
 		await page.goto(`/patronRequests/audits/${ENTRY.id}`);
 		await expect(
-			page.getByRole("heading", { level: 1, name: ENTRY.id }),
+			page.getByRole("heading", { level: 1, name: ENTRY.briefDescription }),
 		).toBeVisible();
 		await expect(page.getByRole("button", { name: "Older" })).toBeDisabled();
 

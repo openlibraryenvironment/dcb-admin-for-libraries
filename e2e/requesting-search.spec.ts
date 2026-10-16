@@ -114,3 +114,62 @@ for (const mode of ["simple", "advanced"] as const) {
 		expect(overflow).toBe(0);
 	});
 }
+
+// 320 CSS px is also a 1280px screen at 400% zoom - WCAG 1.4.10
+test("at 320px wide, the page buttons are on screen", async ({ app, page }) => {
+	await page.setViewportSize({ width: 320, height: 800 });
+	await openSearch(app, page, "/requesting?filters=12345");
+
+	for (const name of ["Go to previous page", "Go to next page"]) {
+		const button = page.getByRole("button", { name });
+		await expect(button).toBeVisible();
+		const box = await button.boundingBox();
+		expect(box!.x, name).toBeGreaterThanOrEqual(0);
+		expect(box!.x + box!.width, name).toBeLessThanOrEqual(320);
+	}
+});
+
+test("a result says why it can or cannot be requested, without a hover", async ({
+	app,
+	page,
+}) => {
+	await openSearch(app, page, "/requesting?filters=12345");
+
+	await expect(
+		page.getByText(/^Not available for walk-up requesting: there is currently no available item/).first(),
+	).toBeVisible();
+	await expect(
+		page.getByText(/^Not available for staff requesting: there is currently no available item/).first(),
+	).toBeVisible();
+});
+
+test("a new page of results is announced, and says which page", async ({ app, page }) => {
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraries: library });
+	await page.route("**/search/instances**", (route) =>
+		route.fulfill({ json: { ...DEFAULT_SEARCH, totalRecords: 60 } }),
+	);
+	await page.route("**/items/availability**", (route) =>
+		route.fulfill({ json: { itemList: [], timings: {} } }),
+	);
+	await page.goto("/requesting?filters=12345");
+	const announcer = page.getByRole("status").filter({ hasText: /\S/ });
+	await expect(announcer).toHaveText(/60 titles found/);
+
+	await page.getByRole("button", { name: "Go to next page" }).click();
+
+	await expect(announcer).toHaveText(/Page 2 of 3, 60 titles found\./);
+});
+
+test("a failed search is reported in the page, under its one heading", async ({ app, page }) => {
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraries: library });
+	await page.route("**/search/instances**", (route) => route.fulfill({ status: 500, json: {} }));
+
+	await page.goto("/requesting?filters=12345");
+
+	await expect(page.getByRole("alert")).toContainText("error connecting to the search service", {
+		timeout: 15_000,
+	});
+	await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+});

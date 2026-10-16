@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import {
 	Autocomplete,
 	Button,
@@ -37,7 +38,6 @@ interface StaffRequestDetailsStepProps {
 	isSubmitting: boolean;
 	/** Placed already: a second submission would be a duplicate request. */
 	isPlaced: boolean;
-	isValid: boolean;
 	t: TFunction;
 }
 
@@ -56,7 +56,6 @@ export const StaffRequestDetailsStep = ({
 	handleClose,
 	isSubmitting,
 	isPlaced,
-	isValid,
 	t,
 }: StaffRequestDetailsStepProps) => {
 	// useWatch rather than the form's watch: the subscription belongs to
@@ -66,6 +65,12 @@ export const StaffRequestDetailsStep = ({
 		control,
 		name: ["selectionType", "itemAgencyCode"],
 	});
+
+	// The Validate button that had focus went with the step before this one
+	const pickupLocationRef = useRef<HTMLInputElement>(null);
+	useEffect(() => {
+		pickupLocationRef.current?.focus();
+	}, []);
 
 	return (
 		<>
@@ -91,6 +96,7 @@ export const StaffRequestDetailsStep = ({
 						renderInput={(params) => (
 							<TextField
 								{...params}
+								inputRef={pickupLocationRef}
 								margin="normal"
 								required
 								label={t("requesting.staff_request.patron.pickup_location")}
@@ -162,6 +168,8 @@ export const StaffRequestDetailsStep = ({
 								onChange={(_, newValue) => {
 									onChange(newValue?.value || "");
 									setValue("itemLocalSystemCode", newValue?.hostLmsCode);
+									// The item is one of the old library's; its local id may name another item at the new one
+									setValue("itemLocalId", "", { shouldValidate: true });
 								}}
 								options={itemLibraryOptions}
 								loading={librariesLoading}
@@ -240,7 +248,8 @@ export const StaffRequestDetailsStep = ({
 					type="submit"
 					color="primary"
 					variant="contained"
-					disabled={!isValid || isSubmitting || isPlaced}>
+					// Enabled while incomplete: submitting says what is missing, field by field
+					disabled={isSubmitting || isPlaced}>
 					{isSubmitting ? t("ui.actions.submitting") : t("ui.actions.submit")}
 				</Button>
 			</Stack>

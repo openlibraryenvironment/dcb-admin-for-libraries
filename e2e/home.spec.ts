@@ -525,3 +525,39 @@ test.describe("Home's optional parts", () => {
 		).toHaveCount(0);
 	});
 });
+
+test("a sign-in with no library names no library, rather than the first one found", async ({
+	app,
+	page,
+}) => {
+	await app.signIn({ agencyCode: "" });
+	const asked: string[] = [];
+	await app.mockGraphQL({
+		LoadLibrary: (variables: Record<string, unknown>) => {
+			asked.push(String(variables.query));
+			return library;
+		},
+		LoadLibraryBasics: library,
+	});
+
+	await page.goto("/");
+	await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+	expect(asked).not.toContain("agencyCode:");
+	await expect(page.getByRole("heading", { level: 1 })).not.toContainText("E2E Test Library");
+});
+
+test("while the library is unknown, Home is headed Home, not an unfinished welcome", async ({
+	app,
+	page,
+}) => {
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: { libraries: { totalSize: 0, content: [] } },
+		LoadLibraryBasics: library,
+	});
+
+	await page.goto("/");
+
+	await expect(page.getByRole("heading", { level: 1 })).toHaveText("Home");
+});

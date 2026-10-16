@@ -229,8 +229,10 @@ export const SearchResult = ({ record }: SearchResultProps) => {
 							<Typography variant="hitCount" sx={{ flexGrow: 1 }}>
 								{requestableCount !== undefined
 									? t("requesting.available_to_request", {
-											number: requestableCount,
-											total: staffRequestingLocationCount,
+											count: requestableCount,
+											institutions: t("requesting.institutions", {
+												count: staffRequestingLocationCount,
+											}),
 										})
 									: t("requesting.live_availability_unavailable")}
 							</Typography>
@@ -238,28 +240,17 @@ export const SearchResult = ({ record }: SearchResultProps) => {
                                 alignItems: "center"
                             }}>
 								{isAvailableForWalkUp ? (
-									<Tooltip
-										title={t("requesting.available_for_walk_up_description")}>
-										<CheckCircleOutlineOutlined
-											color="success"
-											sx={{ fontSize: "1.25rem" }}
-										/>
-									</Tooltip>
+									<CheckCircleOutlineOutlined
+										color="success"
+										sx={{ fontSize: "1.25rem" }}
+									/>
 								) : (
-									<Tooltip
-										title={t(
-											"requesting.not_available_for_walk_up_description"
-										)}>
-										<CancelOutlined
-											color="error"
-											sx={{ fontSize: "1.25rem" }}
-										/>
-									</Tooltip>
+									<CancelOutlined color="error" sx={{ fontSize: "1.25rem" }} />
 								)}
 								<Typography variant="body2">
 									{isAvailableForWalkUp
-										? t("requesting.available_for_walk_up")
-										: t("requesting.not_available_for_walk_up")}
+										? t("requesting.available_for_walk_up_description")
+										: t("requesting.not_available_for_walk_up_description")}
 								</Typography>
 							</Stack>
 
@@ -267,40 +258,19 @@ export const SearchResult = ({ record }: SearchResultProps) => {
                                 alignItems: "center"
                             }}>
 								{isAvailableForStaffRequesting ? (
-									<Tooltip
-										title={t(
-											"requesting.available_for_staff_request_description"
-										)}>
-										<CheckCircleOutlineOutlined
-											color="success"
-											sx={{ fontSize: "1.25rem" }}
-										/>
-									</Tooltip>
+									<CheckCircleOutlineOutlined
+										color="success"
+										sx={{ fontSize: "1.25rem" }}
+									/>
 								) : (
-									<Tooltip
-										title={t(
-											"requesting.not_available_for_staff_request_description"
-										)}>
-										<CancelOutlined
-											color="error"
-											sx={{ fontSize: "1.25rem" }}
-										/>
-									</Tooltip>
+									<CancelOutlined color="error" sx={{ fontSize: "1.25rem" }} />
 								)}
 								<Typography variant="body2">
 									{isAvailableForStaffRequesting
-										? t("requesting.available_for_staff_request", {
-												count: staffRequestingLocationCount,
-											})
-										: t("requesting.not_available_for_staff_request")}
+										? t("requesting.available_for_staff_request_description")
+										: t("requesting.not_available_for_staff_request_description")}
 								</Typography>
 							</Stack>
-							{/* <Typography variant="hitCount">
-							{t("requesting.available_at", {
-								total: availability?.timings?.size ?? 0,
-								list: locationNames,
-							})}
-						</Typography> */}
 							<Stack direction="row" spacing={1} sx={{
                                 alignItems: "center"
                             }}>
@@ -308,7 +278,7 @@ export const SearchResult = ({ record }: SearchResultProps) => {
 
 								<Typography variant="body2">
 									{t("requesting.available_at", {
-										total: locationCount,
+										institutions: t("requesting.institutions", { count: locationCount }),
 									})}
 									{locationCount > 0 && ": "}
 									{locationCount > 2 && !showAllLocations ? (

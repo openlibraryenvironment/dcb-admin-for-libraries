@@ -2,6 +2,7 @@ import {
 	Accordion,
 	AccordionDetails,
 	AccordionSummary,
+	Box,
 	Button,
 	Dialog,
 	DialogActions,
@@ -17,6 +18,7 @@ import {
 	ExpandMore,
 	WarningAmber,
 } from "@mui/icons-material";
+import { visuallyHidden } from "@mui/utils";
 import { useTranslation } from "react-i18next";
 import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
 import { cleanupPatronRequestVisibility } from "@helpers/dataGrid/columnVisibility/cleanupPatronRequestVisibility";
@@ -25,7 +27,9 @@ import DataGrid from "../DataGrid";
 import { useGridStore } from "@/hooks/useDataGridStore";
 import {
 	GridPaginationModel,
+	GridFilterModel,
 	GridRowModesModel,
+	GridSortModel,
 } from "@mui/x-data-grid-premium";
 
 interface CleanupProgressDialogProps {
@@ -43,6 +47,10 @@ interface CleanupProgressDialogProps {
 }
 
 // Translation keys and more refinement needed
+const CLEANUP_PAGINATION = { page: 0, pageSize: 25 };
+const NO_FILTER: GridFilterModel = { items: [] };
+const CLEANUP_SORT: GridSortModel = [{ field: "dateCreated", sort: "desc" }];
+
 export const CleanupProgressDialog = ({
 	open,
 	isCleaning,
@@ -60,26 +68,22 @@ export const CleanupProgressDialog = ({
 	const [isSuccessRowsExpanded, setIsSuccessRowsExpanded] = useState(false);
 	const [isErrorRowsExpanded, setIsErrorRowsExpanded] = useState(false);
 	const [isSkippedRowsExpanded, setIsSkippedRowsExpanded] = useState(false);
-	const {
-		paginationModel: cleanupPaginationModel,
-		setPaginationModel: setCleanupPaginationModel,
-		filterModel: cleanupFilterModel,
-		setFilterModel: setCleanupFilterModel,
-		sortModel: cleanupSortModel,
-		setSortModel: setCleanupSortModel,
-	} = useGridStore();
-	const currentPagination = cleanupPaginationModel["cleanupGridId"] ?? {
-		page: 0,
-		pageSize: 25,
-	};
-	const currentFilter = cleanupFilterModel["cleanupGridId"] ?? { items: [] };
-	const currentSort = cleanupSortModel["cleanupGridId"] ?? [
-		{ field: "dateCreated", sort: "desc" },
-	];
+	const paginationModels = useGridStore((state) => state.paginationModel);
+	const filterModels = useGridStore((state) => state.filterModel);
+	const sortModels = useGridStore((state) => state.sortModel);
+	const setCleanupPaginationModel = useGridStore((state) => state.setPaginationModel);
+	const setCleanupFilterModel = useGridStore((state) => state.setFilterModel);
+	const setCleanupSortModel = useGridStore((state) => state.setSortModel);
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 	const successCleanupGridId = "cleanup-success-grid";
 	const skippedCleanupGridId = "cleanup-skipped-grid";
 	const failedCleanupGridId = "cleanup-error-grid";
+	// Each grid's own state, under the id it is written to
+	const modelsFor = (gridId: string) => ({
+		paginationModel: paginationModels[gridId] ?? CLEANUP_PAGINATION,
+		filterModel: filterModels[gridId] ?? NO_FILTER,
+		sortModel: sortModels[gridId] ?? CLEANUP_SORT,
+	});
 
 	return (
         <Dialog
@@ -95,6 +99,10 @@ export const CleanupProgressDialog = ({
 					: t("patron_request.cleanup_complete")}
 			</DialogTitle>
             <DialogContent>
+				{/* In the dialog: MUI hides #root, and the app's live region with it, while it is open */}
+				<Box role="status" aria-live="polite" sx={visuallyHidden}>
+					{isCleaning ? "" : t("patron_request.cleanup_complete")}
+				</Box>
 				<Stack direction="column" spacing={1}>
 					<Stack direction="column" spacing={1}>
 						<Stack direction="row" spacing={1} sx={{
@@ -129,8 +137,8 @@ export const CleanupProgressDialog = ({
 									sx={{ mt: 2 }}>
 									<AccordionSummary
 										expandIcon={<ExpandMore />}
-										aria-controls="success-rows-show-content"
-										id="success-rows-show-content">
+										aria-controls="success-rows-content"
+										id="success-rows-header">
 										<Stack direction={"row"} spacing={1}>
 											<CheckCircleOutlined color="success" />
 											<Typography variant="h3" sx={{ fontWeight: "bold" }}>
@@ -171,14 +179,14 @@ export const CleanupProgressDialog = ({
 											listViewEnabled={false}
 											pivotingEnabled
 											loading={isCleaning}
-											paginationModel={currentPagination}
-											filterModel={currentFilter}
+											paginationModel={modelsFor(successCleanupGridId).paginationModel}
+											filterModel={modelsFor(successCleanupGridId).filterModel}
 											rowModesModel={rowModesModel}
 											onRowModesModelChange={setRowModesModel}
 											onSortModelChange={(newModel) =>
 												setCleanupSortModel(successCleanupGridId, newModel)
 											}
-											sortModel={currentSort}
+											sortModel={modelsFor(successCleanupGridId).sortModel}
 											sortingMode="client"
 											noResultsText={t("patron_request.no_requests")}
 											searchText=""
@@ -196,8 +204,8 @@ export const CleanupProgressDialog = ({
 								sx={{ mt: 2 }}>
 								<AccordionSummary
 									expandIcon={<ExpandMore />}
-									aria-controls="error-rows-show-content"
-									id="error-rows-show-content">
+									aria-controls="error-rows-content"
+									id="error-rows-header">
 									<Stack direction={"row"} spacing={1}>
 										<ErrorOutlined color="error" />
 										<Typography variant="h3" sx={{ fontWeight: "bold" }}>
@@ -233,14 +241,14 @@ export const CleanupProgressDialog = ({
 										listViewEnabled={false}
 										pivotingEnabled
 										loading={isCleaning}
-										paginationModel={currentPagination}
-										filterModel={currentFilter}
+										paginationModel={modelsFor(failedCleanupGridId).paginationModel}
+										filterModel={modelsFor(failedCleanupGridId).filterModel}
 										rowModesModel={rowModesModel}
 										onRowModesModelChange={setRowModesModel}
 										onSortModelChange={(newModel) =>
 											setCleanupSortModel(failedCleanupGridId, newModel)
 										}
-										sortModel={currentSort}
+										sortModel={modelsFor(failedCleanupGridId).sortModel}
 										sortingMode="client"
 										noResultsText={t("patron_request.no_requests")}
 										searchText=""
@@ -269,8 +277,8 @@ export const CleanupProgressDialog = ({
 								sx={{ mt: 2 }}>
 								<AccordionSummary
 									expandIcon={<ExpandMore />}
-									aria-controls="skipped-rows-show-content"
-									id="skipped-rows-show-content">
+									aria-controls="skipped-rows-content"
+									id="skipped-rows-header">
 									<Stack direction={"row"} spacing={1}>
 										<WarningAmber color="warning" />
 										<Typography variant="h3" sx={{ fontWeight: "bold" }}>
@@ -306,14 +314,14 @@ export const CleanupProgressDialog = ({
 										listViewEnabled={false}
 										pivotingEnabled
 										loading={isCleaning}
-										paginationModel={currentPagination}
-										filterModel={currentFilter}
+										paginationModel={modelsFor(skippedCleanupGridId).paginationModel}
+										filterModel={modelsFor(skippedCleanupGridId).filterModel}
 										rowModesModel={rowModesModel}
 										onRowModesModelChange={setRowModesModel}
 										onSortModelChange={(newModel) =>
 											setCleanupSortModel(skippedCleanupGridId, newModel)
 										}
-										sortModel={currentSort}
+										sortModel={modelsFor(skippedCleanupGridId).sortModel}
 										sortingMode="client"
 										noResultsText={t("patron_request.no_requests")}
 										searchText=""

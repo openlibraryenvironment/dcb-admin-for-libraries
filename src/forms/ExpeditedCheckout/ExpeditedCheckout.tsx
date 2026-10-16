@@ -12,7 +12,7 @@ import {
 import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { expeditedCheckoutSchema } from "@/schemas/expeditedCheckout";
 import {
 	DialogContent,
@@ -56,6 +56,7 @@ import { authHeaders } from "@helpers/auth";
 import {
 	allLibrariesQueryOptions,
 	libraryQueryOptions,
+	invalidateRequestLists,
 } from "@helpers/sharedQueries";
 import {
 	getStepColors,
@@ -67,6 +68,7 @@ export default function ExpeditedCheckout({
 	bibClusterId,
 }: PatronRequestFormType) {
 	const { t } = useTranslation();
+	const queryClient = useQueryClient();
 	// The library the staff member is acting for - see useAgencyCodes
 	const { agencyCode: selectedAgencyCode } = useAgencyCodes();
 	const staffAgencyCode = selectedAgencyCode ?? "";
@@ -400,7 +402,9 @@ export default function ExpeditedCheckout({
 					agencyCode: patronData.agencyCode,
 				},
 				pickupLocation: { code: selectedLocation?.value || "" },
-				description: "On site borrowing request" + data.requesterNote,
+				description: data.requesterNote
+					? `On site borrowing request: ${data.requesterNote}`
+					: "On site borrowing request",
 				requesterNote: data.requesterNote || "On site borrowing request",
 				item: {
 					localId: data.itemLocalId || "",
@@ -418,6 +422,7 @@ export default function ExpeditedCheckout({
 			return response.data;
 		},
 		onSuccess: (data) => {
+			void invalidateRequestLists(queryClient);
 			setPatronRequestId(data.id);
 			setAlert({
 				open: true,

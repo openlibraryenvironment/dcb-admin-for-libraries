@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
+import { MAX_PAGE, PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
 
 // The shape of a grid's URL state, and nothing that needs its columns. Route files load
 // eagerly, so a schema built from column definitions put every grid's code on every page.
@@ -9,7 +9,7 @@ import { PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
 const MAX_FILTER_ITEMS = 20;
 
 export const gridSearchSchema = z.object({
-	page: z.number().int().min(0).optional().catch(undefined),
+	page: z.number().int().min(0).max(MAX_PAGE).optional().catch(undefined),
 	pageSize: z
 		.number()
 		.refine((size) => PAGE_SIZE_OPTIONS.includes(size))

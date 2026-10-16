@@ -6,7 +6,7 @@ import type { Page } from "@playwright/test";
 /**
  * VITE_LOCALE decides the English and the date order for a deployment, and a
  * user can override it. Asserted where each is visible: the Insights range
- * picker, whose sections run in the locale's order; the Settings page, whose
+ * picker, whose sections run in the locale's order; the Preferences page, whose
  * wording differs; and the page's `lang`, which screen readers pronounce by.
  */
 
@@ -37,7 +37,7 @@ test("a deployment that sets nothing reads British English, day first", async ({
 	await expectDateOrder(page, ["Day", "Month", "Year"]);
 	await expect(page.locator("html")).toHaveAttribute("lang", "en-GB");
 
-	await page.goto("/settings");
+	await page.goto("/preferences");
 	await expect(
 		page.getByRole("radiogroup", { name: "Colour scheme" }),
 	).toBeVisible();
@@ -52,7 +52,7 @@ test("an en-US deployment reads American English, month first", async ({
 	await expectDateOrder(page, ["Month", "Day", "Year"]);
 	await expect(page.locator("html")).toHaveAttribute("lang", "en-US");
 
-	await page.goto("/settings");
+	await page.goto("/preferences");
 	await expect(
 		page.getByRole("radiogroup", { name: "Color scheme" }),
 	).toBeVisible();
@@ -70,7 +70,7 @@ test("a user can choose the other English, and keeps it across a reload", async 
 	page,
 }) => {
 	await app.configure({ VITE_LOCALE: "en-GB" });
-	await page.goto("/settings");
+	await page.goto("/preferences");
 
 	const language = page.getByRole("radiogroup", { name: "Language" });
 	await expect(

@@ -36,7 +36,7 @@ test.describe("Navigation under a deployment base path", () => {
 	});
 
 	test("the header logo goes home under the base", async ({ page }) => {
-		await page.goto(`${BASE}/settings`);
+		await page.goto(`${BASE}/preferences`);
 
 		const logo = page.getByRole("link", { name: /go to the home page/i });
 		await expect(logo).toHaveAttribute("href", `${BASE}/`);

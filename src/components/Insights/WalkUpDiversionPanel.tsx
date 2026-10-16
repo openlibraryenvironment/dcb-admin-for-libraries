@@ -9,7 +9,6 @@ import {
 	Table,
 	TableBody,
 	TableCell,
-	TableContainer,
 	TableHead,
 	TableRow,
 	Typography,
@@ -21,6 +20,7 @@ import { libraryBreakdownQueryOptions, StatsParams } from "@helpers/statsApi";
 
 import MetricInfo from "./MetricInfo";
 import PanelState from "./PanelState";
+import ScrollableTableContainer from "./ScrollableTableContainer";
 
 const PANEL_MIN_HEIGHT = 300;
 
@@ -105,7 +105,7 @@ export default function WalkUpDiversionPanel({ params }: { params: StatsParams }
 								</Alert>
 							)}
 
-							<TableContainer sx={{ overflowX: "auto" }}>
+							<ScrollableTableContainer labelledBy={headingId} sx={{ overflowX: "auto" }}>
 								<Table size="small">
 									<TableHead>
 										<TableRow>
@@ -151,7 +151,7 @@ export default function WalkUpDiversionPanel({ params }: { params: StatsParams }
 										))}
 									</TableBody>
 								</Table>
-							</TableContainer>
+							</ScrollableTableContainer>
 						</Box>
 					)}
 				</PanelState>

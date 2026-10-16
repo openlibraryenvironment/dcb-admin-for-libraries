@@ -38,6 +38,7 @@ import {
 } from "@helpers/savedFilters";
 import { type SavedFilterForm, savedFilterSchema } from "@/schemas/savedFilter";
 import { useFilterLabels } from "./useFilterLabels";
+import { Announcer } from "@components/Layout/Announcer";
 
 const describe = (
 	t: (key: string, options?: Record<string, unknown>) => string,
@@ -129,6 +130,8 @@ export default function SavedFiltersDialog({
 		>
 			<DialogTitle id={titleId}>{t("ui.data_grid.views.title")}</DialogTitle>
 			<DialogContent>
+				{/* The app's own region is under #root, which MUI hides while a dialog is open */}
+				<Announcer />
 				<Stack spacing={2}>
 					<Typography variant="body2" color="text.secondary">
 						{t("ui.data_grid.views.session_note")}

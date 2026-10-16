@@ -48,3 +48,23 @@ test("the supplier grid scopes its query once", async ({ app, page }) => {
 	// Escaped like every other value in a query; dcb-service's parser unescapes it.
 	expect(queries[0]).toBe("supplyingAgencyCode:e2e\\-agency");
 });
+
+for (const [path, operation, field, empty] of [
+	["/bibs", "LoadBibs", "sourceBibs", "No bib records match."],
+	["/locations", "LoadLocations", "locations", "No locations match."],
+	["/mappings", "LoadMappings", "referenceValueMappings", "No mappings match."],
+] as const) {
+	test(`an empty ${path} grid names what it found none of`, async ({ app, page }) => {
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraries: library,
+			[operation]: { [field]: { totalSize: 0, content: [] } },
+		});
+
+		await page.goto(path);
+
+		await expect(page.getByRole("grid")).toContainText(empty);
+		await expect(page.getByRole("grid")).not.toContainText("audits");
+	});
+}

@@ -225,6 +225,46 @@ test.describe("Insights panel states", () => {
 		);
 	});
 
+	test("typing a year asks for that year, not for each digit on the way to it", async ({
+		page,
+	}) => {
+		await page.goto("/insights?from=2026-09-01&to=2026-09-15");
+		const from = page.getByRole("group", { name: "From" });
+		await expect(from.getByRole("spinbutton", { name: "Day" })).toHaveText("01");
+
+		const views: string[] = [];
+		page.on("framenavigated", (frame) => views.push(frame.url()));
+		await from.getByRole("spinbutton", { name: "Year" }).click();
+		await page.keyboard.type("2025");
+
+		await expect(page).toHaveURL(/from=2025-09-01/);
+		// Not "from" dropped, so the page fell back to its preset, nor from=0202-09-01
+		expect(views.filter((url) => !/from=(2026|2025)-09-01/.test(url))).toEqual([]);
+	});
+
+	test("an acquired-since date that does not exist leaves the page standing", async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on("pageerror", (error) => errors.push(error.message));
+
+		await page.goto("/insights?tab=gaps");
+		await reveal(page, "New acquisitions performance");
+		const field = cardFor(page, "New acquisitions performance").getByRole("group", {
+			name: "Acquired since",
+		});
+
+		await field.getByRole("spinbutton", { name: "Day" }).click();
+		// The en-GB picker's own section order, day then month: 30 February
+		await page.keyboard.type("3002");
+
+		await expect(field.getByRole("spinbutton", { name: "Month" })).toHaveText("02");
+		await expect(
+			page.getByRole("heading", { level: 3, name: "New acquisitions performance" }),
+		).toBeVisible();
+		expect(errors).toEqual([]);
+	});
+
 	test("a failed panel says it failed, and offers a retry that works", async ({
 		page,
 	}) => {
@@ -442,4 +482,68 @@ test.describe("Insights subjects", () => {
 			page.getByRole("heading", { level: 2, name: "Trends" }),
 		).toBeVisible();
 	});
+});
+
+// 320 CSS px is also a 1280px screen at 400% zoom - WCAG 1.4.10
+test("at 320px wide, both ends of the date range are on screen", async ({ app, page }) => {
+	await page.setViewportSize({ width: 320, height: 800 });
+	await app.signIn();
+	await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+	await app.mockStats();
+
+	await page.goto("/insights?from=2026-09-01&to=2026-09-15");
+
+	for (const name of ["From", "To"]) {
+		const field = page.getByRole("group", { name, exact: true });
+		await expect(field).toBeVisible();
+		const box = await field.boundingBox();
+		expect(box!.x, name).toBeGreaterThanOrEqual(0);
+		expect(box!.x + box!.width, name).toBeLessThanOrEqual(320);
+	}
+});
+
+// The tables scroll only below desktop width, so the desktop axe gate never saw them
+for (const subject of ["service", "partners", "collection", "gaps"]) {
+	test(`at 320px, every table that scrolls on ${subject} can be reached by keyboard`, async ({
+		app,
+		page,
+	}) => {
+		await page.setViewportSize({ width: 320, height: 800 });
+		await app.signIn();
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+		await app.mockStats();
+
+		await page.goto(`/insights?tab=${subject}`);
+		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+		// Panels below the fold mount as they are scrolled to
+		for (let i = 0; i < 20; i++) {
+			await page.mouse.wheel(0, 1200);
+			await expect(page.locator("body")).toBeVisible();
+		}
+		await expect(page.getByRole("progressbar")).toHaveCount(0);
+
+		await app.expectNoAccessibilityViolations();
+	});
+}
+
+test("at 320px, the activity chart fits its card and names statuses as the grids do", async ({
+	app,
+	page,
+}) => {
+	await page.setViewportSize({ width: 320, height: 800 });
+	await app.signIn();
+	await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+	await app.mockStats();
+
+	await page.goto("/insights");
+	await reveal(page, "Requesting activity over time");
+	const card = cardFor(page, "Requesting activity over time");
+
+	await expect(card.getByRole("button", { name: "Loaned", exact: true })).toHaveText("Loaned");
+	await expect(card.locator("svg").first()).toBeVisible();
+	const overflow = await card.evaluate((element) => element.scrollWidth - element.clientWidth);
+	expect(overflow).toBeLessThanOrEqual(0);
 });

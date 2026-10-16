@@ -49,10 +49,10 @@ test("a navigation announces the page it arrived at", async ({ app, page }) => {
 	await page.goto("/contacts");
 	const region = page.getByRole("status");
 
-	await page.getByRole("tab", { name: /^settings$/i }).click();
+	await page.getByRole("tab", { name: /^preferences$/i }).click();
 
 	// A full page load announces itself and resets focus. A client-side
 	// navigation does neither, so both have to be arranged.
-	await expect(region).toHaveText(/Settings/);
+	await expect(region).toHaveText(/Preferences/);
 	await expect(page.getByRole("main")).toBeFocused();
 });

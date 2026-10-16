@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { test, expect, type AppFixture } from "./fixtures/test";
 import { AGENCY_CODE } from "./fixtures/auth";
+import { contrast } from "./fixtures/contrast";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 const RECORD = "aaaaaaaa-0000-4000-8000-000000000001";
@@ -21,6 +22,7 @@ interface Traffic {
 	/** Availability calls made after the requesting dialog opened. */
 	availability: () => number;
 	lookups: Record<string, unknown>[];
+	placed: Record<string, unknown>[];
 }
 
 const openForm = async (
@@ -31,12 +33,13 @@ const openForm = async (
 		placeStatus?: number;
 		checkoutStatus?: string;
 		item?: Record<string, unknown>;
+		libraries?: typeof library;
 	} = {},
 ): Promise<Traffic> => {
 	await app.signIn();
 	await app.mockGraphQL({
 		LoadLibrary: library,
-		LoadLibraries: library,
+		LoadLibraries: options.libraries ?? library,
 		LoadLocations: {
 			locations: {
 				totalSize: 1,
@@ -84,7 +87,9 @@ const openForm = async (
 			},
 		});
 	});
+	const placedBodies: Record<string, unknown>[] = [];
 	await page.route("**/patrons/requests/place**", (route) => {
+		placedBodies.push(route.request().postDataJSON());
 		if (options.placeStatus) {
 			return route.fulfill({ status: options.placeStatus, json: {} });
 		}
@@ -105,7 +110,7 @@ const openForm = async (
 	await page.getByRole("button", { name: /continue/i }).click();
 
 	const before = availabilityCalls;
-	return { availability: () => availabilityCalls - before, lookups };
+	return { availability: () => availabilityCalls - before, lookups, placed: placedBodies };
 };
 
 const barcode = (page: Page) =>
@@ -127,6 +132,18 @@ test("Enter in the barcode field validates the patron", async ({
 
 	await expect.poll(() => traffic.lookups.length).toBe(1);
 	await expect(page.getByText(/choose a pickup location/i)).toBeVisible();
+});
+
+test("focus moves to the next step's first field once the patron is validated", async ({
+	app,
+	page,
+}) => {
+	await openForm(app, page, "staff");
+
+	await barcode(page).fill("12345");
+	await barcode(page).press("Enter");
+
+	await expect(page.getByRole("combobox", { name: /pickup location/i })).toBeFocused();
 });
 
 test("validates against the patron's library, never the staff member's", async ({
@@ -213,6 +230,54 @@ test("opening the item picker does not ask every library again", async ({
 	expect(traffic.availability()).toBeLessThanOrEqual(1);
 });
 
+test("choosing another item library clears the item chosen at the first", async ({
+	app,
+	page,
+}) => {
+	const [own] = library.libraries.content;
+	const other = {
+		...own,
+		id: "lib-2",
+		fullName: "Second Test Library",
+		agencyCode: "second-agency",
+		agency: { ...own.agency, code: "second-agency" },
+	};
+	const traffic = await openForm(app, page, "staff", {
+		libraries: { libraries: { ...library.libraries, totalSize: 2, content: [own, other] } },
+	});
+
+	await barcode(page).fill("12345");
+	await barcode(page).press("Enter");
+	await choose(page, /pickup location/i, /main desk/i);
+	await page.getByRole("radio", { name: /manual/i }).check();
+	await choose(page, /item library/i, /e2e test library/i);
+	await choose(page, /item local id/i, /30001/);
+	await choose(page, /item library/i, /second test library/i);
+
+	const item = page.getByRole("combobox", { name: /item local id/i });
+	await expect(item).toHaveValue("");
+	await page.getByRole("button", { name: /^submit$/i }).click();
+	await expect(item).toHaveAttribute("aria-invalid", "true");
+	expect(traffic.placed).toEqual([]);
+});
+
+test("an on-site request's description keeps its note apart from its kind", async ({
+	app,
+	page,
+}) => {
+	const traffic = await openForm(app, page, "walk-up");
+
+	await barcode(page).fill("12345");
+	await barcode(page).press("Enter");
+	await choose(page, /pickup location/i, /main desk/i);
+	await choose(page, /item local id/i, /30001/);
+	await page.getByRole("textbox", { name: /requester note/i }).fill("Please hold");
+	await page.getByRole("button", { name: /create request/i }).click();
+
+	await expect.poll(() => traffic.placed.length).toBe(1);
+	expect(traffic.placed[0].description).toBe("On site borrowing request: Please hold");
+});
+
 test("shows the due date once a walk-up checkout completes", async ({
 	app,
 	page,
@@ -255,3 +320,39 @@ for (const type of ["staff", "walk-up"] as const) {
 		await expect(option).not.toContainText("v22y1990");
 	});
 }
+
+// WCAG 1.4.11: an icon is a graphical object, and axe does not measure it
+for (const scheme of ["light", "dark", "highContrast"] as const) {
+	test(`the requesting dialog's close icon stands out from the dialog (${scheme})`, async ({
+		app,
+		page,
+	}) => {
+		await app.useColorScheme(scheme);
+		await openForm(app, page, "staff");
+
+		const close = page.getByRole("dialog").getByRole("button", { name: /close/i });
+		const { icon, ground } = await close.evaluate((element) => {
+			let ground = "rgb(255, 255, 255)";
+			for (let node = element.parentElement; node; node = node.parentElement) {
+				const background = getComputedStyle(node).backgroundColor;
+				if (background !== "rgba(0, 0, 0, 0)" && background !== "transparent") {
+					ground = background;
+					break;
+				}
+			}
+			return { icon: getComputedStyle(element).color, ground };
+		});
+
+		expect(contrast(icon, ground)).toBeGreaterThanOrEqual(3);
+	});
+}
+
+test("at 320px, the requesting dialog uses the width of the screen", async ({ app, page }) => {
+	await page.setViewportSize({ width: 320, height: 800 });
+	await openForm(app, page, "staff");
+
+	const width = await page
+		.getByRole("dialog")
+		.evaluate((element) => element.getBoundingClientRect().width);
+	expect(width).toBeGreaterThanOrEqual(300);
+});

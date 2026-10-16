@@ -55,3 +55,20 @@ test.describe("Service", () => {
 		await expect(page.getByRole("alert")).toContainText(/could not be loaded/i);
 	});
 });
+
+test("a sign-in with no library asks for no library's service settings", async ({ app, page }) => {
+	await app.signIn({ agencyCode: "" });
+	const asked: unknown[] = [];
+	await app.mockGraphQL({
+		LoadLibrary: polarisLibrary,
+		LoadLibraryServiceConfig: (variables: Record<string, unknown>) => {
+			asked.push(variables.query);
+			return polarisLibrary;
+		},
+	});
+
+	await page.goto("/service");
+	await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+	expect(asked).toEqual([]);
+});

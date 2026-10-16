@@ -1,10 +1,15 @@
-/** Where a read-only user is sent, and the only branch of the app they may use. */
+/** Where a read-only user is sent, and the branch of the app they work in. */
 export const READ_ONLY_HOME = "/requesting";
 
+// A user's own display preferences and the accessibility statement, which change nothing anyone else sees
+const READ_ONLY_ALSO = ["/preferences", "/accessibility", "/logout"] as const;
+
+const ADMIN_ROLE = "LIBRARY_ADMIN";
 const READ_ONLY_ROLE = "LIBRARY_READ_ONLY";
 
+/** Deny by default: full access is LIBRARY_ADMIN's alone, and read-only wins over it. */
 export const isReadOnly = (roles: readonly string[] | undefined): boolean =>
-	(roles ?? []).includes(READ_ONLY_ROLE);
+	!(roles ?? []).includes(ADMIN_ROLE) || (roles ?? []).includes(READ_ONLY_ROLE);
 
 /**
  * The previous predicate matched "/requesting/" WITH a trailing slash, so
@@ -15,7 +20,6 @@ export const isReadOnly = (roles: readonly string[] | undefined): boolean =>
  * Paths are router-relative: the base prefix is not part of them.
  */
 export const isReadOnlyAllowed = (pathname: string): boolean =>
-	pathname === READ_ONLY_HOME ||
-	pathname.startsWith(`${READ_ONLY_HOME}/`) ||
-	pathname === "/logout" ||
-	pathname.startsWith("/logout/");
+	[READ_ONLY_HOME, ...READ_ONLY_ALSO].some(
+		(path) => pathname === path || pathname.startsWith(`${path}/`),
+	);

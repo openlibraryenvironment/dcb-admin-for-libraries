@@ -16,7 +16,7 @@ import { useExportContext } from "@helpers/insightsExport";
  * Not a second export engine: the rows are already in the query cache and already bounded
  * by the query's own limit, so this costs no request and cannot grow with the corpus. The
  * requests BEHIND a figure are exported by the grid a drill-down leads to, which already
- * pages a whole result set - see docs/large-exports.md.
+ * pages a whole result set - see docs/export.md.
  */
 export default function PanelExport<T>({
 	rows,

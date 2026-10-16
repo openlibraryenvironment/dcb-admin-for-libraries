@@ -1,6 +1,8 @@
 import { formatNumber } from "@helpers/formatters";
 import { CustomLink } from "../CustomLink";
 import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import { visuallyHidden } from "@mui/utils";
 import { useTranslation } from "react-i18next";
 
 const isValidLink = (url: string): boolean => {
@@ -97,11 +99,12 @@ export default function RenderAttribute({
 			{attribute}
 		</Typography>
 	) : (
-		<Typography
-			variant="attributeText"
-			aria-hidden="true"
-			title={t("a11y.empty")}>
-			-
+		// The dash is for sight; aria-hidden alone left a screen reader a label with no value
+		<Typography variant="attributeText" title={t("a11y.empty")}>
+			<span aria-hidden="true">-</span>
+			<Box component="span" sx={visuallyHidden}>
+				{t("a11y.empty")}
+			</Box>
 		</Typography>
 	);
 }

@@ -63,7 +63,11 @@ const selectRow = async (page: Page, title: string) => {
 
 const runCleanup = async (page: Page) => {
 	await page.getByRole("button", { name: /^Actions/ }).click();
-	await page.getByRole("menuitem", { name: /Cleanup selected/ }).click();
+	await page.getByRole("menuitem", { name: /Clean up selected/ }).click();
+	await page
+		.getByRole("dialog", { name: /^Clean up/ })
+		.getByRole("button", { name: "Clean up", exact: true })
+		.click();
 };
 
 test.describe("Supplier requests clean up", () => {
@@ -87,7 +91,7 @@ test.describe("Supplier requests clean up", () => {
 
 		await page.getByRole("button", { name: /^Actions/ }).click();
 		await expect(
-			page.getByRole("menuitem", { name: "Cleanup selected requests (0)" }),
+			page.getByRole("menuitem", { name: "Clean up selected requests (0)" }),
 		).toBeDisabled();
 		await page.keyboard.press("Escape");
 
@@ -97,7 +101,7 @@ test.describe("Supplier requests clean up", () => {
 		await expect(page.getByRole("button", { name: "Actions (4)" })).toBeVisible();
 		await page.getByRole("button", { name: /^Actions/ }).click();
 		await expect(
-			page.getByRole("menuitem", { name: "Cleanup selected requests (4)" }),
+			page.getByRole("menuitem", { name: "Clean up selected requests (4)" }),
 		).toBeEnabled();
 	});
 
@@ -125,6 +129,26 @@ test.describe("Supplier requests clean up", () => {
 		expect(calls).toEqual([]);
 	});
 
+	test("asks before cleaning up, and Cancel cleans up nothing", async ({ app, page }) => {
+		await app.enableFeatures(["VITE_FEATURE_GUARDED_CLEANUP"]);
+
+		const calls: string[] = [];
+		await recordCleanupCalls(page, calls);
+
+		await page.goto("/supplierRequests");
+		await selectRow(page, DELTA);
+		await page.getByRole("button", { name: /^Actions/ }).click();
+		await page.getByRole("menuitem", { name: /Clean up selected/ }).click();
+
+		const confirm = page.getByRole("dialog", { name: "Clean up this request?" });
+		await expect(confirm).toContainText("This cannot be undone.");
+		await confirm.getByRole("button", { name: "Cancel" }).click();
+
+		await expect(confirm).toBeHidden();
+		await expect(page.getByRole("button", { name: /^Actions/ })).toBeFocused();
+		expect(calls).toEqual([]);
+	});
+
 	test("checks for updates first, then cleans up", async ({ app, page }) => {
 		await app.enableFeatures(["VITE_FEATURE_GUARDED_CLEANUP"]);
 
@@ -140,6 +164,15 @@ test.describe("Supplier requests clean up", () => {
 			expect.stringContaining("/update"),
 			expect.stringMatching(/\/transition\/cleanup$/),
 		]);
+
+		// Told when it finishes, from inside the dialog, where a screen reader is listening
+		const dialog = page.getByRole("dialog");
+		await expect(dialog.getByRole("status")).toHaveText("Clean-up complete");
+		const repeated = await dialog.locator("[id]").evaluateAll((elements) => {
+			const ids = elements.map((element) => element.id);
+			return ids.filter((id, index) => ids.indexOf(id) !== index);
+		});
+		expect(repeated).toEqual([]);
 	});
 
 	/**
@@ -148,6 +181,40 @@ test.describe("Supplier requests clean up", () => {
 	 * cannot change the answer. cleanupPatronRequest.test.ts asserts the helper
 	 * skips it; this asserts the grid does, which is where the flag is read.
 	 */
+	test("more results than fit on a page can be paged through", async ({ app, page }) => {
+		test.slow();
+		const [alpha] = supplierRequests.patronRequests.content;
+		// One more than a page of 25: each is cleaned up through the mocks, five at a time
+		const many = Array.from({ length: 26 }, (_, n) => ({
+			...alpha,
+			id: `aa${String(n).padStart(6, "0")}-1111-5111-9111-111111111111`,
+			clusterRecord: { ...alpha.clusterRecord, title: `Title ${n + 1}` },
+		}));
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadLibraries: library,
+			LoadPatronRequests: { patronRequests: { totalSize: 26, content: many } },
+		});
+		await recordCleanupCalls(page, []);
+
+		await page.goto("/supplierRequests?pageSize=50");
+		await page.getByRole("checkbox", { name: /select all/i }).check();
+		await expect(page.getByRole("button", { name: "Actions (26)" })).toBeVisible();
+		await runCleanup(page);
+
+		const dialog = page.getByRole("dialog");
+		await expect(dialog.getByRole("button", { name: /Successful: 26/ })).toBeVisible({
+			timeout: 15_000,
+		});
+		await dialog.getByRole("button", { name: /Successful: 26/ }).click();
+		const results = dialog.getByRole("region", { name: /Successful: 26/ });
+		await expect(results.getByText("1–25 of 26")).toBeVisible();
+		await results.getByRole("button", { name: "Go to next page" }).click();
+
+		await expect(results.getByText("26–26 of 26")).toBeVisible();
+	});
+
 	test("does not check for updates on a status the service stopped tracking", async ({
 		app,
 		page,
@@ -222,5 +289,102 @@ test.describe("Supplier requests clean up", () => {
 
 		await expect(page.getByRole("dialog").getByText(/Not eligible/)).toBeVisible();
 		expect(calls).toEqual([]);
+	});
+});
+
+test.describe("Patron request clean up", () => {
+	const [alpha] = supplierRequests.patronRequests.content;
+	const delta = supplierRequests.patronRequests.content[3];
+
+	test("the audit log shows what Check for updates wrote", async ({ app, page }) => {
+		let auditFetches = 0;
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			// The supplier's library: unanswered, the page went to Network error mid-test
+			LoadLibraryBasics: library,
+			LoadPatronRequest: { patronRequests: { totalSize: 1, content: [delta] } },
+			LoadHostLms: { hostLms: { content: [] } },
+			GetAuditsByPatronRequest: () => {
+				auditFetches += 1;
+				return { audits: { totalSize: 0, content: [] } };
+			},
+		});
+		await recordCleanupCalls(page, []);
+
+		await page.goto(`/patronRequests/${delta.id}`);
+		await page.getByRole("tab", { name: "Audit log" }).click();
+		await expect.poll(() => auditFetches).toBe(1);
+
+		await page.getByRole("tab", { name: "General" }).click();
+		await page.getByRole("button", { name: "Check for updates" }).click();
+		await expect(page.getByText("Check complete")).toBeVisible();
+		await page.getByRole("tab", { name: "Audit log" }).click();
+
+		await expect.poll(() => auditFetches).toBe(2);
+	});
+
+	test("a request cleaned up from the grid is fetched again when it is opened", async ({
+		app,
+		page,
+	}) => {
+		let detailFetches = 0;
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadLibraries: library,
+			LoadPatronRequests: supplierRequests,
+			LoadPatronRequest: () => {
+				detailFetches += 1;
+				return { patronRequests: { totalSize: 1, content: [alpha] } };
+			},
+			LoadHostLms: { hostLms: { content: [] } },
+		});
+		await recordCleanupCalls(page, []);
+
+		await page.goto(`/patronRequests/${alpha.id}`);
+		await expect(page.getByRole("button", { name: "Clean up", exact: true })).toBeVisible();
+		await page.getByRole("tab", { name: "Supplier requests" }).click();
+		await selectRow(page, ALPHA);
+		await runCleanup(page);
+		const progress = page.getByRole("dialog");
+		await expect(progress.getByText(/Successful/)).toBeVisible();
+		await progress.getByRole("button", { name: "Close" }).click();
+
+		await page.getByRole("row", { name: new RegExp(ALPHA) }).getByRole("link").first().click();
+
+		await expect(page.getByRole("button", { name: "Clean up", exact: true })).toBeVisible();
+		await expect.poll(() => detailFetches).toBe(2);
+	});
+
+	test("asks before cleaning up, and cleans up only once confirmed", async ({
+		app,
+		page,
+	}) => {
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadPatronRequest: { patronRequests: { totalSize: 1, content: [alpha] } },
+			LoadHostLms: { hostLms: { content: [] } },
+		});
+		const calls: string[] = [];
+		await recordCleanupCalls(page, calls);
+
+		await page.goto(`/patronRequests/${alpha.id}`);
+		const cleanup = page.getByRole("button", { name: "Clean up", exact: true });
+		await cleanup.click();
+
+		const confirm = page.getByRole("dialog", { name: "Clean up this request?" });
+		await confirm.getByRole("button", { name: "Cancel" }).click();
+		await expect(confirm).toBeHidden();
+		await expect(cleanup).toBeFocused();
+		expect(calls).toEqual([]);
+
+		await cleanup.click();
+		await confirm.getByRole("button", { name: "Clean up", exact: true }).click();
+
+		await expect.poll(() => calls).toEqual([expect.stringMatching(/\/transition\/cleanup$/)]);
 	});
 });

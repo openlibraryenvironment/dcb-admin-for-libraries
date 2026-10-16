@@ -15,7 +15,10 @@ import {
 	Typography,
 } from "@mui/material";
 import { DateRangePicker } from "@mui/x-date-pickers-pro";
-import { MultiInputDateRangeField } from "@mui/x-date-pickers-pro/MultiInputDateRangeField";
+import {
+	MultiInputDateRangeField,
+	type MultiInputDateRangeFieldProps,
+} from "@mui/x-date-pickers-pro/MultiInputDateRangeField";
 import dayjs from "dayjs";
 
 import { useDcbRestClient } from "@/hooks/useDcbRestClient";
@@ -119,6 +122,17 @@ function Section({
 	);
 }
 
+// From above To on a phone: side by side, the pair is wider than a 320px screen
+function StackedRangeField(props: MultiInputDateRangeFieldProps) {
+	return (
+		<MultiInputDateRangeField
+			{...props}
+			direction={{ xs: "column", sm: "row" }}
+			sx={[{ maxWidth: "100%" }, ...(Array.isArray(props.sx) ? props.sx : [props.sx])]}
+		/>
+	);
+}
+
 export default function InsightsDashboard({
 	libraryCode,
 	view,
@@ -154,8 +168,8 @@ export default function InsightsDashboard({
 		: t(`insights.range.${rangePreset}`);
 
 	// Changing the range rewrites every panel below it, and a screen-reader user was
-	// told none of that - WCAG 2.2 SC 4.1.3. Announced on the settled view: the control
-	// only emits when the choice is complete, so there is nothing to debounce.
+	// told none of that - WCAG 2.2 SC 4.1.3. Announced on the settled view: only a
+	// complete, valid range reaches the URL (the onChange below).
 	const announcement = t("insights.announce.view", { range: window });
 	useEffect(() => {
 		announce(announcement);
@@ -208,7 +222,8 @@ export default function InsightsDashboard({
 					direction="row"
 					spacing={2}
 					sx={{
-						justifyContent: "flex-end",
+						// End-aligned, a row too wide for a phone overflowed off its left edge
+						justifyContent: { xs: "flex-start", sm: "flex-end" },
 						alignItems: "center",
 						flexWrap: "wrap",
 						rowGap: 1,
@@ -238,22 +253,26 @@ export default function InsightsDashboard({
 									? [dayjs(customRange.startDate), dayjs(customRange.endDate)]
 									: [null, null]
 							}
-							onChange={(value) => {
+							onChange={(value, context) => {
 								const [start, end] = value;
-								// The URL holds calendar days; statsWindow makes them instants.
-								if (start && end) {
-									setCustomRange({
-										startDate: start.format("YYYY-MM-DD"),
-										endDate: end.format("YYYY-MM-DD"),
-									});
-								} else if (!start && !end) {
+								if (!start && !end) {
 									setCustomRange(null);
+									return;
 								}
+								// The field publishes each section as it is typed: years 2, 20 and 202 on the way to 2025
+								if (!start || !end || context.validationError.some((error) => error !== null)) {
+									return;
+								}
+								// The URL holds calendar days; statsWindow makes them instants.
+								setCustomRange({
+									startDate: start.format("YYYY-MM-DD"),
+									endDate: end.format("YYYY-MM-DD"),
+								});
 							}}
 							disableFuture
 							// Two labelled inputs and the same actions as the data grid's date
 							// filter, rather than one combined field with neither.
-							slots={{ field: MultiInputDateRangeField }}
+							slots={{ field: StackedRangeField }}
 							slotProps={{
 								textField: { size: "small" },
 								actionBar: { actions: ["clear", "nextOrAccept"] },
@@ -470,7 +489,8 @@ export default function InsightsDashboard({
 								titleKey="insights.charts.top_titles.title"
 								subtitleKey="insights.charts.top_titles.subtitle"
 								queryOptions={topRequestedTitlesQueryOptions(client, params)}
-								getRowKey={(r) => r.title}
+								// Titles repeat across editions; the cluster is the work counted
+								getRowKey={(r) => r.clusterId ?? r.title}
 								columns={[
 									{
 										headerKey: "insights.charts.top_titles.col_title",

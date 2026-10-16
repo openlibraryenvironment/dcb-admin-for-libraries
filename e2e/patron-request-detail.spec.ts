@@ -2,6 +2,7 @@ import { test, expect } from "./fixtures/test";
 import library from "./fixtures-data/library.json" with { type: "json" };
 import sparse from "./fixtures-data/patronRequest-sparse.json" with { type: "json" };
 import audit from "./fixtures-data/audit.json" with { type: "json" };
+import supplierRequests from "./fixtures-data/supplier-requests.json" with { type: "json" };
 
 const REQUEST = sparse.patronRequests.content[0];
 const AUDIT = audit.audits.content[0];
@@ -45,6 +46,20 @@ test.describe("Patron request detail", () => {
 			.locator("xpath=following-sibling::dd[1]");
 		await expect(changed).toBeVisible();
 		await expect(changed).not.toHaveText(/\d{4}-\d{2}-\d{2}/);
+		// Read as empty, not skipped: a dash alone is hidden from a screen reader
+		await expect(changed).toContainText("This field is empty");
+	});
+
+	test("names statuses as the grids do, not by their codes", async ({ page }) => {
+		await page.goto(`/patronRequests/${REQUEST.id}`);
+		const value = (term: string) =>
+			page
+				.getByRole("term")
+				.filter({ hasText: new RegExp(`^${term}$`) })
+				.locator("xpath=following-sibling::dd[1]");
+
+		await expect(value("Current status")).toHaveText("Error");
+		await expect(value("Previous status")).toHaveText("Resolved");
 	});
 
 	test("says why an action is unavailable, in text the button points at", async ({
@@ -53,7 +68,7 @@ test.describe("Patron request detail", () => {
 		await page.goto(`/patronRequests/${REQUEST.id}`);
 		await expect(
 			page.getByRole("button", { name: "Check for updates" }),
-		).toHaveAccessibleDescription(/You cannot check for updates .* ERROR/);
+		).toHaveAccessibleDescription(/You cannot check for updates .* status Error\./);
 		await expect(
 			page.getByText(/You cannot check for updates when/),
 		).toBeVisible();
@@ -147,4 +162,50 @@ test.describe("Patron request detail", () => {
 		).toBeVisible();
 		expect(asked).toEqual([]);
 	});
+});
+
+test("a library's ILS and contacts are written out, not left to a hover", async ({
+	app,
+	page,
+}) => {
+	const [alpha] = supplierRequests.patronRequests.content;
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraryBasics: library,
+		LoadPatronRequest: { patronRequests: { totalSize: 1, content: [alpha] } },
+		LoadHostLms: { hostLms: { content: [] } },
+	});
+
+	await page.goto(`/patronRequests/${alpha.id}`);
+
+	const supplier = page
+		.getByRole("term")
+		.filter({ hasText: /^Supplier library$/ })
+		.locator("xpath=following-sibling::dd[1]");
+	await expect(supplier).toContainText("E2E Test Library");
+	await expect(supplier).toContainText("Primary contacts:");
+});
+
+test("on a phone, each of a request's details takes the whole row", async ({ app, page }) => {
+	await page.setViewportSize({ width: 320, height: 800 });
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadPatronRequest: sparse,
+		LoadHostLms: { hostLms: { content: [] } },
+	});
+
+	await page.goto(`/patronRequests/${REQUEST.id}`);
+	const item = page
+		.getByRole("term")
+		.filter({ hasText: /^Current status$/ })
+		.locator("xpath=ancestor::div[contains(@class,'MuiGrid-root')][1]");
+	await expect(item).toBeVisible();
+
+	const { own, row } = await item.evaluate((element) => ({
+		own: element.getBoundingClientRect().width,
+		row: (element.parentElement as HTMLElement).getBoundingClientRect().width,
+	}));
+	expect(own / row).toBeGreaterThan(0.9);
 });

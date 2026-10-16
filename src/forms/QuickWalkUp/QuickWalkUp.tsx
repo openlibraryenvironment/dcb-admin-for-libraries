@@ -10,7 +10,7 @@ import {
 import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { quickWalkUpSchema } from "@/schemas/quickWalkUp";
 import {
 	DialogContent,
@@ -27,7 +27,7 @@ import request from "graphql-request";
 
 import { queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
-import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
+import { allLibrariesQueryOptions, invalidateRequestLists } from "@helpers/sharedQueries";
 import { getLocations } from "@queries/getLocations";
 import { getPatronRequestEssentials } from "@queries/getPatronRequestEssentials";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
@@ -60,6 +60,7 @@ export default function QuickWalkUpRequest({
 	onClose: () => void;
 }) {
 	const { t } = useTranslation();
+	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 	const { cfg } = useRouter().options.context;
 	// The library the staff member is acting for - see useAgencyCodes
@@ -217,7 +218,9 @@ export default function QuickWalkUpRequest({
 		patronRequestId,
 		bibClusterId: resolvedBibClusterId,
 		checkoutCompleted,
-		isCheckedOutItem: (item) => item.barcode === itemBarcode,
+		// The item is the staff library's: a barcode alone can name another library's copy
+		isCheckedOutItem: (item) =>
+			item.barcode === itemBarcode && item.agency?.code === staffAgencyCode,
 		apiBase: cfg.VITE_DCB_API_BASE,
 	});
 
@@ -324,6 +327,7 @@ export default function QuickWalkUpRequest({
 			return response.data;
 		},
 		onSuccess: (data) => {
+			void invalidateRequestLists(queryClient);
 			setPatronRequestId(data.id);
 			setResolvedBibClusterId(data.citation?.bibClusterId);
 			setAlert({

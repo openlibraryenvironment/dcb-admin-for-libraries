@@ -4,12 +4,15 @@ import {
 	currencySymbol,
 	formatCurrency,
 	formatDate,
+	formatDayOfWeek,
 	formatHourOfDay,
+	formatUtcDate,
 	formatLongDateTime,
 	formatNumber,
 	formatPercent,
 } from "../src/helpers/formatters";
 import { isCurrencyCode } from "../src/hooks/insightsCostStore";
+import { utcBucketAxis } from "../src/components/Insights/utcBucketAxis";
 
 /**
  * Locales are passed explicitly here. In the application they are not: Intl
@@ -86,6 +89,57 @@ describe("dates", () => {
 		// "dddd, MMMM D, YYYY h:mm A" was hardcoded, so every reader got this one.
 		expect(formatLongDateTime(when, "en-US")).toContain("September 22, 2026");
 		expect(formatLongDateTime(when, "en-GB")).toContain("22 September 2026");
+	});
+});
+
+describe("days of the week", () => {
+	it("numbers them from Sunday, as Postgres does", () => {
+		expect(formatDayOfWeek(0, "en-GB")).toBe("Sun");
+		expect(formatDayOfWeek(6, "en-GB")).toBe("Sat");
+	});
+
+	it("does not name the day before west of UTC", () => {
+		const zone = process.env.TZ;
+		process.env.TZ = "America/New_York";
+		try {
+			expect(formatDayOfWeek(0, "en-US")).toBe("Sun");
+		} finally {
+			if (zone === undefined) delete process.env.TZ;
+			else process.env.TZ = zone;
+		}
+	});
+});
+
+describe("a chart bucket west of UTC", () => {
+	const inNewYork = (check: () => void) => {
+		const zone = process.env.TZ;
+		process.env.TZ = "America/New_York";
+		try {
+			check();
+		} finally {
+			if (zone === undefined) delete process.env.TZ;
+			else process.env.TZ = zone;
+		}
+	};
+	const october = new Date("2026-10-01T00:00:00Z");
+
+	it("is named for its own UTC day, not the evening before", () => {
+		inNewYork(() => expect(formatUtcDate(october, "en-GB")).toBe("1 Oct 2026"));
+	});
+
+	it("is shown that way in a chart's tooltip, and leaves the ticks to the UTC scale", () => {
+		inNewYork(() => {
+			expect(utcBucketAxis.scaleType).toBe("utc");
+			const tooltip = utcBucketAxis.valueFormatter(october, { location: "tooltip" } as never);
+			expect(tooltip).toBe(formatUtcDate(october));
+			expect(tooltip).not.toMatch(/30/);
+			expect(
+				utcBucketAxis.valueFormatter(october, {
+					location: "tick",
+					defaultTickLabel: "October",
+				} as never),
+			).toBe("October");
+		});
 	});
 });
 

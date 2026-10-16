@@ -16,7 +16,12 @@ import {
 	Typography,
 } from "@mui/material";
 
-import { announcementsQueryOptions, isExpired } from "@helpers/announcements";
+import {
+	announcementsQueryOptions,
+	isExpired,
+	type AnnouncementRow,
+} from "@helpers/announcements";
+import Confirmation from "@components/Confirmation/Confirmation";
 import {
 	createAnnouncement,
 	deleteAnnouncement,
@@ -53,6 +58,7 @@ const FULL_WIDTH = { xs: 4, sm: 8, md: 12 } as const;
 
 function AnnouncementsRoute() {
 	const { t } = useTranslation();
+	const { agencyCode } = useAgencyCodes();
 
 	if (!isAnnouncementsEnabled()) {
 		return (
@@ -65,7 +71,8 @@ function AnnouncementsRoute() {
 		);
 	}
 
-	return <Announcements />;
+	// Per library, as the profile is: a draft must not be published to the next one chosen
+	return <Announcements key={agencyCode ?? ""} />;
 }
 
 /**
@@ -120,6 +127,7 @@ function Announcements() {
 		},
 	});
 
+	const [withdrawing, setWithdrawing] = useState<AnnouncementRow | null>(null);
 	const withdraw = useMutation({
 		mutationFn: async (id: string) =>
 			request(
@@ -160,6 +168,8 @@ function Announcements() {
 	};
 
 	const loadError = libraryQuery.error ?? announcements.error;
+	// Answered, but with no library: nothing can be listed or published, and the page says why
+	const noLibrary = libraryQuery.isSuccess && !scopeId;
 	const loading = libraryQuery.isLoading || announcements.isLoading;
 
 	return (
@@ -172,6 +182,12 @@ function Announcements() {
 					{t("announcements.scope_help")}
 				</Typography>
 			</Grid>
+
+			{noLibrary && (
+				<Grid size={FULL_WIDTH}>
+					<Alert severity="error">{t("announcements.no_library")}</Alert>
+				</Grid>
+			)}
 
 			{publish.isError && (
 				<Grid size={FULL_WIDTH}>
@@ -244,7 +260,7 @@ function Announcements() {
 					<Alert severity="error">
 						{serverMessage(loadError, t("announcements.load_failed"))}
 					</Alert>
-				) : rows.length === 0 ? (
+				) : noLibrary ? null : rows.length === 0 ? (
 					<Typography color="text.secondary">
 						{t("announcements.none")}
 					</Typography>
@@ -270,7 +286,7 @@ function Announcements() {
 								</Typography>
 								<Button
 									size="small"
-									onClick={() => withdraw.mutate(row.id)}
+									onClick={() => setWithdrawing(row)}
 									disabled={withdraw.isPending}
 									aria-label={t("announcements.withdraw_named", {
 										headline: row.headline,
@@ -283,6 +299,17 @@ function Announcements() {
 						))}
 					</Stack>
 				)}
+				<Confirmation
+					open={withdrawing !== null}
+					onClose={() => setWithdrawing(null)}
+					onConfirm={() => {
+						if (withdrawing) withdraw.mutate(withdrawing.id);
+						setWithdrawing(null);
+					}}
+					action="withdraw"
+					entityName={withdrawing?.headline ?? ""}
+					gridEdit={false}
+				/>
 			</Grid>
 		</Grid>
 	);

@@ -75,7 +75,7 @@ export function downloadCsv(name: string, content: string): void {
 	// The BOM is what makes Excel read the file as UTF-8 rather than as the machine's
 	// codepage, which is where an accented author's name turns into mojibake. As an escape
 	// rather than the character itself, which is invisible in a diff.
-	const blob = new Blob(["﻿" + content], {
+	const blob = new Blob(["\uFEFF" + content], {
 		type: "text/csv;charset=utf-8",
 	});
 	const url = URL.createObjectURL(blob);

@@ -136,7 +136,7 @@ test("an expired session signs in again and comes back to the same page", async 
 		return route.fulfill({ status: 302, headers: { location: `${appOrigin}/no-such-page` } });
 	});
 
-	await page.goto("/settings");
+	await page.goto("/preferences");
 	appOrigin = new URL(page.url()).origin;
 	await expect(page.getByRole("radiogroup", { name: /colour scheme/i })).toBeVisible();
 
@@ -147,5 +147,5 @@ test("an expired session signs in again and comes back to the same page", async 
 				k.endsWith("afterLoginRedirectPath"),
 			)?.[1],
 	);
-	expect(returnTo).toBe("/settings");
+	expect(returnTo).toBe("/preferences");
 });

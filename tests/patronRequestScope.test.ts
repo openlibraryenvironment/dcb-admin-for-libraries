@@ -2,8 +2,10 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 
 import {
 	borrowedByLibraryQuery,
+	borrowingScopeHostLms,
 	hasBorrowingScope,
 } from "../src/helpers/patronRequestScope";
+import { getPatronRequestModeQuery } from "../src/helpers/dataGrid/getPatronRequestModeQuery";
 
 /**
  * The borrowing views used to filter on the patron's Host LMS, which on a shared system
@@ -64,5 +66,33 @@ describe("hasBorrowingScope", () => {
 		withFlag(undefined);
 		expect(hasBorrowingScope("springfield", undefined)).toBe(false);
 		expect(hasBorrowingScope(undefined, "SHARED-KOHA")).toBe(true);
+	});
+});
+
+describe("getPatronRequestModeQuery", () => {
+	it("scopes a record's borrowing history by agency, as the grid does", () => {
+		withFlag("true");
+		expect(getPatronRequestModeQuery("borrowing", "springfield", "SHARED-KOHA")).toBe(
+			"patronAgencyCode:springfield",
+		);
+	});
+
+	it("keeps the Host LMS filter on a backend that cannot answer by agency", () => {
+		withFlag(undefined);
+		expect(getPatronRequestModeQuery("borrowing", "springfield", "SHARED-KOHA")).toBe(
+			"patronHostlmsCode:SHARED-KOHA",
+		);
+	});
+});
+
+describe("borrowingScopeHostLms", () => {
+	it("keeps the Host LMS out of the key when the scope does not use it", () => {
+		withFlag("true");
+		expect(borrowingScopeHostLms("SHARED-KOHA")).toBeUndefined();
+	});
+
+	it("keys on it when the scope is built from it", () => {
+		withFlag(undefined);
+		expect(borrowingScopeHostLms("SHARED-KOHA")).toBe("SHARED-KOHA");
 	});
 });

@@ -15,7 +15,7 @@ test("an administrator's borrowed-requests grid is paged by the server", async (
 	app,
 	page,
 }) => {
-	await app.signIn({ roles: ["ADMIN"] });
+	await app.signIn({ roles: ["LIBRARY_ADMIN", "ADMIN"] });
 
 	const facetRequests: string[] = [];
 	const requestQueries: { operation: string; pagesize: unknown }[] = [];

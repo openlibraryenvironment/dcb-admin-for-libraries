@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Kind, parse, type OperationDefinitionNode } from "graphql";
 
 import { getPatronIdentities } from "../src/queries/getPatronIdentities";
+import { onlyMatch } from "../src/helpers/onlyMatch";
 
 /**
  * graphql-java ignores a variable the operation does not declare, so a lookup
@@ -33,5 +34,24 @@ describe("the pickup patron lookup", () => {
 			kind: Kind.VARIABLE,
 			name: { value: name },
 		});
+	});
+});
+
+describe("the pickup patron shown", () => {
+	const identity = (barcode: string) => ({ localBarcode: barcode });
+
+	it("is the one identity the lookup found", () => {
+		expect(onlyMatch({ totalSize: 1, content: [identity("1111")] })).toEqual(identity("1111"));
+	});
+
+	it("is nobody when the local id matched patrons on more than one system", () => {
+		expect(
+			onlyMatch({ totalSize: 2, content: [identity("1111"), identity("2222")] }),
+		).toBeUndefined();
+	});
+
+	it("is nobody when nothing was found", () => {
+		expect(onlyMatch({ totalSize: 0, content: [] })).toBeUndefined();
+		expect(onlyMatch(undefined)).toBeUndefined();
 	});
 });

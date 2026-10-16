@@ -1,4 +1,3 @@
-import { Library } from "@models/Library";
 
 /**
  * Filter options for a column holding a Host LMS code, labelled by library.
@@ -9,7 +8,10 @@ import { Library } from "@models/Library";
  * library happened to come first. The label names them all instead.
  */
 export const hostLmsLibraryOptions = (
-	libraries: readonly Library[],
+	libraries: readonly {
+		fullName: string;
+		agency?: { hostLms?: { code?: string } | null } | null;
+	}[],
 ): { value: string; label: string }[] => {
 	const names = new Map<string, string[]>();
 	for (const library of libraries) {

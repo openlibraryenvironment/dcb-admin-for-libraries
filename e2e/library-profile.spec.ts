@@ -345,7 +345,7 @@ test.describe("editing the profile", () => {
 
 test.describe("leaving the profile with unsaved edits", () => {
 	const settingsTab = (page: import("@playwright/test").Page) =>
-		page.getByRole("tab", { name: /^settings$/i });
+		page.getByRole("tab", { name: /^preferences$/i });
 	const leaveDialog = (page: import("@playwright/test").Page) =>
 		page.getByRole("dialog", { name: "Leave without saving?" });
 
@@ -391,7 +391,7 @@ test.describe("leaving the profile with unsaved edits", () => {
 			.getByRole("button", { name: "Leave without saving" })
 			.click();
 
-		await expect(page).toHaveURL(/\/settings$/);
+		await expect(page).toHaveURL(/\/preferences$/);
 		await expect(leaveDialog(page)).toHaveCount(0);
 	});
 
@@ -402,7 +402,7 @@ test.describe("leaving the profile with unsaved edits", () => {
 			LoadLibraryBasics: library,
 			...STATS_MOCKS,
 		});
-		await page.goto("/settings");
+		await page.goto("/preferences");
 		await page.getByRole("tab", { name: /^your library$/i }).click();
 		await page.getByRole("button", { name: /^edit$/i }).click();
 		await page
@@ -416,7 +416,7 @@ test.describe("leaving the profile with unsaved edits", () => {
 		await leaveDialog(page)
 			.getByRole("button", { name: "Leave without saving" })
 			.click();
-		await expect(page).toHaveURL(/\/settings$/);
+		await expect(page).toHaveURL(/\/preferences$/);
 	});
 
 	test("closing the tab asks the browser to confirm", async ({ app, page }) => {
@@ -439,7 +439,7 @@ test.describe("leaving the profile with unsaved edits", () => {
 
 		await settingsTab(page).click();
 
-		await expect(page).toHaveURL(/\/settings$/);
+		await expect(page).toHaveURL(/\/preferences$/);
 		await expect(page.getByRole("dialog")).toHaveCount(0);
 	});
 });
@@ -494,4 +494,56 @@ test.describe("statistics", () => {
 		).toHaveCount(2);
 		release();
 	});
+});
+
+test("choosing another library while editing does not carry the edit over", async ({
+	app,
+	page,
+}) => {
+	const updates = recordUpdates();
+	await app.signIn({ agencyCode: "e2e-agency,e2e-agency-2" });
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraryBasics: library,
+		LoadPatronRequestStats: { patronRequests: { totalSize: 42 } },
+		LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
+		UpdateLibrary: updates.responder,
+	});
+	await page.goto("/library");
+	await page.getByRole("button", { name: /^edit$/i }).click();
+	await page.getByRole("textbox", { name: /full name/i }).first().fill("Edited elsewhere");
+
+	await page.getByRole("combobox", { name: /library/i }).click();
+	await page.getByRole("option").nth(1).click();
+
+	await expect(page.getByRole("button", { name: /^edit$/i })).toBeVisible();
+	await expect(page.getByRole("button", { name: /^save$/i })).toHaveCount(0);
+	expect(updates.sent).toEqual([]);
+});
+
+test("Tab goes from Upload image to the next control, not to a hidden file input", async ({
+	app,
+	page,
+}) => {
+	await app.enableFeatures(["VITE_DISCOVERY_ACTIVE", "VITE_FEATURE_LIBRARY_BRANDING"]);
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library, ...STATS_MOCKS });
+
+	await page.goto("/library");
+	await page.getByRole("button", { name: /^edit$/i }).click();
+	await page.getByRole("button", { name: "Upload image" }).first().focus();
+	await page.keyboard.press("Tab");
+
+	expect(
+		await page.evaluate(() => (document.activeElement as HTMLInputElement | null)?.type),
+	).not.toBe("file");
+});
+
+test("greets a user whose profile has no name without a gap where it would be", async ({
+	app,
+	page,
+}) => {
+	await signedInOnProfile(app, page);
+
+	await expect(page.getByText(/^Welcome to DCB Admin for E2E Test Library, User\.$/)).toBeVisible();
 });

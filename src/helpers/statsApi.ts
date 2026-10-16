@@ -1,5 +1,6 @@
 import { OPTIONAL_QUERY } from "@helpers/serviceErrors";
 import { AxiosInstance } from "axios";
+import type { QueryFunctionContext } from "@tanstack/react-query";
 
 // --- Response types (mirror org.olf.dcb.core.api.serde.*) -------------------
 
@@ -151,6 +152,8 @@ export interface CollectionSummaryStat {
 export interface RequestedTitleStat {
 	title: string;
 	requestCount: number;
+	/** Absent before dcb-service carried it. */
+	clusterId?: string;
 }
 export interface PickupLocationDemandStat {
 	pickupLocationCode: string;
@@ -331,9 +334,10 @@ export function timeSeriesQueryOptions(
 	return {
 		queryKey: ["stats", "timeseries", interval, params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<TimeSeriesPoint[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<TimeSeriesPoint[]> => {
 			const { data } = await client.get(`${STATS_BASE}/timeseries`, {
 				params: cleanParams({ interval, ...params }),
+				signal,
 			});
 			return data;
 		},
@@ -347,9 +351,10 @@ export function dashboardMetricsQueryOptions(
 	return {
 		queryKey: ["stats", "dashboard-metrics", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<DashboardMetrics> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<DashboardMetrics> => {
 			const { data } = await client.get(`${STATS_BASE}/dashboard-metrics`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -379,9 +384,10 @@ export function topPartnersQueryOptions(
 	return {
 		queryKey: ["stats", "top-partners", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<Paged<TradingPartnerStat>> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<Paged<TradingPartnerStat>> => {
 			const { data } = await client.get(`${STATS_BASE}/top-partners`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return { content: data?.content ?? [], totalSize: data?.totalSize ?? 0 };
 		},
@@ -395,9 +401,10 @@ export function failureTaxonomyQueryOptions(
 	return {
 		queryKey: ["stats", "failure-taxonomy", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<FailureReasonStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<FailureReasonStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/failure-taxonomy`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -411,9 +418,10 @@ export function supplierReliabilityQueryOptions(
 	return {
 		queryKey: ["stats", "supplier-reliability", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<SupplierReliabilityStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<SupplierReliabilityStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/supplier-reliability`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -427,9 +435,10 @@ export function netFlowQueryOptions(
 	return {
 		queryKey: ["stats", "net-flow", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<NetFlowStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<NetFlowStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/net-flow`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -443,9 +452,10 @@ export function borrowerFulfillmentQueryOptions(
 	return {
 		queryKey: ["stats", "fulfillment", "borrower", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<FulfillmentStat> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<FulfillmentStat> => {
 			const { data } = await client.get(`${STATS_BASE}/fulfillment/borrower`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -461,9 +471,10 @@ export function uniqueContributionsQueryOptions(
 	return {
 		queryKey: ["stats", "unique-contributions", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<RareGem[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<RareGem[]> => {
 			const { data } = await client.get(`${STATS_BASE}/unique-contributions`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -477,9 +488,10 @@ export function timeInStatusQueryOptions(
 	return {
 		queryKey: ["stats", "time-in-status", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<StatusDwellStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<StatusDwellStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/time-in-status`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -493,9 +505,10 @@ export function supplierResponseSlaQueryOptions(
 	return {
 		queryKey: ["stats", "supplier-response-sla", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<SupplierResponseStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<SupplierResponseStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/supplier-response-sla`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -509,9 +522,10 @@ export function demandHeatmapQueryOptions(
 	return {
 		queryKey: ["stats", "demand-heatmap", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<DemandHeatCell[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<DemandHeatCell[]> => {
 			const { data } = await client.get(`${STATS_BASE}/demand-heatmap`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -536,9 +550,10 @@ export function trendQueryOptions(
 	return {
 		queryKey: ["stats", "trend", metric, interval, params, extra ?? null] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<TrendPoint[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<TrendPoint[]> => {
 			const { data } = await client.get(`${STATS_BASE}/trend`, {
 				params: cleanParams({ metric, interval, ...extra, ...params }),
+				signal,
 			});
 			return data;
 		},
@@ -552,9 +567,10 @@ export function dashboardQueryOptions(
 	return {
 		queryKey: ["stats", "dashboard", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<DashboardSummary> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<DashboardSummary> => {
 			const { data } = await client.get(`${STATS_BASE}/dashboard`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -568,9 +584,10 @@ export function checkoutRateQueryOptions(
 	return {
 		queryKey: ["stats", "checkout-rate", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<CheckoutRateStat> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<CheckoutRateStat> => {
 			const { data } = await client.get(`${STATS_BASE}/checkout-rate`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -584,9 +601,10 @@ export function collectionSummaryQueryOptions(
 	return {
 		queryKey: ["stats", "collection-summary", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<CollectionSummaryStat> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<CollectionSummaryStat> => {
 			const { data } = await client.get(`${STATS_BASE}/collection-summary`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -600,9 +618,10 @@ export function demandByFormatQueryOptions(
 	return {
 		queryKey: ["stats", "demand-by-format", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<FormatDemandStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<FormatDemandStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/demand-by-format`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -616,10 +635,10 @@ export function demandByPickupLocationQueryOptions(
 	return {
 		queryKey: ["stats", "demand-by-pickup-location", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<PickupLocationDemandStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<PickupLocationDemandStat[]> => {
 			const { data } = await client.get(
 				`${STATS_BASE}/demand-by-pickup-location`,
-				{ params: cleanParams(params) },
+				{ params: cleanParams(params), signal },
 			);
 			return data;
 		},
@@ -633,11 +652,12 @@ export function demandByPatronGroupQueryOptions(
 	return {
 		queryKey: ["stats", "demand-by-patron-group", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<PatronGroupDemandStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<PatronGroupDemandStat[]> => {
 			const { data } = await client.get(
 				`${STATS_BASE}/demand-by-patron-group`,
 				{
 					params: cleanParams(params),
+					signal,
 				},
 			);
 			return data;
@@ -653,9 +673,10 @@ export function topRequestedTitlesQueryOptions(
 	return {
 		queryKey: ["stats", "top-requested-titles", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<RequestedTitleStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<RequestedTitleStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/top-requested-titles`, {
 				params: cleanParams({ ...params, size: 20 }),
+				signal,
 			});
 			return data?.content ?? [];
 		},
@@ -669,11 +690,12 @@ export function savedByReResolutionQueryOptions(
 	return {
 		queryKey: ["stats", "saved-by-re-resolution", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<number> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<number> => {
 			const { data } = await client.get(
 				`${STATS_BASE}/saved-by-re-resolution`,
 				{
 					params: cleanParams(params),
+					signal,
 				},
 			);
 			return data;
@@ -689,9 +711,10 @@ export function unmetLocalDemandQueryOptions(
 	return {
 		queryKey: ["stats", "unmet-local-demand", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<TopClusterStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<TopClusterStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/unmet-local-demand`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -705,10 +728,10 @@ export function acquisitionOpportunitiesQueryOptions(
 	return {
 		queryKey: ["stats", "acquisition-opportunities", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<TopClusterStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<TopClusterStat[]> => {
 			const { data } = await client.get(
 				`${STATS_BASE}/acquisition-opportunities`,
-				{ params: cleanParams(params) },
+				{ params: cleanParams(params), signal },
 			);
 			return data;
 		},
@@ -722,9 +745,10 @@ export function consortialLifelineQueryOptions(
 	return {
 		queryKey: ["stats", "consortial-lifeline", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<ConsortialLifelineStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<ConsortialLifelineStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/consortial-lifeline`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -740,9 +764,10 @@ export function libraryBreakdownQueryOptions(
 	return {
 		queryKey: ["stats", "library-breakdown", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<LibraryBreakdownStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<LibraryBreakdownStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/library-breakdown`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -758,9 +783,10 @@ export function peerBenchmarksQueryOptions(
 	return {
 		queryKey: ["stats", "peer-benchmarks", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<PeerBenchmarkStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<PeerBenchmarkStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/peer-benchmarks`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -775,9 +801,10 @@ export function demandByDimensionQueryOptions(
 	return {
 		queryKey: ["stats", "demand-by-dimension", dimension, params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<DimensionDemandStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<DimensionDemandStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/demand-by-dimension`, {
 				params: cleanParams({ dimension, ...params }),
+				signal,
 			});
 			return data;
 		},
@@ -797,9 +824,10 @@ export function turnaroundQueryOptions(
 	return {
 		queryKey: ["stats", "turnaround", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<TurnaroundStat> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<TurnaroundStat> => {
 			const { data } = await client.get(`${STATS_BASE}/turnaround`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -814,10 +842,10 @@ export function newAcquisitionsQueryOptions(
 	return {
 		queryKey: ["stats", "new-acquisitions-performance", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<NewAcquisitionPerformanceStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<NewAcquisitionPerformanceStat[]> => {
 			const { data } = await client.get(
 				`${STATS_BASE}/new-acquisitions-performance`,
-				{ params: cleanParams(params) },
+				{ params: cleanParams(params), signal },
 			);
 			return data;
 		},
@@ -831,9 +859,10 @@ export function unfillableDemandQueryOptions(
 	return {
 		queryKey: ["stats", "unfillable-demand", params] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<UnfillableDemandStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<UnfillableDemandStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/unfillable-demand`, {
 				params: cleanParams(params),
+				signal,
 			});
 			return data;
 		},
@@ -877,8 +906,8 @@ export function collectionTotalsQueryOptions(client: AxiosInstance) {
 		...collectionAnalysisPolicy,
 		queryKey: ["stats", "collection-totals"] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<CollectionTotalsStat> => {
-			const { data } = await client.get(`${STATS_BASE}/collection-totals`);
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<CollectionTotalsStat> => {
+			const { data } = await client.get(`${STATS_BASE}/collection-totals`, { signal });
 			return data;
 		},
 	};
@@ -889,8 +918,8 @@ export function collectionProfileQueryOptions(client: AxiosInstance) {
 		...collectionAnalysisPolicy,
 		queryKey: ["stats", "collection-profile"] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<CollectionProfileStat[]> => {
-			const { data } = await client.get(`${STATS_BASE}/collection-profile`);
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<CollectionProfileStat[]> => {
+			const { data } = await client.get(`${STATS_BASE}/collection-profile`, { signal });
 			return data;
 		},
 	};
@@ -901,9 +930,10 @@ export function clusterSizeDistributionQueryOptions(client: AxiosInstance) {
 		...collectionAnalysisPolicy,
 		queryKey: ["stats", "cluster-size-distribution"] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<ClusterSizeStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<ClusterSizeStat[]> => {
 			const { data } = await client.get(
 				`${STATS_BASE}/cluster-size-distribution`,
+				{ signal },
 			);
 			return data;
 		},
@@ -915,8 +945,8 @@ export function formatProfileQueryOptions(client: AxiosInstance) {
 		...collectionAnalysisPolicy,
 		queryKey: ["stats", "format-profile"] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<SourceFormatStat[]> => {
-			const { data } = await client.get(`${STATS_BASE}/format-profile`);
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<SourceFormatStat[]> => {
+			const { data } = await client.get(`${STATS_BASE}/format-profile`, { signal });
 			return data;
 		},
 	};
@@ -934,9 +964,10 @@ export function collectionOverlapQueryOptions(
 		...collectionAnalysisPolicy,
 		queryKey: ["stats", "collection-overlap", libraryCode] as const,
 		meta: OPTIONAL_QUERY,
-		queryFn: async (): Promise<CollectionOverlapStat[]> => {
+		queryFn: async ({ signal }: QueryFunctionContext): Promise<CollectionOverlapStat[]> => {
 			const { data } = await client.get(`${STATS_BASE}/collection-overlap`, {
 				params: cleanParams({ libraryCode }),
+				signal,
 			});
 			return data;
 		},

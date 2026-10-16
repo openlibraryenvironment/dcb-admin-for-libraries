@@ -14,6 +14,7 @@ import { MAIN_CONTENT_ID } from "@constants/landmarks";
 import { SkipLink } from "./SkipLink";
 import { useRouteAnnouncement } from "@/hooks/useRouteAnnouncement";
 import { InsideMainContext } from "@/hooks/useInsideMain";
+import { isReadOnly } from "@helpers/readOnlyAccess";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -37,7 +38,7 @@ const TAB_PATHS = {
 	locations: "/locations",
 	bibs: "/bibs",
 	insights: "/insights",
-	settings: "/settings",
+	preferences: "/preferences",
 } as const;
 
 export const Layout = ({ children }: LayoutProps) => {
@@ -50,13 +51,13 @@ export const Layout = ({ children }: LayoutProps) => {
 	const tabsReadOnly = useMemo(() => {
 		return [
 			{ label: t("nav.requesting.title"), value: TAB_PATHS.requesting },
+			{ label: t("nav.preferences.title"), value: TAB_PATHS.preferences },
 		];
 	}, [t]);
 
-	// Library admin check makes sure only requesting tabs show up for non-admin users.
-	// Then we need to put the redirect in to make sure they only get directed to that tab.
+	// Non-admin users see only the read-only tabs; the route guard keeps them to those pages.
 	const tabsConfig = useMemo(() => {
-		return auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN")
+		return !isReadOnly(auth?.user?.profile?.roles)
 			? [
 					{ label: t("nav.home.title"), value: TAB_PATHS.home },
 					{ label: t("nav.library.title"), value: TAB_PATHS.library },
@@ -82,7 +83,7 @@ export const Layout = ({ children }: LayoutProps) => {
 					...(isInsightsEnabled()
 						? [{ label: t("nav.insights.title"), value: TAB_PATHS.insights }]
 						: []),
-					{ label: t("nav.settings.title"), value: TAB_PATHS.settings },
+					{ label: t("nav.preferences.title"), value: TAB_PATHS.preferences },
 				]
 			: tabsReadOnly;
 	}, [auth?.user?.profile?.roles, t, tabsReadOnly]);
@@ -112,7 +113,9 @@ export const Layout = ({ children }: LayoutProps) => {
 					<Tabs
 						value={activeTab}
 						variant="scrollable"
-						scrollButtons="auto">
+						scrollButtons="auto"
+						// MUI hides them below sm unless asked, and the cut-off tab was the only sign there was more
+						allowScrollButtonsMobile>
 						{tabsConfig.map((tab) => (
 							<Tab
 								key={tab.value}

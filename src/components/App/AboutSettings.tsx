@@ -28,8 +28,7 @@ export function AboutSettings() {
 			<Link href={releaseNotesUrl(version)} target="_blank" rel="noopener noreferrer">
 				{version
 					? t("about.release_notes", { version })
-					: t("about.release_notes_all")}{" "}
-				{t("about.new_tab")}
+					: t("about.release_notes_all")}
 			</Link>
 			<Button variant="outlined" aria-haspopup="dialog" onClick={() => setOpen(true)}>
 				{t("about.whats_new")}

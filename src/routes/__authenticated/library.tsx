@@ -2,14 +2,14 @@ import { Attribute } from "@components/Attribute/Attribute";
 import { pageTitle } from "@helpers/pageTitle";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useBlocker, useRouter } from "@tanstack/react-router";
 import {
 	BrandUploadError,
 	uploadStagedBrandImages,
 } from "@helpers/brandAssetUpload";
 import request from "graphql-request";
-import { libraryQueryOptions } from "@helpers/sharedQueries";
+import { invalidateLibrary, libraryQueryOptions } from "@helpers/sharedQueries";
 import { createRestClient } from "@helpers/createRestClient";
 import { authHeaders } from "@helpers/auth";
 import { queryKeys } from "@helpers/queryKeys";
@@ -86,8 +86,15 @@ const ProfileField = ({
 
 export const Route = createFileRoute("/__authenticated/library")({
 	head: () => ({ meta: [{ title: pageTitle("nav.library.title") }] }),
-	component: HomeComponent,
+	component: LibraryRoute,
 });
+
+// Remounted per library: choosing another in the header is not a navigation, and an
+// edit begun on one library must not be saved onto the next
+function LibraryRoute() {
+	const { agencyCode } = useAgencyCodes();
+	return <HomeComponent key={agencyCode ?? ""} />;
+}
 
 /**
  * Whether an edit actually changed a field.
@@ -124,6 +131,7 @@ function HomeComponent() {
 	};
 
 	const DCB_API_BASE = cfg?.VITE_DCB_API_BASE;
+	const queryClient = useQueryClient();
 
 	// Read once per render rather than at each call site, so the two cards below
 	// cannot disagree with each other.
@@ -159,7 +167,7 @@ function HomeComponent() {
 		}, 0);
 	};
 
-	const { data, isError, refetch } = useQuery(
+	const { data, isError } = useQuery(
 		libraryQueryOptions(DCB_API_BASE, code ?? ""),
 	);
 
@@ -261,7 +269,7 @@ function HomeComponent() {
 		onSuccess: () => {
 			setChangedFields({});
 			setEditMode(false);
-			refetch();
+			void invalidateLibrary(queryClient, DCB_API_BASE, code ?? "");
 			setAlert({
 				open: true,
 				severity: "success",
@@ -444,14 +452,17 @@ function HomeComponent() {
 					<Alert severity="error">{t("library.load_failed")}</Alert>
 				</Grid>
 			)}
-            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-				<Typography>
-					{t("library.greeting", {
-						library: library?.fullName,
-						name: auth.user?.profile?.name,
-					})}
-				</Typography>
-			</Grid>
+            {/* Not "Welcome to DCB Admin for , …" while the library loads, or if it fails */}
+            {library?.fullName ? (
+				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+					<Typography>
+						{t("library.greeting", {
+							library: library.fullName,
+							name: auth.user?.profile?.name || t("header.user_fallback"),
+						})}
+					</Typography>
+				</Grid>
+			) : null}
             {editingEnabled ? (
 				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 					<>

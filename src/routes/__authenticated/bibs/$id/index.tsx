@@ -15,7 +15,7 @@ import {
 	CircularProgress,
 } from "@mui/material";
 import { isUuidShaped } from "@helpers/isUuidShaped";
-import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
+import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE, DETAIL_ITEM } from "@constants/detailGrid";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { getBibMainDetails } from "@queries/getBib";
@@ -138,76 +138,76 @@ function RouteComponent() {
 			<Grid size={FULL_ROW}>
 				<Typography variant="h1">{bibRecord.title || t("bibs.title")}</Typography>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.author")}>
 					<RenderAttribute attribute={bibRecord?.author} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.date_created")}>
 					<RenderAttribute
 						attribute={formatTimestamp(bibRecord?.dateCreated, clock)}
 					/>
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.date_updated")}>
 					<RenderAttribute
 						attribute={formatTimestamp(bibRecord?.dateUpdated, clock)}
 					/>
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.publisher")}>
 					<RenderAttribute attribute={bibRecord?.publisher} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.place_of_publication")}>
 					<RenderAttribute attribute={bibRecord?.placeOfPublication} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.date_of_publication")}>
 					<RenderAttribute attribute={bibRecord?.dateOfPublication} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.edition")}>
 					<RenderAttribute attribute={bibRecord?.edition} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.large_print")}>
 					<RenderAttribute attribute={bibRecord?.isLargePrint} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.source_system_id")}>
 					<RenderAttribute attribute={bibRecord?.sourceSystemId} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.source_record_id")}>
 					<RenderAttribute attribute={bibRecord?.sourceRecordId} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.process_version")}>
 					<RenderAttribute attribute={bibRecord?.processVersion} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.metadata_score")}>
 					<RenderAttribute attribute={bibRecord?.metadataScore} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.id")}>
 					<RenderAttribute attribute={bibRecord?.id} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.cluster_uuid")}>
 					<RenderAttribute attribute={bibRecord?.contributesTo?.id} />
 				</Attribute>

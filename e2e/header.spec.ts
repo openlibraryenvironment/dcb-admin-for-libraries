@@ -17,7 +17,7 @@ test.describe("Header", () => {
 		await app.signIn({ agencyCode: "e2e-agency,e2e-agency-2" });
 		await app.mockGraphQL({ LoadLibrary: library });
 
-		await page.goto("/settings");
+		await page.goto("/preferences");
 		await expect(page.getByRole("combobox", { name: /library/i })).toBeVisible();
 		await expect(page.getByRole("button", { name: /logout/i })).toBeVisible();
 
@@ -39,7 +39,7 @@ test.describe("Header", () => {
 			LoadSupplierRequests: { patronRequests: { totalSize: 42 } },
 		});
 
-		await page.goto("/settings");
+		await page.goto("/preferences");
 		await page.evaluate(() => {
 			(window as unknown as { __sameDocument: boolean }).__sameDocument = true;
 		});
@@ -69,7 +69,7 @@ test.describe("Header", () => {
 		await app.signIn({ agencyCode: "" });
 		await app.mockGraphQL({ LoadLibrary: library });
 
-		await page.goto("/settings");
+		await page.goto("/preferences");
 		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 		await expect(page.getByRole("banner")).toContainText(
 			"DCB Admin for Libraries",
@@ -78,4 +78,16 @@ test.describe("Header", () => {
 		expect(requests).toEqual([]);
 		expect(scopes.filter((scope) => scope.includes("undefined"))).toEqual([]);
 	});
+});
+
+test("at 320px, the main tabs show that they scroll", async ({ app, page }) => {
+	await page.setViewportSize({ width: 320, height: 640 });
+	await app.signIn();
+	await app.mockGraphQL({ LoadLibrary: library });
+
+	await page.goto("/preferences");
+	const tabs = page.getByRole("navigation", { name: /main navigation/i });
+	await expect(tabs.getByRole("tab", { name: "Preferences" })).toBeVisible();
+
+	await expect(tabs.locator(".MuiTabs-scrollButtons").first()).toBeVisible();
 });

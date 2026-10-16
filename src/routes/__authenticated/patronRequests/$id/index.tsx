@@ -41,11 +41,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { isUuidShaped } from "@helpers/isUuidShaped";
+import { onlyMatch } from "@helpers/onlyMatch";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
+import Confirmation from "@components/Confirmation/Confirmation";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import { formatDuration } from "@helpers/formatDuration";
 import Loading from "@components/Loading/Loading";
-import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE } from "@constants/detailGrid";
+import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE, DETAIL_ITEM } from "@constants/detailGrid";
 import { CustomLink } from "@components/CustomLink";
 import { SourceRecord } from "@models/SourceRecord";
 import { queryKeys } from "@helpers/queryKeys";
@@ -53,6 +55,7 @@ import { authHeaders } from "@helpers/auth";
 import {
 	libraryBasicsQueryOptions,
 	locationQueryOptions,
+	invalidateRequestLists,
 } from "@helpers/sharedQueries";
 import { Library } from "@models/Library";
 import { getILS } from "@helpers/getILS";
@@ -67,6 +70,7 @@ import {
 } from "@helpers/cleanupPatronRequest";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
+import { dcbStatusLabel } from "@constants/statuses/DCBStatuses";
 import PatronRequestAuditLog from "@components/PatronRequestAuditLog/PatronRequestAuditLog";
 import { z } from "zod";
 
@@ -75,6 +79,27 @@ const requestSearchSchema = z.object({
 	tab: z.number().int().min(1).max(5).optional().catch(undefined),
 	audit: gridSearchSchema.optional().catch(undefined),
 });
+
+/**
+ * A library, with its ILS and primary contacts written out. They were a tooltip on the
+ * name, which a keyboard or touch user could not reach.
+ */
+function LibraryWithContact({ library }: { library: Library }) {
+	const { t } = useTranslation();
+	return (
+		<>
+			<RenderAttribute attribute={library.fullName} />
+			<Typography variant="body2" color="text.secondary">
+				{t("patron_request.library_ils_contacts", {
+					ils: getILS(library.agency?.hostLms?.lmsClientClass),
+					contact: library.contacts
+						? findPrimaryContacts(library.contacts)
+						: t("library.no_contact"),
+				})}
+			</Typography>
+		</>
+	);
+}
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
 	validateSearch: requestSearchSchema,
@@ -97,6 +122,7 @@ function RouteComponent() {
 	const [cleanupErrorAlertVisibility, setCleanupErrorAlertVisibility] =
 		useState(false);
 	const [cleanupRefusal, setCleanupRefusal] = useState<string | null>(null);
+	const [confirmCleanup, setConfirmCleanup] = useState(false);
 	const { agencyCodes } = useAgencyCodes();
 	const guardedCleanup = isGuardedCleanupEnabled();
 	const apiBase: string = cfg.VITE_DCB_API_BASE;
@@ -174,8 +200,7 @@ function RouteComponent() {
 			),
 	});
 
-	const pickupPatronIdentity =
-		patronIdentitiesData?.patronIdentities?.content?.[0];
+	const pickupPatronIdentity = onlyMatch(patronIdentitiesData?.patronIdentities);
 
 	const {
 		data: pickupLocationData,
@@ -290,8 +315,10 @@ function RouteComponent() {
 		queryClient.invalidateQueries({
 			queryKey: queryKeys.patronRequests.detail(apiBase, id),
 		});
-		queryClient.invalidateQueries({ queryKey: queryKeys.patronRequests.lists() });
-		queryClient.invalidateQueries({ queryKey: queryKeys.supplierRequests.lists() });
+		queryClient.invalidateQueries({
+			queryKey: queryKeys.audits.forPatronRequestAll(apiBase, id),
+		});
+		void invalidateRequestLists(queryClient);
 	};
 
 	// Mutation for updating the patron request
@@ -417,21 +444,9 @@ function RouteComponent() {
 							</Typography>
 						</Grid>
 						{patronLibrary?.fullName ? (
-							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Grid size={DETAIL_ITEM}>
 								<Attribute label={t("patron_request.patron_library")}>
-									<Tooltip
-										title={t("patron_request.request_tooltip", {
-											ils: getILS(
-												patronLibrary?.agency?.hostLms?.lmsClientClass,
-											),
-											contact: patronLibrary?.contacts
-												? findPrimaryContacts(patronLibrary?.contacts)
-												: t("library.no_contact"),
-										})}>
-										<span>
-											<RenderAttribute attribute={patronLibrary?.fullName} />
-										</span>
-									</Tooltip>
+									<LibraryWithContact library={patronLibrary} />
 								</Attribute>
 							</Grid>
 						) : patronLibraryLoading ||
@@ -440,68 +455,44 @@ function RouteComponent() {
 							<CircularProgress size="1rem" aria-label={t("ui.info.loading.value")} />
 						) : null}
 						{supplierLibrary?.fullName ? (
-							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Grid size={DETAIL_ITEM}>
 								<Attribute label={t("patron_request.supplier_library")}>
-									<Tooltip
-										title={t("patron_request.request_tooltip", {
-											ils: getILS(
-												supplierLibrary?.agency?.hostLms?.lmsClientClass,
-											),
-											contact: supplierLibrary?.contacts
-												? findPrimaryContacts(supplierLibrary?.contacts)
-												: t("library.no_contact"),
-										})}>
-										<span>
-											<RenderAttribute attribute={supplierLibrary?.fullName} />
-										</span>
-									</Tooltip>
+									<LibraryWithContact library={supplierLibrary} />
 								</Attribute>
 							</Grid>
 						) : supplierLibraryLoading ? (
 							<CircularProgress size="1rem" aria-label={t("ui.info.loading.value")} />
 						) : null}
 						{pickupLibrary?.fullName ? (
-							<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Grid size={DETAIL_ITEM}>
 								<Attribute label={t("patron_request.pickup_library")}>
-									<Tooltip
-										title={t("patron_request.request_tooltip", {
-											ils: getILS(
-												pickupLibrary?.agency?.hostLms?.lmsClientClass,
-											),
-											contact: pickupLibrary?.contacts
-												? findPrimaryContacts(pickupLibrary?.contacts)
-												: t("library.no_contact"),
-										})}>
-										<span>
-											<RenderAttribute attribute={pickupLibrary?.fullName} />
-										</span>
-									</Tooltip>
+									<LibraryWithContact library={pickupLibrary} />
 								</Attribute>
 							</Grid>
 						) : pickupLibraryLoading ? (
 							<CircularProgress size="1rem" aria-label={t("ui.info.loading.value")} />
 						) : null}
 
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.patron_hostlms")}>
 								<RenderAttribute attribute={patronRequest?.patronHostlmsCode} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_patron_barcode")}>
 								<RenderAttribute
 									attribute={patronRequest?.requestingIdentity?.localBarcode}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.supplying_agency_code")}>
 								<RenderAttribute
 									attribute={supplier?.localAgency}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_agency_code")}>
 								{pickupLocationDataLoading ? (
 									<CircularProgress
@@ -521,7 +512,7 @@ function RouteComponent() {
 								)}
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_hostlms_code")}>
 								{pickupLocationDataLoading ? (
 									<CircularProgress
@@ -541,7 +532,7 @@ function RouteComponent() {
 								)}
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_location_name")}>
 								{pickupLocationDataLoading ? (
 									<CircularProgress
@@ -566,21 +557,21 @@ function RouteComponent() {
 								)}
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.request_created")}>
 								<RenderAttribute
 									attribute={formatTimestamp(patronRequest?.dateCreated, clock)}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.request_updated")}>
 								<RenderAttribute
 									attribute={formatTimestamp(patronRequest?.dateUpdated, clock)}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.next_poll")}>
 								<RenderAttribute
 									attribute={formatTimestamp(patronRequest?.nextScheduledPoll, clock)}
@@ -606,7 +597,7 @@ function RouteComponent() {
 							{untracked ? (
 								<Typography variant="body2" id="check-for-updates-reason">
 									{t("patron_request.check_for_updates_disabled", {
-										status: patronRequest?.status,
+										status: dcbStatusLabel(patronRequest?.status, t),
 									})}
 								</Typography>
 							) : null}
@@ -651,14 +642,14 @@ function RouteComponent() {
 								}
 							/>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.previous_status")}>
-								<RenderAttribute attribute={patronRequest?.previousStatus} />
+								<RenderAttribute attribute={dcbStatusLabel(patronRequest?.previousStatus, t)} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.status")}>
-								<RenderAttribute attribute={patronRequest?.status} />
+								<RenderAttribute attribute={dcbStatusLabel(patronRequest?.status, t)} />
 							</Attribute>
 							{auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
 								<>
@@ -666,7 +657,7 @@ function RouteComponent() {
 										variant="outlined"
 										color="primary"
 										sx={{ marginTop: 1 }}
-										onClick={() => cleanupMutation.mutate()}
+										onClick={() => setConfirmCleanup(true)}
 										aria-describedby="cleanup-reason"
 										disabled={cleanupMutation.isPending || !canCleanup}>
 										{t("patron_request.cleanup")}
@@ -684,12 +675,22 @@ function RouteComponent() {
 											? t("patron_request.cleanup_info")
 											: t("patron_request.cleanup_disabled")}
 									</Typography>
+									<Confirmation
+										open={confirmCleanup}
+										onClose={() => setConfirmCleanup(false)}
+										onConfirm={() => {
+											setConfirmCleanup(false);
+											cleanupMutation.mutate();
+										}}
+										action="cleanup"
+										entityName=""
+										gridEdit={false}
+									/>
 								</>
 							) : null}
 							<TimedAlert
 								open={cleanupRefusal !== null}
 								severityType="warning"
-								autoHideDuration={10000}
 								alertText={t("patron_request.cleanup_refused", {
 									detail: cleanupRefusal ?? "",
 								})}
@@ -697,14 +698,14 @@ function RouteComponent() {
 								onCloseFunc={() => setCleanupRefusal(null)}
 							/>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.next_expected_status")}>
 								<RenderAttribute
-									attribute={patronRequest?.nextExpectedStatus?.toString()}
+									attribute={dcbStatusLabel(patronRequest?.nextExpectedStatus?.toString(), t)}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.status_changed")}>
 								<RenderAttribute
 									attribute={formatTimestamp(patronRequest?.currentStatusTimestamp, clock, {
@@ -713,7 +714,7 @@ function RouteComponent() {
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.time_in_status")}>
 								<RenderAttribute
 									attribute={formatDuration(
@@ -722,65 +723,65 @@ function RouteComponent() {
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.polling_checks_in_status")}>
 								<RenderAttribute
 									attribute={patronRequest?.pollCountForCurrentStatus?.toString()}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.active_workflow")}>
 								<RenderAttribute attribute={patronRequest?.activeWorkflow} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.out_of_sequence")}>
 								<RenderAttribute
 									attribute={patronRequest?.outOfSequenceFlag?.toString()}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.resolution_count")}>
 								<RenderAttribute
 									attribute={patronRequest?.resolutionCount?.toString()}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.renewal_status")}>
 								<RenderAttribute attribute={patronRequest?.renewalStatus} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.renewal_count")}>
 								<RenderAttribute
 									attribute={patronRequest?.renewalCount?.toString()}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.error_message")}>
 								<RenderAttribute attribute={patronRequest?.errorMessage} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.requestor_note")}>
 								<RenderAttribute attribute={patronRequest?.requesterNote} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.description")}>
 								<RenderAttribute attribute={patronRequest?.description} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.request_uuid")}>
 								<RenderAttribute attribute={patronRequest?.id} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("requesting.expedited_checkout.request_title")}>
 								<RenderAttribute
 									attribute={patronRequest?.isExpeditedCheckout}
@@ -800,28 +801,28 @@ function RouteComponent() {
 								{t("requesting.bib_record")}
 							</Typography>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("bibs.record_title")}>
 								<RenderAttribute
 									attribute={patronRequest?.clusterRecord?.title}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("bibs.record_created")}>
 								<RenderAttribute
 									attribute={formatTimestamp(patronRequest?.clusterRecord?.dateCreated, clock)}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("bibs.record_updated")}>
 								<RenderAttribute
 									attribute={formatTimestamp(patronRequest?.clusterRecord?.dateUpdated, clock)}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("bibs.cluster_uuid")}>
 								{linkToCluster ? (
 									<Tooltip
@@ -843,14 +844,14 @@ function RouteComponent() {
 								)}
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("bibs.selected_bib_uuid")}>
 								<RenderAttribute
 									attribute={patronRequest?.clusterRecord?.selectedBib}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("bibs.source_record_id")}>
 								<RenderAttribute
 									attribute={
@@ -859,7 +860,7 @@ function RouteComponent() {
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("bibs.source_system_id")}>
 								<RenderAttribute
 									attribute={
@@ -918,68 +919,68 @@ function RouteComponent() {
 								{t("patron_request.supplying")}
 							</Typography>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.supplying_agency_code")}>
 								<RenderAttribute
 									attribute={supplier?.localAgency}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("hostlms.code")}>
 								<RenderAttribute
 									attribute={supplier?.hostLmsCode}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.active")}>
 								<RenderAttribute
 									attribute={String(supplier?.isActive)}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.date_created")}>
 								<RenderAttribute
 									attribute={formatTimestamp(supplier?.dateCreated, clock)}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.date_updated")}>
 								<RenderAttribute
 									attribute={formatTimestamp(supplier?.dateUpdated, clock)}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_request_status")}>
 								<RenderAttribute
 									attribute={supplier?.localStatus}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_request_status_raw")}>
 								<RenderAttribute
 									attribute={supplier?.rawLocalStatus}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.supplier_uuid")}>
 								<RenderAttribute attribute={supplier?.id} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_bib_id")}>
 								<RenderAttribute
 									attribute={supplier?.localBibId}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_supplier_id")}>
 								<RenderAttribute
 									attribute={supplier?.localId}
@@ -1005,77 +1006,77 @@ function RouteComponent() {
 								{t("patron_request.item")}
 							</Typography>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_item_barcode")}>
 								<RenderAttribute
 									attribute={supplier?.localItemBarcode}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_item_loc")}>
 								<RenderAttribute
 									attribute={supplier?.localItemLocationCode}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_item_status")}>
 								<RenderAttribute
 									attribute={supplier?.localItemStatus}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_item_status_raw")}>
 								<RenderAttribute
 									attribute={supplier?.rawLocalItemStatus}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.renewal_count_supplier")}>
 								<RenderAttribute
 									attribute={supplier?.localRenewalCount?.toString()}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_item_type")}>
 								<RenderAttribute
 									attribute={supplier?.localItemType}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.supplier_ctype")}>
 								<RenderAttribute
 									attribute={supplier?.canonicalItemType}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_item_id")}>
 								<RenderAttribute
 									attribute={supplier?.localItemId}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.item_manually_selected")}>
 								<RenderAttribute
 									attribute={patronRequest?.isManuallySelectedItem?.toString()}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.item_manual_agency_code")}>
 								<RenderAttribute
 									attribute={patronRequest?.localItemAgencyCode}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.item_manual_hostlms_code")}>
 								<RenderAttribute
 									attribute={patronRequest?.localItemHostlmsCode}
@@ -1101,7 +1102,7 @@ function RouteComponent() {
 								{t("patron_request.virtual_patron")}
 							</Typography>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_id")}>
 								<RenderAttribute
 									attribute={
@@ -1110,7 +1111,7 @@ function RouteComponent() {
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_barcode")}>
 								<RenderAttribute
 									attribute={
@@ -1119,7 +1120,7 @@ function RouteComponent() {
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_patron_type")}>
 								<RenderAttribute
 									attribute={
@@ -1128,7 +1129,7 @@ function RouteComponent() {
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.patron_type_dcb")}>
 								<RenderAttribute
 									attribute={
@@ -1149,24 +1150,24 @@ function RouteComponent() {
 								{t("patron_request.borrowing", "Borrowing")}
 							</Typography>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("hostlms.code")}>
 								<RenderAttribute attribute={patronRequest?.patronHostlmsCode} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_request_id")}>
 								<RenderAttribute attribute={patronRequest?.localRequestId} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_request_status")}>
 								<RenderAttribute
 									attribute={patronRequest?.localRequestStatus}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_request_status_raw")}>
 								<RenderAttribute
 									attribute={patronRequest?.rawLocalRequestStatus}
@@ -1174,40 +1175,40 @@ function RouteComponent() {
 							</Attribute>
 						</Grid>
 
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_patron_id")}>
 								<RenderAttribute
 									attribute={patronRequest?.requestingIdentity?.localId}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_patron_barcode")}>
 								<RenderAttribute
 									attribute={patronRequest?.requestingIdentity?.localBarcode}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_patron_type")}>
 								<RenderAttribute
 									attribute={patronRequest?.requestingIdentity?.localPtype}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.patron_canonical_ptype")}>
 								<RenderAttribute
 									attribute={patronRequest?.requestingIdentity?.canonicalPtype}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.patron_uuid")}>
 								<RenderAttribute attribute={patronRequest?.patron?.id} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.requestor_uuid")}>
 								<RenderAttribute
 									attribute={patronRequest?.requestingIdentity?.id}
@@ -1228,34 +1229,34 @@ function RouteComponent() {
 								{t("patron_request.virtual_item")}
 							</Typography>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_virtual_id")}>
 								<RenderAttribute attribute={patronRequest?.localItemId} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_virtual_type")}>
 								<RenderAttribute attribute={patronRequest?.localItemType} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_virtual_item_status")}>
 								<RenderAttribute attribute={patronRequest?.localItemStatus} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_virtual_item_status_raw")}>
 								<RenderAttribute
 									attribute={patronRequest?.rawLocalItemStatus}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_virtual_bib_id")}>
 								<RenderAttribute attribute={patronRequest?.localBibId} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.renewal_count_borrower")}>
 								<RenderAttribute
 									attribute={patronRequest?.localRenewalCount?.toString()}
@@ -1274,7 +1275,7 @@ function RouteComponent() {
 								{t("patron_request.pickup")}
 							</Typography>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_location_name")}>
 								{pickupLocationDataLoading ? (
 									<CircularProgress
@@ -1299,19 +1300,19 @@ function RouteComponent() {
 								)}
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_request_id")}>
 								<RenderAttribute attribute={patronRequest?.pickupRequestId} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_request_status")}>
 								<RenderAttribute
 									attribute={patronRequest?.pickupRequestStatus}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_request_status_raw")}>
 								<RenderAttribute
 									attribute={patronRequest?.rawPickupRequestStatus}
@@ -1332,12 +1333,12 @@ function RouteComponent() {
 							</Typography>
 						</Grid>
 
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_patron_id")}>
 								<RenderAttribute attribute={patronRequest?.pickupPatronId} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.local_barcode")}>
 								{patronIdentitiesLoading ? (
 									<CircularProgress
@@ -1357,7 +1358,7 @@ function RouteComponent() {
 								)}
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.borrowing_patron_type")}>
 								{patronIdentitiesLoading ? (
 									<CircularProgress
@@ -1377,7 +1378,7 @@ function RouteComponent() {
 								)}
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.patron_type_dcb")}>
 								{patronIdentitiesLoading ? (
 									<CircularProgress
@@ -1411,29 +1412,29 @@ function RouteComponent() {
 							</Typography>
 						</Grid>
 
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_item_id")}>
 								<RenderAttribute attribute={patronRequest?.pickupItemId} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_item_type")}>
 								<RenderAttribute attribute={patronRequest?.pickupItemType} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_item_status")}>
 								<RenderAttribute attribute={patronRequest?.pickupItemStatus} />
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_item_status_raw")}>
 								<RenderAttribute
 									attribute={patronRequest?.rawPickupItemStatus}
 								/>
 							</Attribute>
 						</Grid>
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.pickup_bib_id")}>
 								<RenderAttribute attribute={patronRequest?.pickupBibId} />
 							</Attribute>

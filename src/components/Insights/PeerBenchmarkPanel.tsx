@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -8,7 +8,6 @@ import {
 	Table,
 	TableBody,
 	TableCell,
-	TableContainer,
 	TableHead,
 	TableRow,
 	Typography,
@@ -22,6 +21,7 @@ import { formatNumber, formatPercent } from "@helpers/formatters";
 import PanelState from "./PanelState";
 
 import MetricInfo from "./MetricInfo";
+import ScrollableTableContainer from "./ScrollableTableContainer";
 
 const PANEL_MIN_HEIGHT = 300;
 
@@ -33,7 +33,7 @@ function median(values: number[]): number | null {
 }
 
 // Ranks every library's borrower-side performance and marks the current library, with
-// the consortium median as the benchmark line. The competitive gap vs LibraryIQ.
+// the consortium median as the benchmark line.
 export default function PeerBenchmarkPanel({
 	params,
 	libraryCode,
@@ -42,6 +42,7 @@ export default function PeerBenchmarkPanel({
 	libraryCode?: string;
 }) {
 	const { t } = useTranslation();
+	const headingId = useId();
 	const client = useDcbRestClient();
 
 	const { data, isLoading, isError, refetch, isFetching } = useQuery(
@@ -82,7 +83,7 @@ export default function PeerBenchmarkPanel({
 		<Card variant="outlined">
 			<CardContent>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-					<Typography variant="h6" component="h3">
+					<Typography variant="h6" component="h3" id={headingId}>
 						{t("insights.charts.peer_benchmark.title")}
 					</Typography>
 					<MetricInfo
@@ -106,7 +107,7 @@ export default function PeerBenchmarkPanel({
 					height={PANEL_MIN_HEIGHT}
 				>
 					{() => (
-						<TableContainer sx={{ maxHeight: 440 }}>
+						<ScrollableTableContainer labelledBy={headingId} sx={{ maxHeight: 440 }}>
 							<Table size="small" stickyHeader>
 								<TableHead>
 									<TableRow>
@@ -184,7 +185,7 @@ export default function PeerBenchmarkPanel({
 									})}
 								</TableBody>
 							</Table>
-						</TableContainer>
+						</ScrollableTableContainer>
 					)}
 				</PanelState>
 			</CardContent>

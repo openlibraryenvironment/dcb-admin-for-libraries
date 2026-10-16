@@ -142,6 +142,11 @@ interface DataGridProps {
 	/** A URL-synced grid's view, which its toolbar can share as a link and save. */
 	views?: GridViews;
 }
+
+// Module scope: a new function each render made MUI X re-measure every row on every render
+const AUTO_ROW_HEIGHT = () => "auto" as const;
+const DEFAULT_ROW_HEIGHT = () => null;
+
 export default function DataGrid({
 	autoRowHeight,
 	checkboxSelection,
@@ -295,7 +300,7 @@ export default function DataGrid({
 				getDetailPanelContent={getDetailPanelContent}
 				getDetailPanelHeight={getDetailPanelHeight}
 				// May need initial state passed in like serverpaginated grid
-				getRowHeight={autoRowHeight ? () => "auto" : () => null}
+				getRowHeight={autoRowHeight ? AUTO_ROW_HEIGHT : DEFAULT_ROW_HEIGHT}
 				listView={listViewEnabled}
 				loading={loading}
 				localeText={{

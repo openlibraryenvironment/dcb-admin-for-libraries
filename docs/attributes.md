@@ -37,7 +37,7 @@ reworked, one list per section is the shape to move to.
 
 ## The library profile is different
 
-`ProfileField`, local to `src/routes/__authenticated/index.tsx`, wraps
+`ProfileField`, local to `src/routes/__authenticated/library.tsx`, wraps
 `Attribute` only when the page is in read mode. In edit mode the `TextField`
 carries its own label, and a heading seven pixels above a floating label saying
 the same thing is a second visible name for one control (WCAG 2.5.3).

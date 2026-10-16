@@ -38,7 +38,7 @@ export function ShareViewButton({ views }: { views: GridViews }) {
 				onCloseFunc={(_event: unknown, reason?: string) =>
 					reason !== "clickaway" && setResult(null)
 				}
-				severityType={result === "failed" ? "error" : "success"}
+				severityType={result === "failed" ? "error" : views.hasPrivate ? "warning" : "success"}
 				alertText={
 					result === "failed"
 						? t("ui.data_grid.views.share_failed")

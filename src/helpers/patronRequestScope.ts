@@ -30,6 +30,13 @@ export const hasBorrowingScope = (
 ): boolean =>
 	isAgencyScopedRequestsEnabled() ? !!agencyCode : !!hostLmsCode;
 
+/**
+ * The Host LMS code, for a query key, only when the scope is built from it. Keyed on it
+ * otherwise, a grid fetched again when the libraries list arrived with the code.
+ */
+export const borrowingScopeHostLms = (hostLmsCode: string | undefined): string | undefined =>
+	isAgencyScopedRequestsEnabled() ? undefined : hostLmsCode;
+
 /** "The requests my library supplies": the same field on every release. */
 export const suppliedByLibraryQuery = (agencyCode: string | undefined): string =>
 	"supplyingAgencyCode:" + escapeLucene(agencyCode ?? "");

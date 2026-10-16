@@ -12,6 +12,8 @@ import { queryKeys } from "@helpers/queryKeys";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import LinearProgress from "@mui/material/LinearProgress";
@@ -36,7 +38,6 @@ import {
 } from "@models/SearchTypes";
 import { buildQuery } from "@helpers/search/queryBuilder";
 import { SearchResult } from "@components/SearchResultComponent/SearchResultComponent";
-import Error from "@components/Error/Error";
 import { useSearchGridStore } from "@/hooks/useSearchGridStore";
 import { parseQuery } from "@helpers/search/queryParser";
 import type { RequestingSearch } from "@helpers/requestingSearch";
@@ -242,12 +243,20 @@ export function SharedIndexV2() {
 
 	// The result count changes on screen and nothing else says so - the count
 	// renders into a span, and the grid below it redraws silently. WCAG 4.1.3.
-	// Announcing on the settled value rather than on each keystroke: isFetching
-	// would narrate every intermediate state of a debounced search.
+	// Announced once a search or a page has settled, not for each state on the way. A
+	// new page keeps the count, so it says which page it is.
 	useEffect(() => {
-		if (typeof totalRecords !== "number") return;
-		announce(t("requesting.titles_found", { number: totalRecords }));
-	}, [totalRecords, announce, t]);
+		if (typeof totalRecords !== "number" || isFetching) return;
+		announce(
+			pageno > 0
+				? t("requesting.page_announce", {
+						page: pageno + 1,
+						pages: Math.ceil(totalRecords / pagesize),
+						count: totalRecords,
+					})
+				: t("requesting.titles_found", { count: totalRecords }),
+		);
+	}, [totalRecords, isFetching, pageno, pagesize, announce, t]);
 
 	return (
 		<Box sx={{ width: "100%" }}>
@@ -338,16 +347,16 @@ export function SharedIndexV2() {
 
 				{typeof totalRecords === "number" ? (
 					<Typography variant="hitCount">
-						{t("requesting.titles_found", { number: totalRecords })}
+						{t("requesting.titles_found", { count: totalRecords })}
 					</Typography>
 				) : null}
 			</Stack>
+			{/* In the page, not a page of its own: the page's h1 is already "Requesting" */}
 			{isError && (
-				<Error
-					title={t("requesting.shared_index.error_connecting_title")}
-					message={t("requesting.shared_index.error_connecting")}
-					action={t("ui.actions.go_back")}
-					goBack="/"></Error>
+				<Alert severity="error" sx={{ mt: 2 }}>
+					<AlertTitle>{t("requesting.shared_index.error_connecting_title")}</AlertTitle>
+					{t("requesting.shared_index.error_connecting")}
+				</Alert>
 			)}
 			{/* A LIST, not a one-column grid. These are search results: rendering
 			    them through DataGridPremium with a null column header announced
@@ -411,7 +420,6 @@ export function SharedIndexV2() {
 						position: "absolute",
 						right: 8,
 						top: 8,
-						color: (theme) => (theme.vars || theme).palette.grey[500],
 					}}>
 					<Close />
 				</IconButton>

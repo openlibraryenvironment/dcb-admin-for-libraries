@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyServiceError } from "@helpers/serviceErrors";
+import { classifyServiceError, retryTransientOnce } from "@helpers/serviceErrors";
 
 describe("classifyServiceError", () => {
 	it.each([
@@ -20,5 +20,24 @@ describe("classifyServiceError", () => {
 		expect(classifyServiceError({ response: { status: 500 } })).toBeNull();
 		expect(classifyServiceError(new Error("GraphQL Error (Code: 200)"))).toBeNull();
 		expect(classifyServiceError(undefined)).toBeNull();
+	});
+});
+
+describe("retryTransientOnce", () => {
+	it.each([
+		["no answer at all", new TypeError("Failed to fetch")],
+		["a server fault", { response: { status: 500 } }],
+		["a gateway timeout", { response: { status: 504 } }],
+	])("retries %s once", (_, error) => {
+		expect(retryTransientOnce(0, error)).toBe(true);
+		expect(retryTransientOnce(1, error)).toBe(false);
+	});
+
+	it.each([
+		["a refusal", { response: { status: 403 } }],
+		["a malformed request", { response: { status: 400 } }],
+		["a GraphQL error carried on a 200", { response: { status: 200, errors: [{}] } }],
+	])("does not retry %s, which will be the same next time", (_, error) => {
+		expect(retryTransientOnce(0, error)).toBe(false);
 	});
 });

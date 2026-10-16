@@ -1,6 +1,7 @@
 import type { Components, Theme } from "@mui/material/styles";
 import type {} from "@mui/x-data-grid/themeAugmentation";
 
+import { dialogClasses } from "@mui/material/Dialog";
 import "./augmentation";
 
 /**
@@ -126,6 +127,49 @@ export const components: Components<Theme> = {
 	MuiIconButton: {
 		defaultProps: {
 			disableRipple: true,
+		},
+		styleOverrides: {
+			// The ripple was MUI's only focus cue for an IconButton; without it there is none
+			root: ({ theme }) => ({
+				"&.Mui-focusVisible": {
+					outline: "2px solid",
+					outlineColor: (theme.vars || theme).palette.primary.outlineColor,
+					outlineOffset: "2px",
+				},
+			}),
+		},
+	},
+	// MUI keeps 32px either side of a dialog, which at 320px leaves 256px for its content
+	MuiDialog: {
+		styleOverrides: {
+			paper: ({ theme }) => ({
+				[theme.breakpoints.down("sm")]: {
+					[`&:not(.${dialogClasses.paperFullScreen})`]: {
+						margin: theme.spacing(1),
+						maxHeight: `calc(100% - ${theme.spacing(2)})`,
+						maxWidth: `calc(100% - ${theme.spacing(2)})`,
+					},
+					[`&.${dialogClasses.paperFullWidth}`]: {
+						width: `calc(100% - ${theme.spacing(2)})`,
+					},
+				},
+			}),
+		},
+	},
+	// Below sm the toolbar is wider than the screen, and its page buttons fell outside it.
+	// Only there: the spacer's 100% basis would push everything onto a second line on a wrapping toolbar.
+	MuiTablePagination: {
+		styleOverrides: {
+			toolbar: ({ theme }) => ({
+				[theme.breakpoints.down("sm")]: {
+					flexWrap: "wrap",
+					rowGap: theme.spacing(1),
+					paddingLeft: 0,
+				},
+			}),
+			spacer: ({ theme }) => ({
+				[theme.breakpoints.down("sm")]: { display: "none" },
+			}),
 		},
 	},
 	MuiListItemButton: {

@@ -153,7 +153,7 @@ Admin. Any other value — including `en-us` in lower case — also means `en-GB
 browser console says so once. A consortium that wants American text and month-first dates
 sets `en-US`.
 
-**Each user can override it** under Settings, Display, Language: "Consortium default"
+**Each user can override it** under Preferences, Display, Language: "Consortium default"
 follows this variable, and either English can be chosen instead. The choice is kept on
 that device, like the other display settings.
 
@@ -253,7 +253,7 @@ Using "staging" as an example environment.
 
 **Architecture:** Similar to Cloudflare, this uses a runtime-config approach. The provided Dockerfile (`docker/production/Dockerfile`) builds the app and serves it via an Nginx alpine container (`nginx:stable-alpine`). On boot, nginx's own template mechanism renders `docker/production/default.conf.template` into the live server config, and a script in `/docker-entrypoint.d/` (`docker/production/40-inject-env.sh`) uses `envsubst` on `docker/production/inject_env.json.template` to render `/inject_env.json` from the container's environment variables. Client-side routes (deep links/refreshes) fall back to `index.html`, and both `index.html` and `inject_env.json` are served with `Cache-Control: no-store, no-cache, must-revalidate` so redeployed containers are never masked by a stale cache.
 
-**Security Note**: The Dockerfile deliberately uses floating minor-version tags (e.g., node:22-alpine, nginx:stable-alpine) rather than pinned patch versions. This ensures that every time the image is rebuilt, it automatically picks up the latest base-OS security patches.
+**Security Note**: The Dockerfile deliberately uses floating minor-version tags (e.g., node:24-alpine, nginx:stable-alpine) rather than pinned patch versions. This ensures that every time the image is rebuilt, it automatically picks up the latest base-OS security patches.
 
 **Deployment Steps:**
 
@@ -349,9 +349,9 @@ through them before the release pipeline runs, and the checks after it.
 To see which build a host is serving, `curl -s https://<host>/dcb-admin-for-libraries/ | grep dcb-admin-for-libraries-build`
 prints the commit it was built from; the build job asserts the stamp is there. The version is
 in `release.json` beside it, `curl -s https://<host>/dcb-admin-for-libraries/release.json`,
-which the deploy job writes and settings shows ([release-highlights.md](release-highlights.md)).
+which the deploy job writes and Preferences shows ([release-highlights.md](release-highlights.md)).
 A deployment that does not come from these jobs, a Docker image included, has none, and
-settings says the version is not known.
+Preferences says the version is not known.
 
 1. The R2 bucket `ki-front-end-bundles/dcb-admin-for-libraries/` holds `v<version>/`, and
    `latest.json` reads `{"version":"v<version>"}`. Before 2.0, no release had ever reached R2.

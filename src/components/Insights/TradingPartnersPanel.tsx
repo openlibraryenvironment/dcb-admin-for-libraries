@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
@@ -8,7 +8,6 @@ import {
 	Table,
 	TableBody,
 	TableCell,
-	TableContainer,
 	TableHead,
 	TablePagination,
 	TableRow,
@@ -21,6 +20,7 @@ import { formatNumber } from "@helpers/formatters";
 
 import MetricInfo from "./MetricInfo";
 import PanelState from "./PanelState";
+import ScrollableTableContainer from "./ScrollableTableContainer";
 
 const PANEL_MIN_HEIGHT = 320;
 const PAGE_SIZES = [10, 25, 50];
@@ -38,6 +38,7 @@ export default function TradingPartnersPanel({
 	libraryCode: string;
 }) {
 	const { t } = useTranslation();
+	const headingId = useId();
 	const client = useDcbRestClient();
 	const [page, setPage] = useState(0);
 	const [size, setSize] = useState(PAGE_SIZES[0]);
@@ -55,7 +56,7 @@ export default function TradingPartnersPanel({
 		<Card variant="outlined">
 			<CardContent>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-					<Typography variant="h6" component="h3">
+					<Typography variant="h6" component="h3" id={headingId}>
 						{title}
 					</Typography>
 					<MetricInfo metric="trading_partners" label={title} />
@@ -73,7 +74,7 @@ export default function TradingPartnersPanel({
 				>
 					{() => (
 						<>
-							<TableContainer sx={{ maxHeight: 420 }}>
+							<ScrollableTableContainer labelledBy={headingId} sx={{ maxHeight: 420 }}>
 								<Table size="small" stickyHeader>
 									<TableHead>
 										<TableRow>
@@ -120,7 +121,7 @@ export default function TradingPartnersPanel({
 										))}
 									</TableBody>
 								</Table>
-							</TableContainer>
+							</ScrollableTableContainer>
 							<TablePagination
 								component="div"
 								// totalSize counts PARTNERS, not requests, so it drives this directly.

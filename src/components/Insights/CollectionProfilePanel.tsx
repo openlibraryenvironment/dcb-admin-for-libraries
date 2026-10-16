@@ -1,10 +1,9 @@
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	Table,
 	TableBody,
 	TableCell,
-	TableContainer,
 	TableHead,
 	TableRow,
 	Typography,
@@ -19,6 +18,7 @@ import { rankedProfile, uniqueSharePct } from "@helpers/insightsCollection";
 import { formatNumber, formatPercent } from "@helpers/formatters";
 import CollectionPanel from "./CollectionPanel";
 import MetricInfo from "./MetricInfo";
+import ScrollableTableContainer from "./ScrollableTableContainer";
 
 // A consortium is hundreds of members; a panel shows a head, and rankedProfile keeps the
 // libraries in scope in it whatever their rank.
@@ -64,6 +64,7 @@ function ProfileTable({
 	libraryCode?: string;
 }) {
 	const { t } = useTranslation();
+	const captionId = useId();
 
 	const inScope = useMemo(
 		() =>
@@ -82,9 +83,9 @@ function ProfileTable({
 	);
 
 	return (
-		<TableContainer sx={{ maxHeight: 420 }}>
+		<ScrollableTableContainer labelledBy={captionId} sx={{ maxHeight: 420 }}>
 			<Table size="small" stickyHeader>
-				<caption style={{ captionSide: "bottom" }}>
+				<caption id={captionId} style={{ captionSide: "bottom" }}>
 					<Typography variant="caption" color="text.secondary">
 						{t("insights.collection.profile.caption", {
 							shown: shown.length,
@@ -141,6 +142,6 @@ function ProfileTable({
 					})}
 				</TableBody>
 			</Table>
-		</TableContainer>
+		</ScrollableTableContainer>
 	);
 }

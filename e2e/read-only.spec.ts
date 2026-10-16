@@ -3,7 +3,8 @@ import { READ_ONLY_ROLES } from "./fixtures/auth";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
- * A LIBRARY_READ_ONLY user may use the requesting branch and nothing else. The
+ * A LIBRARY_READ_ONLY user may use the requesting branch, their own preferences and
+ * the accessibility statement, and nothing else. The
  * guard used to live in a useEffect on the layout, which renders the protected
  * page first and corrects afterwards.
  */
@@ -89,4 +90,33 @@ test("stays on the requesting page it is sent to", async ({ app, page }) => {
 	// destination of the redirect did not satisfy the rule that caused it.
 	await expect(page).toHaveURL(/\/requesting$/);
 	await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+});
+
+test("can set their own preferences, and reach the accessibility statement", async ({
+	app,
+	page,
+}) => {
+	await readOnlyOn(app, page, "/requesting");
+
+	await page.getByRole("tab", { name: "Preferences" }).click();
+	await expect(page).toHaveURL(/\/preferences$/);
+	await expect(page.getByRole("heading", { level: 1, name: "Preferences" })).toBeVisible();
+	await expect(page.getByRole("radiogroup").first()).toBeVisible();
+
+	await page.getByRole("link", { name: /^accessibility/i }).click();
+	await expect(page).toHaveURL(/\/accessibility$/);
+});
+
+test("a user with no library role is read-only too, and is kept off the service page", async ({
+	app,
+	page,
+}) => {
+	await app.signIn({ roles: ["CONSORTIUM_ADMIN"] });
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+	await app.mockSearch();
+
+	await page.goto("/service");
+
+	await expect(page).toHaveURL(/\/requesting$/);
+	await expect(page.getByRole("tab", { name: "Service" })).toHaveCount(0);
 });

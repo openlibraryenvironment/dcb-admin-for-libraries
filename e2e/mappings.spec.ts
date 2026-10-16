@@ -101,6 +101,36 @@ test.describe("Mappings", () => {
 		await expect(page.getByRole("button", { name: "Edit" })).toHaveCount(0);
 	});
 
+	test("a deletion submitted without its reason says what is missing", async ({
+		app,
+		page,
+	}) => {
+		const deletions: unknown[] = [];
+		await app.mockGraphQL({
+			LoadLibrary: libraryWithEditing(true),
+			LoadMappings: mappings,
+			DeleteReferenceValueMapping: (variables) => {
+				deletions.push(variables);
+				return { deleteReferenceValueMapping: { success: true, message: null } };
+			},
+		});
+
+		await page.goto("/mappings");
+		await page
+			.getByRole("row", { name: /Adult/ })
+			.getByRole("button", { name: "Delete" })
+			.click();
+		const dialog = page.getByRole("dialog");
+		await dialog.getByRole("button", { name: "Delete" }).click();
+
+		await expect(dialog.getByText("Please provide a reason for this change.")).toBeVisible();
+		await expect(dialog.getByRole("textbox", { name: /Reason for change/ })).toHaveAttribute(
+			"aria-invalid",
+			"true",
+		);
+		expect(deletions).toEqual([]);
+	});
+
 	test("deletes a mapping, recording the reason the user gave", async ({
 		app,
 		page,
@@ -122,6 +152,8 @@ test.describe("Mappings", () => {
 			.click();
 
 		const dialog = page.getByRole("dialog");
+		const { fromValue, toValue } = mappings.referenceValueMappings.content[0];
+		await expect(dialog.getByRole("heading")).toContainText(`${fromValue} → ${toValue}`);
 		await dialog.getByRole("combobox", { name: /Change category/ }).click();
 		await page.getByRole("option", { name: "Error correction" }).click();
 		await dialog

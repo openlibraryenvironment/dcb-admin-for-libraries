@@ -11,4 +11,7 @@ export interface ConfirmationType {
 	entityType?: string;
 	entityName: string;
 	gridEdit: boolean;
+	// How many records a cleanup acts on
+	count?: number;
+	onExited?: () => void;
 }

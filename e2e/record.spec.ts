@@ -164,3 +164,23 @@ test("the record information shows no raw JSON", async ({ app, page }) => {
 	await page.getByRole("button", { name: /cluster details/i }).click();
 	await expect(page.locator("pre")).toHaveCount(0);
 });
+
+test("the next record's items start on their own first page", async ({ app, page }) => {
+	await openRecord(app, page, "/requesting?filters=12345");
+	await app.mockSearch();
+	await page.reload();
+	const grid = page.getByRole("grid", { name: /^items$/i });
+
+	await page.getByRole("link", { name: "Middlemarch" }).first().click();
+	await page.getByRole("tab", { name: "Items" }).click();
+	await expect(grid.getByText("item-30")).toBeVisible({ timeout: 15_000 });
+	await page.getByRole("button", { name: /next page/i }).first().click();
+	await expect(grid.getByText("item-01")).toBeVisible();
+
+	await page.goBack();
+	await page.goBack();
+	await page.getByRole("link", { name: "Bleak House" }).first().click();
+	await page.getByRole("tab", { name: "Items" }).click();
+
+	await expect(grid.getByText("item-30")).toBeVisible({ timeout: 15_000 });
+});

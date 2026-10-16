@@ -1,8 +1,8 @@
 import { ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type QueryFunctionContext } from "@tanstack/react-query";
 
-import type { MetricId } from "@helpers/insightsMetrics";
+import { methodKeys, type MetricId } from "@helpers/insightsMetrics";
 import MetricInfo from "./MetricInfo";
 import PanelState from "./PanelState";
 import PanelExport from "./PanelExport";
@@ -14,10 +14,10 @@ import {
 	Table,
 	TableBody,
 	TableCell,
-	TableContainer,
 	TableHead,
 	TableRow,
 } from "@mui/material";
+import ScrollableTableContainer from "./ScrollableTableContainer";
 
 const PANEL_MIN_HEIGHT = 280;
 
@@ -40,7 +40,7 @@ interface TableStatPanelProps<T> {
 	subtitleKey: string;
 	queryOptions: {
 		queryKey: readonly unknown[];
-		queryFn: () => Promise<T[]>;
+		queryFn: (context: QueryFunctionContext) => Promise<T[]>;
 	};
 	columns: StatColumn<T>[];
 	getRowKey: (row: T) => string;
@@ -78,6 +78,7 @@ export default function TableStatPanel<T>({
 					<PanelExport
 						rows={rows}
 						panel={t(titleKey)}
+						method={metric ? t(methodKeys(metric).how) : undefined}
 						columns={columns
 							.filter((col) => col.text)
 							.map((col) => ({
@@ -99,7 +100,7 @@ export default function TableStatPanel<T>({
 					height={PANEL_MIN_HEIGHT}
 				>
 					{() => (
-						<TableContainer sx={{ maxHeight: 420 }}>
+						<ScrollableTableContainer labelledBy={titleId} sx={{ maxHeight: 420 }}>
 							<Table size="small" stickyHeader aria-labelledby={titleId}>
 								<TableHead>
 									<TableRow>
@@ -128,7 +129,7 @@ export default function TableStatPanel<T>({
 									))}
 								</TableBody>
 							</Table>
-						</TableContainer>
+						</ScrollableTableContainer>
 					)}
 				</PanelState>
 			</CardContent>

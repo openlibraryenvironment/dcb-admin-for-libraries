@@ -1,17 +1,47 @@
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import request from "graphql-request";
 
 import { REFERENCE_LIST_PAGE_SIZE } from "@constants/dataGrid/pagination";
 import { authHeaders } from "@helpers/auth";
 import {
 	LibrariesQueryData,
+	LibraryFilterOptionsQueryData,
 	LocationsQueryData,
 } from "@models/ReactQueryHelperTypes";
 import { getLibraries } from "@queries/getLibraries";
+import { getLibraryFilterOptions } from "@queries/getLibraryFilterOptions";
 import { getLibrary } from "@queries/getLibrary";
 import { getLibraryBasics } from "@queries/getLibraryBasics";
 import { getLocation } from "@queries/getLocation";
 import { queryKeys } from "@helpers/queryKeys";
+
+/** Every request grid, record history included: after a request is placed or changed. */
+export const invalidateRequestLists = (queryClient: QueryClient) =>
+	Promise.all([
+		queryClient.invalidateQueries({ queryKey: queryKeys.patronRequests.lists() }),
+		queryClient.invalidateQueries({ queryKey: queryKeys.supplierRequests.lists() }),
+	]);
+
+/** Everything that shows this library's name or profile: after the profile is saved. */
+export const invalidateLibrary = (
+	queryClient: QueryClient,
+	apiBase: string,
+	agencyCode: string,
+) =>
+	Promise.all([
+		...[
+			queryKeys.library.detail,
+			queryKeys.library.own,
+			queryKeys.library.basics,
+			queryKeys.library.name,
+		].map((key) => queryClient.invalidateQueries({ queryKey: key(apiBase, agencyCode) })),
+		queryClient.invalidateQueries({
+			queryKey: ["library", "names", apiBase],
+			predicate: ({ queryKey }) => (queryKey[3] as readonly string[]).includes(agencyCode),
+		}),
+		queryClient.invalidateQueries({ queryKey: queryKeys.libraries.all(apiBase) }),
+		queryClient.invalidateQueries({ queryKey: queryKeys.libraries.filterOptions(apiBase) }),
+	]);
 
 // Queries asked for in the same shape from more than one place: one definition each,
 // so the callers share a cache entry rather than asking again under a different key.
@@ -40,6 +70,25 @@ export const allLibrariesQueryOptions = (apiBase: string) =>
 			request<LibrariesQueryData>(
 				`${apiBase}/graphql`,
 				getLibraries,
+				{
+					query: "",
+					pagesize: REFERENCE_LIST_PAGE_SIZE,
+					pageno: 0,
+					order: "fullName",
+					orderBy: "ASC",
+				},
+				await authHeaders(),
+			),
+	});
+
+/** Every library, as the request grids filter by it: up to REFERENCE_LIST_PAGE_SIZE. */
+export const libraryFilterOptionsQueryOptions = (apiBase: string) =>
+	queryOptions({
+		queryKey: queryKeys.libraries.filterOptions(apiBase),
+		queryFn: async () =>
+			request<LibraryFilterOptionsQueryData>(
+				`${apiBase}/graphql`,
+				getLibraryFilterOptions,
 				{
 					query: "",
 					pagesize: REFERENCE_LIST_PAGE_SIZE,

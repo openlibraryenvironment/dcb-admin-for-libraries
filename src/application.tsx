@@ -6,18 +6,14 @@ import { routeTree } from "./routeTree.gen";
 import { LicenseInfo } from "@mui/x-license";
 import { AuthProvider } from "react-oidc-context";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
-import "@fontsource/roboto/300.css";
-import "@fontsource/roboto/400.css";
-import "@fontsource/roboto/500.css";
-import "@fontsource/roboto/700.css";
 import App from "@components/App/App";
 import { useLocaleStore } from "@/hooks/useLocaleStore";
-import { classifyServiceError } from "@helpers/serviceErrors";
+import { classifyServiceError, retryTransientOnce } from "@helpers/serviceErrors";
 import NotFound from "@components/Error/NotFound";
 import RouteError from "@components/Error/RouteError";
 import { User } from "oidc-client-ts";
 import { createUserManager } from "@helpers/auth";
-import { safeReturnPath } from "@helpers/returnPath";
+import { safeReturnPath, signInReturnPath } from "@helpers/returnPath";
 import {
 	appPath,
 	appUrl,
@@ -25,6 +21,7 @@ import {
 	storageKey,
 	toRoutePath,
 } from "@helpers/appBase";
+import { isReadOnly } from "@helpers/readOnlyAccess";
 
 declare global {
 	interface Window {
@@ -97,7 +94,7 @@ const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
 			staleTime: 1000 * 60 * 5,
-			retry: 1,
+			retry: retryTransientOnce,
 		},
 	},
 	// Mutations are absent on purpose: a user's action reports its own failure where it was
@@ -165,18 +162,19 @@ export async function mountDcbAdminForLibraries(
 	});
 
 	const onSigninCallback = (_user: User | void): void => {
-		const isReadOnly = _user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
+		const readOnly = isReadOnly(_user?.profile?.roles);
 		const afterLoginRedirectPath = sessionStorage.getItem(
 			storageKey("afterLoginRedirectPath"),
 		);
-		if (isReadOnly) {
-			window.location.replace(appPath("requesting"));
-			return;
-		}
 		sessionStorage.removeItem(storageKey("afterLoginRedirectPath"));
-		const returnTo = safeReturnPath(afterLoginRedirectPath, getAppBase());
+		const returnTo = signInReturnPath(
+			safeReturnPath(afterLoginRedirectPath, getAppBase()),
+			readOnly,
+		);
 		if (returnTo) {
 			window.location.replace(returnTo);
+		} else if (readOnly) {
+			window.location.replace(appPath("requesting"));
 		} else {
 			window.history.replaceState(
 				{},

@@ -1,39 +1,71 @@
 {
-	"_why": "Gzipped budgets, checked by scripts/check-bundle-budget.mjs after a build: what every page loads first (initialBytes), everything the build emits (totalBytes), and each chunk over nameChunksAboveBytes. Lighthouse cannot reach a route behind Keycloak; this reaches every chunk. Each number is what was measured plus 2% unless its note argues otherwise. Never raise one to make a build pass: cut the weight, or bring a written argument.",
-	"nameChunksAboveBytes": 15000,
-	"initialBytes": 252100,
-	"totalBytes": 1279669,
-	"chunks": {
-		"exceljs.min.js": 281900,
-		"DataGrid.js": 198600,
-		"insights.js": 139700,
-		"application.js": 91700,
-		"DateLocalizationProvider.js": 58300,
-		"Typography.js": 32900,
-		"index.esm.js": 25000,
-		"gridDefinitions.js": 21300,
-		"en-GB.js": 26600,
-		"en-US.js": 26600,
-		"axios.js": 18900,
-		"oidc-client-ts.js": 17000,
-		"schemas.js": 17700,
-		"TextField.js": 17700,
-		"CombinedRequestingModal.js": 16100,
-		"useThemeStore.css": 2800
+	"_why": "Gzipped bytes of scripts and stylesheets, measured from the build manifest by scripts/check-bundle-budget.mjs (npm run budget). The first load FAILS the build when over; each route and on-demand feature is REPORTED. Routes and features are named by their source file, so a regrouping by the bundler does not move them. Never raise a number to make a build pass, or to sit just above it: cut the weight, or write the argument here and in the commit. docs/testing.md, 'What the bundle budget measures'.",
+	"firstLoad": {
+		"budget": 252100,
+		"_note": "What every page loads before its own route code, /login included. 247,141 measured on 2026-10-14 when the catalogue left the first load, plus 2%, and held as a ceiling since."
+	},
+	"routes": {
+		"Home": {
+			"source": "src/routes/__authenticated/index.tsx",
+			"budget": 112800
+		},
+		"Requesting search": {
+			"source": "src/routes/__authenticated/requesting/index.tsx",
+			"budget": 199000
+		},
+		"Record items": {
+			"source": "src/routes/__authenticated/requesting/$recordId/items/index.tsx",
+			"budget": 432700
+		},
+		"Patron requests grid": {
+			"source": "src/routes/__authenticated/patronRequests/index.tsx",
+			"budget": 470300
+		},
+		"Patron request detail": {
+			"source": "src/routes/__authenticated/patronRequests/$id/index.tsx",
+			"budget": 498200
+		},
+		"Supplier requests": {
+			"source": "src/routes/__authenticated/supplierRequests.tsx",
+			"budget": 497100
+		},
+		"Insights": {
+			"source": "src/routes/__authenticated/insights.tsx",
+			"budget": 351700
+		},
+		"Library profile": {
+			"source": "src/routes/__authenticated/library.tsx",
+			"budget": 177600
+		},
+		"Mappings": {
+			"source": "src/routes/__authenticated/mappings.tsx",
+			"budget": 468100
+		},
+		"Preferences": {
+			"source": "src/routes/__authenticated/preferences.tsx",
+			"budget": 95200
+		}
+	},
+	"onDemand": {
+		"Excel export": {
+			"source": "node_modules/@mui/x-internal-exceljs-fork/dist/exceljs.min.js",
+			"budget": 290200
+		},
+		"British English catalogue": {
+			"source": "src/locales/en-GB/en-GB.json",
+			"budget": 25800
+		},
+		"American English catalogue": {
+			"source": "src/locales/en-US/en-US.json",
+			"budget": 25800
+		},
+		"Saved filters dialog": {
+			"source": "src/components/DataGrid/components/SavedFiltersDialog.tsx",
+			"budget": 80200
+		}
 	},
 	"_notes": {
-		"totalBytes": "Re-derived 2026-10-12 from a measured evaluation, docs/testing.md 'What the bundle budget measures'. 931,176 for this branch, plus 26,665 the two 2.0 feature branches measured against their base (insights-collection 4,440, deployment-locale 22,225), plus 2%. Down from 1,252,000: 303 KB of that was exceljs and rasterizeHTML, which only Excel and chart-image export load and this app offered neither (EXCLUDED_PACKAGES in vite.config.ts). Raised on 2026-10-12 by exactly what the export wizard measured against its base, 930,613 to 1,209,082 (+278,469), with no further margin: exceljs is back as its own chunk (276,357) for Excel export through the wizard, loaded only when someone exports Excel; the rest is the wizard in the DataGrid chunk (+1,481) and its strings in i18n.js (+372). initialBytes is unchanged: 257,565 before, 258,100 after, the difference being those strings and the bundler's interop helper. docs/export.md. Raised on 2026-10-14 by 24,200, from 1,255,469 to 1,279,669, for the second English catalogue, en-US.js (24,193 measured): both are built, and a deployment downloads only its own.",
-		"initialBytes": "What every page loads before its own route code: index.html's entry, the app shell it boots, and their static imports. 258,099 measured on 2026-10-12, plus 2%. The two 2.0 regressions this file missed both landed here (Insights code on /login, +190 KB; grid definitions on every page, +40 KB). Raised on 2026-10-13 by exactly the overrun Today's optional parts measured, 263,300 to 264,300, with no margin, and on 2026-10-14 by the 5 more its QA audit cost: words for unknown values a screen reader read as a dash, and sentences moved out of JSX into strings a translator can reorder, less the English plural forms no 24-hour window uses. Against the same branch before them it is +3,076: 676 of strings, 486 of route tree, 116 of flags, about 1,350 of longer preload lists in the seven grid routes and 425 of the bundler moving oidc-client-ts and react-dom into chunks of their own. Loading the parts lazily was measured and made it worse (+5,755): more split points cut MUI and React Query into more chunks, and every route's preload list grew with them. Raised on 2026-10-14 from 264,305 to 265,340, exactly what was measured, with no margin, against 264,005 for the same branch before the change (both without a local .env, whose VITE_ values Vite inlines: 471 more on one machine). Of the 1,335: about 270 is the Welcome page's window choice and its reworded strings, about 265 the saved-filter and clear-filter strings and the grid hook's share, save and reset, and about 800 the bundler regrouping chunks around the lazily loaded saved-filters dialog (react-query's provider leaves auth.js for a chunk of its own, and every route's preload list grows). Importing the dialog statically was measured too: 800 less here, and 35 KB of react-hook-form and yup on the patron, supplier, bib and location grids, which loaded neither before. Raised again on 2026-10-14, from 265,340 to 265,637 (+297, measured, no margin), by the grid QA fixes: about 130 of strings in i18n.js (the sort announcement, the empty and incomplete export messages), about 60 for the request page's tab search param in its eagerly loaded route file, and about 105 of longer preload lists across the five grid routes and 40 in application.js, the bundler regrouping around the new modules and the MUI X 9.15.0 set. Set on 2026-10-14 to 270,000 and HELD: a ceiling, no longer re-derived. 265,745 measured (BUNDLE_BUDGET=1, so no local .env), so 4,255 (1.6%) of room. The five raises of 12-14 October, each to exactly what was measured, were all strings and bundler regrouping; with no margin the next string failed the gate, and every failure was answered by raising it, which is the ratchet this file exists to prevent. The regressions it is for were +190 KB and +40 KB, and a ceiling 4 KB above the build still fails on either. Raise it only with a written argument here, never to just above the current build. Re-derive it once, as measured plus 2%, when feat/deployment-locale moves the catalogue out of the first load. Re-derived on 2026-10-14 when feat/deployment-locale moved the catalogue out of the first load: 247,141 measured (BUNDLE_BUDGET=1), plus 2%, 252,100. Held as a ceiling from here, as before.",
-		"exceljs.min.js": "MUI X's Excel library, imported dynamically by src/helpers/dataGrid/xlsxWorkbook.ts and nowhere else (tests/excludedFromBuild.test.ts), so it never joins the initial load or a grid page: only an Excel export downloads it. 276,357 measured on 2026-10-12, plus 2%. It is the whole library. The fork's dist/exceljs.bare.min.js would save about 20 KB by leaving its polyfills out, but only as a deep import into an internal MUI package whose layout is not a contract; not taken.",
-		"insights.js": "Re-derived 2026-10-12: 132,671 measured, plus the 4,440 feat/insights-collection-and-partners measured against its base, plus 2%.",
-		"gridDefinitions.js": "Every server-paged grid's columns and URL allow-list, shared by the grid pages and loaded with them, never with the route tree (tests/gridRoutesValidateSearch.test.ts guards that).",
-		"axios.js": "Loaded only with pages that call a REST endpoint, since loaders were split from the route tree. Replacing axios with fetch at its call sites would remove the chunk; not done for 2.0.",
-		"schemas.js": "zod's runtime, named after whichever module anchors it. validateSearch is what it costs, and it loads on every page because route files do.",
-		"useThemeStore.css": "The application's stylesheet: @font-face rules and nothing else. It was 21,882 with eight font subsets inlined as base64; vite.config.ts no longer inlines fonts. 2,672 measured on 2026-10-12, so a regression to inlining fails here.",
-		"index.esm.js": "yup, budgeted as yup.js until 2026-10-14: the bundler names a chunk after its first module, and the lazily loaded saved-filters dialog changed which module that is. 24,280 measured, under the 25,000 yup.js had; the number is kept.",
-		"DateLocalizationProvider.js": "The MUI X date pickers and the dayjs adapter, loaded by the Insights page and the grid pages; the bundler names the chunk after its first module, which was useMobileRangePicker until every picker took its locale from DateLocalizationProvider. 57,587 measured on 2026-10-14, under the 58,300 it had as useMobileRangePicker.js, so the number is kept.",
-		"oidc-client-ts.js": "oidc-client-ts, which until 2026-10-13 sat inside react-oidc-context's chunk and was budgeted as react.js at 18,800. Budgeted as oidc.js until 2026-10-14, when the bundler began naming the chunk after the package. 16,961 measured, inside the 17,000 it had.",
-		"en-GB.js": "One locale's translation catalogue, and nothing else: every page loads one of the two at startup, by a dynamic import the initialBytes count cannot see, so this is the only check on string weight. 24,190 measured on 2026-10-14, plus 10% rather than 2%: its growth is a feature's text, and what it is here to catch is a catalogue doubling (a duplicated or wrongly bundled language), not the next string.",
-		"en-US.js": "See en-GB.js: the same catalogue in American spelling, 24,193 measured on 2026-10-14."
+		"routes": "What a page loads beyond the first load: its route file, the layout routes above it, and their static imports. Set on 2026-10-16 to what was measured plus 5%, rounded up to 100, and held: room for strings and dependency patches, not for tens of KB.",
+		"onDemand": "What a feature loads beyond the first load, from its entry point. The catalogues load at startup by a dynamic import the first-load count cannot see; a deployment loads one. Excel export loads only when someone exports to Excel. The saved filters dialog loads when it is opened, and most of what it counts is already on the grid page that opens it."
 	}
 }

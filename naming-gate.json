@@ -13,6 +13,17 @@
 			]
 		},
 		{
+			"id": "competitor-name",
+			"pattern": "library\\s*iq",
+			"ignoreCase": true,
+			"message": "Another company's product. How we compare with it is a competitive assessment, which belongs in the planning repository, not in a repository the public can read.",
+			"exclude": [],
+			"scope": [
+				"files",
+				"messages"
+			]
+		},
+		{
 			"id": "plan-reference",
 			"pattern": "(§\\s*)?\\b[NRV]-[0-9]+(\\.[0-9]+)*[A-Za-z]?\\b",
 			"ignoreCase": false,

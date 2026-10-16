@@ -18,7 +18,7 @@ import { Trans, useTranslation } from "react-i18next";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import { queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
-import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
+import { allLibrariesQueryOptions, invalidateRequestLists } from "@helpers/sharedQueries";
 import { getLocations } from "@queries/getLocations";
 import axios, { AxiosError } from "axios";
 import { useAuth } from "react-oidc-context";
@@ -35,7 +35,7 @@ import { PatronRequestAutocompleteOption } from "@models/PatronRequestAutocomple
 import { PatronLookupResponse } from "@models/PatronLookupResponse";
 import { PlaceRequestResponse } from "@models/PlaceRequestResponse";
 import { StaffRequestFormData } from "@models/StaffRequestFormData";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import request from "graphql-request";
 import { LocationsQueryData } from "@models/ReactQueryHelperTypes";
 import { StaffRequestDetailsStep } from "@forms/ExpeditedCheckout/steps/StaffRequestDetailsStep";
@@ -47,12 +47,14 @@ import {
 	getStepColors,
 	getStepLabelFontWeight,
 } from "@helpers/getStepLabelStyles";
+import { isReadOnly } from "@helpers/readOnlyAccess";
 
 export default function StaffRequest({
 	onClose,
 	bibClusterId,
 }: PatronRequestFormType) {
 	const { t } = useTranslation();
+	const queryClient = useQueryClient();
 	const auth = useAuth();
 	const router = useRouter();
 	const { cfg } = router.options.context;
@@ -82,7 +84,7 @@ export default function StaffRequest({
 		t("requesting.expedited_checkout.steps.patron_validation"),
 		t("requesting.expedited_checkout.steps.request_creation"),
 	];
-	const isReadOnly = auth.user?.profile?.roles?.includes("LIBRARY_READ_ONLY");
+	const readOnly = isReadOnly(auth.user?.profile?.roles);
 
 	const validationSchema = useMemo(() => staffRequestSchema(t), [t]);
 
@@ -91,7 +93,7 @@ export default function StaffRequest({
 		handleSubmit,
 		reset,
 		setValue,
-		formState: { errors, isValid },
+		formState: { errors },
 	} = useForm<StaffRequestFormData>({
 		defaultValues: {
 			patronBarcode: "",
@@ -314,6 +316,7 @@ export default function StaffRequest({
 				.then((res) => res.data),
 		onSuccess: () => {
 			setStepError(null);
+			void invalidateRequestLists(queryClient);
 		},
 		onError: (error: any) => {
 			setAlert({
@@ -442,7 +445,6 @@ export default function StaffRequest({
 						handleClose={handleClose}
 						isSubmitting={placeRequestMutation.isPending}
 						isPlaced={placeRequestMutation.isSuccess}
-						isValid={isValid}
 						t={t}
 					/>
 				);
@@ -501,7 +503,7 @@ export default function StaffRequest({
 				    closes it: WCAG 2.2.1. */}
 				{placedRequestId ? (
 					<Alert severity="success" sx={{ mt: 2 }}>
-						{isReadOnly ? (
+						{readOnly ? (
 							t("requesting.staff_request.patron.success.request_requesting_only")
 						) : (
 							<Trans

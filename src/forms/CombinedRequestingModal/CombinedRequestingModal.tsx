@@ -170,7 +170,6 @@ export default function CombinedRequestingModal({
 						position: "absolute",
 						right: 8,
 						top: 8,
-						color: (theme) => (theme.vars || theme).palette.grey[500],
 					}}>
 					<Close />
 				</IconButton>

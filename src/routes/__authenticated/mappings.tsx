@@ -124,7 +124,7 @@ function RouteComponent() {
 		isError: mappingsError,
 	} = useQuery<ReferenceValueMappingsQueryData>({
 		queryKey: queryKeys.mappings.list(apiBase, libraryHostLmsCode, page),
-		queryFn: async () => {
+		queryFn: async ({ signal }) => {
 			const baseQuery = `(toContext:"${libraryHostLmsCode}" OR fromContext:${libraryHostLmsCode}) AND NOT deleted:true`;
 			// Second Host LMS to come.
 			const queryVariables = {
@@ -140,12 +140,13 @@ function RouteComponent() {
 				order: page.sortField ?? "lastImported",
 				orderBy: getSortOrderForServer(page.sortDirection) ?? "DESC",
 			};
-			return request(
-				apiBase + "/graphql",
-				getMappings,
-				queryVariables,
-				await authHeaders()
-			);
+			return request({
+				url: apiBase + "/graphql",
+				document: getMappings,
+				variables: queryVariables,
+				requestHeaders: await authHeaders(),
+				signal,
+			});
 		},
 		enabled: !!libraryHostLmsCode,
 		refetchOnWindowFocus: true,
@@ -230,6 +231,10 @@ function RouteComponent() {
 			});
 		},
 		[rowModesModel]
+	);
+
+	const mappingToDelete = mappingsData?.referenceValueMappings?.content?.find(
+		(mapping) => mapping.id === deleteConfirmationId,
 	);
 
 	const handleDeleteClick = (id: GridRowId) => () => {
@@ -478,7 +483,7 @@ function RouteComponent() {
 					pivotingEnabled={false}
 					pagination
 					toolbarVisible
-					noResultsText={t("audit.no_results")}
+					noResultsText={t("mappings.no_results")}
 					searchText={t("ui.data_grid.search_mappings")}
 				/>
 			}
@@ -499,7 +504,8 @@ function RouteComponent() {
 					onClose={() => setDeleteConfirmationId(null)}
 					onConfirm={handleConfirmDelete}
 					gridEdit={false}
-					entityName="ReferenceValueMapping"
+					entityType={t("entities.reference_value_mapping")}
+					entityName={mappingToDelete ? `${mappingToDelete.fromValue} → ${mappingToDelete.toValue}` : ""}
 					action="deletion"
 				/>
 			}

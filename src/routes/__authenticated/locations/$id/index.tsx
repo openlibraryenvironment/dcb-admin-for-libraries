@@ -14,7 +14,7 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { isUuidShaped } from "@helpers/isUuidShaped";
-import { DETAIL_COLUMNS, FULL_ROW } from "@constants/detailGrid";
+import { DETAIL_COLUMNS, FULL_ROW, DETAIL_ITEM } from "@constants/detailGrid";
 
 export const Route = createFileRoute("/__authenticated/locations/$id/")({
 	head: () => ({ meta: [{ title: pageTitle("nav.locations.title") }] }),
@@ -77,32 +77,32 @@ function RouteComponent() {
 			<Grid size={FULL_ROW}>
 				<Typography variant="h1">{location.name || t("location.title")}</Typography>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("location.name")}>
 					<RenderAttribute attribute={location?.name} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("location.code")}>
 					<RenderAttribute attribute={location?.code} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("location.type")}>
 					<RenderAttribute attribute={location?.type} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("location.latitude")}>
 					<RenderAttribute attribute={location?.latitude} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("location.longitude")}>
 					<RenderAttribute attribute={location?.longitude} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Stack direction={"column"}>
 					<Attribute label={t("location.pickup_status")}>
 						{location?.isPickup
@@ -113,7 +113,7 @@ function RouteComponent() {
 					</Attribute>
 				</Stack>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("location.pickup_anywhere_status")}>
 					{location?.isPickupAnywhere
 						? t("ui.feedback.enabled")
@@ -122,17 +122,17 @@ function RouteComponent() {
 							: t("ui.feedback.not_set")}
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t(getLocalId(ils))}>
 					<RenderAttribute attribute={location?.localId} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("location.print_label")}>
 					<RenderAttribute attribute={location?.printLabel} />
 				</Attribute>
 			</Grid>
-			<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("location.location_id")}>
 					<RenderAttribute attribute={location?.id} />
 				</Attribute>

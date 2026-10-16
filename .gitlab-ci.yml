@@ -92,8 +92,8 @@ verify_performance:
     pull_policy: if-not-present
   script:
     - npm ci --prefer-offline --no-audit --no-fund
-    # Base pinned so chunk names match bundle-budget.json; BUNDLE_BUDGET ignores any .env,
-    # so a local run measures the same build as this one.
+    # Base pinned and BUNDLE_BUDGET ignores any .env, so `npm run budget:build` on a laptop
+    # measures the same build as this one. Only the first load fails; the rest is reported.
     - BUNDLE_BUDGET=1 VITE_PUBLIC_URL=/ npm run build
     - npm run budget
     # Lighthouse can only reach /login; every other route is behind Keycloak.
@@ -103,6 +103,7 @@ verify_performance:
     expose_as: "Lighthouse report"
     paths:
       - .lighthouseci/
+      - reports/bundle-budget.md
     expire_in: 1 week
 
 # verify_e2e pins the base to "/", so this is the job that runs the shipped base.
@@ -173,6 +174,46 @@ verify_secrets:
     paths:
       - gitleaks.sarif
     expire_in: 1 month
+
+# Nothing else here builds the image: on node 22 it stopped at `npm ci` while every job passed.
+# In the verify stage, so a release branch whose image cannot build does not release.
+verify_image:
+  stage: verify
+  timeout: 20m
+  cache: []
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "release"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        paths: &image_paths
+          - docker/**/*
+          - .dockerignore
+          - package.json
+          - package-lock.json
+    # Branch pipelines only, as every other job: a rule with no `if` also matches a merge
+    # request pipeline, which then held this job alone and stood in for the whole pipeline.
+    - if: '$CI_COMMIT_BRANCH'
+      changes:
+        paths: *image_paths
+        compare_to: refs/heads/main
+  image:
+    name: docker:27
+    pull_policy: if-not-present
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    # dind can still be starting; without this the first symptom is a build error about the daemon.
+    - |
+      for attempt in $(seq 1 30); do
+        docker info >/dev/null 2>&1 && break
+        sleep 2
+      done
+      docker info >/dev/null || { echo "No Docker daemon at $DOCKER_HOST: this job needs a runner that permits privileged containers."; exit 1; }
+    - docker build -f docker/production/Dockerfile -t "dcb-admin-for-libraries:$CI_COMMIT_SHORT_SHA" .
 
 build:
   stage: build

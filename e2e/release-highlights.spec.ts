@@ -1,8 +1,9 @@
 import type { Page } from "@playwright/test";
 import { test, expect } from "./fixtures/test";
+import { READ_ONLY_ROLES } from "./fixtures/auth";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
-/** A release's highlights on the first sign-in after it, and again from settings. */
+/** A release's highlights on the first sign-in after it, and again from preferences. */
 
 const RELEASE_NOTES = "https://github.com/openlibraryenvironment/dcb-admin-for-libraries/releases";
 
@@ -42,7 +43,9 @@ test.describe("a user who has not seen this release's highlights", () => {
 		await expect(dialog.getByRole("listitem")).toHaveCount(4);
 		// The wording is rewritten each release; each item has its heading
 		await expect(dialog.getByRole("heading", { level: 3 })).toHaveCount(4);
-		const notes = dialog.getByRole("link", { name: /full release notes on GitHub/ });
+		const notes = dialog.getByRole("link", {
+			name: "Read the full release notes on GitHub (opens in a new tab)",
+		});
 		await expect(notes).toHaveAttribute("href", `${RELEASE_NOTES}/tag/v1.14.0`);
 		await expect(notes).toHaveAttribute("target", "_blank");
 
@@ -76,6 +79,22 @@ test.describe("a user who has not seen this release's highlights", () => {
 	});
 });
 
+test("a read-only user is shown only what they can use", async ({ app, page }) => {
+	await app.signIn({ roles: READ_ONLY_ROLES, releaseHighlightsSeen: false });
+	await app.mockGraphQL({ LoadLibrary: library });
+	await app.mockSearch();
+	await deployedAs(page, "v1.14.0");
+	await page.goto("/requesting");
+
+	const dialog = highlights(page);
+	await expect(dialog.getByRole("heading", { level: 3 })).toHaveText([
+		"Share, save and clear a grid's filters",
+		"More accessible, and set up the way you work",
+	]);
+	await expect(dialog).toContainText("In Preferences, choose your colour scheme");
+	await expect(dialog).not.toContainText(/Home page|Insights|export/i);
+});
+
 test("a user who has seen them is not shown them again", async ({ app, page }) => {
 	await app.signIn();
 	await app.mockGraphQL({ LoadLibrary: library });
@@ -86,7 +105,7 @@ test("a user who has seen them is not shown them again", async ({ app, page }) =
 	await expect(highlights(page)).toHaveCount(0);
 });
 
-test.describe("settings", () => {
+test.describe("preferences", () => {
 	test.beforeEach(async ({ app }) => {
 		await app.signIn();
 		await app.mockGraphQL({ LoadLibrary: library });
@@ -96,7 +115,7 @@ test.describe("settings", () => {
 		page,
 	}) => {
 		await deployedAs(page, "v1.14.0");
-		await page.goto("/settings");
+		await page.goto("/preferences");
 
 		const about = page.getByRole("heading", { name: "About DCB Admin for Libraries" });
 		await expect(about).toBeVisible();
@@ -119,7 +138,7 @@ test.describe("settings", () => {
 		page,
 	}) => {
 		await servedWithBuildStamp(page, "abc1234");
-		await page.goto("/settings");
+		await page.goto("/preferences");
 
 		await expect(page.getByText("Development build abc1234", { exact: true })).toBeVisible();
 		await expect(
@@ -131,7 +150,7 @@ test.describe("settings", () => {
 		page,
 	}) => {
 		await servedWithBuildStamp(page, "local");
-		await page.goto("/settings");
+		await page.goto("/preferences");
 
 		await expect(page.getByText("Version not known", { exact: true })).toBeVisible();
 	});

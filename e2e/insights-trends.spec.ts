@@ -112,3 +112,17 @@ test.describe("Insights trends", () => {
 		await expect.poll(() => asked).toContain("STATUS_DWELL");
 	});
 });
+
+test("a figure's change is said in words, not only by an arrow and its colour", async ({
+	app,
+	page,
+}) => {
+	await app.signIn();
+	await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+	await app.mockGraphQL({ LoadLibrary: library, LoadLibraryBasics: library });
+	await app.mockStats();
+
+	await page.goto("/insights");
+
+	await expect(page.getByText("Up 3.6% on the preceding period", { exact: true })).toHaveCount(1);
+});

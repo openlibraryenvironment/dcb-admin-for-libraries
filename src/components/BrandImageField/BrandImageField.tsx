@@ -127,6 +127,8 @@ export function BrandImageField({
 					accept={BRAND_IMAGE_ACCEPT}
 					onChange={handleFile}
 					aria-label={label}
+					// The Upload button opens it; on its own it was a tab stop nobody could see
+					tabIndex={-1}
 					sx={{
 						position: "absolute",
 						width: 1,

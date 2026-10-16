@@ -13,9 +13,9 @@ import { patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import {
 	borrowedByLibraryQuery,
+	borrowingScopeHostLms,
 	hasBorrowingScope,
 } from "@helpers/patronRequestScope";
-import { Library } from "@models/Library";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import {
 	GridColDef,
@@ -24,7 +24,7 @@ import {
 } from "@mui/x-data-grid-premium";
 import { gridPage, queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
-import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
+import { libraryFilterOptionsQueryOptions } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -78,7 +78,7 @@ function RouteComponent() {
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery(allLibrariesQueryOptions(dcbApiBase));
+	} = useQuery(libraryFilterOptionsQueryOptions(dcbApiBase));
 
 	// All libraries, supplied to the filters. Memoised because `?? []` allocates
 	// a new array on every render, which made every memo keyed on it recompute
@@ -94,7 +94,7 @@ function RouteComponent() {
 	const libraryFilterOptions = useMemo(() => {
 		if (!libraries) return [];
 
-		return libraries.map((lib: Library) => ({
+		return libraries.map((lib) => ({
 			value: lib.agencyCode, // The value to be used in the filter (e.g., 'agency-code-123')
 			label: lib.fullName, // The human-readable name (e.g., 'Main Library')
 		}));
@@ -129,13 +129,13 @@ function RouteComponent() {
 		error,
 		isFetching,
 	} = useQuery<PatronRequestQueryData>({
-		// Both the agency and the Host LMS feed the scope this query runs under.
+		// What the scope this query runs under is built from.
 		queryKey: queryKeys.patronRequests.list(
 			dcbApiBase,
-			{ agencyCode: code ?? "", hostLmsCode: userLibraryHostLmsCode },
+			{ agencyCode: code ?? "", hostLmsCode: borrowingScopeHostLms(userLibraryHostLmsCode) },
 			page,
 		),
-		queryFn: async () => {
+		queryFn: async ({ signal }) => {
 			const baseQuery = borrowedByLibraryQuery(code, userLibraryHostLmsCode);
 			const queryVariables = {
 				query:
@@ -148,12 +148,13 @@ function RouteComponent() {
 				order: page.sortField ?? "dateCreated",
 				orderBy: page.sortDirection?.toUpperCase() ?? "DESC",
 			};
-			return request(
-				`${dcbApiBase}/graphql`,
-				getPatronRequests,
-				queryVariables,
-				await authHeaders(),
-			);
+			return request({
+				url: `${dcbApiBase}/graphql`,
+				document: getPatronRequests,
+				variables: queryVariables,
+				requestHeaders: await authHeaders(),
+				signal,
+			});
 		},
 		// Gated on whatever the scope is actually built from. Under the v9 filter that is
 		// the agency claim, which is available immediately; waiting on the Host LMS would

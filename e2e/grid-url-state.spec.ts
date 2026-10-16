@@ -1,6 +1,6 @@
 import type { Browser, Page } from "@playwright/test";
 import { test, expect } from "./fixtures/test";
-import { injectRuntimeConfig } from "./fixtures/runtime-config";
+import { API_BASE, injectRuntimeConfig } from "./fixtures/runtime-config";
 import { seedAuth } from "./fixtures/auth";
 import { mockGraphQL } from "./fixtures/graphql";
 import library from "./fixtures-data/library.json" with { type: "json" };
@@ -390,4 +390,102 @@ test("a sort from a later page asks once, for the first page", async ({ page }) 
 	await expect.poll(() => sent.length).toBeGreaterThan(before);
 	const after = sent.slice(before);
 	expect(after.map((request) => [request.order, request.pageno])).toEqual([["status", 0]]);
+});
+
+test("a grid's search is cancelled when the user leaves before it answers", async ({
+	app,
+	page,
+}) => {
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraryBasics: library,
+		LoadLibraries: library,
+		LoadSupplierRequests: { patronRequests: { totalSize: 0, content: [] } },
+		LoadPatronRequests: { patronRequests: { totalSize: 0, content: [] } },
+	});
+	let release: () => void = () => undefined;
+	const held = new Promise<void>((resolve) => (release = resolve));
+	let asked = false;
+	await page.route(`${API_BASE}/graphql`, async (route) => {
+		if (route.request().postDataJSON()?.operationName !== "LoadPatronRequests" || asked) {
+			return route.fallback();
+		}
+		asked = true;
+		await held;
+		await route.fulfill({ json: { data: { patronRequests: { totalSize: 0, content: [] } } } }).catch(() => undefined);
+	});
+	const aborted: string[] = [];
+	page.on("requestfailed", (request) => {
+		if (request.postDataJSON()?.operationName === "LoadPatronRequests") {
+			aborted.push(request.failure()?.errorText ?? "");
+		}
+	});
+
+	await page.goto("/patronRequests");
+	await expect.poll(() => asked).toBe(true);
+	await page.getByRole("tab", { name: "Requesting" }).click();
+
+	await expect.poll(() => aborted.length).toBe(1);
+	release();
+});
+
+test("the request grids ask for library names and codes, not every library's full record", async ({
+	app,
+	page,
+}) => {
+	await app.signIn();
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraryBasics: library,
+		LoadLibraries: library,
+		LoadPatronRequests: patronRequests,
+	});
+	const operations: string[] = [];
+	page.on("request", (request) => {
+		const name = request.postDataJSON?.()?.operationName;
+		if (name) operations.push(name);
+	});
+
+	for (const path of ["/patronRequests", "/supplierRequests"]) {
+		await page.goto(path);
+		await expect(page.getByRole("grid")).toBeVisible();
+	}
+
+	expect(operations).toContain("LoadLibraryFilterOptions");
+	expect(operations).not.toContain("LoadLibraries");
+});
+
+test("with agency scoping, the patron request grid searches once on a cold load", async ({
+	app,
+	page,
+}) => {
+	await app.signIn();
+	await app.enableFeatures(["VITE_FEATURE_AGENCY_SCOPED_REQUESTS"]);
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraryBasics: library,
+		LoadPatronRequests: patronRequests,
+	});
+	let librariesAnswered = false;
+	await page.route(`${API_BASE}/graphql`, async (route) => {
+		if (route.request().postDataJSON()?.operationName !== "LoadLibraryFilterOptions") {
+			return route.fallback();
+		}
+		// Later than the search, as a list of every library is
+		await new Promise((resolve) => setTimeout(resolve, 500));
+		librariesAnswered = true;
+		await route.fulfill({ json: { data: library } });
+	});
+	let searches = 0;
+	page.on("request", (request) => {
+		if (request.postDataJSON?.()?.operationName === "LoadPatronRequests") searches += 1;
+	});
+
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+	await expect.poll(() => librariesAnswered).toBe(true);
+	await expect(page.getByRole("link", { name: /2026-09-01/ }).first()).toBeVisible();
+
+	expect(searches).toBe(1);
 });

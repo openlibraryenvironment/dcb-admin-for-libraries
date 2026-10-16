@@ -45,12 +45,10 @@ export const libraryProfileSchema = (t: TFunction) =>
 			.nonNullable(t("ui.validation.required"))
 			.required(t("ui.validation.required", { field: t("library.full_name") })),
 		shortName: boundedText(t, 32),
-		// The message says 128 where the bound is 32. Left as found: changing
-		// either half is a copy decision, not a refactor.
 		abbreviatedName: Yup.string()
 			.trim()
 			.nonNullable(t("ui.validation.required"))
-			.max(32, t("ui.validation.max_length", { length: 128 })),
+			.max(32, t("ui.validation.max_length", { length: 32 })),
 		latitude: coordinate(t, 90, "ui.validation.locations.lat"),
 		longitude: coordinate(t, 180, "ui.validation.locations.long"),
 		backupDowntimeSchedule: boundedText(t, 200),

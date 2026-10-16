@@ -124,6 +124,19 @@ export const formatHourOfDay = (hour: number, locale?: string): string =>
 		locale,
 	).format(new Date(Date.UTC(2023, 0, 1, hour)));
 
+/**
+ * A short day name, 0 for Sunday as Postgres numbers them. 1 January 2023 was a Sunday;
+ * formatting in UTC is what stops a zone west of it naming the day before.
+ */
+export const formatDayOfWeek = (day: number, locale?: string): string =>
+	dateFormat({ weekday: "short", timeZone: "UTC" }, locale).format(
+		new Date(Date.UTC(2023, 0, 1 + day)),
+	);
+
+/** A day as UTC names it: dcb-service buckets by UTC day, week and month. */
+export const formatUtcDate = (value: string | number | Date, locale?: string): string =>
+	dateFormat({ dateStyle: "medium", timeZone: "UTC" }, locale).format(new Date(value));
+
 /** UTC is what dcb-service records; see docs/formatting.md. */
 const SERVICE_TIME_ZONE = "UTC";
 

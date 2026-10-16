@@ -8,7 +8,7 @@ import request from "graphql-request";
 import { useMemo } from "react";
 import { gridPage, queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
-import { allLibrariesQueryOptions } from "@helpers/sharedQueries";
+import { libraryFilterOptionsQueryOptions } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { processGridFilterModel } from "@helpers/dataGrid/utilities";
 import { standardPatronRequestColumns } from "@helpers/dataGrid/columns/patronRequestColumns";
@@ -21,6 +21,7 @@ import {
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import { PatronRequestQueryData } from "@models/ReactQueryHelperTypes";
 import { getPatronRequestModeQuery } from "@helpers/dataGrid/getPatronRequestModeQuery";
+import { borrowingScopeHostLms, hasBorrowingScope } from "@helpers/patronRequestScope";
 
 interface UsePatronRequestQueriesProps {
 	apiBase: string;
@@ -49,7 +50,7 @@ export const usePatronRequestQueries = ({
 		data: librariesData,
 		isLoading: librariesLoading,
 		isError: librariesError,
-	} = useQuery(allLibrariesQueryOptions(apiBase));
+	} = useQuery(libraryFilterOptionsQueryOptions(apiBase));
 
 	// Memoised because `?? []` allocates a new array on every render, which made
 	// every memo keyed on it recompute every render.
@@ -95,13 +96,13 @@ export const usePatronRequestQueries = ({
 			apiBase,
 			{
 				agencyCode: code,
-				hostLmsCode: userLibraryHostLmsCode,
+				hostLmsCode: borrowingScopeHostLms(userLibraryHostLmsCode),
 				mode,
 				additionalQuery,
 			},
 			grid,
 		),
-		queryFn: async () => {
+		queryFn: async ({ signal }) => {
 			const baseQuery = additionalQuery
 				? "(" +
 					getPatronRequestModeQuery(mode, code, userLibraryHostLmsCode) +
@@ -119,14 +120,15 @@ export const usePatronRequestQueries = ({
 				order: grid.sortField ?? "dateCreated",
 				orderBy: grid.sortDirection?.toUpperCase() ?? "DESC",
 			};
-			return request(
-				`${apiBase}/graphql`,
-				getPatronRequests,
-				queryVariables,
-				await authHeaders(),
-			);
+			return request({
+				url: `${apiBase}/graphql`,
+				document: getPatronRequests,
+				variables: queryVariables,
+				requestHeaders: await authHeaders(),
+				signal,
+			});
 		},
-		enabled: !!apiBase && !!userLibraryHostLmsCode,
+		enabled: !!apiBase && hasBorrowingScope(code, userLibraryHostLmsCode),
 		placeholderData: (previousData) => previousData,
 	});
 

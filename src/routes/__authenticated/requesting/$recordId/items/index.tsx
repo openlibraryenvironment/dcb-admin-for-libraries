@@ -7,4 +7,6 @@ export const Route = createFileRoute(
 )({
 	head: () => ({ meta: [{ title: pageTitle("requesting.items") }] }),
 	component: ClusterItems,
+	// Per record: its grids' filters and pages are not the next record's
+	remountDeps: ({ params }) => params.recordId,
 });

@@ -193,7 +193,7 @@ export default function MasterDetail({ row, type }: MasterDetailType) {
 						</Attribute>
 					</Grid>
 					{row?.statusCorrectAsOf ? (
-						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Grid size={4}>
 							<Attribute label={t("ui.info.correct_as_of")}>
 								<RenderAttribute
 									attribute={formatTimestamp(row?.statusCorrectAsOf, clock)}

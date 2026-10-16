@@ -31,8 +31,13 @@ const Confirmation = ({
 	entityType, // The type of entity being acted upon - i.e. library
 	entityName, // The name of the entity
 	gridEdit, // boolean value for grid editing
+	count = 1,
+	onExited,
 }: ConfirmationType) => {
 	const { t } = useTranslation();
+	// The rest are changes to shared records, and ask for a reason for the data change log
+	const recordsChange = !["unsavedChanges", "cleanup", "withdraw"].includes(action);
+	const destructive = ["deletion", "cleanup", "withdraw"].includes(action);
 
 	const getCharCountHelperText = (
 		value: string,
@@ -53,7 +58,7 @@ const Confirmation = ({
 		control,
 		handleSubmit,
 		reset,
-		formState: { errors, isValid, isDirty, isSubmitting },
+		formState: { errors, isSubmitting },
 	} = useForm<ConfirmationForm>({
 		defaultValues: {
 			reason: "",
@@ -93,6 +98,10 @@ const Confirmation = ({
 				});
 			case "unsavedChanges":
 				return t("ui.unsaved_changes.title");
+			case "cleanup":
+				return t("patron_request.cleanup_confirm.title", { count });
+			case "withdraw":
+				return t("announcements.withdraw_confirm.title", { headline: entityName });
 		}
 	};
 
@@ -123,6 +132,18 @@ const Confirmation = ({
 						{t("ui.unsaved_changes.body", { name: entityName })}
 					</Typography>
 				);
+			case "cleanup":
+				return (
+					<Typography variant="body1">
+						{t("patron_request.cleanup_confirm.body", { count })}
+					</Typography>
+				);
+			case "withdraw":
+				return (
+					<Typography variant="body1">
+						{t("announcements.withdraw_confirm.body")}
+					</Typography>
+				);
 		}
 	};
 	const getButtonText = () => {
@@ -134,6 +155,10 @@ const Confirmation = ({
 				return t("ui.actions.confirm_changes");
 			case "unsavedChanges":
 				return t("ui.unsaved_changes.leave");
+			case "cleanup":
+				return t("patron_request.cleanup_confirm.confirm");
+			case "withdraw":
+				return t("announcements.withdraw");
 		}
 	};
 	const onSubmit = async (data: ConfirmationForm) => {
@@ -149,7 +174,8 @@ const Confirmation = ({
 			open={open}
 			onClose={handleClose}
 			aria-labelledby="confirmation-modal"
-			fullWidth>
+			fullWidth
+			slotProps={{ transition: { onExited } }}>
 			<DialogTitle id="confirmation-modal" variant="modalTitle">
 				{getHeaderText()}
 			</DialogTitle>
@@ -166,7 +192,7 @@ const Confirmation = ({
 					}}>
 					<Stack direction="column" spacing={2}>
 						{getDialogContent()}
-						{action !== "unsavedChanges" ? (
+						{recordsChange ? (
 							<>
 								<Controller
 									name="changeCategory"
@@ -255,25 +281,24 @@ const Confirmation = ({
 							: t("ui.actions.cancel")}
 					</Button>
 					<div style={{ flex: "1 0 0" }} />
-					{action == "unsavedChanges" ? (
+					{!recordsChange ? (
 						<Button
 							onClick={() => {
 								onConfirm("", "", "");
 								reset();
 							}}
-							color="primary"
+							color={destructive ? "error" : "primary"}
 							variant="contained">
 							{getButtonText()}
 						</Button>
 					) : (
 						<Button
 							type="submit"
-							color="primary"
+							color={destructive ? "error" : "primary"}
 							variant="contained"
 							onClick={handleSubmit(onSubmit)}
-							disabled={
-								!isValid || !isDirty || isSubmitting
-							}>
+							// Enabled while incomplete: submitting says what is missing, field by field
+							disabled={isSubmitting}>
 							{getButtonText()}
 							{isSubmitting ? (
 								<CircularProgress
