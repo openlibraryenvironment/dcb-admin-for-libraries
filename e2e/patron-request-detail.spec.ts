@@ -20,6 +20,24 @@ test.describe("Patron request detail", () => {
 		});
 	});
 
+	test("a request id that is not a UUID is not found, and nothing is asked of DCB", async ({
+		page,
+	}) => {
+		const sent: string[] = [];
+		page.on("request", (request) => {
+			if (/\/patrons\/requests\//.test(request.url())) sent.push(request.url());
+			if (request.url().includes("/graphql") && request.postData()?.includes("LoadPatronRequest(")) {
+				sent.push("LoadPatronRequest");
+			}
+		});
+
+		await page.goto("/patronRequests/not-a-request");
+
+		await expect(page.getByText("Unable to find the record")).toBeVisible();
+		await expect(page.getByRole("button", { name: "Check for updates" })).toHaveCount(0);
+		expect(sent).toEqual([]);
+	});
+
 	// GraphQL declares suppliers and the cluster record nullable; suppliers[0]
 	// on a null list threw and took the page down.
 	test("renders a request with no suppliers and no cluster record", async ({
