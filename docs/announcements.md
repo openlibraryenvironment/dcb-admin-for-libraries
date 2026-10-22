@@ -47,8 +47,8 @@ somebody set a flag that changes nothing.
 
 ## Behind a flag that changes the document, not the render
 
-`VITE_FEATURE_ANNOUNCEMENTS` is not a render switch. dcb-service declares none of these
-operations on any release, so asking a deployment that lacks them for `announcements` is a
+`VITE_FEATURE_ANNOUNCEMENTS` is not a render switch. dcb-service declares these operations
+from 9.2.0, so asking a deployment that lacks them for `announcements` is a
 GraphQL validation error that fails the **whole operation** rather than returning null for
 the part it cannot answer.
 
@@ -56,13 +56,12 @@ So the flag gates the document that is sent, and the route renders an explanatio
 than a form when it is off: an administrator who arrives from a bookmark is told why,
 instead of meeting something that cannot work.
 
-The capability row carries `since: null` for the same reason — there is no release to name
-yet. `schemaConformance.test.ts` excludes these documents from its narrower passes through
-`FLAG_ONLY`, which is a documented door rather than a silent skip: see
+The capability row carries `since: "9.2.0"`. `schemaConformance.test.ts` excludes these
+documents from the passes for older releases through `FLAG_ONLY`, which is a documented
+door rather than a silent skip: see
 [testing.md](testing.md), "Documents only sent behind a flag".
 
 ## Where the contract lives
 
-The schema this app targets is dcb-service's `feat/discovery-contract` branch, which is its
-main plus what a discovery front end needs. Until that branch merges and a release carries
-it, nothing here can reach a deployment.
+The schema this app targets is the dcb-service v9.2.0 tag, which serves every announcement
+operation this app sends.

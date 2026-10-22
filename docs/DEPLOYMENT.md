@@ -65,12 +65,12 @@ does not show the feature.
 | --- | --- | --- |
 | `VITE_FEATURE_LIBRARY_BRANDING` | **9.0.0** or later | The "How your library appears to patrons" block on the library profile: logo, logo description and discovery theme |
 | `VITE_FEATURE_INSIGHTS` | **9.0.0** or later | The Insights page. The top-titles / top-requesters panels on the library profile read `/insights/**` with it on and the legacy `/patrons/requests/stats/**` with it off, so they show on 8.71.0 too |
-| `VITE_FEATURE_LIBRARY_SUPPORT_URL` | **no release serves this yet** (not yet on dcb-service main) | The "Report a problem URL" field in the "Links for patrons" block |
-| `VITE_FEATURE_INSIGHTS_WALK_UP` | **after 9.1.0**: the release carrying `/insights/library-breakdown` | The "Collected in person, or sent" panel under Insights, Service. Needs `VITE_FEATURE_INSIGHTS` too |
+| `VITE_FEATURE_LIBRARY_SUPPORT_URL` | **9.2.0** or later | The "Report a problem URL" field in the "Links for patrons" block |
+| `VITE_FEATURE_INSIGHTS_WALK_UP` | **9.2.0** or later (`/insights/library-breakdown`) | The "Collected in person, or sent" panel under Insights, Service. Needs `VITE_FEATURE_INSIGHTS` too |
 | `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | **9.0.0** or later | Scoping the request grids by agency code rather than by Host LMS code, and the library column that needs it |
 | `VITE_FEATURE_GUARDED_CLEANUP` | **9.0.0** or later | Request cleanup that the service refuses, with a reason, while the item is still out |
 | `VITE_FEATURE_INSIGHTS_TRENDS` | **9.1.0** or later (`/insights/trend`) | The duration trend panel on Insights → Trends. Needs `VITE_FEATURE_INSIGHTS` as well |
-| `VITE_FEATURE_ANNOUNCEMENTS` | **no release serves this yet** | The Announcements page. Leave it off: on a service without the announcement operations, the page's whole GraphQL request is rejected |
+| `VITE_FEATURE_ANNOUNCEMENTS` | **9.2.0** or later | The Announcements page. Off on anything older: on a service without the announcement operations, the page's whole GraphQL request is rejected |
 | `VITE_FEATURE_HOME_SINCE_LAST_VISIT` | any supported release | Home page: a "since your last visit" window, remembered per browser |
 | `VITE_FEATURE_HOME_LAST_WEEK` | any supported release | Home page: each problem and new-request count compared with a week earlier, for the today and 7-day windows |
 | `VITE_FEATURE_HOME_SETUP_CHECKLIST` | any supported release | Home page: a profile checklist for a library that has never borrowed or supplied |
@@ -321,7 +321,7 @@ through them before the release pipeline runs, and the checks after it.
    | --- | --- |
    | `VITE_FEATURE_INSIGHTS`, `VITE_FEATURE_LIBRARY_BRANDING`, `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`, `VITE_FEATURE_GUARDED_CLEANUP` | 9.0.0 |
    | `VITE_FEATURE_INSIGHTS_TRENDS` | 9.1.0 |
-   | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP` | none yet: must resolve to off |
+   | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP` | 9.2.0 |
    | `VITE_FEATURE_HOME_*` | a product choice, not a release: see section 2a for what each needs beside it |
 
    A flag that is absent from the table is off on every host, which is the safe failure for

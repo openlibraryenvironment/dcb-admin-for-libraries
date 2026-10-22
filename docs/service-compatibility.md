@@ -84,21 +84,22 @@ at module scope reads every flag as off, in every environment, and **the bug is
 invisible because the app still works**: it silently runs in legacy mode
 forever.
 
-## Three schema passes, not two
+## A schema pass per release, not two
 
 `src/queries/schemaConformance.test.ts` validates every document this
-application can emit, three times, with the flags in the state each deployment
-would have:
+application can emit once per schema, with the flags in the state each
+deployment would have:
 
 | Flags | Schema | Deployment |
 |---|---|---|
-| all on | `schema.graphqls` | dcb-service `main` |
+| all on | `schema.graphqls` | the newest schema this app targets |
 | all off | `schema.v8.71.0.graphqls` | the release before 9.0.0 |
 | the release's own | `schema.v9.0.0.graphqls` | a 9.0.0 deployment |
+| the release's own | `schema.v9.2.0.graphqls` | a 9.2.0 deployment |
 
-**The third pass is the one that was missing**, and it stopped being optional
-when `schema.graphqls` diverged from the 9.0.0 tag: `supportUrl` arrives
-after it. Neither of the others can catch a field gated at the
+**The per-release passes are the ones that were missing**, and they stopped
+being optional when `schema.graphqls` diverged from the 9.0.0 tag: `supportUrl`
+arrived in 9.2.0. Neither of the others can catch a field gated at the
 wrong *threshold* — all-flags-on validates against a schema that has
 everything, all-flags-off against one that has nothing, and a deployment on the
 9.0.0 release is in neither state.
@@ -130,7 +131,7 @@ exists because the two fields are gated differently:
 - **`patronWebsite`** has been on `Library` since 5.11.1, so it is selected
   unconditionally and needs no flag. It was already fetched and displayed; it
   was never editable.
-- **`supportUrl`** arrives after the 9.0.0 tag, so it is behind
+- **`supportUrl`** arrived in 9.2.0, after the 9.0.0 tag, so it is behind
   its own flag. `legacy-service.spec.ts` holds the other end: 8.71.0 is never
   asked for it.
 

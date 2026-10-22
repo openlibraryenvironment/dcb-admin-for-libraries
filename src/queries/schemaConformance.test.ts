@@ -21,7 +21,6 @@ const schemaFrom = (file: string): GraphQLSchema =>
 	buildSchema(readFileSync(path.resolve(repoRoot, file), "utf8"));
 
 const CURRENT = schemaFrom("schema.graphqls");
-const RELEASE_9 = schemaFrom("schema.v9.0.0.graphqls");
 const LEGACY = schemaFrom("schema.v8.71.0.graphqls");
 
 const flagsFor = (capabilities: readonly { flag: string }[]) =>
@@ -31,17 +30,23 @@ const flagsFor = (capabilities: readonly { flag: string }[]) =>
 const ALL_FLAGS_ON = flagsFor(SERVICE_CAPABILITIES);
 
 /**
- * The flags a deployment on the 9.0.0 RELEASE would have: every capability that release
+ * The flags a deployment on each RELEASE would have: every capability that release
  * actually serves, and none that landed after it.
  *
- * `meetsServiceVersion("9.0.0", null)` is false, so a capability with no release - which
+ * `meetsServiceVersion(version, null)` is false, so a capability with no release - which
  * is what `since: null` means - is off here. That is the claim under test.
  */
-const RELEASE_9_CAPABILITIES = SERVICE_CAPABILITIES.filter(
-	(entry) => meetsServiceVersion("9.0.0", entry.since) === true,
-);
-
-const RELEASE_9_FLAGS = flagsFor(RELEASE_9_CAPABILITIES);
+const RELEASE_PASSES = (["9.0.0", "9.2.0"] as const).map((version) => {
+	const capabilities = SERVICE_CAPABILITIES.filter(
+		(entry) => meetsServiceVersion(version, entry.since) === true,
+	);
+	return {
+		version,
+		schema: schemaFrom(`schema.v${version}.graphqls`),
+		capabilities,
+		flags: flagsFor(capabilities),
+	};
+});
 
 const modules = import.meta.glob("../{queries,mutations}/*.ts");
 
@@ -118,29 +123,24 @@ describe("documents validate against the dcb-service they target", () => {
 		},
 	);
 
-	it.each(
-		files.filter((file) => {
-			const gate = gatedBy(file);
-			return !gate || gate in RELEASE_9_FLAGS;
-		}),
-	)(
-		"%s is valid against dcb-service 9.0.0 (the release's flags)",
-		async (file) => {
-			vi.stubGlobal("window", { __APP_ENV__: RELEASE_9_FLAGS });
+	describe.each(RELEASE_PASSES)("dcb-service $version", ({ version, schema, flags }) => {
+		it.each(
+			files.filter((file) => {
+				const gate = gatedBy(file);
+				return !gate || gate in flags;
+			}),
+		)(`%s is valid against dcb-service ${version} (the release's flags)`, async (file) => {
+			vi.stubGlobal("window", { __APP_ENV__: flags });
 
 			const documents = documentsFrom(
 				(await modules[file]()) as Record<string, unknown>,
 			);
 			expect(documents.length).toBeGreaterThan(0);
 			documents.forEach((document) =>
-				assertValid(
-					document,
-					RELEASE_9,
-					`${file} against schema.v9.0.0.graphqls`,
-				),
+				assertValid(document, schema, `${file} against schema.v${version}.graphqls`),
 			);
-		},
-	);
+		});
+	});
 
 	it("every flag-only exclusion names a flag that exists", () => {
 		const declared = readFileSync(
@@ -158,8 +158,9 @@ describe("documents validate against the dcb-service they target", () => {
 	it("the 9.0.0 pass is not vacuous", () => {
 		// It would be if every capability were `since: null`, or if meetsServiceVersion
 		// started returning null for a release we hold a schema for.
-		expect(RELEASE_9_CAPABILITIES.length).toBeGreaterThan(0);
-		expect(RELEASE_9_CAPABILITIES.length).toBeLessThan(
+		const release9 = RELEASE_PASSES[0].capabilities;
+		expect(release9.length).toBeGreaterThan(0);
+		expect(release9.length).toBeLessThan(
 			SERVICE_CAPABILITIES.length,
 		);
 	});

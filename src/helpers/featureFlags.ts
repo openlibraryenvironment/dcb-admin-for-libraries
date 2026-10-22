@@ -43,23 +43,19 @@ export const isLibraryBrandingEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_LIBRARY_BRANDING");
 
 /**
- * Patron announcements, on no dcb-service release at all.
+ * Patron announcements - dcb-service 9.2.0 and later.
  *
- * The store, the scoped read and the three mutations are on the
- * `feat/discovery-contract` branch. Asking a deployment that lacks them for
- * `announcements` is a GraphQL validation error that fails the whole operation, so this
- * flag changes the DOCUMENT, not just what renders - and it is off everywhere until that
- * branch merges and a release carries it.
+ * Asking a deployment that lacks them for `announcements` is a GraphQL validation error
+ * that fails the whole operation, so this flag changes the DOCUMENT, not just what renders.
  */
 export const isAnnouncementsEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_ANNOUNCEMENTS");
 
 /**
- * The library's patron support link - dcb-service AFTER 9.0.0.
+ * The library's patron support link - dcb-service 9.2.0 and later.
  *
- * `library.support_url` is in no dcb-service release, so this
- * is a SEPARATE flag from the branding one above rather than a fourth field on it.
- * Selecting `supportUrl` against the 9.0.0 tag fails LoadLibrary whole, exactly as the
+ * A SEPARATE flag from the branding one above rather than a fourth field on it.
+ * Selecting `supportUrl` against 9.0.0 or 9.1.0 fails LoadLibrary whole, exactly as the
  * brand fields do against 8.71.0 - same failure, different threshold, which is the entire
  * reason the flags are per capability.
  *
@@ -104,11 +100,10 @@ export const isInsightsTrendsEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_INSIGHTS_TRENDS");
 
 /**
- * Walk-up against shipped - `/insights/library-breakdown`, on dcb-service branch
- * `feat/discovery-service-support` and in no release.
+ * Walk-up against shipped - `/insights/library-breakdown`, dcb-service 9.2.0 and later.
  *
- * Separate from VITE_FEATURE_INSIGHTS for the trends flag's reason: every released
- * dcb-service answers this one endpoint 404, which the panel would report as a fault.
+ * Separate from VITE_FEATURE_INSIGHTS for the trends flag's reason: 9.0.0 and 9.1.0
+ * answer this one endpoint 404, which the panel would report as a fault.
  */
 export const isInsightsWalkUpEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_INSIGHTS_WALK_UP");

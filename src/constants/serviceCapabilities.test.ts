@@ -34,7 +34,7 @@ const CURRENT = buildSchema(
  * Every release schema committed here, oldest first. The registry's `since` values must
  * name one of these - a threshold nobody can check is not a threshold.
  */
-const SUPPORTED_RELEASES = ["8.71.0", "9.0.0"] as const;
+const SUPPORTED_RELEASES = ["8.71.0", "9.0.0", "9.2.0"] as const;
 
 /** Whether `schema` declares `field` on `type`, for object and input types alike. */
 const declaresField = (
