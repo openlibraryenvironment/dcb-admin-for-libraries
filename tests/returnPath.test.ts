@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { safeReturnPath, signInReturnPath } from "@helpers/returnPath";
 
-const ORIGIN = "https://mobius.kihosting.net";
+const ORIGIN = "https://consortium.example.org";
 const BASE = "/dcb-admin-for-libraries/";
 
 describe("safeReturnPath", () => {

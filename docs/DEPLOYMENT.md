@@ -22,7 +22,7 @@ Log into your Keycloak dashboard, select the `dcb-hub` realm, and complete these
 8. Set the flow to **Standard flow**.
 9. Turn **OFF** client authentication (this must be a public access type, not a confidential OIDC client).
 10. Under the "Advanced" tab, set the Proof Key for Code Exchange (PKCE) Code Challenge Method to **S256**.
-11. Set **Valid Redirect URIs** to the app's own path, scoped by a trailing wildcard: `https://<host>/dcb-admin-for-libraries/*` on a shared origin such as `mobius.kihosting.net`, or `https://<host>/*` when the app is at the root. Sign-in returns to the base and sign-out to `<base>logout?loggedOut=true`, so the exact base URL alone rejects the sign-out redirect. Leave **Valid post logout redirect URIs** as `+` (the same list). Set **Web Origins** to the origin only, with no path (`https://<host>`). Keep this client separate from DCB Admin's even on the same host.
+11. Set **Valid Redirect URIs** to the app's own path, scoped by a trailing wildcard: `https://<host>/dcb-admin-for-libraries/*` on a shared origin such as `consortium.example.org`, or `https://<host>/*` when the app is at the root. Sign-in returns to the base and sign-out to `<base>logout?loggedOut=true`, so the exact base URL alone rejects the sign-out redirect. Leave **Valid post logout redirect URIs** as `+` (the same list). Set **Web Origins** to the origin only, with no path (`https://<host>`). Keep this client separate from DCB Admin's even on the same host.
     **CRITICAL SECURITY NOTE:** Never use a bare wildcard (`*`) or a host-wide one where other apps share the origin: either lets a redirect deliver the authorisation code somewhere this app does not control.
 
 ---
@@ -44,7 +44,7 @@ The application requires the following environment variables to function properl
 > `VITE_PUBLIC_URL` is not runtime tenant configuration. Set it only at build time for standalone/subpath deployments. Host-specific backend, search, Keycloak and licence values should be supplied by `inject_env.json` in standalone runtime-config deployments or by the KI bootloader host configuration.
 
 > [!IMPORTANT]
-> Under a subpath, only the router adds the base. A root-relative `href` or `window.open("/patronRequests/…")` resolves against the origin root, outside this app — on a shared origin such as Mobius, into whatever else is mounted there. Navigate with `to` on a router link (`CustomLink`), and pass `appUrl(path)` to `window.open`. ESLint fails both patterns when the path is a literal; it cannot see a path held in a variable.
+> Under a subpath, only the router adds the base. A root-relative `href` or `window.open("/patronRequests/…")` resolves against the origin root, outside this app — on a shared origin, into whatever else is mounted there. Navigate with `to` on a router link (`CustomLink`), and pass `appUrl(path)` to `window.open`. ESLint fails both patterns when the path is a literal; it cannot see a path held in a variable.
 
 ---
 
@@ -308,7 +308,7 @@ PKCE was explicitly designed to secure public clients like SPAs and mobile appli
 
 ## 5. Releasing to the kihosting hosts
 
-The kihosting hosts, `mobius.kihosting.net` among them, serve this app at
+The kihosting hosts serve this app at
 `/dcb-admin-for-libraries/` through the Cloudflare worker that also serves DCB Admin at
 `/dcb-admin/`. The pipeline publishes the bundle; these are the parts it cannot do. Work
 through them before the release pipeline runs, and the checks after it.
