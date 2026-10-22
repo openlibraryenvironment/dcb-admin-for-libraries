@@ -6,7 +6,7 @@
 export const HIGHLIGHTS_GENERATION = 1;
 
 /** In the order shown; each is release_highlights.items.<key>.heading and .body. */
-export const HIGHLIGHTS = ["home", "views", "accessibility", "exports"] as const;
+export const HIGHLIGHTS = ["home", "cleanup", "views", "accessibility", "exports"] as const;
 
 /** A read-only user's, who has only Requesting and Preferences: no Home, Insights or exports. */
 export const READ_ONLY_HIGHLIGHTS = ["views", "accessibility_read_only"] as const;

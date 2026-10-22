@@ -1863,6 +1863,10 @@
 		"title_version": "What's new in version {{version}}",
 		"intro": "The main changes in this release of DCB Admin for Libraries.",
 		"items": {
+			"cleanup": {
+				"heading": "Clean up is for the library that supplied the item",
+				"body": "Clean up is now on Supplier requests and on the page of a request your library supplied. It is no longer offered on Patron requests, for requests your library borrowed."
+			},
 			"home": {
 				"heading": "A personalised OpenRS summary for your library",
 				"body": "The Home page now shows a personalised summary of your library's OpenRS activity for today, the last 7 days or the last 30 days."

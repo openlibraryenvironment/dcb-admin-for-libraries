@@ -40,9 +40,12 @@ test.describe("a user who has not seen this release's highlights", () => {
 
 		const dialog = highlights(page);
 		await expect(dialog).toHaveAccessibleName("What's new in version 1.14.0");
-		await expect(dialog.getByRole("listitem")).toHaveCount(4);
+		await expect(dialog.getByRole("listitem")).toHaveCount(5);
 		// The wording is rewritten each release; each item has its heading
-		await expect(dialog.getByRole("heading", { level: 3 })).toHaveCount(4);
+		await expect(dialog.getByRole("heading", { level: 3 })).toHaveCount(5);
+		await expect(
+			dialog.getByRole("heading", { level: 3, name: /clean up is for the library that supplied/i }),
+		).toBeVisible();
 		const notes = dialog.getByRole("link", {
 			name: "Read the full release notes on GitHub (opens in a new tab)",
 		});
