@@ -23,6 +23,9 @@ export function getRequestError(
 			description: first.description ?? "",
 		});
 	}
+	if (first?.code === "PREFLIGHT_CHECKS_TIMED_OUT") {
+		return t("requesting.staff_request.patron.error.request.timed_out");
+	}
 	if (first?.code) {
 		return t("requesting.staff_request.patron.error.request.generic", {
 			code: first.code,

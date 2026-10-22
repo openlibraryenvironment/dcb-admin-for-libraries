@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import enGB from "@/locales/en-GB/en-GB.json";
+import enUS from "@/locales/en-US/en-US.json";
+import { getRequestError } from "./getRequestError";
 import { buildWalkUpPayload, walkUpRefusal } from "./walkUpRequest";
 
 const t = (key: string, options?: Record<string, unknown>) =>
@@ -87,5 +90,24 @@ describe("walkUpRefusal", () => {
 		expect(walkUpRefusal(500, undefined, t)).toBe(
 			"requesting.staff_request.patron.error.request.failed",
 		);
+	});
+});
+
+describe("a request refused because a library system was too slow", () => {
+	it("is explained on every form, not shown as a raw code", () => {
+		expect(
+			getRequestError([{ code: "PREFLIGHT_CHECKS_TIMED_OUT", description: "PT45S" }], t),
+		).toBe("requesting.staff_request.patron.error.request.timed_out");
+		expect(
+			walkUpRefusal(400, [{ code: "PREFLIGHT_CHECKS_TIMED_OUT" }], t),
+		).toBe("requesting.staff_request.patron.error.request.timed_out");
+	});
+
+	it("has a sentence in every locale", () => {
+		for (const messages of [enGB, enUS]) {
+			expect(
+				messages.requesting.staff_request.patron.error.request.timed_out,
+			).toEqual(expect.any(String));
+		}
 	});
 });
