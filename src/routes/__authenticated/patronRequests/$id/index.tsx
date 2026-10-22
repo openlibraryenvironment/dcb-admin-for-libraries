@@ -42,6 +42,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { isUuidShaped } from "@helpers/isUuidShaped";
+import { OPTIONAL_QUERY } from "@helpers/serviceErrors";
 import { onlyMatch } from "@helpers/onlyMatch";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import Confirmation from "@components/Confirmation/Confirmation";
@@ -162,9 +163,11 @@ function RouteComponent() {
 	const patronRequest = data?.patronRequests?.content?.[0];
 	const agencyScoped = isAgencyScopedRequestsEnabled();
 
-	// Without agency scoping the borrowing library is known only by its Host LMS
+	// Without agency scoping the borrowing library is known only by its Host LMS. Optional:
+	// unanswered, clean up is offered to a supplying library alone, and the page stays.
 	const { data: callerLibraryData } = useQuery({
 		...libraryBasicsQueryOptions(apiBase, agencyCode ?? ""),
+		meta: OPTIONAL_QUERY,
 		enabled: !agencyScoped && !!agencyCode,
 	});
 	const canCleanup = isCleanupEligible(patronRequest, {
