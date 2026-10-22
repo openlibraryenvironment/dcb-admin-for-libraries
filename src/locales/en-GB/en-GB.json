@@ -1879,6 +1879,10 @@
 				"heading": "Clean up protects an item that is out",
 				"body": "The borrowing library and the supplying library can both clean up a request, from Patron requests, Supplier requests or the request's own page. A request whose item is on loan or in transit is not cleaned up until someone confirms where the item is."
 			},
+			"walk_up": {
+				"heading": "Quick walk-up requests for everyone at the desk",
+				"body": "Every member of staff, read-only accounts included, can place a Quick walk-up request from Requesting when a patron borrows an item at your desk."
+			},
 			"home": {
 				"heading": "A personalised OpenRS summary for your library",
 				"body": "The Home page now shows a personalised summary of your library's OpenRS activity for today, the last 7 days or the last 30 days."
