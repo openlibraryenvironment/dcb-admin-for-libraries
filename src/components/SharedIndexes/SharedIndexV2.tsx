@@ -1,5 +1,5 @@
 import { useRouter, useSearch } from "@tanstack/react-router";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import axios from "axios";
 import {
 	keepPreviousData,
@@ -38,7 +38,6 @@ import {
 } from "@models/SearchTypes";
 import { buildQuery } from "@helpers/search/queryBuilder";
 import { SearchResult } from "@components/SearchResultComponent/SearchResultComponent";
-import { useSearchGridStore } from "@/hooks/useSearchGridStore";
 import { parseQuery } from "@helpers/search/queryParser";
 import type { RequestingSearch } from "@helpers/requestingSearch";
 import { clampPageSize, PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
@@ -111,10 +110,11 @@ export function SharedIndexV2() {
 	const pageno = search.pageno ?? 0;
 	const pagesize = clampPageSize(search.pagesize);
 
-	const appliedFilters = useSearchGridStore((state) => state.appliedFilters);
-	const setAppliedFilters = useSearchGridStore(
-		(state) => state.setAppliedFilters,
-	);
+	// The URL is the applied search; only the filters being edited are local
+	const appliedFilters = useMemo(() => {
+		const parsed = parseQuery(queryParam || "");
+		return parsed.length > 0 ? parsed : [createDefaultFilter()];
+	}, [queryParam]);
 	const paginationModel: GridPaginationModel = {
 		page: pageno,
 		pageSize: pagesize,
@@ -136,7 +136,6 @@ export function SharedIndexV2() {
 		createDefaultFilter(),
 	]);
 
-	const [isDirty, setIsDirty] = useState(false);
 	const [isAdvancedMode, setIsAdvancedMode] = useState(false);
 
 	const isAdvancedSearchAvailable =
@@ -160,27 +159,19 @@ export function SharedIndexV2() {
 	};
 
 	useEffect(() => {
-		const initialFilters = parseQuery(queryParam || "");
-
-		const filtersToSet =
-			initialFilters.length > 0 ? initialFilters : [createDefaultFilter()];
-
-		setAppliedFilters(filtersToSet);
-		setStagedFilters(filtersToSet);
-		if (filtersToSet.length > 1) {
+		setStagedFilters(appliedFilters);
+		if (appliedFilters.length > 1) {
 			setIsAdvancedMode(true);
 		}
-	}, [queryParam, setAppliedFilters]);
-	useEffect(() => {
-		const staged = JSON.stringify(stagedFilters.filter((f) => f.value));
-		const applied = JSON.stringify(appliedFilters.filter((f) => f.value));
-		setIsDirty(staged !== applied);
-	}, [stagedFilters, appliedFilters]);
+	}, [appliedFilters]);
+
+	const isDirty =
+		JSON.stringify(stagedFilters.filter((f) => f.value)) !==
+		JSON.stringify(appliedFilters.filter((f) => f.value));
 
 	const handleApplyFilters = useCallback(
 		(newFilters: SearchFilter[]) => {
 			const activeFilters = newFilters.filter((f) => f.value);
-			setAppliedFilters(activeFilters);
 
 			router.navigate({
 				to: "/requesting",
@@ -194,7 +185,7 @@ export function SharedIndexV2() {
 				replace: true,
 			});
 		},
-		[router, setAppliedFilters, paginationModel.pageSize],
+		[router, paginationModel.pageSize],
 	);
 
 	const isClusterIdSearch =
