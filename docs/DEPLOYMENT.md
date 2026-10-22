@@ -258,7 +258,7 @@ Using "staging" as an example environment.
 
 **Deployment Steps:**
 
-1. Build the image using `docker build -f docker/production/Dockerfile -t dcb-admin-libraries .`.
+1. Pull a published image (below), or build one using `docker build -f docker/production/Dockerfile -t dcb-admin-libraries .`.
 2. Run the container, passing in your environment variables via the `-e` flag.
 3. Map the port correctly, keeping in mind the application runs on port `80` inside the container.
 
@@ -284,6 +284,21 @@ The two feature flags above are the dcb-service **9.0.0** set (Section 2a). Agai
 older deployment, leave them out. Switching them on later is a changed `-e` and a
 container restart — `40-inject-env.sh` re-renders `inject_env.json` on every start, so the
 bundle is never rebuilt.
+
+#### Images
+
+CI pushes this Dockerfile's image to `docker.libsdev.k-int.com/knowledgeintegration/dcb-admin-for-libraries`, the registry dcb-service's images are in:
+
+| Pipeline | Tags | |
+| --- | --- | --- |
+| a commit on `main` | `main-<short sha>`, `next` | `publish_image_next` |
+| a release, on the `release` branch | `<version>` (e.g. `2.1.0`), `latest` | `publish_image_release` |
+
+`main-<sha>` and `<version>` never move; pin one of those. `next` and `latest` move with each push.
+
+A release image carries `release.json`, written into `public/` before the build, so Preferences shows its version as it does on the kihosting hosts. A `main` image has none, and Preferences says the version is not known.
+
+The jobs sign in with the CI variables `NEXUS_USER` and `NEXUS_PASS`, and fail before building if either is missing.
 
 ---
 
@@ -351,7 +366,7 @@ To see which build a host is serving, `curl -s https://<host>/dcb-admin-for-libr
 prints the commit it was built from; the build job asserts the stamp is there. The version is
 in `release.json` beside it, `curl -s https://<host>/dcb-admin-for-libraries/release.json`,
 which the deploy job writes and Preferences shows ([release-highlights.md](release-highlights.md)).
-A deployment that does not come from these jobs, a Docker image included, has none, and
+A deployment that does not come from these jobs or a release image has none, and
 Preferences says the version is not known.
 
 1. The R2 bucket `ki-front-end-bundles/dcb-admin-for-libraries/` holds `v<version>/`, and
