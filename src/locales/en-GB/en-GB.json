@@ -1040,11 +1040,22 @@
 			"title_one": "Clean up this request?",
 			"title_other": "Clean up {{count}} requests?"
 		},
-		"cleanup_disabled": "Clean-up is only available for requests supplied by your library that are in error, or have not yet been shipped.",
+		"cleanup_disabled": "Clean-up is available to the borrowing library and to a supplying library, for a request that is in error or whose item has not yet been shipped.",
+		"cleanup_disabled_guarded": "Clean-up is available to the borrowing library and to a supplying library, until the request is finished.",
 		"cleanup_failed": "Requests that could not be cleaned up",
 		"cleanup_in_progress": "Clean-up in progress",
 		"cleanup_info": "Check this request for updates, then close it and delete its temporary records.",
-		"cleanup_not_supplier": "Only the supplying library can clean this request up.",
+		"cleanup_not_party": "Only the borrowing library or a supplying library can clean this request up.",
+		"cleanup_override": {
+			"title_one": "Clean up while the item is out?",
+			"title_other": "Clean up {{count}} requests while their items are out?",
+			"warning_one": "DCB refused this clean-up because the item is not back at the supplying library. Cleaning up now deletes the borrowing library's temporary records, which leaves the supplying library nothing to check the item in against. Only continue once you have confirmed where the item is.",
+			"warning_other": "DCB refused these {{count}} clean-ups because their items are not back at the supplying libraries. Cleaning up now deletes the borrowing libraries' temporary records, which leaves the supplying libraries nothing to check the items in against. Only continue once you have confirmed where each item is.",
+			"reason": "DCB's reason: {{detail}}",
+			"acknowledge_one": "I have confirmed where the item is",
+			"acknowledge_other": "I have confirmed where each item is",
+			"confirm": "Clean up anyway"
+		},
 		"cleanup_refused": "This request was not cleaned up. {{detail}}",
 		"cleanup_skipped": "Requests skipped",
 		"cleanup_succeeded": "Requests cleaned up",
@@ -1490,6 +1501,7 @@
 			"cleanup": {
 				"error_count": "Error: {{count}}",
 				"refused_count": "Refused while the item is out: {{count}}",
+				"override": "Clean up anyway ({{count}})",
 				"selected": "Clean up selected requests ({{count}})",
 				"skipped_count": "Not eligible: {{count}}",
 				"success_count": "Successful: {{count}}"
@@ -1864,8 +1876,8 @@
 		"intro": "The main changes in this release of DCB Admin for Libraries.",
 		"items": {
 			"cleanup": {
-				"heading": "Clean up is for the library that supplied the item",
-				"body": "Clean up is now on Supplier requests and on the page of a request your library supplied. It is no longer offered on Patron requests, for requests your library borrowed."
+				"heading": "Clean up protects an item that is out",
+				"body": "The borrowing library and the supplying library can both clean up a request, from Patron requests, Supplier requests or the request's own page. A request whose item is on loan or in transit is not cleaned up until someone confirms where the item is."
 			},
 			"home": {
 				"heading": "A personalised OpenRS summary for your library",

@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import axios from "axios";
 import {
 	cleanupPatronRequest,
+	isBorrowedByCaller,
 	isCleanupEligible,
 	isSuppliedByCaller,
+	type CleanupCaller,
 } from "@helpers/cleanupPatronRequest";
 
 vi.mock("axios", () => ({
@@ -31,6 +33,22 @@ const suppliedByUs = {
 	suppliers: [{ localAgency: "AG_A", isActive: true }],
 };
 
+const borrowedByUs = {
+	status: "ERROR",
+	patronHostlmsCode: "LMS_B",
+	requestingIdentity: { resolvedAgency: { code: "AG_B" } },
+	suppliers: [{ localAgency: "AG_A", isActive: true }],
+};
+
+const caller = (
+	overrides: Partial<CleanupCaller> = {},
+): CleanupCaller => ({
+	agencyCodes: ["AG_A"],
+	agencyScoped: true,
+	guarded: true,
+	...overrides,
+});
+
 describe("who may clean a request up", () => {
 	it("recognises a request this library supplied", () => {
 		expect(isSuppliedByCaller(suppliedByUs, ["AG_A"])).toBe(true);
@@ -38,19 +56,38 @@ describe("who may clean a request up", () => {
 		expect(isSuppliedByCaller({ status: "ERROR" }, ["AG_A"])).toBe(false);
 	});
 
-	it("never offers cleanup for a request this library only borrowed", () => {
-		// Cleanup deletes the borrowing library's temporary records; the supplying
-		// library is the one left with an item to account for.
+	it("recognises the borrowing library by agency where requests are agency scoped", () => {
+		const scoped = { agencyCodes: ["AG_B"], agencyScoped: true };
+
+		expect(isBorrowedByCaller(borrowedByUs, scoped)).toBe(true);
+		expect(isBorrowedByCaller(borrowedByUs, { ...scoped, agencyCodes: ["AG_C"] })).toBe(false);
 		expect(
-			isCleanupEligible(suppliedByUs, { guarded: false, agencyCodes: ["AG_B"] }),
-		).toBe(false);
-		expect(
-			isCleanupEligible(suppliedByUs, { guarded: true, agencyCodes: ["AG_B"] }),
+			isBorrowedByCaller({ ...borrowedByUs, requestingIdentity: null }, scoped),
 		).toBe(false);
 	});
 
+	it("recognises the borrowing library by Host LMS where they are not", () => {
+		const legacy = { agencyCodes: ["AG_B"], agencyScoped: false };
+
+		expect(isBorrowedByCaller(borrowedByUs, { ...legacy, hostLmsCode: "LMS_B" })).toBe(true);
+		expect(isBorrowedByCaller(borrowedByUs, { ...legacy, hostLmsCode: "LMS_C" })).toBe(false);
+		expect(isBorrowedByCaller(borrowedByUs, legacy)).toBe(false);
+	});
+
+	it("offers cleanup to the borrowing library and to a supplying one, as dcb-service allows", () => {
+		expect(isCleanupEligible(borrowedByUs, caller({ agencyCodes: ["AG_B"] }))).toBe(true);
+		expect(isCleanupEligible(borrowedByUs, caller({ agencyCodes: ["AG_A"] }))).toBe(true);
+		expect(isCleanupEligible(borrowedByUs, caller({ agencyCodes: ["AG_C"] }))).toBe(false);
+		expect(
+			isCleanupEligible(
+				borrowedByUs,
+				caller({ agencyCodes: ["AG_B"], agencyScoped: false, guarded: false, hostLmsCode: "LMS_B" }),
+			),
+		).toBe(true);
+	});
+
 	it("against 8.71.0 offers only requests whose item has not left the library", () => {
-		const options = { guarded: false, agencyCodes: ["AG_A"] };
+		const options = caller({ guarded: false });
 
 		expect(isCleanupEligible(suppliedByUs, options)).toBe(true);
 		expect(
@@ -62,7 +99,7 @@ describe("who may clean a request up", () => {
 	});
 
 	it("against 9.0.0 and later lets the server decide, short of the terminal states", () => {
-		const options = { guarded: true, agencyCodes: ["AG_A"] };
+		const options = caller();
 
 		expect(
 			isCleanupEligible({ ...suppliedByUs, status: "PICKUP_TRANSIT" }, options),
@@ -103,12 +140,26 @@ describe("cleaning up one request", () => {
 		expect(urls()).toEqual(["/api/patrons/requests/pr-1/transition/cleanup"]);
 	});
 
-	it("never sends the override: this app has none", async () => {
+	it("sends no override unless asked", async () => {
 		await cleanupPatronRequest("/api", { id: "pr-1", status: "ERROR" });
 
 		expect(post.mock.calls[0][2]).not.toHaveProperty("params");
 		expect(post.mock.calls[0][2]).toEqual({
 			headers: { Authorization: "Bearer current" },
+		});
+	});
+
+	it("overrides with force=true, without polling again", async () => {
+		await cleanupPatronRequest(
+			"/api",
+			{ id: "pr-1", status: "LOANED" },
+			{ refreshFirst: true, override: true },
+		);
+
+		expect(urls()).toEqual(["/api/patrons/requests/pr-1/transition/cleanup"]);
+		expect(post.mock.calls[0][2]).toEqual({
+			headers: { Authorization: "Bearer current" },
+			params: { force: true },
 		});
 	});
 

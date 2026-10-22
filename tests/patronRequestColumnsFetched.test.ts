@@ -9,7 +9,7 @@ import { standardSupplierRequestColumns } from "@helpers/dataGrid/columns/suppli
  * with a working filter and sort, when the grid's query never selects it.
  */
 const contentFields = (): Set<string> => {
-	const document = parse(getPatronRequests);
+	const document = parse(getPatronRequests());
 	const fields = new Set<string>();
 	const find = (set: SelectionSetNode | undefined): SelectionSetNode | undefined => {
 		for (const selection of set?.selections ?? []) {

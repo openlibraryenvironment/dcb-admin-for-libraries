@@ -5,6 +5,9 @@ import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestExport } from "@/hooks/useExport";
+import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
+import { CleanupProgressDialog } from "@components/DataGrid/components/CleanupProgressDialog";
+import { CleanupOverrideDialog } from "@components/CleanupOverrideDialog/CleanupOverrideDialog";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -24,9 +27,12 @@ import {
 } from "@mui/x-data-grid-premium";
 import { gridPage, queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
-import { libraryFilterOptionsQueryOptions } from "@helpers/sharedQueries";
+import {
+	invalidateRequestLists,
+	libraryFilterOptionsQueryOptions,
+} from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	useRouter,
@@ -71,7 +77,8 @@ function RouteComponent() {
 	};
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
-	const { agencyCode: code } = useAgencyCodes();
+	const { agencyCode: code, agencyCodes } = useAgencyCodes();
+	const queryClient = useQueryClient();
 
 	// Library query
 	const {
@@ -150,7 +157,7 @@ function RouteComponent() {
 			};
 			return request({
 				url: `${dcbApiBase}/graphql`,
-				document: getPatronRequests,
+				document: getPatronRequests(),
 				variables: queryVariables,
 				requestHeaders: await authHeaders(),
 				signal,
@@ -174,8 +181,20 @@ function RouteComponent() {
 		}),
 	);
 
-	// No cleanup here: this grid lists what THIS library borrowed, and cleanup belongs to
-	// the library that supplied the request - see supplierRequests.tsx.
+	const cleanup = usePatronRequestCleanup({
+		apiRef,
+		dcbApiBase,
+		agencyCodes,
+		hostLmsCode: userLibraryHostLmsCode,
+		onSuccess: (cleanedIds) => {
+			void invalidateRequestLists(queryClient);
+			for (const id of cleanedIds) {
+				void queryClient.invalidateQueries({
+					queryKey: queryKeys.patronRequests.detail(dcbApiBase, id),
+				});
+			}
+		},
+	});
 	const { exportProgress, exportConfig } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
@@ -254,10 +273,35 @@ function RouteComponent() {
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
+					enableCleanup={true}
+					onCleanup={cleanup.handleCleanup}
 					exportConfig={exportConfig}
 					isExporting={exportProgress.isExporting}
 				/>
 			}
+			<CleanupProgressDialog
+				open={cleanup.cleanupState.open}
+				isCleaning={cleanup.cleanupState.isCleaning}
+				progress={
+					cleanup.cleanupState.total > 0
+						? (cleanup.cleanupState.processed / cleanup.cleanupState.total) * 100
+						: 0
+				}
+				total={cleanup.cleanupState.total}
+				processed={cleanup.cleanupState.processed}
+				successRows={cleanup.cleanupState.successRows}
+				errorRows={cleanup.cleanupState.errorRows}
+				skippedRows={cleanup.cleanupState.skippedRows}
+				refusedRows={cleanup.cleanupState.refusedRows}
+				onOverride={cleanup.requestOverride}
+				onClose={cleanup.handleCloseCleanup}
+			/>
+			<CleanupOverrideDialog
+				open={cleanup.overrideConfirmOpen}
+				count={cleanup.cleanupState.refusedRows.length}
+				onClose={cleanup.cancelOverride}
+				onConfirm={() => void cleanup.confirmOverride()}
+			/>
 
 			{
 				<TimedAlert

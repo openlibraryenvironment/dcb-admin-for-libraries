@@ -8,6 +8,7 @@ import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestExport } from "@/hooks/useExport";
 import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
 import { CleanupProgressDialog } from "@components/DataGrid/components/CleanupProgressDialog";
+import { CleanupOverrideDialog } from "@components/CleanupOverrideDialog/CleanupOverrideDialog";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -108,7 +109,7 @@ function RouteComponent() {
 
 			return request({
 				url: `${dcbApiBase}/graphql`,
-				document: getPatronRequests,
+				document: getPatronRequests(),
 				variables: queryVariables,
 				requestHeaders: await authHeaders(),
 				signal,
@@ -162,7 +163,7 @@ function RouteComponent() {
 		}),
 	);
 
-	const { cleanupState, handleCleanup, handleCloseCleanup } =
+	const cleanup =
 		usePatronRequestCleanup({
 			apiRef,
 			dcbApiBase,
@@ -253,27 +254,34 @@ function RouteComponent() {
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
 					enableCleanup={true}
-					onCleanup={handleCleanup}
+					onCleanup={cleanup.handleCleanup}
 					exportConfig={exportConfig}
 					isExporting={exportProgress.isExporting}
 					parentApiRef={apiRef}
 				/>
 			}
 			<CleanupProgressDialog
-				open={cleanupState.open}
-				isCleaning={cleanupState.isCleaning}
+				open={cleanup.cleanupState.open}
+				isCleaning={cleanup.cleanupState.isCleaning}
 				progress={
-					cleanupState.total > 0
-						? (cleanupState.processed / cleanupState.total) * 100
+					cleanup.cleanupState.total > 0
+						? (cleanup.cleanupState.processed / cleanup.cleanupState.total) * 100
 						: 0
 				}
-				total={cleanupState.total}
-				processed={cleanupState.processed}
-				successRows={cleanupState.successRows}
-				errorRows={cleanupState.errorRows}
-				skippedRows={cleanupState.skippedRows}
-				refusedRows={cleanupState.refusedRows}
-				onClose={handleCloseCleanup}
+				total={cleanup.cleanupState.total}
+				processed={cleanup.cleanupState.processed}
+				successRows={cleanup.cleanupState.successRows}
+				errorRows={cleanup.cleanupState.errorRows}
+				skippedRows={cleanup.cleanupState.skippedRows}
+				refusedRows={cleanup.cleanupState.refusedRows}
+				onOverride={cleanup.requestOverride}
+				onClose={cleanup.handleCloseCleanup}
+			/>
+			<CleanupOverrideDialog
+				open={cleanup.overrideConfirmOpen}
+				count={cleanup.cleanupState.refusedRows.length}
+				onClose={cleanup.cancelOverride}
+				onConfirm={() => void cleanup.confirmOverride()}
 			/>
 
 			{

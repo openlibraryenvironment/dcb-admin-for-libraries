@@ -44,7 +44,7 @@ test.describe("a user who has not seen this release's highlights", () => {
 		// The wording is rewritten each release; each item has its heading
 		await expect(dialog.getByRole("heading", { level: 3 })).toHaveCount(5);
 		await expect(
-			dialog.getByRole("heading", { level: 3, name: /clean up is for the library that supplied/i }),
+			dialog.getByRole("heading", { level: 3, name: "Clean up protects an item that is out" }),
 		).toBeVisible();
 		const notes = dialog.getByRole("link", {
 			name: "Read the full release notes on GitHub (opens in a new tab)",

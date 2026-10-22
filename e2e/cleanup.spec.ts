@@ -4,13 +4,10 @@ import library from "./fixtures-data/library.json" with { type: "json" };
 import supplierRequests from "./fixtures-data/supplier-requests.json" with { type: "json" };
 
 /**
- * Clean up on the supplier requests grid.
- *
- * Clean up deletes the borrowing library's temporary records, so it belongs to the library
- * that SUPPLIED the request - a request this library only borrowed is never offered, and
- * neither is one supplied by somebody else. Against dcb-service 9.0.0 the server refuses a
- * clean up that would orphan an item still out; this application reports that refusal and
- * offers no override, because only a consortium administrator can overrule it.
+ * Clean up on the request grids and the request page: offered to the borrowing library and
+ * to a supplying one, as dcb-service allows. Against 9.0.0 and later the server refuses a
+ * clean up that would orphan an item still out, and a refusal can be cleaned up anyway after
+ * a second confirmation. docs/cleanup.md.
  */
 
 const ALPHA = "Alpha and the art of failure";
@@ -29,7 +26,8 @@ const recordCleanupCalls = async (page: Page, calls: string[]) => {
 		calls.push(`${url.pathname}${url.search}`);
 
 		if (url.pathname.endsWith("/transition/cleanup")) {
-			const refused = url.pathname.includes("bb000000");
+			const refused =
+				url.pathname.includes("bb000000") && url.searchParams.get("force") !== "true";
 
 			return refused
 				? route.fulfill({
@@ -105,16 +103,33 @@ test.describe("Supplier requests clean up", () => {
 		).toBeEnabled();
 	});
 
-	test("is not offered on the grid of requests this library borrowed", async ({
+	test("is offered on the grid of requests this library borrowed", async ({
+		app,
 		page,
 	}) => {
+		// Gamma was supplied by another library; this library borrowed it, which on 8.71.0
+		// the grid knows by its patron's Host LMS.
+		const gamma = supplierRequests.patronRequests.content[2];
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadLibraries: library,
+			LoadPatronRequests: {
+				patronRequests: {
+					totalSize: 1,
+					content: [{ ...gamma, patronHostlmsCode: "e2e-lms" }],
+				},
+			},
+		});
+		const calls: string[] = [];
+		await recordCleanupCalls(page, calls);
+
 		await page.goto("/patronRequests");
-		await expect(page.getByRole("row", { name: new RegExp(ALPHA) })).toBeVisible();
-		// Rows can be selected here, for the export wizard's selected-rows scope; selecting
-		// them still offers no cleanup.
-		await page.getByRole("checkbox", { name: /select all/i }).check();
-		await expect(page.getByRole("button", { name: /^Actions/ })).toHaveCount(0);
-		await expect(page.getByRole("menuitem", { name: /Cleanup/ })).toHaveCount(0);
+		await selectRow(page, GAMMA);
+		await runCleanup(page);
+
+		await expect(page.getByRole("dialog").getByText(/Successful/)).toBeVisible();
+		expect(calls).toEqual([expect.stringMatching(/cc000000.*\/transition\/cleanup$/)]);
 	});
 
 	test("never offers a request another library supplied", async ({ page }) => {
@@ -231,7 +246,10 @@ test.describe("Supplier requests clean up", () => {
 		await expect(page.getByRole("dialog").getByText(/Successful/)).toBeVisible();
 		expect(calls).toEqual([expect.stringMatching(/\/transition\/cleanup$/)]);
 	});
-	test("reports a refusal, and offers no override", async ({ app, page }) => {
+	test("reports a refusal, and cleans it up anyway only after a second confirmation", async ({
+		app,
+		page,
+	}) => {
 		await app.enableFeatures(["VITE_FEATURE_GUARDED_CLEANUP"]);
 
 		const calls: string[] = [];
@@ -243,11 +261,7 @@ test.describe("Supplier requests clean up", () => {
 
 		const dialog = page.getByRole("dialog");
 		await expect(dialog.getByText(/Refused while the item is out/)).toBeVisible();
-		await expect(
-			dialog.getByRole("button", { name: /Clean up anyway/ }),
-		).toHaveCount(0);
-
-		// Nothing was forced: the item is out and only the consortium can overrule that.
+		// Nothing is forced until somebody asks
 		expect(calls.filter((call) => call.includes("force=true"))).toEqual([]);
 
 		// The result dialog is a surface a user reads and acts on, so it meets the floor.
@@ -274,6 +288,37 @@ test.describe("Supplier requests clean up", () => {
 				`focus left the dialog after ${press + 1} tabs`,
 			).toBe(true);
 		}
+	});
+
+	test("cleans up a refused request anyway once the item is confirmed", async ({
+		app,
+		page,
+	}) => {
+		await app.enableFeatures(["VITE_FEATURE_GUARDED_CLEANUP"]);
+
+		const calls: string[] = [];
+		await recordCleanupCalls(page, calls);
+
+		await page.goto("/supplierRequests");
+		await selectRow(page, BETA);
+		await runCleanup(page);
+
+		const results = page.getByRole("dialog", { name: /Clean/ }).first();
+		await results.getByRole("button", { name: "Clean up anyway (1)" }).click();
+
+		const override = page.getByRole("dialog", { name: "Clean up while the item is out?" });
+		const anyway = override.getByRole("button", { name: "Clean up anyway", exact: true });
+		await expect(anyway).toBeDisabled();
+		await app.expectNoAccessibilityViolations();
+		await override.getByRole("checkbox", { name: "I have confirmed where the item is" }).check();
+		await anyway.click();
+
+		await expect(page.getByRole("dialog").getByText(/Successful: 1/)).toBeVisible();
+		// Forced once, without polling the library systems a second time
+		expect(calls.filter((call) => call.includes("force=true"))).toEqual([
+			expect.stringMatching(/bb000000.*\/transition\/cleanup\?force=true$/),
+		]);
+		expect(calls.filter((call) => call.endsWith("/update"))).toHaveLength(1);
 	});
 
 	test("hides an item-out request against a service that cannot refuse it", async ({
@@ -386,5 +431,46 @@ test.describe("Patron request clean up", () => {
 		await confirm.getByRole("button", { name: "Clean up", exact: true }).click();
 
 		await expect.poll(() => calls).toEqual([expect.stringMatching(/\/transition\/cleanup$/)]);
+	});
+
+	test("offers to clean up anyway when the service refuses, with its reason", async ({
+		app,
+		page,
+	}) => {
+		const beta = supplierRequests.patronRequests.content[1];
+		await app.enableFeatures(["VITE_FEATURE_GUARDED_CLEANUP"]);
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadPatronRequest: { patronRequests: { totalSize: 1, content: [beta] } },
+			LoadHostLms: { hostLms: { content: [] } },
+		});
+		const calls: string[] = [];
+		await recordCleanupCalls(page, calls);
+
+		await page.goto(`/patronRequests/${beta.id}`);
+		await page.getByRole("button", { name: "Clean up", exact: true }).click();
+		await page
+			.getByRole("dialog", { name: "Clean up this request?" })
+			.getByRole("button", { name: "Clean up", exact: true })
+			.click();
+
+		const override = page.getByRole("dialog", { name: "Clean up while the item is out?" });
+		await expect(override).toContainText("not back at the supplying library (status PICKUP_TRANSIT)");
+		await override.getByRole("button", { name: "Cancel" }).click();
+		await expect(override).toBeHidden();
+		expect(calls.filter((call) => call.includes("force=true"))).toEqual([]);
+
+		await page.getByRole("button", { name: "Clean up", exact: true }).click();
+		await page
+			.getByRole("dialog", { name: "Clean up this request?" })
+			.getByRole("button", { name: "Clean up", exact: true })
+			.click();
+		await override.getByRole("checkbox", { name: "I have confirmed where the item is" }).check();
+		await override.getByRole("button", { name: "Clean up anyway", exact: true }).click();
+
+		await expect(page.getByText("The request has been cleaned up and finalised.")).toBeVisible();
+		expect(calls.filter((call) => call.includes("force=true"))).toHaveLength(1);
 	});
 });

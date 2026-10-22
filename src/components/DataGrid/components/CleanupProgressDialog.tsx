@@ -43,6 +43,8 @@ interface CleanupProgressDialogProps {
 	skippedRows: any[];
 	/** Refused by dcb-service because the item is not back at the supplying library. */
 	refusedRows?: any[];
+	/** Offered where dcb-service accepts an override (9.0.0 and later); asks again before it runs. */
+	onOverride?: () => void;
 	onClose: () => void;
 }
 
@@ -61,6 +63,7 @@ export const CleanupProgressDialog = ({
 	errorRows,
 	skippedRows,
 	refusedRows = [],
+	onOverride,
 	onClose,
 }: CleanupProgressDialogProps) => {
 	const { t } = useTranslation();
@@ -333,6 +336,11 @@ export const CleanupProgressDialog = ({
 				</Stack>
 			</DialogContent>
             <DialogActions>
+				{onOverride && refusedRows.length > 0 && !isCleaning ? (
+					<Button onClick={onOverride} color="error" variant="outlined">
+						{t("ui.data_grid.cleanup.override", { count: refusedRows.length })}
+					</Button>
+				) : null}
 				<Button onClick={onClose} disabled={isCleaning} variant="contained">
 					{t("ui.actions.close")}
 				</Button>

@@ -70,6 +70,7 @@ import {
 	isCleanupEligible,
 } from "@helpers/cleanupPatronRequest";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
+import { CleanupOverrideDialog } from "@components/CleanupOverrideDialog/CleanupOverrideDialog";
 import {
 	confirmItemReturned,
 	confirmReturnStatuses,
@@ -128,11 +129,13 @@ function RouteComponent() {
 	const [cleanupErrorAlertVisibility, setCleanupErrorAlertVisibility] =
 		useState(false);
 	const [cleanupRefusal, setCleanupRefusal] = useState<string | null>(null);
+	// The server's reason for refusing, while the user decides whether to clean up anyway
+	const [overrideDetail, setOverrideDetail] = useState<string | null>(null);
 	const [confirmCleanup, setConfirmCleanup] = useState(false);
 	const [confirmReturnOpen, setConfirmReturnOpen] = useState(false);
 	const [confirmReturnSuccess, setConfirmReturnSuccess] = useState(false);
 	const [confirmReturnError, setConfirmReturnError] = useState<string | null>(null);
-	const { agencyCodes } = useAgencyCodes();
+	const { agencyCode, agencyCodes } = useAgencyCodes();
 	const guardedCleanup = isGuardedCleanupEnabled();
 	const apiBase: string = cfg.VITE_DCB_API_BASE;
 	const isValidId = isUuidShaped(id);
@@ -157,9 +160,19 @@ function RouteComponent() {
 			),
 	});
 	const patronRequest = data?.patronRequests?.content?.[0];
+	const agencyScoped = isAgencyScopedRequestsEnabled();
+
+	// Without agency scoping the borrowing library is known only by its Host LMS
+	const { data: callerLibraryData } = useQuery({
+		...libraryBasicsQueryOptions(apiBase, agencyCode ?? ""),
+		enabled: !agencyScoped && !!agencyCode,
+	});
 	const canCleanup = isCleanupEligible(patronRequest, {
 		guarded: guardedCleanup,
+		agencyScoped,
 		agencyCodes,
+		hostLmsCode:
+			callerLibraryData?.libraries?.content?.[0]?.agency?.hostLms?.code ?? undefined,
 	});
 	const members = patronRequest?.clusterRecord?.members;
 	const untracked = untrackedStatuses.includes(patronRequest?.status ?? "");
@@ -247,7 +260,6 @@ function RouteComponent() {
 	// that library's contact details, which belong to somebody unconnected to the
 	// request. The chain is kept rather than deleted because it is what an older
 	// deployment has; the flag is how such a deployment stops being wrong.
-	const agencyScoped = isAgencyScopedRequestsEnabled();
 	const resolvedAgency: Agency | null | undefined =
 		patronRequest?.requestingIdentity?.resolvedAgency;
 
@@ -346,9 +358,10 @@ function RouteComponent() {
 
 	// Mutation for cleaning up the patron request
 	const cleanupMutation = useMutation({
-		mutationFn: () =>
+		mutationFn: (override: boolean) =>
 			cleanupPatronRequest(apiBase, patronRequest, {
 				refreshFirst: guardedCleanup,
+				override,
 			}),
 		// A refusal is the server declining, not a transport failure, so it arrives here.
 		onSuccess: (outcome) => {
@@ -358,10 +371,16 @@ function RouteComponent() {
 				return;
 			}
 
+			if (outcome.kind === "refused" && guardedCleanup) {
+				invalidateRequest();
+				setOverrideDetail(outcome.detail ?? "");
+				return;
+			}
+
 			setCleanupRefusal(
 				outcome.kind === "refused"
 					? (outcome.detail ?? "")
-					: t("patron_request.cleanup_not_supplier"),
+					: t("patron_request.cleanup_not_party"),
 			);
 		},
 		onError: () => {
@@ -708,18 +727,32 @@ function RouteComponent() {
 									<Typography variant="body2" id="cleanup-reason">
 										{canCleanup
 											? t("patron_request.cleanup_info")
-											: t("patron_request.cleanup_disabled")}
+											: t(
+													guardedCleanup
+														? "patron_request.cleanup_disabled_guarded"
+														: "patron_request.cleanup_disabled",
+												)}
 									</Typography>
 									<Confirmation
 										open={confirmCleanup}
 										onClose={() => setConfirmCleanup(false)}
 										onConfirm={() => {
 											setConfirmCleanup(false);
-											cleanupMutation.mutate();
+											cleanupMutation.mutate(false);
 										}}
 										action="cleanup"
 										entityName=""
 										gridEdit={false}
+									/>
+									<CleanupOverrideDialog
+										open={overrideDetail !== null}
+										count={1}
+										detail={overrideDetail ?? undefined}
+										onClose={() => setOverrideDetail(null)}
+										onConfirm={() => {
+											setOverrideDetail(null);
+											cleanupMutation.mutate(true);
+										}}
 									/>
 									{offerConfirmReturn ? (
 										<>
