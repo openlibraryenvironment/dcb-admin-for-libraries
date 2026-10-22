@@ -104,10 +104,10 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		fields: {},
 	},
 	{
-		// A REST route, so nothing to select. In no release yet.
+		// A REST route, so nothing to select.
 		id: "confirm_item_returned",
 		flag: "VITE_FEATURE_CONFIRM_ITEM_RETURNED",
-		since: null,
+		since: "9.2.0",
 		fields: {},
 	},
 	{

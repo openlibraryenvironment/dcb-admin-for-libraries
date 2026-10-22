@@ -25,8 +25,8 @@ export const isGuardedCleanupEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_GUARDED_CLEANUP");
 
 /**
- * Confirming a supplied request's item is back on the shelf - a dcb-service route no release has
- * yet (POST .../transition/confirm-returned). An older service answers 404.
+ * Confirming a supplied request's item is back on the shelf - dcb-service 9.2.0 and later
+ * (POST .../transition/confirm-returned). An older service answers 404.
  */
 export const isConfirmItemReturnedEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_CONFIRM_ITEM_RETURNED");
