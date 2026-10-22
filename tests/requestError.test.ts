@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getRequestError } from "../src/helpers/getRequestError";
+import { walkUpRefusal } from "../src/helpers/walkUpRequest";
 import en from "../src/locales/en-GB/en-GB.json";
 
 /** Renders against the real English file, so a missing key or value shows up as text. */
@@ -46,5 +47,28 @@ describe("the message for a refused place-request", () => {
 		expect(
 			getRequestError([{ code: "DUPLICATE_REQUEST_ATTEMPT" }], t),
 		).not.toContain("DUPLICATE_REQUEST_ATTEMPT");
+	});
+});
+
+const SUPPLIER_CANNOT_SUPPLY = [
+	{
+		code: "SUPPLIER_CANNOT_SUPPLY",
+		description:
+			"At its last check (2026-10-15T09:00:00Z) Host LMS ALTOONA refused DCB's credentials. To fix: Correct the credentials for Host LMS ALTOONA in DCB Admin, then save it so DCB checks again",
+	},
+];
+
+describe("a copy whose library cannot supply it", () => {
+	it("explains it to staff choosing a copy, with dcb-service's reason and remedy", () => {
+		const message = getRequestError(SUPPLIER_CANNOT_SUPPLY, t);
+		expect(message).toContain("The library that holds this copy cannot supply it");
+		expect(message).toContain(SUPPLIER_CANNOT_SUPPLY[0].description);
+		expect(message).not.toContain("SUPPLIER_CANNOT_SUPPLY");
+	});
+
+	it("tells the walk-up desk it is their own library, with the reason and remedy", () => {
+		const message = walkUpRefusal(400, SUPPLIER_CANNOT_SUPPLY, t);
+		expect(message).toContain("Your library cannot lend through DCB");
+		expect(message).toContain(SUPPLIER_CANNOT_SUPPLY[0].description);
 	});
 });

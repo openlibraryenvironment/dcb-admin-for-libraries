@@ -18,6 +18,11 @@ export function getRequestError(
 	if (first?.code === "DUPLICATE_REQUEST_ATTEMPT") {
 		return t("requesting.staff_request.patron.error.request.duplicate");
 	}
+	if (first?.code === "SUPPLIER_CANNOT_SUPPLY") {
+		return t("requesting.staff_request.patron.error.request.supplier_cannot_supply", {
+			description: first.description ?? "",
+		});
+	}
 	if (first?.code) {
 		return t("requesting.staff_request.patron.error.request.generic", {
 			code: first.code,
