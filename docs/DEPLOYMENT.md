@@ -16,7 +16,7 @@ Log into your Keycloak dashboard, select the `dcb-hub` realm, and complete these
 2. Ensure this value strictly corresponds to their library's agency code.
 3. Navigate to **Client Scopes**, then select **profile**.
 4. Add a **User Attribute Mapper** for the `code` attribute.
-5. Select **"by configuration"** so the application can successfully extract it from the token.
+5. Select **"by configuration"**, and turn on **Add to access token** as well as **Add to ID token**. dcb-service 9.0.0 and later scope every request grid, Home count, export and history to the agency codes in the **access** token (`code`, or `agencyCodes`) for a user without a consortium role, and a token that carries none gets nothing: every grid is empty while the app looks healthy. Turn on **Multivalued** for a user with more than one library. Check this before the dcb-service upgrade, not after; dcb-service's `docs/v9-migration-guide.md` ("Library staff need their agency in the access token") is the server's side of it.
 6. Configure a new PKCE client.
 7. Ensure the client name matches the `VITE_KEYCLOAK_ID` you plan to use in your environment variables.
 8. Set the flow to **Standard flow**.
