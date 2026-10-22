@@ -36,7 +36,6 @@ import { updateLibrary } from "../../mutations/updateLibrary";
 import { stripUnsupportedInput } from "@helpers/capabilityFields";
 import {
 	isDiscoveryActive,
-	isInsightsEnabled,
 	isLibraryBrandingEnabled,
 	isLibrarySupportUrlEnabled,
 } from "@helpers/featureFlags";
@@ -132,10 +131,6 @@ function HomeComponent() {
 
 	const DCB_API_BASE = cfg?.VITE_DCB_API_BASE;
 	const queryClient = useQueryClient();
-
-	// Read once per render rather than at each call site, so the two cards below
-	// cannot disagree with each other.
-	const insightsEnabled = isInsightsEnabled();
 
 	// No discovery front end means nowhere for a patron logo, a theme or a footer link to
 	// appear, so the two blocks below are not offered. Unlike the capability flags they
@@ -938,42 +933,26 @@ function HomeComponent() {
 					)}
 				</Attribute>
 			</Grid>
-			{/*
-			 * Both summary cards read the Insights API (/insights/top-requested-titles
-			 * and /insights/top-requestors), so they belong behind the same flag as the
-			 * dashboard. Ungated they defeated the flag's whole purpose: an environment
-			 * that turns Insights OFF because its dcb-service is too old to serve those
-			 * endpoints still fired both calls on its home page, and showed two broken
-			 * cards to every library administrator on arrival.
-			 *
-			 * The heading is inside the guard with the card it labels - a heading over
-			 * nothing is worse than an absent section, and it would leave a stray h3 in
-			 * the page outline.
-			 */}
-			{insightsEnabled && (
-				<>
-					<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-						<Stack spacing={1} direction={"column"}>
-							<Typography variant="h3" component="h2" sx={{ fontWeight: "bold" }}>
-								{t("library.statistics.top_titles_month")}
-							</Typography>
-							<TopTitlesSummary
-								libraryCode={userLibraryHostLmsCode ?? ""}
-							/>
-						</Stack>
-					</Grid>
-					<Grid size={{ xs: 4, sm: 8, md: 12 }}>
-						<Stack spacing={1} direction={"column"}>
-							<Typography variant="h3" component="h2" sx={{ fontWeight: "bold" }}>
-								{t("library.statistics.top_requesters_month")}
-							</Typography>
-							<TopRequestorsSummary
-								libraryCode={userLibraryHostLmsCode ?? ""}
-							/>
-						</Stack>
-					</Grid>
-				</>
-			)}
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Stack spacing={1} direction={"column"}>
+					<Typography variant="h3" component="h2" sx={{ fontWeight: "bold" }}>
+						{t("library.statistics.top_titles_month")}
+					</Typography>
+					<TopTitlesSummary
+						libraryCode={userLibraryHostLmsCode ?? ""}
+					/>
+				</Stack>
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<Stack spacing={1} direction={"column"}>
+					<Typography variant="h3" component="h2" sx={{ fontWeight: "bold" }}>
+						{t("library.statistics.top_requesters_month")}
+					</Typography>
+					<TopRequestorsSummary
+						libraryCode={userLibraryHostLmsCode ?? ""}
+					/>
+				</Stack>
+			</Grid>
             <TimedAlert
 				open={alert.open}
 				severityType={alert.severity}

@@ -159,3 +159,14 @@ never grow one**: the library it reports on comes from the access token's agency
 claim and from nowhere else. The guard means a mismatch is refused, but the
 request this client sends is what a reviewer reads to decide whether it is
 honest. `e2e/insights.spec.ts` asserts that.
+
+## The library page's leaderboards before Insights
+
+"Top titles" and "Top requesters" on the library page read `/insights/*` when
+`VITE_FEATURE_INSIGHTS` is on and `/patrons/requests/stats/*` when it is off.
+8.71.0 serves only the second, binding the library as `libraryCode`; 9.x still
+serves it, as a deprecated alias of the first, binding `requestedLibraryCode`.
+The fallback therefore sends both names (`leaderboardUrl` in `statsApi.ts`). The
+response shape is the same at both paths and in every release. Without the
+fallback the two cards would vanish on 8.71.0 with nothing on screen to say why.
+`e2e/legacy-service.spec.ts` and `tests/statsApiParams.test.ts` hold it.

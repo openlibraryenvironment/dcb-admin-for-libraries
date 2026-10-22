@@ -71,10 +71,8 @@ test.describe("Library insights", () => {
 		expect(statsRequests, paths(statsRequests)).toHaveLength(0);
 	});
 
-	// The other half of the same flag. Both home-page summary cards read the
-	// Insights API, so leaving them ungated defeated the flag on the page every
-	// library administrator lands on first: an environment too old to serve
-	// /insights still fired both calls and rendered two broken cards.
+	// The other half of the same flag. With it off the two library-page cards read
+	// the legacy routes instead (legacy-service.spec.ts), never /insights.
 	test("the library page makes no Insights call while the flag is off", async ({
 		page,
 		app,
@@ -87,20 +85,13 @@ test.describe("Library insights", () => {
 
 		await page.goto("/library");
 
-		// Wait for something that renders either way, so this cannot pass by
-		// asserting against a page that has not finished loading yet.
-		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-
-		// The two card headings, by their real names: "Your patrons' favorite
-		// titles this month" and "Top requesters this month".
 		await expect(
-			page.getByRole("heading", { name: /favou?rite titles|top requesters/i }),
-		).toHaveCount(0);
+			page.getByRole("heading", { name: /top requesters/i }),
+		).toBeVisible();
 		expect(statsRequests, paths(statsRequests)).toHaveLength(0);
 	});
 
-	// ...and they are gated, not deleted.
-	test("the library page shows the summary cards once the flag is on", async ({
+	test("the library page reads the summary cards from Insights once the flag is on", async ({
 		page,
 		app,
 	}) => {

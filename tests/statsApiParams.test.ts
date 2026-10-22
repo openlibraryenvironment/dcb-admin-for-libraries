@@ -10,6 +10,7 @@ import {
 	collectionTotalsQueryOptions,
 	dashboardMetricsQueryOptions,
 	formatProfileQueryOptions,
+	leaderboardUrl,
 	topPartnersQueryOptions,
 	unfillableDemandQueryOptions,
 } from "@helpers/statsApi";
@@ -207,5 +208,34 @@ describe("collection analysis queries", () => {
 
 		expect(url()).toBe("/insights/unfillable-demand");
 		expect(params()).toEqual({ [LIBRARY_CODE_PARAM]: "LIB_A" });
+	});
+});
+
+describe("leaderboardUrl", () => {
+	const parse = (url: string) => {
+		const parsed = new URL(url);
+		return { path: parsed.pathname, params: parsed.searchParams };
+	};
+
+	it("reads /insights under the name dcb-service binds when Insights is on", () => {
+		const { path, params } = parse(
+			leaderboardUrl("https://dcb.example", "top-requestors", { size: "10" }, "LIB_A", true),
+		);
+
+		expect(path).toBe("/insights/top-requestors");
+		expect(params.get(LIBRARY_CODE_PARAM)).toBe("LIB_A");
+		expect(params.has("libraryCode")).toBe(false);
+		expect(params.get("size")).toBe("10");
+	});
+
+	it("falls back to the route 8.71.0 serves, naming the library both ways, when Insights is off", () => {
+		const { path, params } = parse(
+			leaderboardUrl("https://dcb.example", "top-requested-titles", { size: "10" }, "LIB_A", false),
+		);
+
+		expect(path).toBe("/patrons/requests/stats/top-requested-titles");
+		expect(params.get("libraryCode")).toBe("LIB_A");
+		expect(params.get(LIBRARY_CODE_PARAM)).toBe("LIB_A");
+		expect(params.get("size")).toBe("10");
 	});
 });

@@ -64,7 +64,7 @@ does not show the feature.
 | Variable | Enable at dcb-service | What it turns on |
 | --- | --- | --- |
 | `VITE_FEATURE_LIBRARY_BRANDING` | **9.0.0** or later | The "How your library appears to patrons" block on the library profile: logo, logo description and discovery theme |
-| `VITE_FEATURE_INSIGHTS` | **9.0.0** or later | The Insights page, and the top-titles / top-requesters panels on the library profile (all of them call `/insights/**`) |
+| `VITE_FEATURE_INSIGHTS` | **9.0.0** or later | The Insights page. The top-titles / top-requesters panels on the library profile read `/insights/**` with it on and the legacy `/patrons/requests/stats/**` with it off, so they show on 8.71.0 too |
 | `VITE_FEATURE_LIBRARY_SUPPORT_URL` | **no release serves this yet** (not yet on dcb-service main) | The "Report a problem URL" field in the "Links for patrons" block |
 | `VITE_FEATURE_INSIGHTS_WALK_UP` | **after 9.1.0**: the release carrying `/insights/library-breakdown` | The "Collected in person, or sent" panel under Insights, Service. Needs `VITE_FEATURE_INSIGHTS` too |
 | `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | **9.0.0** or later | Scoping the request grids by agency code rather than by Host LMS code, and the library column that needs it |

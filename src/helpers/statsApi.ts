@@ -312,6 +312,30 @@ const STATS_BASE = "/insights";
  */
 export const LIBRARY_CODE_PARAM = "requestedLibraryCode";
 
+export type Leaderboard = "top-requested-titles" | "top-requestors";
+
+/**
+ * The library page's two leaderboards. With Insights off they come from
+ * /patrons/requests/stats, which 8.71.0 serves binding `libraryCode` and 9.x
+ * still serves binding LIBRARY_CODE_PARAM, so that path carries both names.
+ * docs/service-compatibility.md.
+ */
+export function leaderboardUrl(
+	apiBase: string,
+	leaderboard: Leaderboard,
+	params: Record<string, string>,
+	libraryCode: string,
+	insightsEnabled: boolean,
+): string {
+	const search = new URLSearchParams({
+		...params,
+		[LIBRARY_CODE_PARAM]: libraryCode,
+		...(insightsEnabled ? {} : { libraryCode }),
+	});
+	const base = insightsEnabled ? STATS_BASE : "/patrons/requests/stats";
+	return `${apiBase}${base}/${leaderboard}?${search}`;
+}
+
 // Strip undefined so axios does not serialise `libraryCode=undefined` etc., and rename the
 // library filter to the name the API actually binds.
 function cleanParams<T extends object>(params: T): Record<string, unknown> {
