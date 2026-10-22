@@ -93,6 +93,16 @@ export function summarise(findings: AxeFindings): AxeRuleOutcome[] {
 }
 
 export async function analyse(page: Page): Promise<AxeFindings> {
+	// A dialog's fade or a button's transition sampled mid-run reports a colour
+	// pair that never rests on screen. Infinite ones (spinners) never finish.
+	await page.evaluate(() =>
+		Promise.all(
+			document
+				.getAnimations()
+				.filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
+				.map((a) => a.finished.catch(() => undefined)),
+		),
+	);
 	let builder = new AxeBuilder({ page })
 		.withTags(WCAG_TAGS)
 		// `withRules` REPLACES the tag selection rather than adding to it, so the
