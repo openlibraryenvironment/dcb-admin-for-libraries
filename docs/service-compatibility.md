@@ -95,6 +95,7 @@ deployment would have:
 | all on | `schema.graphqls` | the newest schema this app targets |
 | all off | `schema.v8.71.0.graphqls` | the release before 9.0.0 |
 | the release's own | `schema.v9.0.0.graphqls` | a 9.0.0 deployment |
+| the release's own | `schema.v9.1.0.graphqls` | a 9.1.0 deployment |
 | the release's own | `schema.v9.2.0.graphqls` | a 9.2.0 deployment |
 
 **The per-release passes are the ones that were missing**, and they stopped
@@ -171,3 +172,14 @@ The fallback therefore sends both names (`leaderboardUrl` in `statsApi.ts`). The
 response shape is the same at both paths and in every release. Without the
 fallback the two cards would vanish on 8.71.0 with nothing on screen to say why.
 `e2e/legacy-service.spec.ts` and `tests/statsApiParams.test.ts` hold it.
+
+## Telling library staff why a feature is missing
+
+Preferences, under About, has a **Feature availability** table: every registry row a
+release serves, the release it needs, and whether this deployment has it, read from the
+version dcb-service reports on `/info`. It is how a library on 8.71.0 learns why the
+Insights tab is not there. A row with `since: null` is never shown, so nothing names a
+feature no release has; rows for what patrons see through a discovery front end are left
+out where `VITE_DISCOVERY_ACTIVE` says none is deployed. The two Insights panels with flags
+of their own are registry rows for this reason, with no fields. `e2e/feature-availability.spec.ts`
+holds the three outcomes.

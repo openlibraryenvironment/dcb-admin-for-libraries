@@ -1870,6 +1870,36 @@
 		"release_notes_all": "Release notes on GitHub (opens in a new tab)",
 		"whats_new": "Show what's new in this release"
 	},
+	"feature_availability": {
+		"title": "Feature availability",
+		"intro": "Some features need a newer DCB service than others. Your consortium's DCB service reports version {{version}}.",
+		"version_unknown": "unknown",
+		"needs_version": "DCB service {{version}} or later",
+		"checking": "Checking…",
+		"column": {
+			"feature": "Feature",
+			"needs": "Needs",
+			"status": "On this service"
+		},
+		"feature": {
+			"library_branding": "How your library appears to patrons",
+			"announcements": "Announcements",
+			"library_support_url": "Report a problem link for patrons",
+			"insights": "Insights",
+			"insights_trends": "Insights: duration trends",
+			"insights_walk_up": "Insights: collected in person, or sent",
+			"guarded_cleanup": "Clean up that protects an item that is out",
+			"confirm_item_returned": "Confirm item is back",
+			"agency_scoped_requests": "Request lists for your library alone, not every library on its system"
+		},
+		"status": {
+			"ready": "Available",
+			"available": "Supported, but not switched on for your consortium yet",
+			"premature": "Switched on, but this DCB service is too old for it",
+			"unavailable": "Needs a newer DCB service",
+			"unknown": "Cannot tell: the DCB service version could not be read"
+		}
+	},
 	"release_highlights": {
 		"title": "What's new",
 		"title_version": "What's new in version {{version}}",

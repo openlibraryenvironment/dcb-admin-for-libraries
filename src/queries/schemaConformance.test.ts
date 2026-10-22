@@ -36,7 +36,7 @@ const ALL_FLAGS_ON = flagsFor(SERVICE_CAPABILITIES);
  * `meetsServiceVersion(version, null)` is false, so a capability with no release - which
  * is what `since: null` means - is off here. That is the claim under test.
  */
-const RELEASE_PASSES = (["9.0.0", "9.2.0"] as const).map((version) => {
+const RELEASE_PASSES = (["9.0.0", "9.1.0", "9.2.0"] as const).map((version) => {
 	const capabilities = SERVICE_CAPABILITIES.filter(
 		(entry) => meetsServiceVersion(version, entry.since) === true,
 	);

@@ -97,6 +97,20 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		fields: {},
 	},
 	{
+		// REST: /insights/trend. Needs VITE_FEATURE_INSIGHTS as well.
+		id: "insights_trends",
+		flag: "VITE_FEATURE_INSIGHTS_TRENDS",
+		since: "9.1.0",
+		fields: {},
+	},
+	{
+		// REST: /insights/library-breakdown. Needs VITE_FEATURE_INSIGHTS as well.
+		id: "insights_walk_up",
+		flag: "VITE_FEATURE_INSIGHTS_WALK_UP",
+		since: "9.2.0",
+		fields: {},
+	},
+	{
 		// REST behaviour again: 9.0.0 refuses an unsafe cleanup with a 409 this app reports.
 		id: "guarded_cleanup",
 		flag: "VITE_FEATURE_GUARDED_CLEANUP",
@@ -177,4 +191,34 @@ export const meetsServiceVersion = (
 		if (actual[i] !== wanted[i]) return actual[i] > wanted[i];
 	}
 	return true;
+};
+
+/** dcb-service's version from its /info body, or null when it does not say. */
+export const serviceVersionFrom = (info: unknown): string | null => {
+	const version = (info as { git?: { build?: { version?: unknown } } } | null)
+		?.git?.build?.version;
+	return typeof version === "string" && version !== "" ? version : null;
+};
+
+export type CapabilityStatus =
+	| "ready"
+	| "available"
+	| "premature"
+	| "unavailable"
+	| "unknown";
+
+/**
+ * Where a capability stands on this deployment: switched on or not, against whether its
+ * dcb-service serves it. Unknown when the version cannot be read.
+ */
+export const capabilityStatus = (
+	since: string | null,
+	enabled: boolean,
+	version: string | null | undefined,
+): CapabilityStatus => {
+	const served = meetsServiceVersion(version, since);
+
+	if (served === null) return "unknown";
+	if (served) return enabled ? "ready" : "available";
+	return enabled ? "premature" : "unavailable";
 };

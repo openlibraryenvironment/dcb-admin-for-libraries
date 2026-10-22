@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import MuiLink from "@mui/material/Link";
 
 import { AboutSettings } from "@components/App/AboutSettings";
+import { FeatureAvailability } from "@components/App/FeatureAvailability";
 import { DisplaySettings } from "@components/App/DisplaySettings";
 import { pageTitle } from "@helpers/pageTitle";
 
@@ -47,6 +48,9 @@ function RouteComponent() {
 			</Grid>
 			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
 				<AboutSettings />
+			</Grid>
+			<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+				<FeatureAvailability />
 			</Grid>
 		</Grid>
 	);
