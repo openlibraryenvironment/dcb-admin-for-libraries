@@ -69,6 +69,7 @@ does not show the feature.
 | `VITE_FEATURE_INSIGHTS_WALK_UP` | **9.2.0** or later (`/insights/library-breakdown`) | The "Collected in person, or sent" panel under Insights, Service. Needs `VITE_FEATURE_INSIGHTS` too |
 | `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | **9.0.0** or later | Scoping the request grids by agency code rather than by Host LMS code, and the library column that needs it |
 | `VITE_FEATURE_GUARDED_CLEANUP` | **9.0.0** or later | Request cleanup that the service refuses, with a reason, while the item is still out |
+| `VITE_FEATURE_CONFIRM_ITEM_RETURNED` | **no release serves this yet** | "Confirm item is back" on a request the library supplied, once its item is waiting to come back to the library |
 | `VITE_FEATURE_INSIGHTS_TRENDS` | **9.1.0** or later (`/insights/trend`) | The duration trend panel on Insights → Trends. Needs `VITE_FEATURE_INSIGHTS` as well |
 | `VITE_FEATURE_ANNOUNCEMENTS` | **9.2.0** or later | The Announcements page. Off on anything older: on a service without the announcement operations, the page's whole GraphQL request is rejected |
 | `VITE_FEATURE_HOME_SINCE_LAST_VISIT` | any supported release | Home page: a "since your last visit" window, remembered per browser |

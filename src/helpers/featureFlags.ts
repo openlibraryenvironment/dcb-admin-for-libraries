@@ -25,6 +25,13 @@ export const isGuardedCleanupEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_GUARDED_CLEANUP");
 
 /**
+ * Confirming a supplied request's item is back on the shelf - a dcb-service route no release has
+ * yet (POST .../transition/confirm-returned). An older service answers 404.
+ */
+export const isConfirmItemReturnedEnabled = (): boolean =>
+	readFlag("VITE_FEATURE_CONFIRM_ITEM_RETURNED");
+
+/**
  * Insights depends on the /insights/** endpoints, first released in dcb-service 9.0.0.
  * Enable with VITE_FEATURE_INSIGHTS=true once the environment's dcb-service is new
  * enough - an older one answers 404 to all of them.
