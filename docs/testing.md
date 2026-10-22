@@ -426,7 +426,8 @@ it quietly increments to the next free one — which is a neighbour's, and
 defeats the allocation entirely.
 
 Adding a gate means taking the next free band for this repo's digit and adding
-it to the table above *and* to `openrs-harness-pack/instructions/workspace.md`.
+it to the table above *and*, if you are using the K-Int Agent Harness for
+AI-assisted development, to `openrs-harness-pack/instructions/workspace.md`.
 
 ## The Lighthouse toolchain is pinned by hand
 
