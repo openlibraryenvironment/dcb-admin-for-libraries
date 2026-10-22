@@ -429,8 +429,8 @@ release:
     reports:
       dotenv: deploy.env
 
-# The production image, pushed beside dcb-service's: main -> :main-<sha> and :next, a release
-# -> :<version> and :latest. The first of each pair is immutable. docs/DEPLOYMENT.md, "Images".
+# The production image, pushed to K-Int's Harbor beside DCB Admin's: main -> :main-<sha> and :next,
+# a release -> :<version> and :latest. The first of each pair is immutable. docs/DEPLOYMENT.md, "Images".
 .publish_image:
   stage: container
   interruptible: false
@@ -444,14 +444,15 @@ release:
   variables:
     # Rootless buildkit in an unprivileged runner cannot use the default process sandbox.
     BUILDKITD_FLAGS: --oci-worker-no-process-sandbox
-    CONTAINER_REGISTRY: docker.libsdev.k-int.com
-    CONTAINER_IMAGE: docker.libsdev.k-int.com/knowledgeintegration/dcb-admin-for-libraries
+    CONTAINER_REGISTRY: harbor.k-int.com
+    CONTAINER_IMAGE: harbor.k-int.com/knowledgeintegration/dcb-admin-for-libraries
   before_script:
-    - test -n "$NEXUS_USER" && test -n "$NEXUS_PASS"
+    # Inherited protected group variables, so only a protected branch (main, release) has them
+    - test -n "$HARBOR_USERNAME" && test -n "$HARBOR_PASSWORD"
     - mkdir -p ~/.docker
     # A docker config rather than a flag, so the password never appears in a process list.
     - |
-      AUTH="$(printf '%s' "$NEXUS_USER:$NEXUS_PASS" | base64 | tr -d '\n')"
+      AUTH="$(printf '%s' "$HARBOR_USERNAME:$HARBOR_PASSWORD" | base64 | tr -d '\n')"
       printf '{"auths":{"%s":{"auth":"%s"}}}' "$CONTAINER_REGISTRY" "$AUTH" > ~/.docker/config.json
   script:
     - echo "publishing ${CONTAINER_IMAGE}:${PRIMARY} (and :${MOVING})"

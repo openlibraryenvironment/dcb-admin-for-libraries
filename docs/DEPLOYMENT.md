@@ -287,7 +287,7 @@ bundle is never rebuilt.
 
 #### Images
 
-CI pushes this Dockerfile's image to `docker.libsdev.k-int.com/knowledgeintegration/dcb-admin-for-libraries`, the registry dcb-service's images are in:
+CI pushes this Dockerfile's image to `harbor.k-int.com/knowledgeintegration/dcb-admin-for-libraries`, K-Int's Harbor registry, beside DCB Admin's `dcb-admin-ui`:
 
 | Pipeline | Tags | |
 | --- | --- | --- |
@@ -298,7 +298,7 @@ CI pushes this Dockerfile's image to `docker.libsdev.k-int.com/knowledgeintegrat
 
 A release image carries `release.json`, written into `public/` before the build, so Preferences shows its version as it does on the kihosting hosts. A `main` image has none, and Preferences says the version is not known.
 
-The jobs sign in with the CI variables `NEXUS_USER` and `NEXUS_PASS`, and fail before building if either is missing.
+The jobs sign in with `HARBOR_USERNAME` and `HARBOR_PASSWORD`, protected variables inherited from the GitLab group, and fail before building if either is missing. Protected variables reach only protected branches, so `main` and `release` must both be protected for the jobs to publish.
 
 ---
 
