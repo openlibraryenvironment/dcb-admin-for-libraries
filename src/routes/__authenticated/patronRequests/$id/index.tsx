@@ -770,7 +770,6 @@ function RouteComponent() {
 							<TimedAlert
 								open={confirmReturnError !== null}
 								severityType="error"
-								autoHideDuration={10000}
 								alertText={confirmReturnError ?? ""}
 								key="confirm-returned-error-alert"
 								onCloseFunc={() => setConfirmReturnError(null)}
