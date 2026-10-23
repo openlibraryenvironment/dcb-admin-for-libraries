@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
 import CollectionTotalsTiles from "./CollectionTotalsTiles";
@@ -6,7 +6,8 @@ import ClusterQualityPanel from "./ClusterQualityPanel";
 import CollectionProfilePanel from "./CollectionProfilePanel";
 import FormatMixPanel from "./FormatMixPanel";
 import CollectionOverlapPanel from "./CollectionOverlapPanel";
-import LazyPanel from "./LazyPanel";
+import PanelRow from "./PanelRow";
+import { isInsightsPanelShown as shown } from "@helpers/featureFlags";
 
 /**
  * What the catalogue holds, beside the rest of Insights, which counts what was asked for.
@@ -27,36 +28,20 @@ export default function CollectionAnalysisSection({
 				{t("insights.collection.section_subtitle")}
 			</Typography>
 
-			<LazyPanel minHeight={160}>
-				<CollectionTotalsTiles />
-			</LazyPanel>
+			<PanelRow minHeight={160}>
+				{shown("collection.totals") && <CollectionTotalsTiles />}
+			</PanelRow>
 
-			<LazyPanel minHeight={360}>
-				<Box
-					sx={{
-						display: "grid",
-						gap: 3,
-						gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)" },
-					}}
-				>
-					{/* Confidence first: it qualifies every number in this section. */}
-					<ClusterQualityPanel />
-					<CollectionProfilePanel libraryCode={libraryCode} />
-				</Box>
-			</LazyPanel>
+			{/* Confidence first: it qualifies every number in this section. */}
+			<PanelRow minHeight={360}>
+				{shown("collection.clusterQuality") && <ClusterQualityPanel />}
+				{shown("collection.profile") && <CollectionProfilePanel libraryCode={libraryCode} />}
+			</PanelRow>
 
-			<LazyPanel minHeight={340}>
-				<Box
-					sx={{
-						display: "grid",
-						gap: 3,
-						gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)" },
-					}}
-				>
-					<FormatMixPanel libraryCode={libraryCode} />
-					<CollectionOverlapPanel libraryCode={libraryCode} />
-				</Box>
-			</LazyPanel>
+			<PanelRow minHeight={340}>
+				{shown("collection.formatMix") && <FormatMixPanel libraryCode={libraryCode} />}
+				{shown("collection.overlap") && <CollectionOverlapPanel libraryCode={libraryCode} />}
+			</PanelRow>
 		</>
 	);
 }

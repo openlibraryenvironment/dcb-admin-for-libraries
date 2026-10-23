@@ -169,6 +169,53 @@ others do.
 
 ---
 
+## 2d. Which Insights pages and panels: `VITE_INSIGHTS_PAGES`, `VITE_INSIGHTS_PANELS`
+
+A choice about what this consortium wants to see, not about which dcb-service it runs. Both
+take the same comma-separated list:
+
+| Value | Shows |
+| --- | --- |
+| unset, or empty | everything, as before these existed |
+| `all` | everything |
+| `all,-partners,-gaps.rareGems` | everything except the Partners subject and the "Unique collection value" panel |
+| `overview,trends,service.durations` | exactly those: the overview, every Trends panel, and the durations panel |
+
+Names apply left to right: `all` adds everything, a name adds what it names, and `-name`
+takes it away again. A subject's name stands for all of its panels.
+
+**They narrow the release flags, never widen them.** Nothing shows while
+`VITE_FEATURE_INSIGHTS` is off, and the duration trends and walk-up panels also need
+`VITE_FEATURE_INSIGHTS_TRENDS` and `VITE_FEATURE_INSIGHTS_WALK_UP`, whatever these lists say.
+A subject with none of its panels shown loses its link, and a link to it opens the first
+subject that is shown. Hiding the Insights page hides its tab, refuses a typed link to it,
+and hides the Insights part of the home page.
+
+**A name this app does not have is ignored**, and the browser console says so once. So a
+misspelt name in an `all,-…` list leaves that panel showing, and one in a plain list leaves
+it out. On the kihosting.net hosts the shared worker sets neither variable, so every panel
+shows there until its configuration for that host names one.
+
+| Page | Name |
+| --- | --- |
+| The Insights page, its tab, and the Insights part of the home page | `insights` |
+
+| Subject | Panels |
+| --- | --- |
+| `overview`, above every subject | `overview.headline`, `overview.moreFigures` |
+| `trends` | `trends.trendStrip`, `trends.durationTrend`, `trends.statusFlow` |
+| `service` | `service.durations`, `service.peerBenchmark`, `service.walkUp`, `service.failures`, `service.supplierReliability`, `service.timeInStatus`, `service.supplierResponse` |
+| `demand` | `demand.heatmap`, `demand.dimensions`, `demand.topTitles`, `demand.byPickupLocation`, `demand.byPatronGroup`, `demand.unfillable` |
+| `partners` | `partners.tradingPartners`, `partners.netFlow` |
+| `collection` | `collection.totals`, `collection.clusterQuality`, `collection.profile`, `collection.formatMix`, `collection.overlap` |
+| `gaps` | `gaps.unmetLocal`, `gaps.acquisitionOpportunities`, `gaps.consortialLifeline`, `gaps.newAcquisitions`, `gaps.rareGems` |
+
+The names are the same in DCB Admin, which has no walk-up panel and has pages for the
+consortium, a group and a library. `src/helpers/insightsSelection.ts` holds the list, and
+`src/helpers/insightsSelection.test.ts` fails when this table and it disagree.
+
+---
+
 ## 3. Deployment Pathways
 
 Choose the deployment method that matches your infrastructure.
