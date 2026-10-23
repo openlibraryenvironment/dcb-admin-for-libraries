@@ -46,6 +46,14 @@ something else is written with an explicit `is` (`note:is:empty`).
 A page's main grid uses the bare names. The audit log, a tab of the request page, prefixes every
 name with `audit.`: `/patronRequests/<id>?tab=3&audit.sort=auditDate:asc&audit.page=2`.
 
+### The requesting search
+
+`/requesting?filters=keyword:middlemarch&page=2&pageSize=50`. Its `filters` is the search query in
+the catalogue's own syntax, not the grid grammar, and its page and page size follow the grid
+grammar: `page` is one-based and left out on the first page. It never restores a last view: a
+bare search page is a new search. Links written before 2.0.0 used `pageno`, zero-based, and
+`pagesize`; they are still read (`src/helpers/requestingSearch.ts`) and never written.
+
 ## What never goes in a URL
 
 Filters on a patron's barcode or a requester's note (`PRIVATE_FILTER_FIELDS` in

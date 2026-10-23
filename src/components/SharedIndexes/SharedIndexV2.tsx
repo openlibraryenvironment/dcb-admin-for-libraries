@@ -40,7 +40,7 @@ import { buildQuery } from "@helpers/search/queryBuilder";
 import { SearchResult } from "@components/SearchResultComponent/SearchResultComponent";
 import { parseQuery } from "@helpers/search/queryParser";
 import type { RequestingSearch } from "@helpers/requestingSearch";
-import { clampPageSize, PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
+import { clampPageSize, DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
 import { validate } from "uuid";
 import { ChecklistRounded, Close } from "@mui/icons-material";
 import QuickWalkUpRequest from "@forms/QuickWalkUp/QuickWalkUp";
@@ -107,8 +107,9 @@ export function SharedIndexV2() {
 	// Validated by the route's requestingSearchSchema.
 	const search: RequestingSearch = useSearch({ strict: false });
 	const queryParam = search.filters;
-	const pageno = search.pageno ?? 0;
-	const pagesize = clampPageSize(search.pagesize);
+	// Zero-based here, as the grid counts; one-based in the address
+	const pageno = (search.page ?? 1) - 1;
+	const pagesize = clampPageSize(search.pageSize);
 
 	// The URL is the applied search; only the filters being edited are local
 	const appliedFilters = useMemo(() => {
@@ -125,8 +126,8 @@ export function SharedIndexV2() {
 			to: "/requesting",
 			search: {
 				filters: queryParam,
-				pageno: newModel.page,
-				pagesize: newModel.pageSize,
+				page: newModel.page > 0 ? newModel.page + 1 : undefined,
+				pageSize: newModel.pageSize === DEFAULT_PAGE_SIZE ? undefined : newModel.pageSize,
 			},
 			replace: true,
 		});
@@ -177,10 +178,11 @@ export function SharedIndexV2() {
 				to: "/requesting",
 				search: {
 					filters: buildQuery(activeFilters),
-					pagesize: paginationModel.pageSize,
+					pageSize:
+						paginationModel.pageSize === DEFAULT_PAGE_SIZE ? undefined : paginationModel.pageSize,
 					// A new search starts at its first page: page 4 of the last one may
 					// not exist in this one.
-					pageno: 0,
+					page: undefined,
 				},
 				replace: true,
 			});
