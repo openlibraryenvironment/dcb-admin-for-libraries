@@ -211,8 +211,9 @@ shows there until its configuration for that host names one.
 | `gaps` | `gaps.unmetLocal`, `gaps.acquisitionOpportunities`, `gaps.consortialLifeline`, `gaps.newAcquisitions`, `gaps.rareGems` |
 
 The names are the same in DCB Admin, which has no walk-up panel and has pages for the
-consortium, a group and a library. `src/helpers/insightsSelection.ts` holds the list, and
-`src/helpers/insightsSelection.test.ts` fails when this table and it disagree.
+consortium, a group and a library. `src/helpers/insightsSelection.ts` holds the panels and
+`src/helpers/insightsPages.ts` the page, and `src/helpers/insightsSelection.test.ts` fails
+when these tables and the code disagree.
 
 ---
 

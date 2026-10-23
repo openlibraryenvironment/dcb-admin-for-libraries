@@ -1,22 +1,5 @@
-import { isInsightsSectionShown } from "@helpers/featureFlags";
-
-/**
- * The six subjects, and which panels belong to each - the same six as DCB Admin.
- *
- * The order is the reading order: what is happening, how well it went, what was asked for,
- * who with, what we hold, what we are missing.
- */
-
-export const SUBJECTS = [
-	"trends",
-	"service",
-	"demand",
-	"partners",
-	"collection",
-	"gaps",
-] as const;
-
-export type Subject = (typeof SUBJECTS)[number];
+import { isInsightsSectionShown } from "@helpers/insightsPanelFlags";
+import { SUBJECTS, type Subject } from "@helpers/insightsSearch";
 
 export const DEFAULT_SUBJECT: Subject = "trends";
 

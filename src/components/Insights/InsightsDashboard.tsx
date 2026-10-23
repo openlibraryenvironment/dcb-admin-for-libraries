@@ -76,12 +76,12 @@ import DurationTrendPanel from "./DurationTrendPanel";
 import { ExpandMore } from "@mui/icons-material";
 
 import type { InsightsView } from "@/hooks/useInsightsView";
-import type { RangePreset } from "@helpers/insightsSearch";
-import { Subject, resolveSubject } from "@helpers/insightsSubjects";
+import type { RangePreset, Subject } from "@helpers/insightsSearch";
+import { resolveSubject } from "@helpers/insightsSubjects";
 import {
 	isInsightsPanelShown as shown,
 	isInsightsSectionShown,
-} from "@helpers/featureFlags";
+} from "@helpers/insightsPanelFlags";
 import type { InsightsPanel, InsightsSection } from "@helpers/insightsSelection";
 import DateLocalizationProvider from "@components/DateLocalization/DateLocalizationProvider";
 import PanelRow, { PanelGrid } from "./PanelRow";

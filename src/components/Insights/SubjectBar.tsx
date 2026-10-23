@@ -2,7 +2,8 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@mui/material";
 
 import { CustomLink } from "@components/CustomLink";
-import { Subject, visibleSubjects } from "@helpers/insightsSubjects";
+import { visibleSubjects } from "@helpers/insightsSubjects";
+import type { Subject } from "@helpers/insightsSearch";
 import { SUBJECT_BAR_HEIGHT, SUBJECT_BAR_TOP } from "@helpers/stickyOffsets";
 
 /**

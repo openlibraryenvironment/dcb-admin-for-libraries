@@ -1,12 +1,4 @@
-import {
-	panelsOf,
-	selectPages,
-	selectPanels,
-	type InsightsPage,
-	type InsightsPanel,
-	type InsightsSection,
-	type Selection,
-} from "@helpers/insightsSelection";
+import { selectPages, type InsightsPage, type Selection } from "@helpers/insightsPages";
 
 /**
  * Runtime feature flags, read from the injected config rather than
@@ -175,7 +167,7 @@ const readSetting = (name: string): string | undefined => {
 };
 
 /** Parsed once per value, and a name it does not know reported once: docs/DEPLOYMENT.md, 2d. */
-const readSelection = <Name extends string>(
+export const readSelection = <Name extends string>(
 	name: string,
 	parse: (raw: string | undefined) => Selection<Name>,
 	warnUnknown: () => void,
@@ -195,24 +187,6 @@ const readSelection = <Name extends string>(
 const insightsPages = readSelection("VITE_INSIGHTS_PAGES", selectPages, () =>
 	console.warn("VITE_INSIGHTS_PAGES names a page this app does not have: docs/DEPLOYMENT.md, 2d"),
 );
-const insightsPanels = readSelection("VITE_INSIGHTS_PANELS", selectPanels, () =>
-	console.warn("VITE_INSIGHTS_PANELS names a panel this app does not have: docs/DEPLOYMENT.md, 2d"),
-);
-
-// A panel on an endpoint the deployment's dcb-service lacks stays off whatever the list says
-const PANEL_CAPABILITY: Partial<Record<InsightsPanel, () => boolean>> = {
-	"trends.durationTrend": isInsightsTrendsEnabled,
-	"service.walkUp": isInsightsWalkUpEnabled,
-};
-
 /** An Insights page this deployment shows: VITE_INSIGHTS_PAGES, within VITE_FEATURE_INSIGHTS. */
 export const isInsightsPageShown = (page: InsightsPage): boolean =>
 	isInsightsEnabled() && insightsPages().has(page);
-
-/** An Insights panel this deployment shows: VITE_INSIGHTS_PANELS, within its release flag. */
-export const isInsightsPanelShown = (panel: InsightsPanel): boolean =>
-	insightsPanels().has(panel) && (PANEL_CAPABILITY[panel]?.() ?? true);
-
-/** A section with no panel shown is not shown, nor its subject's link. */
-export const isInsightsSectionShown = (section: InsightsSection): boolean =>
-	panelsOf(section).some(isInsightsPanelShown);

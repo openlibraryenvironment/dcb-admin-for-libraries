@@ -7,7 +7,7 @@ import CollectionProfilePanel from "./CollectionProfilePanel";
 import FormatMixPanel from "./FormatMixPanel";
 import CollectionOverlapPanel from "./CollectionOverlapPanel";
 import PanelRow from "./PanelRow";
-import { isInsightsPanelShown as shown } from "@helpers/featureFlags";
+import { isInsightsPanelShown as shown } from "@helpers/insightsPanelFlags";
 
 /**
  * What the catalogue holds, beside the rest of Insights, which counts what was asked for.
