@@ -24,7 +24,11 @@ const isEmpty = (view: UrlView) =>
 	view.sort === undefined &&
 	view.pageSize === undefined &&
 	view.hide.length === 0 &&
-	view.show.length === 0;
+	view.show.length === 0 &&
+	!view.pinLeft?.length &&
+	!view.pinRight?.length &&
+	!view.order?.length &&
+	view.agg === undefined;
 
 /** Through the codec both ways, as a link is: what comes back from storage is not trusted. */
 const sanitised = (view: unknown): UrlView | undefined => {

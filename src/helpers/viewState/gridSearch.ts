@@ -2,7 +2,19 @@
 // The grid reads them against its own columns. docs/url-view-state.md.
 
 /** The codec's VIEW_PARAMS, restated so the first load does not carry the codec; a test keeps them equal. */
-export const GRID_PARAMS = ["filters", "logic", "sort", "page", "pageSize", "hide", "show"] as const;
+export const GRID_PARAMS = [
+	"filters",
+	"logic",
+	"sort",
+	"page",
+	"pageSize",
+	"hide",
+	"show",
+	"pinLeft",
+	"pinRight",
+	"order",
+	"agg",
+] as const;
 
 const paramName = (param: string, namespace?: string) =>
 	namespace ? `${namespace}.${param}` : param;

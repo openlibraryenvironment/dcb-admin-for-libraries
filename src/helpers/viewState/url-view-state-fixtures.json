@@ -1,5 +1,5 @@
 {
-	"version": 1,
+	"version": 2,
 	"filters": [
 		{
 			"text": "status:CONFIRMED",
@@ -607,6 +607,107 @@
 				"filters": [],
 				"hide": ["id"],
 				"show": ["title"]
+			}
+		},
+		{
+			"name": "pinned columns and a reader's order",
+			"canonical": true,
+			"namespace": null,
+			"search": {
+				"pinLeft": "status",
+				"pinRight": "id",
+				"order": "dateUpdated,status"
+			},
+			"view": {
+				"filters": [],
+				"hide": [],
+				"show": [],
+				"pinLeft": ["status"],
+				"pinRight": ["id"],
+				"order": ["dateUpdated", "status"]
+			}
+		},
+		{
+			"name": "a column pinned both ways is pinned left, and a repeat is read once",
+			"namespace": null,
+			"search": {
+				"pinLeft": "status,status",
+				"pinRight": "status,id",
+				"order": "title,title"
+			},
+			"view": {
+				"filters": [],
+				"hide": [],
+				"show": [],
+				"pinLeft": ["status"],
+				"pinRight": ["id"],
+				"order": ["title"]
+			}
+		},
+		{
+			"name": "aggregation, and none as distinct from the default",
+			"canonical": true,
+			"namespace": null,
+			"search": {
+				"agg": "recordCount:sum,lastIngest:max"
+			},
+			"view": {
+				"filters": [],
+				"hide": [],
+				"show": [],
+				"agg": [
+					{
+						"field": "recordCount",
+						"fn": "sum"
+					},
+					{
+						"field": "lastIngest",
+						"fn": "max"
+					}
+				]
+			}
+		},
+		{
+			"name": "no aggregation is written as none",
+			"canonical": true,
+			"namespace": null,
+			"search": {
+				"agg": "none"
+			},
+			"view": {
+				"filters": [],
+				"hide": [],
+				"show": [],
+				"agg": "none"
+			}
+		},
+		{
+			"name": "an aggregation that is not one is dropped whole",
+			"namespace": null,
+			"search": {
+				"agg": "recordCount:sum,recordCount:avg",
+				"pinLeft": "not a field"
+			},
+			"view": {
+				"filters": [],
+				"hide": [],
+				"show": []
+			}
+		},
+		{
+			"name": "pinning and order under a namespace",
+			"canonical": true,
+			"namespace": "audit",
+			"search": {
+				"audit.pinLeft": "auditDate",
+				"audit.order": "briefDescription"
+			},
+			"view": {
+				"filters": [],
+				"hide": [],
+				"show": [],
+				"pinLeft": ["auditDate"],
+				"order": ["briefDescription"]
 			}
 		}
 	]

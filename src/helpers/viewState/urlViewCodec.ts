@@ -69,6 +69,12 @@ export interface UrlSort {
 	direction: "asc" | "desc";
 }
 
+/** One aggregated column: `field:function`, the function by the grid's own name for it. */
+export interface UrlAggregate {
+	field: string;
+	fn: string;
+}
+
 /** A view as the URL states it. Absent means the view's default. */
 export interface UrlView {
 	filters: UrlFilter[];
@@ -80,6 +86,13 @@ export interface UrlView {
 	pageSize?: number;
 	hide: string[];
 	show: string[];
+	/** Pinned to the left, then the right, in pinned order. */
+	pinLeft?: string[];
+	pinRight?: string[];
+	/** The leading columns of the reader's order; the rest follow in the grid's default order. */
+	order?: string[];
+	/** "none" is an explicitly unaggregated view, distinct from the grid's default aggregation. */
+	agg?: UrlAggregate[] | "none";
 }
 
 export const emptyView = (): UrlView => ({ filters: [], hide: [], show: [] });
@@ -93,6 +106,10 @@ export const VIEW_PARAMS = [
 	"pageSize",
 	"hide",
 	"show",
+	"pinLeft",
+	"pinRight",
+	"order",
+	"agg",
 ] as const;
 
 export type ViewParam = (typeof VIEW_PARAMS)[number];
@@ -281,11 +298,39 @@ export const decodePageSize = (raw: unknown): number | undefined => {
 const decodeFieldList = (raw: unknown): string[] => {
 	const text = Array.isArray(raw) ? raw.join(",") : raw;
 	if (typeof text !== "string" || text === "") return [];
-	return text
-		.split(",")
-		.filter((field) => FIELD.test(field))
-		.slice(0, MAX_COLUMNS);
+	return [
+		...new Set(text.split(",").filter((field) => FIELD.test(field))),
+	].slice(0, MAX_COLUMNS);
 };
+
+const AGGREGATE_FN = /^[a-z][A-Za-z]*$/;
+
+/** `field:fn,other:fn`, `none`, or null. */
+export const decodeAggregation = (
+	raw: unknown,
+): UrlAggregate[] | "none" | null => {
+	if (typeof raw !== "string" || raw === "") return null;
+	if (raw === "none") return "none";
+	const entries = raw.split(",");
+	if (entries.length > MAX_COLUMNS) return null;
+	const aggregates: UrlAggregate[] = [];
+	for (const entry of entries) {
+		const [field, fn, ...rest] = entry.split(":");
+		if (
+			rest.length > 0 ||
+			!FIELD.test(field ?? "") ||
+			!AGGREGATE_FN.test(fn ?? "") ||
+			aggregates.some((aggregate) => aggregate.field === field)
+		) {
+			return null;
+		}
+		aggregates.push({ field, fn });
+	}
+	return aggregates;
+};
+
+export const encodeAggregation = (agg: UrlAggregate[] | "none"): string =>
+	agg === "none" ? "none" : agg.map(({ field, fn }) => `${field}:${fn}`).join(",");
 
 const asList = (raw: unknown): unknown[] =>
 	raw === undefined ? [] : Array.isArray(raw) ? raw : [raw];
@@ -321,6 +366,17 @@ export const decodeView = (
 	view.show = decodeFieldList(get("show")).filter(
 		(field) => !view.hide.includes(field),
 	);
+
+	const pinLeft = decodeFieldList(get("pinLeft"));
+	if (pinLeft.length) view.pinLeft = pinLeft;
+	const pinRight = decodeFieldList(get("pinRight")).filter(
+		(field) => !pinLeft.includes(field),
+	);
+	if (pinRight.length) view.pinRight = pinRight;
+	const order = decodeFieldList(get("order"));
+	if (order.length) view.order = order;
+	const agg = decodeAggregation(get("agg"));
+	if (agg !== null) view.agg = agg;
 	return view;
 };
 
@@ -365,5 +421,11 @@ export const encodeView = (
 	if (view.pageSize !== undefined) set("pageSize", view.pageSize);
 	if (view.hide.length) set("hide", view.hide.join(","));
 	if (view.show.length) set("show", view.show.join(","));
+	if (view.pinLeft?.length) set("pinLeft", view.pinLeft.join(","));
+	if (view.pinRight?.length) set("pinRight", view.pinRight.join(","));
+	if (view.order?.length) set("order", view.order.join(","));
+	if (view.agg !== undefined && (view.agg === "none" || view.agg.length)) {
+		set("agg", encodeAggregation(view.agg));
+	}
 	return search;
 };
