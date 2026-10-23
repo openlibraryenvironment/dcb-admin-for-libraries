@@ -108,6 +108,38 @@ test.describe("dcb-service 8.71.0", () => {
 		await expect(page.getByText(/discovery theme/i)).toHaveCount(0);
 	});
 
+	test("shows both leaderboards from the legacy routes, and never calls /insights", async ({
+		page,
+		app,
+	}) => {
+		const legacy: string[] = [];
+		const insights: string[] = [];
+		page.on("request", (request) => {
+			if (request.url().includes("/insights/")) insights.push(request.url());
+		});
+		await page.route("**/patrons/requests/stats/**", async (route) => {
+			const url = route.request().url();
+			legacy.push(url);
+			await route.fulfill({
+				json: url.includes("/top-requestors")
+					? { content: [{ patronBarcode: "P-LEGACY-1", activeRequestCount: 4 }] }
+					: { content: [{ title: "Legacy Title One", requestCount: 9 }] },
+			});
+		});
+		await app.signIn();
+		await app.mockGraphQL(mocks);
+
+		await page.goto("/library");
+
+		await expect(page.getByText("Legacy Title One")).toBeVisible();
+		await expect(page.getByText("P-LEGACY-1")).toBeVisible();
+		for (const url of legacy) {
+			expect(new URL(url).searchParams.get("libraryCode"), url).toBeTruthy();
+		}
+		expect(legacy).toHaveLength(2);
+		expect(insights).toEqual([]);
+	});
+
 	test("has no accessibility violations with the block removed", async ({
 		page,
 		app,

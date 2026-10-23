@@ -1,6 +1,21 @@
 import { z } from "zod";
 
-import { SUBJECTS } from "@helpers/insightsSubjects";
+/**
+ * The six subjects, the same six as DCB Admin, in reading order: what is happening, how
+ * well it went, what was asked for, who with, what we hold, what we are missing. Here
+ * rather than in insightsSubjects, because route options load this eagerly and that
+ * module reads the panel flags.
+ */
+export const SUBJECTS = [
+	"trends",
+	"service",
+	"demand",
+	"partners",
+	"collection",
+	"gaps",
+] as const;
+
+export type Subject = (typeof SUBJECTS)[number];
 
 /**
  * The whole Insights view, in the URL.

@@ -65,35 +65,24 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		},
 	},
 	{
-		// On the dcb-service `feat/discovery-contract` branch and in no release at all - not 8.71.0,
-		// not the 9.0.0 tag, not main. `since: null` says exactly that, and the flag stays
-		// off until the branch merges and a release carries it.
-		//
-		// Query and Mutation are listed rather than left empty: they are types like any
-		// other, and listing them is what makes `since: null` a CHECKED claim rather than a
-		// comment. serviceCapabilities.test.ts asserts they are in the target schema and in
-		// none of the releases we hold, and it will fail the day somebody commits the schema
-		// of the release that ships them - which is the reminder to set `since`.
+		// Query and Mutation are listed so the registry test checks them like any other type.
 		id: "announcements",
 		flag: "VITE_FEATURE_ANNOUNCEMENTS",
-		since: null,
+		since: "9.2.0",
 		fields: {
 			Query: ["announcements"],
 			Mutation: ["createAnnouncement", "updateAnnouncement", "deleteAnnouncement"],
 		},
 	},
 	{
-		// In no dcb-service release: support_url is on an unmerged branch, so
-		// `since` stays null and serviceCapabilities.test.ts says so. A SEPARATE row from
-		// library_branding, whose since is 9.0.0 - one flag over both would be a lie about
-		// one of them, and switching it on at the v9 upgrade would take LoadLibrary down
-		// on every deployment running the release. LoadLibrary runs on every page.
+		// A SEPARATE row from library_branding, whose since is 9.0.0: one flag over both
+		// would take LoadLibrary, which runs on every page, down on 9.0.0 and 9.1.0.
 		//
 		// `patronWebsite` is deliberately absent: Library has carried it since 5.11.1, so
 		// it needs no gate and is selected unconditionally.
 		id: "library_support_url",
 		flag: "VITE_FEATURE_LIBRARY_SUPPORT_URL",
-		since: null,
+		since: "9.2.0",
 		fields: {
 			Library: ["supportUrl"],
 			UpdateLibraryInput: ["supportUrl"],
@@ -108,10 +97,31 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		fields: {},
 	},
 	{
+		// REST: /insights/trend. Needs VITE_FEATURE_INSIGHTS as well.
+		id: "insights_trends",
+		flag: "VITE_FEATURE_INSIGHTS_TRENDS",
+		since: "9.1.0",
+		fields: {},
+	},
+	{
+		// REST: /insights/library-breakdown. Needs VITE_FEATURE_INSIGHTS as well.
+		id: "insights_walk_up",
+		flag: "VITE_FEATURE_INSIGHTS_WALK_UP",
+		since: "9.2.0",
+		fields: {},
+	},
+	{
 		// REST behaviour again: 9.0.0 refuses an unsafe cleanup with a 409 this app reports.
 		id: "guarded_cleanup",
 		flag: "VITE_FEATURE_GUARDED_CLEANUP",
 		since: "9.0.0",
+		fields: {},
+	},
+	{
+		// A REST route, so nothing to select.
+		id: "confirm_item_returned",
+		flag: "VITE_FEATURE_CONFIRM_ITEM_RETURNED",
+		since: "9.2.0",
 		fields: {},
 	},
 	{
@@ -181,4 +191,34 @@ export const meetsServiceVersion = (
 		if (actual[i] !== wanted[i]) return actual[i] > wanted[i];
 	}
 	return true;
+};
+
+/** dcb-service's version from its /info body, or null when it does not say. */
+export const serviceVersionFrom = (info: unknown): string | null => {
+	const version = (info as { git?: { build?: { version?: unknown } } } | null)
+		?.git?.build?.version;
+	return typeof version === "string" && version !== "" ? version : null;
+};
+
+export type CapabilityStatus =
+	| "ready"
+	| "available"
+	| "premature"
+	| "unavailable"
+	| "unknown";
+
+/**
+ * Where a capability stands on this deployment: switched on or not, against whether its
+ * dcb-service serves it. Unknown when the version cannot be read.
+ */
+export const capabilityStatus = (
+	since: string | null,
+	enabled: boolean,
+	version: string | null | undefined,
+): CapabilityStatus => {
+	const served = meetsServiceVersion(version, since);
+
+	if (served === null) return "unknown";
+	if (served) return enabled ? "ready" : "available";
+	return enabled ? "premature" : "unavailable";
 };

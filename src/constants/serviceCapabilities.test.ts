@@ -5,8 +5,10 @@ import { buildSchema, type GraphQLSchema } from "graphql";
 
 import {
 	SERVICE_CAPABILITIES,
+	capabilityStatus,
 	meetsServiceVersion,
 	parseServiceVersion,
+	serviceVersionFrom,
 } from "@constants/serviceCapabilities";
 
 /**
@@ -34,7 +36,7 @@ const CURRENT = buildSchema(
  * Every release schema committed here, oldest first. The registry's `since` values must
  * name one of these - a threshold nobody can check is not a threshold.
  */
-const SUPPORTED_RELEASES = ["8.71.0", "9.0.0"] as const;
+const SUPPORTED_RELEASES = ["8.71.0", "9.0.0", "9.1.0", "9.2.0"] as const;
 
 /** Whether `schema` declares `field` on `type`, for object and input types alike. */
 const declaresField = (
@@ -186,5 +188,23 @@ describe("version comparison", () => {
 
 	it("is false for a capability no release serves", () => {
 		expect(meetsServiceVersion("9.0.0", null)).toBe(false);
+	});
+});
+
+describe("what Feature availability says about a capability", () => {
+	it("reads the version dcb-service reports on /info", () => {
+		expect(serviceVersionFrom({ git: { build: { version: "9.2.0" } } })).toBe("9.2.0");
+		expect(serviceVersionFrom({ git: { build: { version: "" } } })).toBeNull();
+		expect(serviceVersionFrom({ git: {} })).toBeNull();
+		expect(serviceVersionFrom(null)).toBeNull();
+	});
+
+	it("weighs whether it is switched on against whether the service serves it", () => {
+		expect(capabilityStatus("9.2.0", true, "9.2.0")).toBe("ready");
+		expect(capabilityStatus("9.2.0", false, "9.2.1")).toBe("available");
+		expect(capabilityStatus("9.2.0", true, "9.1.0")).toBe("premature");
+		expect(capabilityStatus("9.2.0", false, "8.71.0")).toBe("unavailable");
+		expect(capabilityStatus("9.2.0", false, null)).toBe("unknown");
+		expect(capabilityStatus("9.2.0", true, "a branch build")).toBe("unknown");
 	});
 });

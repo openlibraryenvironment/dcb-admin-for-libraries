@@ -1,11 +1,11 @@
 # Sharing and saving a grid's view
 
-Every server-paged grid whose state is in its URL ([routing.md](routing.md), "Grid state is
-URL state") has two more toolbar buttons:
+Every server-paged grid whose state is in its URL ([url-view-state.md](url-view-state.md)) has
+two more toolbar buttons:
 
 - **Copy link to this view** copies the page's address. The address carries the grid's
-  filter, sort and page, so whoever opens it, and is allowed to see the rows, sees the same
-  view. A filter still being typed is written first, so the link is the grid as shown. A
+  filters, sort, page, page size and columns, so whoever opens it, and is allowed to see the
+  rows, sees the same view. A filter still being typed is written first, so the link is the grid as shown. A
   patron barcode filter and quick-search text are never in an address; when either is
   narrowing the grid, the confirmation says the link leaves them out.
 - **Saved filters** opens a dialog that names the grid's current filter and sort and keeps
@@ -25,10 +25,11 @@ In `sessionStorage`, under this app's namespace and one key per grid
 - **bounded.** At most 20 per grid, names up to 60 characters. Saving under a name already
   used on that grid, in any case, replaces it.
 
-A saved filter holds only what the grid's URL may hold: filters on public fields, the AND
-or OR between them, and the sort. Patron barcode and requester note filters and quick-search
+A saved filter holds the filters on public fields, the AND or OR between them, and the sort,
+in the codec's own form (`SavedFilterSearch`), never a query string. One saved by an earlier
+release, as the grid's MUI items, is still read. Patron barcode and requester note filters and quick-search
 text are not saved (`PRIVATE_FILTER_FIELDS`), and the dialog says so when any is applied. Whatever is read back from storage passes the
-grid's URL allow-list again (`savedSearchOf` in `src/helpers/dataGrid/gridSearch.ts`) before
+grid's URL allow-list again (`savedSearchOf` in `src/helpers/viewState/savedSearch.ts`) before
 it is shown or applied, as a hand-typed URL does.
 
 ## When user preferences reach dcb-service

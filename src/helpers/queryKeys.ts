@@ -173,5 +173,6 @@ export const queryKeys = {
 	serviceInfo: {
 		brandAssetStore: (apiBase: string) =>
 			["serviceInfo", "brandAssetStore", apiBase] as const,
+		version: (apiBase: string) => ["serviceInfo", "version", apiBase] as const,
 	},
 };

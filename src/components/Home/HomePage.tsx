@@ -15,7 +15,7 @@ import HomeSections from "@components/Home/HomeSections";
 import WindowChoice from "@components/Home/WindowChoice";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 import {
-	isInsightsEnabled,
+	isInsightsPageShown,
 	isHomeAnnouncementsEnabled,
 	isHomeInsightsEnabled,
 	isHomeLastWeekEnabled,
@@ -250,7 +250,7 @@ export default function HomePage() {
 			{/* Insights is for library administrators, as its own route requires */}
 			{!isLibraryAdmin ? null : isHomeInsightsEnabled() && hostLmsCode ? (
 				<InsightsSummary libraryCode={hostLmsCode} />
-			) : isInsightsEnabled() ? (
+			) : isInsightsPageShown("insights") ? (
 				<Typography>
 					<CustomLink to="/insights">{t("home.insights_link")}</CustomLink>
 				</Typography>

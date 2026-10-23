@@ -4,7 +4,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import LibraryInsights from "@components/Insights/LibraryInsights";
 import InsightsPending from "@components/Insights/InsightsPending";
 
-import { isInsightsEnabled } from "@helpers/featureFlags";
+import { isInsightsPageShown } from "@helpers/featureFlags";
 import { createRestClient } from "@helpers/createRestClient";
 import { ownLibraryQueryOptions, hostLmsCodeOf } from "@helpers/ownLibrary";
 import { statsWindow } from "@helpers/insightsRange";
@@ -42,12 +42,12 @@ export const Route = createFileRoute("/__authenticated/insights")({
 		to: search.to,
 	}),
 
-	// The tab is hidden while the flag is off, but the URL is still typeable - and
-	// the page would call statistics endpoints this environment's dcb-service does
-	// not serve yet. Guarded here rather than in a useEffect so the protected page
+	// The tab is hidden where the page is not shown, but the URL is still typeable - and
+	// the page would call statistics endpoints this environment's dcb-service may not
+	// serve. Guarded here rather than in a useEffect so the protected page
 	// never renders first.
 	beforeLoad: ({ context }) => {
-		if (!isInsightsEnabled()) {
+		if (!isInsightsPageShown("insights")) {
 			throw redirect({ to: "/" });
 		}
 

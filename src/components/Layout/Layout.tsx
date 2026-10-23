@@ -9,7 +9,7 @@ import { Header } from "../Header/Header";
 import { CustomLink } from "@components/CustomLink";
 import { useTranslation } from "react-i18next";
 import { matchActiveTab } from "@helpers/activeTab";
-import { isInsightsEnabled } from "@helpers/featureFlags";
+import { isInsightsPageShown } from "@helpers/featureFlags";
 import { MAIN_CONTENT_ID } from "@constants/landmarks";
 import { SkipLink } from "./SkipLink";
 import { useRouteAnnouncement } from "@/hooks/useRouteAnnouncement";
@@ -78,9 +78,9 @@ export const Layout = ({ children }: LayoutProps) => {
 					{ label: t("nav.locations.title"), value: TAB_PATHS.locations },
 					{ label: t("nav.bibs.title"), value: TAB_PATHS.bibs },
 					// Insights is hidden until the environment's dcb-service serves the
-					// statistics endpoints. The route guards the typeable URL as well -
-					// hiding a tab is UX, not access control.
-					...(isInsightsEnabled()
+					// statistics endpoints, or where the deployment does not show it. The route
+					// guards the typeable URL as well - hiding a tab is UX, not access control.
+					...(isInsightsPageShown("insights")
 						? [{ label: t("nav.insights.title"), value: TAB_PATHS.insights }]
 						: []),
 					{ label: t("nav.preferences.title"), value: TAB_PATHS.preferences },

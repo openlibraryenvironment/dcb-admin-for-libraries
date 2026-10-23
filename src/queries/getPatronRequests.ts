@@ -1,6 +1,10 @@
 import { gql } from "graphql-request";
 
-export const getPatronRequests = gql`
+import { capabilitySelection } from "@helpers/capabilityFields";
+
+// A builder, because resolvedAgency exists only from dcb-service 9.0.0 and the flag that
+// says so arrives after this module evaluates. isBorrowedByCaller reads it.
+export const getPatronRequests = () => gql`
 	query LoadPatronRequests(
 		$pageno: Int!
 		$pagesize: Int!
@@ -52,6 +56,7 @@ export const getPatronRequests = gql`
 					localId
 					localBarcode
 					canonicalPtype
+					${capabilitySelection("agency_scoped_requests", "PatronIdentity")}
 				}
 				suppliers {
 					localAgency

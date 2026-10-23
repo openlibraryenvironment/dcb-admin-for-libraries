@@ -13,7 +13,8 @@ import { useTranslation } from "react-i18next";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 import { useRouter } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { LIBRARY_CODE_PARAM } from "@helpers/statsApi";
+import { leaderboardUrl } from "@helpers/statsApi";
+import { isInsightsEnabled } from "@helpers/featureFlags";
 import { authHeaders } from "@helpers/auth";
 import { queryKeys } from "@helpers/queryKeys";
 
@@ -39,18 +40,16 @@ export default function TopRequestorsSummary({
 				.toISOString();
 			const endDate = dayjs().toISOString();
 
-			const params = new URLSearchParams({
-				// The name dcb-service binds - see LIBRARY_CODE_PARAM in statsApi.
-				[LIBRARY_CODE_PARAM]: libraryCode,
-				sort: "active_request_count,desc",
-				page: "0",
-				size: "10",
-				startDate,
-				endDate,
-			});
+			const url = leaderboardUrl(
+				DCB_API_BASE,
+				"top-requestors",
+				{ sort: "active_request_count,desc", page: "0", size: "10", startDate, endDate },
+				libraryCode,
+				isInsightsEnabled(),
+			);
 
 			const response = await fetch(
-				`${DCB_API_BASE}/insights/top-requestors?${params}`,
+				url,
 				{
 					headers: await authHeaders(),
 				},

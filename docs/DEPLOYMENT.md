@@ -16,13 +16,13 @@ Log into your Keycloak dashboard, select the `dcb-hub` realm, and complete these
 2. Ensure this value strictly corresponds to their library's agency code.
 3. Navigate to **Client Scopes**, then select **profile**.
 4. Add a **User Attribute Mapper** for the `code` attribute.
-5. Select **"by configuration"** so the application can successfully extract it from the token.
+5. Select **"by configuration"**, and turn on **Add to access token** as well as **Add to ID token**. dcb-service 9.0.0 and later scope every request grid, Home count, export and history to the agency codes in the **access** token (`code`, or `agencyCodes`) for a user without a consortium role, and a token that carries none gets nothing: every grid is empty while the app looks healthy. Turn on **Multivalued** for a user with more than one library. Check this before the dcb-service upgrade, not after; dcb-service's `docs/v9-migration-guide.md` ("Library staff need their agency in the access token") is the server's side of it.
 6. Configure a new PKCE client.
 7. Ensure the client name matches the `VITE_KEYCLOAK_ID` you plan to use in your environment variables.
 8. Set the flow to **Standard flow**.
 9. Turn **OFF** client authentication (this must be a public access type, not a confidential OIDC client).
 10. Under the "Advanced" tab, set the Proof Key for Code Exchange (PKCE) Code Challenge Method to **S256**.
-11. Set **Valid Redirect URIs** to the app's own path, scoped by a trailing wildcard: `https://<host>/dcb-admin-for-libraries/*` on a shared origin such as `mobius.kihosting.net`, or `https://<host>/*` when the app is at the root. Sign-in returns to the base and sign-out to `<base>logout?loggedOut=true`, so the exact base URL alone rejects the sign-out redirect. Leave **Valid post logout redirect URIs** as `+` (the same list). Set **Web Origins** to the origin only, with no path (`https://<host>`). Keep this client separate from DCB Admin's even on the same host.
+11. Set **Valid Redirect URIs** to the app's own path, scoped by a trailing wildcard: `https://<host>/dcb-admin-for-libraries/*` on a shared origin such as `consortium.example.org`, or `https://<host>/*` when the app is at the root. Sign-in returns to the base and sign-out to `<base>logout?loggedOut=true`, so the exact base URL alone rejects the sign-out redirect. Leave **Valid post logout redirect URIs** as `+` (the same list). Set **Web Origins** to the origin only, with no path (`https://<host>`). Keep this client separate from DCB Admin's even on the same host.
     **CRITICAL SECURITY NOTE:** Never use a bare wildcard (`*`) or a host-wide one where other apps share the origin: either lets a redirect deliver the authorisation code somewhere this app does not control.
 
 ---
@@ -44,7 +44,7 @@ The application requires the following environment variables to function properl
 > `VITE_PUBLIC_URL` is not runtime tenant configuration. Set it only at build time for standalone/subpath deployments. Host-specific backend, search, Keycloak and licence values should be supplied by `inject_env.json` in standalone runtime-config deployments or by the KI bootloader host configuration.
 
 > [!IMPORTANT]
-> Under a subpath, only the router adds the base. A root-relative `href` or `window.open("/patronRequests/…")` resolves against the origin root, outside this app — on a shared origin such as Mobius, into whatever else is mounted there. Navigate with `to` on a router link (`CustomLink`), and pass `appUrl(path)` to `window.open`. ESLint fails both patterns when the path is a literal; it cannot see a path held in a variable.
+> Under a subpath, only the router adds the base. A root-relative `href` or `window.open("/patronRequests/…")` resolves against the origin root, outside this app — on a shared origin, into whatever else is mounted there. Navigate with `to` on a router link (`CustomLink`), and pass `appUrl(path)` to `window.open`. ESLint fails both patterns when the path is a literal; it cannot see a path held in a variable.
 
 ---
 
@@ -64,13 +64,14 @@ does not show the feature.
 | Variable | Enable at dcb-service | What it turns on |
 | --- | --- | --- |
 | `VITE_FEATURE_LIBRARY_BRANDING` | **9.0.0** or later | The "How your library appears to patrons" block on the library profile: logo, logo description and discovery theme |
-| `VITE_FEATURE_INSIGHTS` | **9.0.0** or later | The Insights page, and the top-titles / top-requesters panels on the library profile (all of them call `/insights/**`) |
-| `VITE_FEATURE_LIBRARY_SUPPORT_URL` | **no release serves this yet** (not yet on dcb-service main) | The "Report a problem URL" field in the "Links for patrons" block |
-| `VITE_FEATURE_INSIGHTS_WALK_UP` | **after 9.1.0**: the release carrying `/insights/library-breakdown` | The "Collected in person, or sent" panel under Insights, Service. Needs `VITE_FEATURE_INSIGHTS` too |
+| `VITE_FEATURE_INSIGHTS` | **9.0.0** or later | The Insights page. The top-titles / top-requesters panels on the library profile read `/insights/**` with it on and the legacy `/patrons/requests/stats/**` with it off, so they show on 8.71.0 too |
+| `VITE_FEATURE_LIBRARY_SUPPORT_URL` | **9.2.0** or later | The "Report a problem URL" field in the "Links for patrons" block |
+| `VITE_FEATURE_INSIGHTS_WALK_UP` | **9.2.0** or later (`/insights/library-breakdown`) | The "Collected in person, or sent" panel under Insights, Service. Needs `VITE_FEATURE_INSIGHTS` too |
 | `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | **9.0.0** or later | Scoping the request grids by agency code rather than by Host LMS code, and the library column that needs it |
-| `VITE_FEATURE_GUARDED_CLEANUP` | **9.0.0** or later | Request cleanup that the service refuses, with a reason, while the item is still out |
+| `VITE_FEATURE_GUARDED_CLEANUP` | **9.0.0** or later | Request cleanup that the service refuses, with a reason, while the item is still out, and cleaning up anyway after a second confirmation (`docs/cleanup.md`) |
+| `VITE_FEATURE_CONFIRM_ITEM_RETURNED` | **9.2.0** or later | "Confirm item is back" on a request the library supplied, once its item is waiting to come back to the library |
 | `VITE_FEATURE_INSIGHTS_TRENDS` | **9.1.0** or later (`/insights/trend`) | The duration trend panel on Insights → Trends. Needs `VITE_FEATURE_INSIGHTS` as well |
-| `VITE_FEATURE_ANNOUNCEMENTS` | **no release serves this yet** | The Announcements page. Leave it off: on a service without the announcement operations, the page's whole GraphQL request is rejected |
+| `VITE_FEATURE_ANNOUNCEMENTS` | **9.2.0** or later | The Announcements page. Off on anything older: on a service without the announcement operations, the page's whole GraphQL request is rejected |
 | `VITE_FEATURE_HOME_SINCE_LAST_VISIT` | any supported release | Home page: a "since your last visit" window, remembered per browser |
 | `VITE_FEATURE_HOME_LAST_WEEK` | any supported release | Home page: each problem and new-request count compared with a week earlier, for the today and 7-day windows |
 | `VITE_FEATURE_HOME_SETUP_CHECKLIST` | any supported release | Home page: a profile checklist for a library that has never borrowed or supplied |
@@ -168,6 +169,54 @@ others do.
 
 ---
 
+## 2d. Which Insights pages and panels: `VITE_INSIGHTS_PAGES`, `VITE_INSIGHTS_PANELS`
+
+A choice about what this consortium wants to see, not about which dcb-service it runs. Both
+take the same comma-separated list:
+
+| Value | Shows |
+| --- | --- |
+| unset, or empty | everything, as before these existed |
+| `all` | everything |
+| `all,-partners,-gaps.rareGems` | everything except the Partners subject and the "Unique collection value" panel |
+| `overview,trends,service.durations` | exactly those: the overview, every Trends panel, and the durations panel |
+
+Names apply left to right: `all` adds everything, a name adds what it names, and `-name`
+takes it away again. A subject's name stands for all of its panels.
+
+**They narrow the release flags, never widen them.** Nothing shows while
+`VITE_FEATURE_INSIGHTS` is off, and the duration trends and walk-up panels also need
+`VITE_FEATURE_INSIGHTS_TRENDS` and `VITE_FEATURE_INSIGHTS_WALK_UP`, whatever these lists say.
+A subject with none of its panels shown loses its link, and a link to it opens the first
+subject that is shown. Hiding the Insights page hides its tab, refuses a typed link to it,
+and hides the Insights part of the home page.
+
+**A name this app does not have is ignored**, and the browser console says so once. So a
+misspelt name in an `all,-…` list leaves that panel showing, and one in a plain list leaves
+it out. On the kihosting.net hosts the shared worker sets neither variable, so every panel
+shows there until its configuration for that host names one.
+
+| Page | Name |
+| --- | --- |
+| The Insights page, its tab, and the Insights part of the home page | `insights` |
+
+| Subject | Panels |
+| --- | --- |
+| `overview`, above every subject | `overview.headline`, `overview.moreFigures` |
+| `trends` | `trends.trendStrip`, `trends.durationTrend`, `trends.statusFlow` |
+| `service` | `service.durations`, `service.peerBenchmark`, `service.walkUp`, `service.failures`, `service.supplierReliability`, `service.timeInStatus`, `service.supplierResponse` |
+| `demand` | `demand.heatmap`, `demand.dimensions`, `demand.topTitles`, `demand.byPickupLocation`, `demand.byPatronGroup`, `demand.unfillable` |
+| `partners` | `partners.tradingPartners`, `partners.netFlow` |
+| `collection` | `collection.totals`, `collection.clusterQuality`, `collection.profile`, `collection.formatMix`, `collection.overlap` |
+| `gaps` | `gaps.unmetLocal`, `gaps.acquisitionOpportunities`, `gaps.consortialLifeline`, `gaps.newAcquisitions`, `gaps.rareGems` |
+
+The names are the same in DCB Admin, which has no walk-up panel and has pages for the
+consortium, a group and a library. `src/helpers/insightsSelection.ts` holds the panels and
+`src/helpers/insightsPages.ts` the page, and `src/helpers/insightsSelection.test.ts` fails
+when these tables and the code disagree.
+
+---
+
 ## 3. Deployment Pathways
 
 Choose the deployment method that matches your infrastructure.
@@ -257,7 +306,7 @@ Using "staging" as an example environment.
 
 **Deployment Steps:**
 
-1. Build the image using `docker build -f docker/production/Dockerfile -t dcb-admin-libraries .`.
+1. Pull a published image (below), or build one using `docker build -f docker/production/Dockerfile -t dcb-admin-libraries .`.
 2. Run the container, passing in your environment variables via the `-e` flag.
 3. Map the port correctly, keeping in mind the application runs on port `80` inside the container.
 
@@ -284,6 +333,21 @@ older deployment, leave them out. Switching them on later is a changed `-e` and 
 container restart — `40-inject-env.sh` re-renders `inject_env.json` on every start, so the
 bundle is never rebuilt.
 
+#### Images
+
+CI pushes this Dockerfile's image to `harbor.k-int.com/knowledgeintegration/dcb-admin-for-libraries`, K-Int's Harbor registry, beside DCB Admin's `dcb-admin-ui`:
+
+| Pipeline | Tags | |
+| --- | --- | --- |
+| a commit on `main` | `main-<short sha>`, `next` | `publish_image_next` |
+| a release, on the `release` branch | `<version>` (e.g. `2.1.0`), `latest` | `publish_image_release` |
+
+`main-<sha>` and `<version>` never move; pin one of those. `next` and `latest` move with each push.
+
+A release image carries `release.json`, written into `public/` before the build, so Preferences shows its version as it does on the kihosting hosts. A `main` image has none, and Preferences says the version is not known.
+
+The jobs sign in with `HARBOR_USERNAME` and `HARBOR_PASSWORD`, protected variables inherited from the GitLab group, and fail before building if either is missing. Protected variables reach only protected branches, so `main` and `release` must both be protected for the jobs to publish.
+
 ---
 
 ## 4. Security Note: PKCE vs. Traditional Client Secrets
@@ -307,7 +371,7 @@ PKCE was explicitly designed to secure public clients like SPAs and mobile appli
 
 ## 5. Releasing to the kihosting hosts
 
-The kihosting hosts, `mobius.kihosting.net` among them, serve this app at
+The kihosting hosts serve this app at
 `/dcb-admin-for-libraries/` through the Cloudflare worker that also serves DCB Admin at
 `/dcb-admin/`. The pipeline publishes the bundle; these are the parts it cannot do. Work
 through them before the release pipeline runs, and the checks after it.
@@ -321,7 +385,7 @@ through them before the release pipeline runs, and the checks after it.
    | --- | --- |
    | `VITE_FEATURE_INSIGHTS`, `VITE_FEATURE_LIBRARY_BRANDING`, `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`, `VITE_FEATURE_GUARDED_CLEANUP` | 9.0.0 |
    | `VITE_FEATURE_INSIGHTS_TRENDS` | 9.1.0 |
-   | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP` | none yet: must resolve to off |
+   | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP`, `VITE_FEATURE_CONFIRM_ITEM_RETURNED` | 9.2.0 |
    | `VITE_FEATURE_HOME_*` | a product choice, not a release: see section 2a for what each needs beside it |
 
    A flag that is absent from the table is off on every host, which is the safe failure for
@@ -350,7 +414,7 @@ To see which build a host is serving, `curl -s https://<host>/dcb-admin-for-libr
 prints the commit it was built from; the build job asserts the stamp is there. The version is
 in `release.json` beside it, `curl -s https://<host>/dcb-admin-for-libraries/release.json`,
 which the deploy job writes and Preferences shows ([release-highlights.md](release-highlights.md)).
-A deployment that does not come from these jobs, a Docker image included, has none, and
+A deployment that does not come from these jobs or a release image has none, and
 Preferences says the version is not known.
 
 1. The R2 bucket `ki-front-end-bundles/dcb-admin-for-libraries/` holds `v<version>/`, and

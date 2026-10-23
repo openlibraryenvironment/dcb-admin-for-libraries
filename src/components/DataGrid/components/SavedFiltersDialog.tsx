@@ -21,7 +21,6 @@ import {
 	TextField,
 	Typography,
 } from "@mui/material";
-import { GridLogicOperator } from "@mui/x-data-grid-premium";
 
 import { useAnnounce } from "@/hooks/useAnnouncer";
 import type { GridViews } from "@/hooks/useSyncedDataGrid";
@@ -43,22 +42,16 @@ import { Announcer } from "@components/Layout/Announcer";
 const describe = (
 	t: (key: string, options?: Record<string, unknown>) => string,
 	labels: FilterLabels,
+	views: GridViews,
 	search: SavedFilterSearch,
 ): string => {
-	const filters = search.filters?.length
-		? generateFilterDescription(
-				{
-					items: search.filters,
-					logicOperator: search.logic === "or" ? GridLogicOperator.Or : GridLogicOperator.And,
-				},
-				labels,
-			)
+	const filters = search.filters.length
+		? generateFilterDescription(views.toFilterModel(search), labels)
 		: t("ui.data_grid.views.no_filter");
-	if (!search.sort) return filters;
-	if (search.sort === "none") return `${filters}. ${t("ui.data_grid.views.unsorted")}`;
-	const [field, direction] = search.sort.split(":");
-	return `${filters}. ${t(`ui.data_grid.views.sorted_${direction === "asc" ? "asc" : "desc"}`, {
-		field: labels.field(field),
+	const [first] = search.sort === "none" ? [] : (search.sort ?? []);
+	if (!first) return filters;
+	return `${filters}. ${t(`ui.data_grid.views.sorted_${first.direction}`, {
+		field: labels.field(first.field),
 	})}`;
 };
 
@@ -116,7 +109,7 @@ export default function SavedFiltersDialog({
 		onClose();
 	};
 
-	const canSave = (views.current.filters?.length ?? 0) > 0 || views.current.sort !== undefined;
+	const canSave = views.current.filters.length > 0 || views.current.sort !== undefined;
 	const filters = saved.data ?? [];
 
 	return (
@@ -208,7 +201,7 @@ export default function SavedFiltersDialog({
 									<ListItemButton onClick={() => apply(filter)}>
 										<ListItemText
 											primary={filter.name}
-											secondary={describe(t, labels, views.sanitise(filter.search))}
+											secondary={describe(t, labels, views, views.sanitise(filter.search))}
 										/>
 									</ListItemButton>
 								</ListItem>

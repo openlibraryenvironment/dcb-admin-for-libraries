@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-	defaultParseSearch,
-	defaultStringifySearch,
-} from "@tanstack/react-router";
+import { defaultParseSearch } from "@tanstack/react-router";
+import type { GridFilterItem } from "@mui/x-data-grid-premium";
 
-import { readFilter } from "@helpers/dataGrid/gridSearch";
+import { filterFromView } from "@helpers/viewState/gridView";
+import { linkFilters } from "@helpers/viewState/linkFilters";
+import { readView } from "@helpers/viewState/readView";
+import { stringifySearch } from "@helpers/viewState/searchSerialiser";
 import {
 	patronRequestsGrid,
 	supplierRequestsGrid,
@@ -43,19 +44,22 @@ const OPEN = { from: SINCE, to: null };
 const CLOSED = { from: SINCE, to: "2026-10-13T08:00:00.000Z" };
 
 /** What the grid makes of a link's search once it has been through a real URL. */
-const asTheGridReadsIt = (scope: keyof typeof GRIDS, filters: unknown[]) =>
-	readFilter(
-		GRIDS[scope],
-		defaultParseSearch(defaultStringifySearch({ filters })),
-		undefined,
-	);
+const asTheGridReadsIt = (scope: keyof typeof GRIDS, filters: GridFilterItem[]) => {
+	const { rules } = GRIDS[scope];
+	const search = defaultParseSearch(stringifySearch({ filters: linkFilters(filters) }));
+	return filterFromView(rules, readView(rules, search));
+};
+
+/** Ids are the filter panel's row keys, which the grid numbers for itself. */
+const withoutIds = (items: GridFilterItem[]) =>
+	items.map(({ field, operator, value }) => ({ field, operator, value }));
 
 const each = HOME_COUNTS.map((count) => [count.id, count] as const);
 
 describe("each home page count", () => {
 	it.each(each)("%s: the grid it links to keeps every one of its filters", (_id, count) => {
 		const filters = count.filters(OPEN);
-		expect(asTheGridReadsIt(count.scope, filters).items).toEqual(filters);
+		expect(withoutIds(asTheGridReadsIt(count.scope, filters).items)).toEqual(withoutIds(filters));
 	});
 
 	it.each(each)("%s: counts exactly what that grid then asks the service for", (_id, count) => {

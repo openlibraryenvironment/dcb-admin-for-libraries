@@ -1,5 +1,6 @@
 import { suppliedByLibraryQuery } from "@helpers/patronRequestScope";
-import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
+import { validateGridSearch } from "@helpers/viewState/gridSearch";
+import { supplierRequestsView } from "@helpers/viewState/gridViewIds";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
@@ -7,7 +8,7 @@ import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestExport } from "@/hooks/useExport";
 import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
-import { CleanupProgressDialog } from "@components/DataGrid/components/CleanupProgressDialog";
+import { LazyCleanupDialogs } from "@components/CleanupDialogs/LazyCleanupDialogs";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -29,14 +30,20 @@ import {
 } from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter, redirect } from "@tanstack/react-router";
 import request from "graphql-request";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/supplierRequests")({
-	validateSearch: gridSearchSchema,
+	validateSearch: validateGridSearch,
+	beforeLoad: async ({ search, location }) => {
+		// Loaded here, not with the route: the first load of every page would carry the codec
+		const { rememberedViewRedirect } = await import("@helpers/viewState/viewRoute");
+		const restore = rememberedViewRedirect(supplierRequestsView, search, location.state);
+		if (restore) throw redirect({ to: "/supplierRequests", ...restore });
+	},
 	head: () => ({ meta: [{ title: pageTitle("nav.supplier_requests.title") }] }),
 	component: RouteComponent,
 });
@@ -108,7 +115,7 @@ function RouteComponent() {
 
 			return request({
 				url: `${dcbApiBase}/graphql`,
-				document: getPatronRequests,
+				document: getPatronRequests(),
 				variables: queryVariables,
 				requestHeaders: await authHeaders(),
 				signal,
@@ -162,7 +169,7 @@ function RouteComponent() {
 		}),
 	);
 
-	const { cleanupState, handleCleanup, handleCloseCleanup } =
+	const cleanup =
 		usePatronRequestCleanup({
 			apiRef,
 			dcbApiBase,
@@ -226,6 +233,7 @@ function RouteComponent() {
 					columnVisibilityModel={grid.columnVisibilityModel}
 					checkboxSelection={true}
 					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
+					columnLayout={grid.columnLayout}
 					type="patronRequests"
 					label={t("nav.supplier_requests.title")}
 					identifier="supplierPatronRequests"
@@ -253,28 +261,13 @@ function RouteComponent() {
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
 					enableCleanup={true}
-					onCleanup={handleCleanup}
+					onCleanup={cleanup.handleCleanup}
 					exportConfig={exportConfig}
 					isExporting={exportProgress.isExporting}
 					parentApiRef={apiRef}
 				/>
 			}
-			<CleanupProgressDialog
-				open={cleanupState.open}
-				isCleaning={cleanupState.isCleaning}
-				progress={
-					cleanupState.total > 0
-						? (cleanupState.processed / cleanupState.total) * 100
-						: 0
-				}
-				total={cleanupState.total}
-				processed={cleanupState.processed}
-				successRows={cleanupState.successRows}
-				errorRows={cleanupState.errorRows}
-				skippedRows={cleanupState.skippedRows}
-				refusedRows={cleanupState.refusedRows}
-				onClose={handleCloseCleanup}
-			/>
+			<LazyCleanupDialogs cleanup={cleanup} />
 
 			{
 				<TimedAlert

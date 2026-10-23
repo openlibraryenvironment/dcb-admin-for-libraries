@@ -7,9 +7,9 @@ import library from "./fixtures-data/library.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 
 /**
- * A server-paged grid's filter, sort and page are URL state (docs/routing.md):
- * shareable, bookmarkable, and restored by the back button. The patron barcode
- * and quick-search text are not: they live in the tab's history entry.
+ * A server-paged grid's filter, sort, page and columns are URL state, readably
+ * (docs/url-view-state.md): shareable, bookmarkable, and restored by the back button.
+ * The patron barcode and quick-search text are not: they live in the tab's history entry.
  */
 
 const BARCODE = "PB8675309";
@@ -29,6 +29,10 @@ async function mockGrid(page: Page): Promise<Sent[]> {
 	await mockGraphQL(page, {
 		LoadLibrary: library,
 		LoadLibraries: library,
+		LoadLibraryBasics: library,
+		// The request a test opens: aborted, its late error would send the page to /networkError
+		LoadPatronRequest: { patronRequests: { totalSize: 0, content: [] } },
+		LoadHostLms: { hostLms: { content: [] } },
 		LoadPatronRequests: (variables) => {
 			sent.push(variables as unknown as Sent);
 			return {
@@ -93,7 +97,7 @@ test("filter, sort and page live in the URL, and back from a request restores th
 	await expect.poll(() => searchOf(page).get("sort")).toBe("status:asc");
 
 	await page.getByRole("button", { name: "Go to next page" }).click();
-	await expect.poll(() => searchOf(page).get("page")).toBe("1");
+	await expect.poll(() => searchOf(page).get("page")).toBe("2");
 
 	const listUrl = page.url();
 	const before = sent.at(-1)!;
@@ -173,7 +177,7 @@ test("a patron barcode filter never reaches the URL, and survives a reload of th
 	urls.push(page.url());
 
 	await page.getByRole("button", { name: "Go to next page" }).click();
-	await expect.poll(() => searchOf(page).get("page")).toBe("1");
+	await expect.poll(() => searchOf(page).get("page")).toBe("2");
 	expect(sent.at(-1)!.query).toContain(`patronBarcode:${BARCODE}`);
 
 	const sentBeforeReload = sent.length;
@@ -214,7 +218,7 @@ test("quick-search text is kept in the tab's history entry, never the URL", asyn
 			history,
 			{
 				...history.state,
-				grids: { mainPatronRequests: { items: [], quickFilterValues: [quick] } },
+				gridPrivate: { mainPatronRequests: { items: [], quickFilterValues: [quick] } },
 			},
 			"",
 		);
@@ -302,8 +306,7 @@ test("a date typed into the picker filters the requests and reaches the URL", as
 
 	await expect
 		.poll(() => searchOf(page).get("filters") ?? "")
-		.toContain('"operator":"luceneDateRange"');
-	expect(JSON.parse(searchOf(page).get("filters")!)[0].value[0]).toMatch(/^2026-10-01T/);
+		.toMatch(/^dateCreated:between:2026-10-01T\S+\.\.$/);
 	await expect.poll(() => sent.at(-1)?.query ?? "").toMatch(/dateCreated:\[2026-10-01T\S+ TO \*\]/);
 	await expect(filterButton(page)).toHaveAccessibleName("Show filters, 1 applied");
 });
@@ -488,4 +491,49 @@ test("with agency scoping, the patron request grid searches once on a cold load"
 	await expect(page.getByRole("link", { name: /2026-09-01/ }).first()).toBeVisible();
 
 	expect(searches).toBe(1);
+});
+
+test("a request page left before its query fails does not send the reader to the error page", async ({
+	page,
+}) => {
+	await mockGrid(page);
+	let release: () => void = () => undefined;
+	const held = new Promise<void>((resolve) => (release = resolve));
+	let asked = false;
+	await page.route(`${API_BASE}/graphql`, async (route) => {
+		if (route.request().postDataJSON()?.operationName !== "LoadPatronRequest") {
+			return route.fallback();
+		}
+		asked = true;
+		await held;
+		await route.abort("failed");
+	});
+	const failed: string[] = [];
+	page.on("requestfailed", (request) => {
+		if (request.postDataJSON()?.operationName === "LoadPatronRequest") failed.push(request.url());
+	});
+
+	await page.goto("/patronRequests");
+	await page.getByRole("link", { name: /2026-09-01/ }).first().click();
+	await expect(page).toHaveURL(/\/patronRequests\/11111111-/);
+	// In flight, and held, before the reader leaves
+	await expect.poll(() => asked).toBe(true);
+	await page.goBack();
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	// The request fails after the reader has gone. The error page, had it come, is a full
+	// page load from the failure's own handler: past two frames, it has started
+	release();
+	await expect.poll(() => failed.length).toBeGreaterThan(0);
+	const stillOn = await page
+		.evaluate(
+			() =>
+				new Promise<string>((resolve) =>
+					requestAnimationFrame(() => requestAnimationFrame(() => resolve(location.pathname))),
+				),
+		)
+		.catch(() => "navigated away");
+	expect(stillOn).toBe("/patronRequests");
+	await expect(page).toHaveURL(/\/patronRequests$/);
+	await expect(page.getByRole("grid")).toBeVisible();
 });

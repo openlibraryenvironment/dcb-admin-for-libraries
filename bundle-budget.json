@@ -19,7 +19,8 @@
 		},
 		"Patron requests grid": {
 			"source": "src/routes/__authenticated/patronRequests/index.tsx",
-			"budget": 470300
+			"budget": 497100,
+			"_note": "Raised from 470,300 on 2026-10-23, to Supplier requests' figure: the page now offers the same bulk clean up (22 Oct, with its dialogs loaded on first use) and the readable URL with columns and the last view (about 6 KB, as DCB Admin measured). 475,548 measured; 497,100 is inside the routes' measured-plus-5% rule."
 		},
 		"Patron request detail": {
 			"source": "src/routes/__authenticated/patronRequests/$id/index.tsx",
@@ -53,11 +54,13 @@
 		},
 		"British English catalogue": {
 			"source": "src/locales/en-GB/en-GB.json",
-			"budget": 25800
+			"budget": 25900,
+			"_note": "Raised from 25,800 on 2026-10-23 for the column menu's Move left and Move right, the keyboard alternative to dragging a column (WCAG 2.2 SC 2.5.7). 25,832 measured."
 		},
 		"American English catalogue": {
 			"source": "src/locales/en-US/en-US.json",
-			"budget": 25800
+			"budget": 25900,
+			"_note": "Raised from 25,800 on 2026-10-23 for the column menu's Move left and Move right, the keyboard alternative to dragging a column (WCAG 2.2 SC 2.5.7). 25,828 measured."
 		},
 		"Saved filters dialog": {
 			"source": "src/components/DataGrid/components/SavedFiltersDialog.tsx",

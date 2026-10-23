@@ -1,4 +1,5 @@
-import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
+import { validateGridSearch } from "@helpers/viewState/gridSearch";
+import { auditLogView } from "@helpers/viewState/gridViewIds";
 import { useClock } from "@/hooks/useThemeStore";
 import { formatTimestamp } from "@helpers/formatters";
 import { Attribute } from "@components/Attribute/Attribute";
@@ -31,6 +32,7 @@ import { getPatronIdentities } from "@queries/getPatronIdentities";
 import { getPatronRequest } from "@queries/getPatronRequest";
 import {
 	isAgencyScopedRequestsEnabled,
+	isConfirmItemReturnedEnabled,
 	isGuardedCleanupEnabled,
 } from "@helpers/featureFlags";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -41,6 +43,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { isUuidShaped } from "@helpers/isUuidShaped";
+import { OPTIONAL_QUERY } from "@helpers/serviceErrors";
 import { onlyMatch } from "@helpers/onlyMatch";
 import TimedAlert from "@components/TimedAlert/TimedAlert";
 import Confirmation from "@components/Confirmation/Confirmation";
@@ -69,6 +72,12 @@ import {
 	isCleanupEligible,
 } from "@helpers/cleanupPatronRequest";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
+import { CleanupOverrideDialog } from "@components/CleanupOverrideDialog/CleanupOverrideDialog";
+import {
+	confirmItemReturned,
+	confirmReturnStatuses,
+	isConfirmReturnEligible,
+} from "@helpers/confirmItemReturned";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 import { dcbStatusLabel } from "@constants/statuses/DCBStatuses";
 import PatronRequestAuditLog from "@components/PatronRequestAuditLog/PatronRequestAuditLog";
@@ -77,7 +86,6 @@ import { z } from "zod";
 const requestSearchSchema = z.object({
 	// The open tab, so a shared or restored link to the audit log opens on it
 	tab: z.number().int().min(1).max(5).optional().catch(undefined),
-	audit: gridSearchSchema.optional().catch(undefined),
 });
 
 /**
@@ -102,7 +110,10 @@ function LibraryWithContact({ library }: { library: Library }) {
 }
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
-	validateSearch: requestSearchSchema,
+	validateSearch: (search: Record<string, unknown>) => ({
+		...requestSearchSchema.parse(search),
+		...validateGridSearch(search, [auditLogView.namespace ?? ""]),
+	}),
 	head:() => ({ meta: [{ title: pageTitle("patron_request.title") }] }),
 	component: RouteComponent,
 });
@@ -122,8 +133,13 @@ function RouteComponent() {
 	const [cleanupErrorAlertVisibility, setCleanupErrorAlertVisibility] =
 		useState(false);
 	const [cleanupRefusal, setCleanupRefusal] = useState<string | null>(null);
+	// The server's reason for refusing, while the user decides whether to clean up anyway
+	const [overrideDetail, setOverrideDetail] = useState<string | null>(null);
 	const [confirmCleanup, setConfirmCleanup] = useState(false);
-	const { agencyCodes } = useAgencyCodes();
+	const [confirmReturnOpen, setConfirmReturnOpen] = useState(false);
+	const [confirmReturnSuccess, setConfirmReturnSuccess] = useState(false);
+	const [confirmReturnError, setConfirmReturnError] = useState<string | null>(null);
+	const { agencyCode, agencyCodes } = useAgencyCodes();
 	const guardedCleanup = isGuardedCleanupEnabled();
 	const apiBase: string = cfg.VITE_DCB_API_BASE;
 	const isValidId = isUuidShaped(id);
@@ -148,9 +164,21 @@ function RouteComponent() {
 			),
 	});
 	const patronRequest = data?.patronRequests?.content?.[0];
+	const agencyScoped = isAgencyScopedRequestsEnabled();
+
+	// Without agency scoping the borrowing library is known only by its Host LMS. Optional:
+	// unanswered, clean up is offered to a supplying library alone, and the page stays.
+	const { data: callerLibraryData } = useQuery({
+		...libraryBasicsQueryOptions(apiBase, agencyCode ?? ""),
+		meta: OPTIONAL_QUERY,
+		enabled: !agencyScoped && !!agencyCode,
+	});
 	const canCleanup = isCleanupEligible(patronRequest, {
 		guarded: guardedCleanup,
+		agencyScoped,
 		agencyCodes,
+		hostLmsCode:
+			callerLibraryData?.libraries?.content?.[0]?.agency?.hostLms?.code ?? undefined,
 	});
 	const members = patronRequest?.clusterRecord?.members;
 	const untracked = untrackedStatuses.includes(patronRequest?.status ?? "");
@@ -238,7 +266,6 @@ function RouteComponent() {
 	// that library's contact details, which belong to somebody unconnected to the
 	// request. The chain is kept rather than deleted because it is what an older
 	// deployment has; the flag is how such a deployment stops being wrong.
-	const agencyScoped = isAgencyScopedRequestsEnabled();
 	const resolvedAgency: Agency | null | undefined =
 		patronRequest?.requestingIdentity?.resolvedAgency;
 
@@ -337,9 +364,10 @@ function RouteComponent() {
 
 	// Mutation for cleaning up the patron request
 	const cleanupMutation = useMutation({
-		mutationFn: () =>
+		mutationFn: (override: boolean) =>
 			cleanupPatronRequest(apiBase, patronRequest, {
 				refreshFirst: guardedCleanup,
+				override,
 			}),
 		// A refusal is the server declining, not a transport failure, so it arrives here.
 		onSuccess: (outcome) => {
@@ -349,16 +377,48 @@ function RouteComponent() {
 				return;
 			}
 
+			if (outcome.kind === "refused" && guardedCleanup) {
+				invalidateRequest();
+				setOverrideDetail(outcome.detail ?? "");
+				return;
+			}
+
 			setCleanupRefusal(
 				outcome.kind === "refused"
 					? (outcome.detail ?? "")
-					: t("patron_request.cleanup_not_supplier"),
+					: t("patron_request.cleanup_not_party"),
 			);
 		},
 		onError: () => {
 			setCleanupErrorAlertVisibility(true);
 		},
 	});
+
+	const confirmReturnMutation = useMutation({
+		mutationFn: () => confirmItemReturned(apiBase, patronRequest?.id),
+		onSuccess: (outcome) => {
+			if (outcome.kind === "confirmed") {
+				invalidateRequest();
+				setConfirmReturnSuccess(true);
+				return;
+			}
+
+			setConfirmReturnError(
+				outcome.kind === "refused"
+					? t("patron_request.confirm_returned.refused", { detail: outcome.detail ?? "" })
+					: outcome.kind === "forbidden"
+						? t("patron_request.confirm_returned.forbidden")
+						: t("patron_request.confirm_returned.unsuccessful"),
+			);
+		},
+		onError: () => {
+			setConfirmReturnError(t("patron_request.confirm_returned.unsuccessful"));
+		},
+	});
+	const offerConfirmReturn =
+		isConfirmItemReturnedEnabled() &&
+		confirmReturnStatuses.includes(String(patronRequest?.status));
+	const canConfirmReturn = isConfirmReturnEligible(patronRequest, agencyCodes);
 
 	const activeTab = Route.useSearch({ select: (search) => search.tab }) ?? 0;
 	const navigate = useNavigate({ from: Route.fullPath });
@@ -673,21 +733,86 @@ function RouteComponent() {
 									<Typography variant="body2" id="cleanup-reason">
 										{canCleanup
 											? t("patron_request.cleanup_info")
-											: t("patron_request.cleanup_disabled")}
+											: t(
+													guardedCleanup
+														? "patron_request.cleanup_disabled_guarded"
+														: "patron_request.cleanup_disabled",
+												)}
 									</Typography>
 									<Confirmation
 										open={confirmCleanup}
 										onClose={() => setConfirmCleanup(false)}
 										onConfirm={() => {
 											setConfirmCleanup(false);
-											cleanupMutation.mutate();
+											cleanupMutation.mutate(false);
 										}}
 										action="cleanup"
 										entityName=""
 										gridEdit={false}
 									/>
+									<CleanupOverrideDialog
+										open={overrideDetail !== null}
+										count={1}
+										detail={overrideDetail ?? undefined}
+										onClose={() => setOverrideDetail(null)}
+										onConfirm={() => {
+											setOverrideDetail(null);
+											cleanupMutation.mutate(true);
+										}}
+									/>
+									{offerConfirmReturn ? (
+										<>
+											<Button
+												variant="outlined"
+												color="primary"
+												sx={{ marginTop: 1 }}
+												onClick={() => setConfirmReturnOpen(true)}
+												aria-describedby="confirm-returned-reason"
+												disabled={confirmReturnMutation.isPending || !canConfirmReturn}>
+												{t("patron_request.confirm_returned.button")}
+												{confirmReturnMutation.isPending ? (
+													<CircularProgress
+														color="inherit"
+														size={13}
+														sx={{ ml: 1 }}
+														aria-label={t("ui.info.loading.value")}
+													/>
+												) : null}
+											</Button>
+											<Typography variant="body2" id="confirm-returned-reason">
+												{canConfirmReturn
+													? t("patron_request.confirm_returned.info")
+													: t("patron_request.confirm_returned.disabled")}
+											</Typography>
+											<Confirmation
+												open={confirmReturnOpen}
+												onClose={() => setConfirmReturnOpen(false)}
+												onConfirm={() => {
+													setConfirmReturnOpen(false);
+													confirmReturnMutation.mutate();
+												}}
+												action="confirmReturned"
+												entityName=""
+												gridEdit={false}
+											/>
+										</>
+									) : null}
 								</>
 							) : null}
+							<TimedAlert
+								open={confirmReturnSuccess}
+								severityType="success"
+								alertText={t("patron_request.confirm_returned.successful")}
+								key="confirm-returned-success-alert"
+								onCloseFunc={() => setConfirmReturnSuccess(false)}
+							/>
+							<TimedAlert
+								open={confirmReturnError !== null}
+								severityType="error"
+								alertText={confirmReturnError ?? ""}
+								key="confirm-returned-error-alert"
+								onCloseFunc={() => setConfirmReturnError(null)}
+							/>
 							<TimedAlert
 								open={cleanupRefusal !== null}
 								severityType="warning"

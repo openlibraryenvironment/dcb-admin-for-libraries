@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import enGB from "@/locales/en-GB/en-GB.json";
+import enUS from "@/locales/en-US/en-US.json";
+import { getRequestError } from "./getRequestError";
 import { buildWalkUpPayload, walkUpRefusal } from "./walkUpRequest";
 
 const t = (key: string, options?: Record<string, unknown>) =>
@@ -45,14 +48,28 @@ describe("buildWalkUpPayload", () => {
 describe("walkUpRefusal", () => {
 	it("names each walk-up refusal the service can make", () => {
 		expect(walkUpRefusal(400, [{ code: "WALK_UP_SAME_LIBRARY" }], t)).toBe(
-			"requesting.quick_walk_up.errors.walk_up_same_library",
+			'requesting.quick_walk_up.errors.walk_up_same_library {"description":""}',
 		);
 		expect(walkUpRefusal(400, [{ code: "ITEM_NOT_FOUND" }], t)).toBe(
-			"requesting.quick_walk_up.errors.item_not_found",
+			'requesting.quick_walk_up.errors.item_not_found {"description":""}',
 		);
 		expect(
 			walkUpRefusal(400, [{ code: "WALK_UP_ITEM_ALREADY_REQUESTED" }], t),
-		).toBe("requesting.quick_walk_up.errors.walk_up_item_already_requested");
+		).toBe(
+			'requesting.quick_walk_up.errors.walk_up_item_already_requested {"description":""}',
+		);
+	});
+
+	it("passes the description to a walk-up refusal's message", () => {
+		expect(
+			walkUpRefusal(
+				400,
+				[{ code: "SUPPLIER_CANNOT_SUPPLY", description: "Host LMS ALTOONA refused the credentials" }],
+				t,
+			),
+		).toBe(
+			'requesting.quick_walk_up.errors.supplier_cannot_supply {"description":"Host LMS ALTOONA refused the credentials"}',
+		);
 	});
 
 	it("says why a 403 refused it", () => {
@@ -73,5 +90,24 @@ describe("walkUpRefusal", () => {
 		expect(walkUpRefusal(500, undefined, t)).toBe(
 			"requesting.staff_request.patron.error.request.failed",
 		);
+	});
+});
+
+describe("a request refused because a library system was too slow", () => {
+	it("is explained on every form, not shown as a raw code", () => {
+		expect(
+			getRequestError([{ code: "PREFLIGHT_CHECKS_TIMED_OUT", description: "PT45S" }], t),
+		).toBe("requesting.staff_request.patron.error.request.timed_out");
+		expect(
+			walkUpRefusal(400, [{ code: "PREFLIGHT_CHECKS_TIMED_OUT" }], t),
+		).toBe("requesting.staff_request.patron.error.request.timed_out");
+	});
+
+	it("has a sentence in every locale", () => {
+		for (const messages of [enGB, enUS]) {
+			expect(
+				messages.requesting.staff_request.patron.error.request.timed_out,
+			).toEqual(expect.any(String));
+		}
 	});
 });

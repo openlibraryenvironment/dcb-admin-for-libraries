@@ -84,21 +84,23 @@ at module scope reads every flag as off, in every environment, and **the bug is
 invisible because the app still works**: it silently runs in legacy mode
 forever.
 
-## Three schema passes, not two
+## A schema pass per release, not two
 
 `src/queries/schemaConformance.test.ts` validates every document this
-application can emit, three times, with the flags in the state each deployment
-would have:
+application can emit once per schema, with the flags in the state each
+deployment would have:
 
 | Flags | Schema | Deployment |
 |---|---|---|
-| all on | `schema.graphqls` | dcb-service `main` |
+| all on | `schema.graphqls` | the newest schema this app targets |
 | all off | `schema.v8.71.0.graphqls` | the release before 9.0.0 |
 | the release's own | `schema.v9.0.0.graphqls` | a 9.0.0 deployment |
+| the release's own | `schema.v9.1.0.graphqls` | a 9.1.0 deployment |
+| the release's own | `schema.v9.2.0.graphqls` | a 9.2.0 deployment |
 
-**The third pass is the one that was missing**, and it stopped being optional
-when `schema.graphqls` diverged from the 9.0.0 tag: `supportUrl` arrives
-after it. Neither of the others can catch a field gated at the
+**The per-release passes are the ones that were missing**, and they stopped
+being optional when `schema.graphqls` diverged from the 9.0.0 tag: `supportUrl`
+arrived in 9.2.0. Neither of the others can catch a field gated at the
 wrong *threshold* — all-flags-on validates against a schema that has
 everything, all-flags-off against one that has nothing, and a deployment on the
 9.0.0 release is in neither state.
@@ -130,7 +132,7 @@ exists because the two fields are gated differently:
 - **`patronWebsite`** has been on `Library` since 5.11.1, so it is selected
   unconditionally and needs no flag. It was already fetched and displayed; it
   was never editable.
-- **`supportUrl`** arrives after the 9.0.0 tag, so it is behind
+- **`supportUrl`** arrived in 9.2.0, after the 9.0.0 tag, so it is behind
   its own flag. `legacy-service.spec.ts` holds the other end: 8.71.0 is never
   asked for it.
 
@@ -159,3 +161,25 @@ never grow one**: the library it reports on comes from the access token's agency
 claim and from nowhere else. The guard means a mismatch is refused, but the
 request this client sends is what a reviewer reads to decide whether it is
 honest. `e2e/insights.spec.ts` asserts that.
+
+## The library page's leaderboards before Insights
+
+"Top titles" and "Top requesters" on the library page read `/insights/*` when
+`VITE_FEATURE_INSIGHTS` is on and `/patrons/requests/stats/*` when it is off.
+8.71.0 serves only the second, binding the library as `libraryCode`; 9.x still
+serves it, as a deprecated alias of the first, binding `requestedLibraryCode`.
+The fallback therefore sends both names (`leaderboardUrl` in `statsApi.ts`). The
+response shape is the same at both paths and in every release. Without the
+fallback the two cards would vanish on 8.71.0 with nothing on screen to say why.
+`e2e/legacy-service.spec.ts` and `tests/statsApiParams.test.ts` hold it.
+
+## Telling library staff why a feature is missing
+
+Preferences, under About, has a **Feature availability** table: every registry row a
+release serves, the release it needs, and whether this deployment has it, read from the
+version dcb-service reports on `/info`. It is how a library on 8.71.0 learns why the
+Insights tab is not there. A row with `since: null` is never shown, so nothing names a
+feature no release has; rows for what patrons see through a discovery front end are left
+out where `VITE_DISCOVERY_ACTIVE` says none is deployed. The two Insights panels with flags
+of their own are registry rows for this reason, with no fields. `e2e/feature-availability.spec.ts`
+holds the three outcomes.

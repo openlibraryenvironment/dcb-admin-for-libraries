@@ -14,6 +14,7 @@ import {
 	type HomeWindowKind,
 } from "@helpers/home";
 import { TILE_MIN_HEIGHT } from "./layout";
+import { linkFilters } from "@helpers/viewState/linkFilters";
 
 const SECTIONS: readonly HomeSection[] = ["waiting", "problems", "activity"];
 
@@ -176,7 +177,7 @@ function HomeTile({
 	return (
 		<CustomLink
 			to={GRID_FOR[count.scope]}
-			search={{ filters: count.filters({ from: data.since, to: data.until }) }}
+			search={{ filters: linkFilters(count.filters({ from: data.since, to: data.until })) }}
 			// Not colour alone: beside it, a 0 or an unknown is the same tile without a link
 			underline="always"
 			sx={{ display: "block" }}

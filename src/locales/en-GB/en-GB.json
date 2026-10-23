@@ -1040,11 +1040,22 @@
 			"title_one": "Clean up this request?",
 			"title_other": "Clean up {{count}} requests?"
 		},
-		"cleanup_disabled": "Clean-up is only available for requests supplied by your library that are in error, or have not yet been shipped.",
+		"cleanup_disabled": "Clean-up is available to the borrowing library and to a supplying library, for a request that is in error or whose item has not yet been shipped.",
+		"cleanup_disabled_guarded": "Clean-up is available to the borrowing library and to a supplying library, until the request is finished.",
 		"cleanup_failed": "Requests that could not be cleaned up",
 		"cleanup_in_progress": "Clean-up in progress",
 		"cleanup_info": "Check this request for updates, then close it and delete its temporary records.",
-		"cleanup_not_supplier": "Only the supplying library can clean this request up.",
+		"cleanup_not_party": "Only the borrowing library or a supplying library can clean this request up.",
+		"cleanup_override": {
+			"title_one": "Clean up while the item is out?",
+			"title_other": "Clean up {{count}} requests while their items are out?",
+			"warning_one": "DCB refused this clean-up because the item is not back at the supplying library. Cleaning up now deletes the borrowing library's temporary records, which leaves the supplying library nothing to check the item in against. Only continue once you have confirmed where the item is.",
+			"warning_other": "DCB refused these {{count}} clean-ups because their items are not back at the supplying libraries. Cleaning up now deletes the borrowing libraries' temporary records, which leaves the supplying libraries nothing to check the items in against. Only continue once you have confirmed where each item is.",
+			"reason": "DCB's reason: {{detail}}",
+			"acknowledge_one": "I have confirmed where the item is",
+			"acknowledge_other": "I have confirmed where each item is",
+			"confirm": "Clean up anyway"
+		},
 		"cleanup_refused": "This request was not cleaned up. {{detail}}",
 		"cleanup_skipped": "Requests skipped",
 		"cleanup_succeeded": "Requests cleaned up",
@@ -1158,7 +1169,19 @@
 		"title": "Patron request",
 		"view": "View",
 		"virtual_item": "Virtual item",
-		"virtual_patron": "Virtual patron"
+		"virtual_patron": "Virtual patron",
+		"confirm_returned": {
+			"button": "Confirm item is back",
+			"info": "Your library has not reported this item back on its shelf. Confirm it once it is.",
+			"disabled": "Only a request your library supplied, whose item is on its way back to you, can be confirmed back.",
+			"title": "Confirm this item is back on your shelf?",
+			"body": "Do this once the item is back at your library. DCB then releases the request as if your library system had reported it: a cancelled request finishes as cancelled, and a returned loan completes.",
+			"confirm": "Confirm item is back",
+			"successful": "The item was confirmed back, and the request has been released.",
+			"refused": "The item was not confirmed back. {{detail}}",
+			"forbidden": "Only the library that supplied this request can confirm its item is back.",
+			"unsuccessful": "Confirming the item is back failed, and the request is unchanged. Its audit log says why."
+		}
 	},
 	"requesting": {
 		"available_at": "Items present at {{institutions}}",
@@ -1269,6 +1292,7 @@
 				"item_not_found": "No item with that barcode was found at your library. Check the barcode and try again.",
 				"item_not_in_shared_index": "This item's record is not in the shared catalogue yet, so it cannot be lent through a walk-up.",
 				"request_limits_unchecked": "The patron's request limits could not be checked. Try again in a moment.",
+				"supplier_cannot_supply": "Your library cannot lend through DCB at the moment because of a problem with its DCB setup. {{description}}",
 				"walk_up_item_already_requested": "This item is already part of a request that is still in progress. Finish or cancel that request before lending the item again.",
 				"walk_up_item_agency_mismatch": "Your library is not on the library system recorded for this item. Ask your OpenRS team to check your library's set-up.",
 				"walk_up_pickup_elsewhere": "Choose a pickup location at your library: a walk-up is collected where the item is.",
@@ -1369,7 +1393,9 @@
 					"request": {
 						"duplicate": "A request already exists for this patron at this library within the time window of 900 seconds.",
 						"generic": "Error: {{code}}. More info: {{description}}",
-						"failed": "The request could not be placed. Please try again, and contact your administrator if this keeps happening."
+						"supplier_cannot_supply": "The library that holds this copy cannot supply it because of a problem with its DCB setup. {{description}} Choose another copy, or ask that library's DCB administrator to correct it.",
+						"failed": "The request could not be placed. Please try again, and contact your administrator if this keeps happening.",
+						"timed_out": "DCB could not finish checking this request in time, because a library system was slow to respond. Nothing was requested. Try again in a few minutes, and contact your administrator if this keeps happening."
 					},
 					"validation_failure": "We were unable to validate this patron. Please correct the barcode and/or affiliated institution, and try again.",
 					"validate_first": "You must validate a patron before attempting to make a staff request on their behalf."
@@ -1470,11 +1496,16 @@
 			"title": "Title"
 		},
 		"data_grid": {
+			"column_menu": {
+				"move_left": "Move left",
+				"move_right": "Move right"
+			},
 			"active_filters_one": "{{count}} active filter",
 			"active_filters_other": "{{count}} active filters",
 			"cleanup": {
 				"error_count": "Error: {{count}}",
 				"refused_count": "Refused while the item is out: {{count}}",
+				"override": "Clean up anyway ({{count}})",
 				"selected": "Clean up selected requests ({{count}})",
 				"skipped_count": "Not eligible: {{count}}",
 				"success_count": "Successful: {{count}}"
@@ -1586,11 +1617,12 @@
 				"saved_as": "Saved as {{name}}.",
 				"applied": "Showing {{name}}.",
 				"no_filter": "No filters",
-				"unsorted": "Not sorted",
 				"sorted_asc": "Sorted by {{field}}, ascending",
 				"sorted_desc": "Sorted by {{field}}, descending",
 				"reset": "Clear filters and sort",
-				"reset_done": "Filters and sort cleared."
+				"reset_done": "Filters and sort cleared.",
+				"restored": "Showing your last view",
+				"restored_reset": "Reset to default"
 			}
 		},
 		"feedback": {
@@ -1843,30 +1875,68 @@
 		"release_notes_all": "Release notes on GitHub (opens in a new tab)",
 		"whats_new": "Show what's new in this release"
 	},
+	"feature_availability": {
+		"title": "Feature availability",
+		"intro": "Some features need a newer DCB service than others. Your consortium's DCB service reports version {{version}}.",
+		"version_unknown": "unknown",
+		"needs_version": "DCB service {{version}} or later",
+		"checking": "Checking…",
+		"column": {
+			"feature": "Feature",
+			"needs": "Needs",
+			"status": "On this service"
+		},
+		"feature": {
+			"library_branding": "How your library appears to patrons",
+			"announcements": "Announcements",
+			"library_support_url": "Report a problem link for patrons",
+			"insights": "Insights",
+			"insights_trends": "Insights: duration trends",
+			"insights_walk_up": "Insights: collected in person, or sent",
+			"guarded_cleanup": "Clean up that protects an item that is out",
+			"confirm_item_returned": "Confirm item is back",
+			"agency_scoped_requests": "Request lists for your library alone, not every library on its system"
+		},
+		"status": {
+			"ready": "Available",
+			"available": "Supported, but not switched on for your consortium yet",
+			"premature": "Switched on, but this DCB service is too old for it",
+			"unavailable": "Needs a newer DCB service",
+			"unknown": "Cannot tell: the DCB service version could not be read"
+		}
+	},
 	"release_highlights": {
 		"title": "What's new",
 		"title_version": "What's new in version {{version}}",
 		"intro": "The main changes in this release of DCB Admin for Libraries.",
 		"items": {
+			"cleanup": {
+				"heading": "Clean up protects an item that is out",
+				"body": "The borrowing library and the supplying library can both clean up a request, from Patron requests, Supplier requests or the request's own page. A request whose item is on loan or in transit is not cleaned up until someone confirms where the item is."
+			},
+			"walk_up": {
+				"heading": "Quick walk-up requests for everyone at the desk",
+				"body": "Every member of staff, read-only accounts included, can place a Quick walk-up request from Requesting when a patron borrows an item at your desk."
+			},
 			"home": {
 				"heading": "A personalised OpenRS summary for your library",
 				"body": "The Home page now shows a personalised summary of your library's OpenRS activity for today, the last 7 days or the last 30 days."
 			},
 			"views": {
-				"heading": "Share, save and clear a grid's filters",
-				"body": "Copy a link to what a grid is showing, save filters for this browser tab, and clear filters and sorting in one step."
+				"heading": "Lists you can share, come back to and export",
+				"body": "A list's address now reads as what it shows: its filters, sort, page and columns. Copy it to share the view, and a list you come back to opens as you left it, with Reset to return to the default. Save filters for this browser tab, and export patron requests the way you need with the new export wizard."
 			},
 			"accessibility": {
 				"heading": "More accessible, and set up the way you work",
 				"body": "In Preferences, choose your colour scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change, and Insights charts come with their numbers as a table."
 			},
+			"views_read_only": {
+				"heading": "Share and save what a list shows",
+				"body": "A list's address now reads as what it shows: its filters, sort, page and columns. Copy it to share the view, and save filters for this browser tab."
+			},
 			"accessibility_read_only": {
 				"heading": "More accessible, and set up the way you work",
 				"body": "In Preferences, choose your colour scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change."
-			},
-			"exports": {
-				"heading": "New and improved exports",
-				"body": "A new export wizard lets you customise your patron request exports."
 			}
 		},
 		"notes_link": "Read the full release notes on GitHub (opens in a new tab)",

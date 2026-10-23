@@ -101,6 +101,31 @@ test("a refused walk-up says why, in the desk's terms", async ({ app, page }) =>
 	).toBeVisible();
 });
 
+test("a walk-up refused for the library's own DCB setup says what to fix", async ({
+	app,
+	page,
+}) => {
+	await placeWalkUp(app, page, (route) =>
+		route.fulfill({
+			status: 400,
+			json: {
+				failedChecks: [
+					{
+						code: "SUPPLIER_CANNOT_SUPPLY",
+						description:
+							"Host LMS e2e-lms refused the credentials. To fix: Correct the credentials for Host LMS e2e-lms in DCB Admin",
+					},
+				],
+			},
+		}),
+	);
+
+	await expect(page.getByText(/your library cannot lend through dcb/i)).toBeVisible();
+	await expect(
+		page.getByText(/to fix: correct the credentials for host lms e2e-lms/i),
+	).toBeVisible();
+});
+
 // dcb-service lets every one of these roles place a walk-up, on 8.71.0 and since
 for (const [who, roles] of [
 	["a library administrator", LIBRARY_ADMIN_ROLES],

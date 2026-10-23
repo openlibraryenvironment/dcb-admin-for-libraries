@@ -1,12 +1,7 @@
-# THE NEWEST SCHEMA THIS APP TARGETS - dcb-service `feat/discovery-service-support`, which is
-# its main plus what a discovery front end needs from it: the support links and
-# announcements. On NO dcb-service release and not on its main. Nothing here
-# reaches a deployment before it merges, because every capability row that depends on it
-# carries `since: null` and its flag is off everywhere.
-#
-# It was byte-identical to the v9.0.0 tag until `supportUrl` was added to Library,
-# Consortium and their update inputs, and the announcements above after it. The
-# provisioning API and maxLocalHolds are also on dcb-service main and belong to DCB Admin.
+# THE NEWEST SCHEMA THIS APP TARGETS - dcb-service v9.2.0 (005b49a7e), the same
+# file as schema.v9.2.0.graphqls. Every capability this app has is served by it.
+# A capability needing something newer re-takes this file from the dcb-service
+# branch that carries it, and its registry row stays `since: null` until a release does.
 #
 # Copied verbatim; do not hand-edit. schemaConformance.test.ts validates every
 # document with every flag ON against this file.
@@ -14,233 +9,100 @@
 scalar JSON
 
 type Query {
-	agencies(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): AgencyPage!
-	hostLms(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): HostLmsPage!
-	locations(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): LocationPage!
-	patronRequests(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): PatronRequestPage
-	supplierRequests(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): SupplierRequestPage!
-	inactiveSupplierRequests(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): InactiveSupplierRequestPage!
-	agencyGroups(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): AgencyGroupPage!
-	instanceClusters(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): ClusterRecordPage!
-	sourceBibs(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): BibRecordPage!
-	processStates(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): ProcessStatePage!
-	audits(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): PatronRequestAuditPage!
-	patronIdentities(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): PatronIdentityPage!
-	numericRangeMappings(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): NumericRangeMappingPage!
-	referenceValueMappings(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): ReferenceValueMappingPage!
-	pickupLocations(forAgency: String): [Location]
-	libraries(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): LibraryPage!
-	libraryGroups(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): LibraryGroupPage!
-	libraryGroupMembers: [LibraryGroupMember]!
-	consortia(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): ConsortiumPage!
-	dataChangeLog(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): DataChangeLogPage!
-	roles(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): RolePage!
-	functionalSettings(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): FunctionalSettingPage!
-	alarms(
-		query: String
-		pageno: Int
-		pagesize: Int
-		order: String
-		orderBy: String
-	): AlarmPage!
-	patronRequestStatistics(
-		startDate: String
-		endDate: String
-		borrowerCodes: [String]
-		pickupCodes: [String]
-		statusCodes: [String]
-		supplierCodes: [String]
-		bibClusterId: ID
-	): [DailyPatronRequestStat]!
-	# One library's DCB Admin for Libraries accounts. Deliberately NOT consortium-wide:
-	# a library's staff list is tens of rows, and a roster across 500 libraries is a
-	# different query with different scale properties that nothing has asked for.
-	libraryUsers(libraryId: ID!): [LibraryUser!]!
-	# V-12. Everything at one scope, live or not - the admin list. A patron reads the LIVE
-	# ones from /discovery/announcements, which is anonymous and has no query language.
-	announcements(scopeType: String!, scopeId: ID!): [Announcement!]!
-	# Whether this deployment has an identity provider configured at all, so the UI can
-	# hide a tab that could only fail rather than render a form nobody can submit.
-	libraryUserProvisioningAvailable: Boolean!
+    agencies(query: String, pageno: Int, pagesize: Int, order: String, orderBy: String): AgencyPage!
+    hostLms(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): HostLmsPage!
+    locations(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): LocationPage!
+    patronRequests(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): PatronRequestPage
+    supplierRequests(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): SupplierRequestPage!
+    inactiveSupplierRequests(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): InactiveSupplierRequestPage!
+    agencyGroups(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): AgencyGroupPage!
+    instanceClusters(query: String, pageno: Int, pagesize: Int, order: String, orderBy: String): ClusterRecordPage!
+    sourceBibs(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): BibRecordPage!
+    processStates(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): ProcessStatePage!
+    audits(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): PatronRequestAuditPage!
+    patronIdentities(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): PatronIdentityPage!
+    numericRangeMappings(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): NumericRangeMappingPage!
+    referenceValueMappings(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): ReferenceValueMappingPage!
+		pickupLocations(forAgency: String): [Location]
+		libraries(query: String, pageno: Int, pagesize: Int, order: String, orderBy: String): LibraryPage!
+		libraryGroups(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): LibraryGroupPage!
+		libraryGroupMembers: [LibraryGroupMember]!
+		consortia(query: String, pageno:Int, pagesize: Int, order: String, orderBy: String): ConsortiumPage!
+		dataChangeLog(query: String, pageno: Int, pagesize: Int, order: String, orderBy: String): DataChangeLogPage!
+		roles(query: String, pageno: Int, pagesize: Int, order: String, orderBy: String): RolePage!
+		functionalSettings(query: String, pageno: Int, pagesize: Int, order: String, orderBy: String): FunctionalSettingPage!
+		alarms(query: String, pageno: Int, pagesize: Int, order: String, orderBy: String): AlarmPage!
+		patronRequestStatistics(startDate: String,endDate: String,borrowerCodes:[String] ,pickupCodes: [String],
+			statusCodes: [String], supplierCodes: [String], bibClusterId: ID): [DailyPatronRequestStat]!
+		# One library's DCB Admin for Libraries accounts. Deliberately NOT consortium-wide:
+		# a library's staff list is tens of rows, and a roster across 500 libraries is a
+		# different query with different scale properties that nothing has asked for.
+		libraryUsers(libraryId: ID!): [LibraryUser!]!
+		requestTags: [RequestTag]
+		# Whether this deployment has an identity provider configured at all, so the UI can
+		# hide a tab that could only fail rather than render a form nobody can submit.
+		libraryUserProvisioningAvailable: Boolean!
+		# Everything at one scope, live or not - the admin list. A patron reads the LIVE
+		# ones from /discovery/announcements, which is anonymous and has no query language.
+		announcements(scopeType: String!, scopeId: ID!): [Announcement!]!
 }
 
 type Mutation {
-	updateAgencyParticipationStatus(
-		input: UpdateAgencyParticipationInput
-	): Agency!
-	createAgencyGroup(input: AgencyGroupInput): AgencyGroup!
-	addAgencyToGroup(input: AddAgencyToGroupCommand): AgencyGroupMember!
-	deleteContact(input: DeleteConsortiumContactInput): DeleteEntityPayload!
-	createContact(input: ConsortiumContactInput): ConsortiumContact!
-	createConsortium(input: ConsortiumInput): Consortium!
-	deleteConsortium(input: DeleteEntityInput): DeleteEntityPayload!
-	updateConsortium(input: UpdateConsortiumInput): Consortium!
-	updateFunctionalSetting(
-		input: UpdateFunctionalSettingInput
-	): FunctionalSetting!
-	createFunctionalSetting(input: FunctionalSettingInput): FunctionalSetting!
-	createLibrary(input: LibraryInput): Library!
-	deleteLibrary(input: DeleteEntityInput): DeleteEntityPayload!
-	updateLibrary(input: UpdateLibraryInput): Library!
-	createLibraryContact(input: CreateLibraryContactInput): LibraryContact!
-	deleteLibraryContact(input: DeleteLibraryContactInput): DeleteEntityPayload!
-	addLibraryToGroup(input: AddLibraryToGroupCommand): LibraryGroupMember!
-	createLibraryGroup(input: LibraryGroupInput): LibraryGroup!
-	createLocation(input: CreateLocationInput): Location!
-	deleteLocation(input: DeleteEntityInput): DeleteEntityPayload!
-	updateLocation(input: UpdateLocationInput): Location!
-	updateReferenceValueMapping(
-		input: UpdateReferenceValueMappingInput
-	): ReferenceValueMapping!
-	deleteNumericRangeMapping(input: DeleteEntityInput): DeleteEntityPayload!
-	updateNumericRangeMapping(
-		input: UpdateNumericRangeMappingInput
-	): NumericRangeMapping!
-	updatePerson(input: UpdatePersonInput): Person!
-	createReferenceValueMapping(
-		input: CreateReferenceValueMappingInput
-	): ReferenceValueMapping!
-	deleteReferenceValueMapping(input: DeleteEntityInput): DeleteEntityPayload!
-	createRole(input: CreateRoleInput): Role!
-	updateRole(input: UpdateRoleInput): Role!
-	updateConsortialMaxLoans(input: UpdateConsortialMaxLoansInput): Agency!
-	updateAgency(input: UpdateAgencyInput): Agency!
-	createHostLms(input: CreateHostLmsInput!): CreateHostLmsResult
-	updateHostLms(input: UpdateHostLmsInput!): UpdateHostLmsResult
-	provisionLibraryUser(input: ProvisionLibraryUserInput): LibraryUser!
-	setLibraryUserEnabled(input: SetLibraryUserEnabledInput): LibraryUser!
-	resendLibraryUserInvite(input: ResendLibraryUserInviteInput): LibraryUser!
-	# V-12. A consortium announcement reaches every patron of every member library, so
-	# consortium scope needs CONSORTIUM_ADMIN; a library administrator may publish for a
-	# library they actually administer, and the scope of an existing one cannot be edited.
-	createAnnouncement(input: CreateAnnouncementInput): Announcement!
-	updateAnnouncement(input: UpdateAnnouncementInput): Announcement!
-	deleteAnnouncement(input: DeleteEntityInput): DeleteEntityPayload!
+		updateAgencyParticipationStatus(input: UpdateAgencyParticipationInput): Agency!
+		createAgencyGroup(input: AgencyGroupInput): AgencyGroup!
+    addAgencyToGroup(input: AddAgencyToGroupCommand): AgencyGroupMember!
+		deleteContact(input: DeleteConsortiumContactInput): DeleteEntityPayload!
+		createContact(input: ConsortiumContactInput): ConsortiumContact!
+		createConsortium(input: ConsortiumInput): Consortium!
+		deleteConsortium(input: DeleteEntityInput): DeleteEntityPayload!
+		updateConsortium(input: UpdateConsortiumInput): Consortium!
+		updateFunctionalSetting(input: UpdateFunctionalSettingInput): FunctionalSetting!
+		createFunctionalSetting(input: FunctionalSettingInput): FunctionalSetting!
+		# A consortium announcement reaches every patron of every member library, so
+		# consortium scope needs CONSORTIUM_ADMIN; a library administrator may publish for a
+		# library they actually administer, and the scope of an existing one cannot be edited.
+		createAnnouncement(input: CreateAnnouncementInput): Announcement!
+		updateAnnouncement(input: UpdateAnnouncementInput): Announcement!
+		deleteAnnouncement(input: DeleteEntityInput): DeleteEntityPayload!
+		createLibrary(input: LibraryInput): Library!
+		deleteLibrary(input: DeleteEntityInput): DeleteEntityPayload!
+		updateLibrary(input: UpdateLibraryInput): Library!
+		createLibraryContact(input: CreateLibraryContactInput): LibraryContact!
+		deleteLibraryContact(input: DeleteLibraryContactInput): DeleteEntityPayload!
+		addLibraryToGroup(input: AddLibraryToGroupCommand): LibraryGroupMember!
+		createLibraryGroup(input: LibraryGroupInput): LibraryGroup!
+		createLocation(input: CreateLocationInput): Location!
+		deleteLocation(input: DeleteEntityInput): DeleteEntityPayload!
+		updateLocation(input: UpdateLocationInput): Location!
+		updateReferenceValueMapping(input: UpdateReferenceValueMappingInput): ReferenceValueMapping!
+		deleteNumericRangeMapping(input: DeleteEntityInput): DeleteEntityPayload!
+		updateNumericRangeMapping(input: UpdateNumericRangeMappingInput): NumericRangeMapping!
+		updatePerson(input: UpdatePersonInput): Person!
+		createReferenceValueMapping(input: CreateReferenceValueMappingInput): ReferenceValueMapping!
+		deleteReferenceValueMapping(input: DeleteEntityInput): DeleteEntityPayload!
+		createRole(input: CreateRoleInput): Role!
+		updateRole(input: UpdateRoleInput): Role!
+		updateConsortialMaxLoans(input: UpdateConsortialMaxLoansInput): Agency!
+		updateAgency(input: UpdateAgencyInput): Agency!
+	  createHostLms(input: CreateHostLmsInput!): CreateHostLmsResult
+		updateHostLms(input: UpdateHostLmsInput!): UpdateHostLmsResult
+		provisionLibraryUser(input: ProvisionLibraryUserInput): LibraryUser!
+		setLibraryUserEnabled(input: SetLibraryUserEnabledInput): LibraryUser!
+		resendLibraryUserInvite(input: ResendLibraryUserInviteInput): LibraryUser!
+		# agencyCode is needed only when the caller holds several agencies involved in the request
+		addPatronRequestNote(patronRequestId: ID!, body: String!, agencyCode: String): PatronRequestNote!
+		retractPatronRequestNote(id: ID!): PatronRequestNote!
+		tagPatronRequest(patronRequestId: ID!, tagCode: String!, agencyCode: String): [PatronRequestTag]!
+		untagPatronRequest(patronRequestId: ID!, tagCode: String!, agencyCode: String): [PatronRequestTag]!
+		createRequestTag(input: RequestTagInput!): RequestTag!
+		updateRequestTag(input: RequestTagInput!): RequestTag!
+		deleteRequestTag(code: String!): DeleteEntityPayload!
+
 }
 
 input AddAgencyToGroupCommand {
-	agency: ID!
-	group: ID!
+        agency: ID!
+        group: ID!
 }
 
 input AddLibraryToGroupCommand {
@@ -250,36 +112,37 @@ input AddLibraryToGroupCommand {
 
 enum FunctionalSettingType {
 	OWN_LIBRARY_BORROWING
-	PICKUP_ANYWHERE
+  PICKUP_ANYWHERE
 	RE_RESOLUTION
 	SELECT_UNAVAILABLE_ITEMS
-	TRIGGER_SUPPLIER_RENEWAL
+  TRIGGER_SUPPLIER_RENEWAL
 	DENY_LIBRARY_MAPPING_EDIT
-	VIRTUAL_PATRON_NAMES_VISIBLE
+	VIRTUAL_PATRON_NAMES_VISIBLE,
 	VIRTUAL_PATRON_NAMES_POLARIS
 }
 
 enum ProcessingStatus {
-	PROCESSING_REQUIRED
-	SUCCESS
+	PROCESSING_REQUIRED,
+	SUCCESS,
 	FAILURE
 }
 
 enum RenewalStatus {
-	ALLOWED
-	DISALLOWED
-	UNKNOWN
+	ALLOWED,
+	DISALLOWED,
+	UNKNOWN,
 	UNSUPPORTED
 }
+
 
 """
 Graphql does not allow types to be reused as input types as the semantics are different. We create the input types here.
 AgencyGroupInput : fields that define a new agency group.
 """
 input AgencyGroupInput {
-	id: ID
-	code: String!
-	name: String!
+    id: ID
+    code: String!
+    name: String!
 }
 
 input ConsortiumInput {
@@ -399,7 +262,7 @@ input LibraryInput {
 	contacts: [PersonInput]!
 	longitude: Float
 	latitude: Float
-	# V-11.1. Both are rendered as an href in the patron app's footer, so both must be
+	# Both are rendered as an href in the patron app's footer, so both must be
 	# an absolute http(s) URL naming a host. An explicit null or an empty string clears
 	# the field. patronWebsite answers opening hours and joining; supportUrl is where a
 	# patron reports that discovery itself is wrong.
@@ -448,6 +311,63 @@ input DeleteConsortiumContactInput {
 	changeCategory: String
 }
 
+# Something a library or consortium needs to tell its patrons.
+#
+# headline and body are PLAIN TEXT and there is deliberately no markup field: operator-
+# authored markup rendered into every patron's page is stored XSS with an admin form
+# attached. expiresAt is required and there is no "never" value - the failure mode of every
+# announcement banner is the notice from March still up in November.
+type Announcement {
+	id: ID
+	scopeType: String
+	scopeId: ID
+	headline: String
+	body: String
+	urgent: Boolean
+	dismissible: Boolean
+	startsAt: String
+	expiresAt: String
+	lastEditedBy: String
+	reason: String
+	changeCategory: String
+	changeReferenceUrl: String
+	dateCreated: String
+	dateUpdated: String
+}
+
+input CreateAnnouncementInput {
+	# CONSORTIUM | LIBRARY_GROUP | LIBRARY. A group notice reaches the patrons of its member libraries.
+	scopeType: String!
+	scopeId: ID!
+	headline: String!
+	body: String!
+	urgent: Boolean
+	dismissible: Boolean
+	# ISO-8601 instants. Both required: a start lets an operator write Monday's notice on
+	# Friday, and an end is what stops it outliving what it was about.
+	startsAt: String!
+	expiresAt: String!
+	reason: String
+	changeCategory: String
+	changeReferenceUrl: String
+}
+
+# The scope is absent on purpose. Moving a library's notice to consortium scope by editing
+# it would widen its reach to every patron of every member library through a path that never
+# asks the question the create path asks; a misplaced notice is withdrawn and republished.
+input UpdateAnnouncementInput {
+	id: ID!
+	headline: String
+	body: String
+	urgent: Boolean
+	dismissible: Boolean
+	startsAt: String
+	expiresAt: String
+	reason: String
+	changeCategory: String
+	changeReferenceUrl: String
+}
+
 input DeleteEntityInput {
 	id: ID!
 	reason: String
@@ -488,7 +408,7 @@ input UpdateConsortiumInput {
 	id: ID!
 	description: String
 	catalogueSearchUrl: String
-	# V-11.1. Rendered as an href in the patron app's footer: an absolute http(s) URL
+	# Rendered as an href in the patron app's footer: an absolute http(s) URL
 	# naming a host, and an explicit null or empty string clears the field.
 	websiteUrl: String
 	supportUrl: String
@@ -547,6 +467,10 @@ input UpdateLibraryInput {
 	type: String
 	patronWebsite: String
 	supportUrl: String
+	# DEWEY | LCC. Explicit null or empty clears it, withdrawing the library from
+	# shelf browse; an unrecognised value is REFUSED rather than ignored, or the form would
+	# show a value the server did not store.
+	classificationScheme: String
 	discoverySystem: String
 	# Patron-facing brand (N-1.3). patronWebsite above is the logo's link target, so
 	# there is no second URL here. Explicit null or empty string clears the field.
@@ -633,20 +557,22 @@ input UpdateHostLmsInput {
 }
 
 type ProcessState {
-	id: ID
-	context: ID
-	processName: String
-	processState: JSON
+  id: ID
+  context: ID
+  processName: String
+  processState: JSON
 }
 
 type HostLms {
-	id: ID
-	code: String
-	name: String
-	lmsClientClass: String
+  id: ID
+  code: String
+  name: String
+  lmsClientClass: String
 	suppressionRulesetName: String
 	itemSuppressionRulesetName: String
-	clientConfig: JSON
+  clientConfig: JSON
+  "The result of the last connectivity check: status, failure category, version, facts, checkedAt, lastOkAt"
+  lastPing: JSON
 }
 
 """
@@ -654,41 +580,41 @@ An Agency is a legal entity participating in resource sharing - perhaps an insti
 example Hathi Trust or internet archive. Agencies are the root object off which branch locations and other domain specific records can hang.
 """
 type Agency {
-	id: ID
-	code: String
-	name: String
-	authProfile: String
-	longitude: Float
-	latitude: Float
-	hostLms: HostLms
-	locations: [Location]
-	isSupplyingAgency: Boolean
-	isBorrowingAgency: Boolean
-	maxConsortialLoans: Int
-	"""
-	The Host LMS limit on total holds per patron, local holds included. Null means
-	the agency has not told us, so DCB will not check it.
-	"""
-	maxLocalHolds: Int
+    id: ID
+    code: String
+    name: String
+    authProfile: String
+    longitude: Float
+    latitude: Float
+    hostLms: HostLms
+    locations: [Location]
+		isSupplyingAgency: Boolean
+		isBorrowingAgency: Boolean
+		maxConsortialLoans: Int
+		"""
+		The Host LMS limit on total holds per patron, local holds included. Null means
+		the agency has not told us, so DCB will not check it.
+		"""
+		maxLocalHolds: Int
 }
 
 """
 An agency group is a collection of Agencies that can be referred to as a group. Agencies are "Members" of agency groups and properties can be
-attached to the membership. Agency groups most often represent consortia. The consortium itself is probably still best modelled as an Agency
+attached to the membership. Agency groups most often represent consortia. The consortium itself is probably still best modelled as an Agency 
 for the purposes of it's interactions with other systems, but for modelling the members of a consortium, agency group is a useful abstracton for
 expressing the aggregation of agencies under a single heading
 """
 type AgencyGroup {
-	id: ID!
-	code: String!
-	name: String!
-	members: [AgencyGroupMember]
+    id: ID!
+    code: String!
+    name: String!
+    members: [AgencyGroupMember]
 }
 
 type AgencyGroupMember {
-	id: ID!
-	agency: Agency
-	group: AgencyGroup
+  id: ID!
+  agency: Agency
+  group: AgencyGroup
 }
 
 type Alarm {
@@ -702,160 +628,206 @@ type Alarm {
 }
 
 type PatronRequest {
-	id: ID!
-	dateCreated: String
-	dateUpdated: String
-	patronHostlmsCode: String
-	patron: Patron
-	requestingIdentity: PatronIdentity
-	bibClusterId: ID
-	pickupLocationCode: String
-	pickupPatronId: String
-	pickupItemId: String
-	pickupItemType: String
-	pickupItemStatus: String
-	pickupRequestId: String
-	pickupRequestStatus: String
-	status: String
-	outcome: String
-	localRequestId: String
-	localRequestStatus: String
-	localItemId: String
-	localItemStatus: String
-	localItemType: String
-	localBibId: String
-	description: String
-	nextScheduledPoll: String
-	errorMessage: String
-	activeWorkflow: String
-	requesterNote: String
-	suppliers: [SupplierRequest]
-	audit: [PatronRequestAudit]
-	clusterRecord: ClusterRecord
-	previousStatus: String
-	pollCountForCurrentStatus: Int
-	manualPollCountForCurrentStatus: Int
-	autoPollCountForCurrentStatus: Int
-	currentStatusTimestamp: String
-	nextExpectedStatus: String
-	outOfSequenceFlag: Boolean
-	elapsedTimeInCurrentStatus: Float
-	rawLocalItemStatus: String
-	rawLocalRequestStatus: String
-	localItemHostlmsCode: String
-	localItemAgencyCode: String
-	isManuallySelectedItem: Boolean
-	resolutionCount: Int
-	renewalCount: Int
-	localRenewalCount: Int
-	rawPickupItemStatus: String
-	rawPickupRequestStatus: String
-	pickupBibId: String
-	pickupItemBarcode: String
+  id: ID!
+  dateCreated: String
+  dateUpdated: String
+  patronHostlmsCode: String
+  patron: Patron
+  requestingIdentity: PatronIdentity
+  bibClusterId: ID
+  pickupLocationCode: String
+  pickupPatronId: String
+  pickupItemId: String
+  pickupItemType: String
+  pickupItemStatus: String
+  pickupRequestId: String
+  pickupRequestStatus: String
+  status: String
+  outcome: String
+  localRequestId: String
+  localRequestStatus: String
+  localItemId: String
+  localItemStatus: String
+  localItemType: String
+  localBibId: String
+  description: String
+  nextScheduledPoll: String
+  errorMessage: String
+  activeWorkflow: String
+  requesterNote: String
+  suppliers: [SupplierRequest]
+  audit: [PatronRequestAudit]
+  clusterRecord: ClusterRecord
+  previousStatus: String
+  pollCountForCurrentStatus: Int
+  manualPollCountForCurrentStatus: Int
+  autoPollCountForCurrentStatus: Int
+  currentStatusTimestamp: String
+  nextExpectedStatus: String
+  outOfSequenceFlag: Boolean
+  elapsedTimeInCurrentStatus: Float
+  rawLocalItemStatus: String
+  rawLocalRequestStatus: String
+  localItemHostlmsCode: String
+  localItemAgencyCode: String
+  isManuallySelectedItem: Boolean
+  resolutionCount: Int
+  renewalCount: Int
+  localRenewalCount: Int
+  rawPickupItemStatus: String
+  rawPickupRequestStatus: String
+  pickupBibId: String
+  pickupItemBarcode: String
 	isExpeditedCheckout: Boolean
+	"True when staff placed the request, false when a patron did, null when DCB cannot tell"
+	placedByStaff: Boolean
 	localHoldingId: String
 	pickupHoldingId: String
 	isTooLong: Boolean
 	protocol: String
 	renewalStatus: RenewalStatus
+	# Newest first, at most 50 per page
+	notes(pageno: Int, pagesize: Int): PatronRequestNotePage
+	tags: [PatronRequestTag]
+	involvedAgencyCodes: [String]
+}
+
+type PatronRequestNote {
+	id: ID
+	patronRequestId: ID
+	# LIBRARY or CONSORTIUM; agencyCode and libraryName are null for the consortium
+	authorKind: String
+	agencyCode: String
+	libraryName: String
+	body: String
+	dateCreated: String
+	retracted: Boolean
+	retractedBy: String
+}
+
+type PatronRequestNotePage {
+	content: [PatronRequestNote]
+	totalSize: Int
+	pageable: Pageable
+}
+
+type PatronRequestTag {
+	code: String
+	label: String
+	agencyCodes: [String]
+	consortium: Boolean
+}
+
+type RequestTag {
+	code: String
+	label: String
+	description: String
+	active: Boolean
+}
+
+input RequestTagInput {
+	code: String!
+	label: String!
+	description: String
+	active: Boolean
 }
 
 type PatronRequestAudit {
-	id: ID!
-	auditDate: String
-	briefDescription: String
-	fromStatus: String
-	toStatus: String
-	auditData: JSON
-	patronRequest: PatronRequest
+  id: ID!
+  auditDate: String
+  briefDescription: String
+  fromStatus: String
+  toStatus: String
+  auditData: JSON
+  patronRequest: PatronRequest
 }
 
 type SupplierRequest {
-	id: ID!
-	canonicalItemType: String
-	dateCreated: String
-	dateUpdated: String
-	hostLmsCode: String
-	isActive: Boolean
-	localItemId: String
-	localBibId: String
-	localItemBarcode: String
-	localItemLocationCode: String
-	localItemStatus: String
-	localItemType: String
-	localId: String
-	localStatus: String
-	localAgency: String
-	patronRequest: PatronRequest
-	virtualPatron: PatronIdentity
-	rawLocalItemStatus: String
-	rawLocalStatus: String
-	localRenewalCount: Int
-	localHoldingId: String
+  id: ID!
+  canonicalItemType: String
+  dateCreated: String
+  dateUpdated: String
+  hostLmsCode: String
+  isActive: Boolean
+  localItemId: String
+  localBibId: String
+  localItemBarcode: String
+  localItemLocationCode: String
+  localItemStatus: String
+  localItemType: String
+  localId: String
+  localStatus: String
+  localAgency: String
+  patronRequest: PatronRequest
+  virtualPatron: PatronIdentity
+  rawLocalItemStatus: String
+  rawLocalStatus: String
+  localRenewalCount: Int
+  localHoldingId: String
 	localRenewable: Boolean
 	localHoldCount: Int
 }
 
 type InactiveSupplierRequest {
-	id: ID!
-	canonicalItemType: String
-	dateCreated: String
-	dateUpdated: String
-	hostLmsCode: String
-	localItemId: String
-	localBibId: String
-	localItemBarcode: String
-	localItemLocationCode: String
-	localItemStatus: String
-	localItemType: String
-	localId: String
-	localStatus: String
-	localAgency: String
-	patronRequest: PatronRequest
-	virtualPatron: PatronIdentity
-	rawLocalItemStatus: String
-	rawLocalStatus: String
-	localRenewalCount: Int
-	localHoldingId: String
+  id: ID!
+  canonicalItemType: String
+  dateCreated: String
+  dateUpdated: String
+  hostLmsCode: String
+  localItemId: String
+  localBibId: String
+  localItemBarcode: String
+  localItemLocationCode: String
+  localItemStatus: String
+  localItemType: String
+  localId: String
+  localStatus: String
+  localAgency: String
+  patronRequest: PatronRequest
+  virtualPatron: PatronIdentity
+  rawLocalItemStatus: String
+  rawLocalStatus: String
+  localRenewalCount: Int
+  localHoldingId: String
 }
 
 type Patron {
-	id: ID!
+  id: ID!
 }
 
 type PatronIdentity {
-	id: ID!
-	localId: String
-	homeIdentity: Boolean
-	localBarcode: String
-	localNames: String
-	localPtype: String
-	canonicalPtype: String
-	localHomeLibraryCode: String
-	lastValidated: String
-	# The library this patron belongs to, resolved from their home location during
-	# patron validation. The only place a request records it: patronHostlmsCode names
-	# the system, which on a shared one is every co-tenant rather than any of them.
-	resolvedAgency: Agency
+  id: ID!
+  localId: String
+  homeIdentity: Boolean
+  localBarcode: String
+  localNames: String
+  localPtype: String
+  canonicalPtype: String
+  localHomeLibraryCode: String
+  lastValidated: String
+  # The library this patron belongs to, resolved from their home location during
+  # patron validation. The only place a request records it: patronHostlmsCode names
+  # the system, which on a shared one is every co-tenant rather than any of them.
+  resolvedAgency: Agency
 }
 
 type Location {
-	id: ID!
-	dateCreated: String
-	dateUpdated: String
-	code: String
-	name: String
-	type: String
-	agency: Agency
-	parentLocation: Location
-	hostSystem: HostLms
-	isPickup: Boolean
+  id: ID!
+  dateCreated: String
+  dateUpdated: String
+  code: String
+  name: String
+  type: String
+  agency: Agency
+  parentLocation: Location
+  hostSystem: HostLms
+  isPickup: Boolean
 	longitude: Float
-	latitude: Float
-	locationReference: String
-	deliveryStops: String
-	printLabel: String
-	localId: String
+  latitude: Float
+  locationReference: String
+  deliveryStops: String
+  printLabel: String
+  localId: String
 	lastImported: String
 	isEnabledForPickupAnywhere: Boolean
 }
@@ -872,6 +844,9 @@ type Library {
 	discoverySystem: String
 	patronWebsite: String
 	supportUrl: String
+	# DEWEY | LCC, or null for a library that has not stated one - which is a
+	# library shelf browse is NOT offered for, rather than one defaulted to Dewey.
+	classificationScheme: String
 	hostLmsConfiguration: String
 	longitude: Float
 	latitude: Float
@@ -970,20 +945,20 @@ type DataChangeLog {
 See: https://micronaut-projects.github.io/micronaut-data/2.4.0/api/io/micronaut/data/model/Page.html
 """
 type Pageable {
-	number: Int
-	offset: Int
+  number: Int
+  offset: Int
 }
 
 type AgencyPage {
-	content: [Agency]
-	totalSize: Int
-	pageable: Pageable
+  content: [Agency]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type AgencyGroupPage {
-	content: [AgencyGroup]
-	totalSize: Int
-	pageable: Pageable
+  content: [AgencyGroup]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type AlarmPage {
@@ -999,15 +974,15 @@ type DataChangeLogPage {
 }
 
 type BibRecordPage {
-	content: [BibRecord]
-	totalSize: Int
-	pageable: Pageable
+  content: [BibRecord]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type ClusterRecordPage {
-	content: [ClusterRecord]
-	totalSize: Int
-	pageable: Pageable
+  content: [ClusterRecord]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type ConsortiumPage {
@@ -1029,15 +1004,15 @@ type LibraryGroupPage {
 }
 
 type HostLmsPage {
-	content: [HostLms]
-	totalSize: Int
-	pageable: Pageable
+  content: [HostLms]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type LocationPage {
-	content: [Location]
-	totalSize: Int
-	pageable: Pageable
+  content: [Location]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type LibraryPage {
@@ -1046,28 +1021,29 @@ type LibraryPage {
 	pageable: Pageable
 }
 
+
 type PatronRequestPage {
-	content: [PatronRequest]
-	totalSize: Int
-	pageable: Pageable
+  content: [PatronRequest]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type ProcessStatePage {
-	content: [ProcessState]
-	totalSize: Int
-	pageable: Pageable
+  content: [ProcessState]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type PatronRequestAuditPage {
-	content: [PatronRequestAudit]
-	totalSize: Int
-	pageable: Pageable
+  content: [PatronRequestAudit]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type PatronIdentityPage {
-	content: [PatronIdentity]
-	totalSize: Int
-	pageable: Pageable
+  content: [PatronIdentity]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type RolePage {
@@ -1077,98 +1053,99 @@ type RolePage {
 }
 
 type SupplierRequestPage {
-	content: [SupplierRequest]
-	totalSize: Int
-	pageable: Pageable
+  content: [SupplierRequest]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type InactiveSupplierRequestPage {
-	content: [InactiveSupplierRequest]
-	totalSize: Int
-	pageable: Pageable
+  content: [InactiveSupplierRequest]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type NumericRangeMappingPage {
-	content: [NumericRangeMapping]
-	totalSize: Int
-	pageable: Pageable
+  content: [NumericRangeMapping]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type ReferenceValueMappingPage {
-	content: [ReferenceValueMapping]
-	totalSize: Int
-	pageable: Pageable
+  content: [ReferenceValueMapping]
+  totalSize: Int
+  pageable: Pageable
 }
 
 type ReferenceValueMapping {
-	id: ID!
-	fromCategory: String
-	fromContext: String
-	fromValue: String
-	toCategory: String
-	toContext: String
-	toValue: String
-	reciprocal: Boolean
-	label: String
-	lastImported: String
-	deleted: Boolean
+  id: ID!
+  fromCategory: String
+  fromContext: String
+  fromValue: String
+  toCategory: String
+  toContext: String
+  toValue: String
+  reciprocal: Boolean
+  label: String
+  lastImported: String
+  deleted: Boolean
 }
 
 type NumericRangeMapping {
-	id: ID!
-	context: String
-	domain: String
-	lowerBound: Int
-	upperBound: Int
-	targetContext: String
-	mappedValue: String
+  id: ID!
+  context: String
+  domain: String
+  lowerBound: Int
+  upperBound: Int
+  targetContext: String
+  mappedValue: String
 	lastImported: String
 	deleted: Boolean
 }
 
 type ClusterRecord {
-	id: ID!
-	title: String
-	selectedBib: ID
-	isDeleted: Boolean
-	dateCreated: String
-	dateUpdated: String
+  id: ID!
+  title: String
+  selectedBib: ID
+  isDeleted: Boolean
+  dateCreated: String
+  dateUpdated: String
 	lastIndexed: String
-	members: [BibRecord]
+  members: [BibRecord]
 }
 
 type BibRecord {
-	id: ID!
-	dateCreated: String
-	dateUpdated: String
-	title: String
-	author: String
-	placeOfPublication: String
-	publisher: String
-	dateOfPublication: String
-	edition: String
-	isLargePrint: Boolean
-	clusterReason: String
-	typeOfRecord: String
-	canonicalMetadata: JSON
-	metadataScore: Int
-	processVersion: Int
-	contributesTo: ClusterRecord
-	sourceSystemId: ID
-	sourceRecordId: String
+  id: ID!
+  dateCreated: String
+  dateUpdated: String
+  title: String
+  author: String
+  placeOfPublication: String
+  publisher: String
+  dateOfPublication: String
+  edition: String
+  isLargePrint: Boolean
+  clusterReason: String
+  typeOfRecord: String
+  canonicalMetadata: JSON
+  metadataScore: Int
+  processVersion: Int
+  contributesTo: ClusterRecord
+  sourceSystemId: ID
+  sourceRecordId: String
 	sourceRecordUuid: String
-	sourceRecord: SourceRecord
-	matchPoints: [MatchPoint]
+  sourceRecord: SourceRecord
+  matchPoints: [MatchPoint]
 }
 
 """
 Used in ingest v1. Note that sourceRecordId is also legacy - source record UUID is the one for ingest v2 and later
 """
+
 type RawSource {
-	id: ID!
-	hostLmsId: ID!
-	remoteId: String
-	json: JSON
+  id: ID!
+  hostLmsId: ID!
+  remoteId: String
+  json: JSON
 }
 
 """
@@ -1186,9 +1163,9 @@ type SourceRecord {
 }
 
 type MatchPoint {
-	id: ID!
-	value: ID!
-	bibId: ID!
+  id: ID!
+  value: ID!
+  bibId: ID!
 }
 
 type FunctionalSetting {
@@ -1219,6 +1196,10 @@ type CreateHostLmsResult {
 	hostLms: HostLms
 	pingStatus: String
 	ingestStatus: String
+	"OK; Missing: the mandatory settings the stored config lacks; or Failed: why no client could be built. Makes no call to the Host LMS."
+	configurationStatus: String
+	"OK; Unsupported: each agency whose auth profile this Host LMS cannot authenticate with, (none) where it has no profile; Not checked: why; or Failed: why."
+	authProfileStatus: String
 	warnings: [String]
 }
 
@@ -1226,8 +1207,13 @@ type UpdateHostLmsResult {
 	hostLms: HostLms
 	pingStatus: String
 	ingestStatus: String
+	"OK; Missing: the mandatory settings the stored config lacks; or Failed: why no client could be built. Makes no call to the Host LMS."
+	configurationStatus: String
+	"OK; Unsupported: each agency whose auth profile this Host LMS cannot authenticate with, (none) where it has no profile; Not checked: why; or Failed: why."
+	authProfileStatus: String
 	warnings: [String]
 }
+
 
 # ---------------------------------------------------------------------------
 # DCB Admin for Libraries accounts
@@ -1289,61 +1275,4 @@ type LibraryUser {
 	status: LibraryUserStatus!
 	dateCreated: String
 	lastEditedBy: String
-}
-
-# V-12. Something a library or consortium needs to tell its patrons.
-#
-# headline and body are PLAIN TEXT and there is deliberately no markup field: operator-
-# authored markup rendered into every patron's page is stored XSS with an admin form
-# attached. expiresAt is required and there is no "never" value - the failure mode of every
-# announcement banner is the notice from March still up in November.
-type Announcement {
-	id: ID
-	scopeType: String
-	scopeId: ID
-	headline: String
-	body: String
-	urgent: Boolean
-	dismissible: Boolean
-	startsAt: String
-	expiresAt: String
-	lastEditedBy: String
-	reason: String
-	changeCategory: String
-	changeReferenceUrl: String
-	dateCreated: String
-	dateUpdated: String
-}
-
-input CreateAnnouncementInput {
-	# CONSORTIUM | LIBRARY_GROUP | LIBRARY
-	scopeType: String!
-	scopeId: ID!
-	headline: String!
-	body: String!
-	urgent: Boolean
-	dismissible: Boolean
-	# ISO-8601 instants. Both required: a start lets an operator write Monday's notice on
-	# Friday, and an end is what stops it outliving what it was about.
-	startsAt: String!
-	expiresAt: String!
-	reason: String
-	changeCategory: String
-	changeReferenceUrl: String
-}
-
-# The scope is absent on purpose. Moving a library's notice to consortium scope by editing
-# it would widen its reach to every patron of every member library through a path that never
-# asks the question the create path asks; a misplaced notice is withdrawn and republished.
-input UpdateAnnouncementInput {
-	id: ID!
-	headline: String
-	body: String
-	urgent: Boolean
-	dismissible: Boolean
-	startsAt: String
-	expiresAt: String
-	reason: String
-	changeCategory: String
-	changeReferenceUrl: String
 }

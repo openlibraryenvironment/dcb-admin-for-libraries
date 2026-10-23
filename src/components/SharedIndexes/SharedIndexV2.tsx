@@ -1,5 +1,5 @@
 import { useRouter, useSearch } from "@tanstack/react-router";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import axios from "axios";
 import {
 	keepPreviousData,
@@ -38,10 +38,9 @@ import {
 } from "@models/SearchTypes";
 import { buildQuery } from "@helpers/search/queryBuilder";
 import { SearchResult } from "@components/SearchResultComponent/SearchResultComponent";
-import { useSearchGridStore } from "@/hooks/useSearchGridStore";
 import { parseQuery } from "@helpers/search/queryParser";
 import type { RequestingSearch } from "@helpers/requestingSearch";
-import { clampPageSize, PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
+import { clampPageSize, DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@constants/dataGrid/pagination";
 import { validate } from "uuid";
 import { ChecklistRounded, Close } from "@mui/icons-material";
 import QuickWalkUpRequest from "@forms/QuickWalkUp/QuickWalkUp";
@@ -108,13 +107,15 @@ export function SharedIndexV2() {
 	// Validated by the route's requestingSearchSchema.
 	const search: RequestingSearch = useSearch({ strict: false });
 	const queryParam = search.filters;
-	const pageno = search.pageno ?? 0;
-	const pagesize = clampPageSize(search.pagesize);
+	// Zero-based here, as the grid counts; one-based in the address
+	const pageno = (search.page ?? 1) - 1;
+	const pagesize = clampPageSize(search.pageSize);
 
-	const appliedFilters = useSearchGridStore((state) => state.appliedFilters);
-	const setAppliedFilters = useSearchGridStore(
-		(state) => state.setAppliedFilters,
-	);
+	// The URL is the applied search; only the filters being edited are local
+	const appliedFilters = useMemo(() => {
+		const parsed = parseQuery(queryParam || "");
+		return parsed.length > 0 ? parsed : [createDefaultFilter()];
+	}, [queryParam]);
 	const paginationModel: GridPaginationModel = {
 		page: pageno,
 		pageSize: pagesize,
@@ -125,8 +126,8 @@ export function SharedIndexV2() {
 			to: "/requesting",
 			search: {
 				filters: queryParam,
-				pageno: newModel.page,
-				pagesize: newModel.pageSize,
+				page: newModel.page > 0 ? newModel.page + 1 : undefined,
+				pageSize: newModel.pageSize === DEFAULT_PAGE_SIZE ? undefined : newModel.pageSize,
 			},
 			replace: true,
 		});
@@ -136,7 +137,6 @@ export function SharedIndexV2() {
 		createDefaultFilter(),
 	]);
 
-	const [isDirty, setIsDirty] = useState(false);
 	const [isAdvancedMode, setIsAdvancedMode] = useState(false);
 
 	const isAdvancedSearchAvailable =
@@ -160,41 +160,34 @@ export function SharedIndexV2() {
 	};
 
 	useEffect(() => {
-		const initialFilters = parseQuery(queryParam || "");
-
-		const filtersToSet =
-			initialFilters.length > 0 ? initialFilters : [createDefaultFilter()];
-
-		setAppliedFilters(filtersToSet);
-		setStagedFilters(filtersToSet);
-		if (filtersToSet.length > 1) {
+		setStagedFilters(appliedFilters);
+		if (appliedFilters.length > 1) {
 			setIsAdvancedMode(true);
 		}
-	}, [queryParam, setAppliedFilters]);
-	useEffect(() => {
-		const staged = JSON.stringify(stagedFilters.filter((f) => f.value));
-		const applied = JSON.stringify(appliedFilters.filter((f) => f.value));
-		setIsDirty(staged !== applied);
-	}, [stagedFilters, appliedFilters]);
+	}, [appliedFilters]);
+
+	const isDirty =
+		JSON.stringify(stagedFilters.filter((f) => f.value)) !==
+		JSON.stringify(appliedFilters.filter((f) => f.value));
 
 	const handleApplyFilters = useCallback(
 		(newFilters: SearchFilter[]) => {
 			const activeFilters = newFilters.filter((f) => f.value);
-			setAppliedFilters(activeFilters);
 
 			router.navigate({
 				to: "/requesting",
 				search: {
 					filters: buildQuery(activeFilters),
-					pagesize: paginationModel.pageSize,
+					pageSize:
+						paginationModel.pageSize === DEFAULT_PAGE_SIZE ? undefined : paginationModel.pageSize,
 					// A new search starts at its first page: page 4 of the last one may
 					// not exist in this one.
-					pageno: 0,
+					page: undefined,
 				},
 				replace: true,
 			});
 		},
-		[router, setAppliedFilters, paginationModel.pageSize],
+		[router, paginationModel.pageSize],
 	);
 
 	const isClusterIdSearch =

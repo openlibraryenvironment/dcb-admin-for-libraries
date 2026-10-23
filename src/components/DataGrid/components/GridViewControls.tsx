@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BookmarksOutlined, FilterAltOffOutlined, LinkRounded } from "@mui/icons-material";
-import { Tooltip } from "@mui/material";
+import { Box, Button, Tooltip, Typography } from "@mui/material";
 import { ToolbarButton } from "@mui/x-data-grid-premium";
 
 import TimedAlert from "@components/TimedAlert/TimedAlert";
@@ -98,5 +98,26 @@ export function ResetViewButton({ views }: { views: GridViews }) {
 				<FilterAltOffOutlined fontSize="small" />
 			</ToolbarButton>
 		</Tooltip>
+	);
+}
+
+/** Rule 2: a view restored onto a bare address says so, and offers the defaults. docs/url-view-state.md. */
+export function RestoredViewNotice({ views }: { views: GridViews }) {
+	const { t } = useTranslation();
+
+	return (
+		// Mounted while empty, so that what it comes to say is announced
+		<Box role="status" sx={{ display: "flex", alignItems: "center", columnGap: 1 }}>
+			{views.restored ? (
+				<>
+					<Typography variant="body2" component="span">
+						{t("ui.data_grid.views.restored")}
+					</Typography>
+					<Button size="small" onClick={views.resetView}>
+						{t("ui.data_grid.views.restored_reset")}
+					</Button>
+				</>
+			) : null}
+		</Box>
 	);
 }

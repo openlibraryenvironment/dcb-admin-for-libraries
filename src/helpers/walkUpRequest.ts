@@ -49,6 +49,7 @@ const WALK_UP_REFUSALS = [
 	"CLUSTER_DELETED",
 	"DUPLICATE_REQUEST_ATTEMPT",
 	"REQUEST_LIMITS_UNCHECKED",
+	"SUPPLIER_CANNOT_SUPPLY",
 ] as const;
 
 type Translate = Parameters<typeof getRequestError>[1];
@@ -63,9 +64,12 @@ export function walkUpRefusal(
 		return t("requesting.quick_walk_up.errors.forbidden");
 	}
 
-	const code = failedChecks?.[0]?.code;
+	const first = failedChecks?.[0];
+	const code = first?.code;
 
 	return code && (WALK_UP_REFUSALS as readonly string[]).includes(code)
-		? t(`requesting.quick_walk_up.errors.${code.toLowerCase()}`)
+		? t(`requesting.quick_walk_up.errors.${code.toLowerCase()}`, {
+				description: first.description ?? "",
+			})
 		: getRequestError(failedChecks, t);
 }

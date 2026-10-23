@@ -13,5 +13,12 @@ export function clearUserState(): void {
 	clearAgencySelection();
 	clearInsightsCost();
 	clearSessionSavedFilters();
+	sessionStorage.removeItem(storageKey("grid-views"));
+	// The store is a grid page's, not the shell's: emptied in memory only if a grid loaded it
+	void import("@/hooks/rememberedViewStore").then(({ useRememberedViewStore }) =>
+		useRememberedViewStore.setState({ views: {} }),
+	);
+	// Column visibility, which an earlier build kept here; it is in the URL now
+	sessionStorage.removeItem(storageKey("grid-storage"));
 	sessionStorage.removeItem(storageKey("afterLoginRedirectPath"));
 }

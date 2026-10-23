@@ -1,10 +1,13 @@
-import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
+import { validateGridSearch } from "@helpers/viewState/gridSearch";
+import { patronRequestsView } from "@helpers/viewState/gridViewIds";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
 import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestExport } from "@/hooks/useExport";
+import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
+import { LazyCleanupDialogs } from "@components/CleanupDialogs/LazyCleanupDialogs";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -24,12 +27,16 @@ import {
 } from "@mui/x-data-grid-premium";
 import { gridPage, queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
-import { libraryFilterOptionsQueryOptions } from "@helpers/sharedQueries";
+import {
+	invalidateRequestLists,
+	libraryFilterOptionsQueryOptions,
+} from "@helpers/sharedQueries";
 import { getPatronRequests } from "@queries/getPatronRequests";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	useRouter,
+	redirect,
 } from "@tanstack/react-router";
 import request from "graphql-request";
 import { useMemo, useState } from "react";
@@ -37,7 +44,13 @@ import { useTranslation } from "react-i18next";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/")({
-	validateSearch: gridSearchSchema,
+	validateSearch: validateGridSearch,
+	beforeLoad: async ({ search, location }) => {
+		// Loaded here, not with the route: the first load of every page would carry the codec
+		const { rememberedViewRedirect } = await import("@helpers/viewState/viewRoute");
+		const restore = rememberedViewRedirect(patronRequestsView, search, location.state);
+		if (restore) throw redirect({ to: "/patronRequests", ...restore });
+	},
 	head: () => ({ meta: [{ title: pageTitle("nav.patron_requests.title") }] }),
 	component: RouteComponent,
 });
@@ -71,7 +84,8 @@ function RouteComponent() {
 	};
 	const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
-	const { agencyCode: code } = useAgencyCodes();
+	const { agencyCode: code, agencyCodes } = useAgencyCodes();
+	const queryClient = useQueryClient();
 
 	// Library query
 	const {
@@ -150,7 +164,7 @@ function RouteComponent() {
 			};
 			return request({
 				url: `${dcbApiBase}/graphql`,
-				document: getPatronRequests,
+				document: getPatronRequests(),
 				variables: queryVariables,
 				requestHeaders: await authHeaders(),
 				signal,
@@ -174,8 +188,20 @@ function RouteComponent() {
 		}),
 	);
 
-	// No cleanup here: this grid lists what THIS library borrowed, and cleanup belongs to
-	// the library that supplied the request - see supplierRequests.tsx.
+	const cleanup = usePatronRequestCleanup({
+		apiRef,
+		dcbApiBase,
+		agencyCodes,
+		hostLmsCode: userLibraryHostLmsCode,
+		onSuccess: (cleanedIds) => {
+			void invalidateRequestLists(queryClient);
+			for (const id of cleanedIds) {
+				void queryClient.invalidateQueries({
+					queryKey: queryKeys.patronRequests.detail(dcbApiBase, id),
+				});
+			}
+		},
+	});
 	const { exportProgress, exportConfig } = usePatronRequestExport({
 		apiRef,
 		dcbApiBase,
@@ -227,6 +253,7 @@ function RouteComponent() {
 					columns={dynamicPatronRequestColumns}
 					columnVisibilityModel={grid.columnVisibilityModel}
 					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
+					columnLayout={grid.columnLayout}
 					type="patronRequests"
 					label={t("nav.patron_requests.title")}
 					identifier="patronRequestsMain"
@@ -254,10 +281,13 @@ function RouteComponent() {
 					rowCount={patronRequestData?.patronRequests?.totalSize ?? 0}
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}
+					enableCleanup={true}
+					onCleanup={cleanup.handleCleanup}
 					exportConfig={exportConfig}
 					isExporting={exportProgress.isExporting}
 				/>
 			}
+			<LazyCleanupDialogs cleanup={cleanup} />
 
 			{
 				<TimedAlert

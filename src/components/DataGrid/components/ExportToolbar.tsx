@@ -40,7 +40,7 @@ import ExportWizard from "./ExportWizard";
 import Confirmation from "@components/Confirmation/Confirmation";
 import { ExportProgressDialog } from "./ExportProgressDialog";
 import { useFilterLabels } from "./useFilterLabels";
-import { ResetViewButton, SavedFiltersButton, ShareViewButton } from "./GridViewControls";
+import { ResetViewButton, SavedFiltersButton, ShareViewButton, RestoredViewNotice } from "./GridViewControls";
 
 interface ExportToolbarProps {
 	exportConfig?: GridExportConfig;
@@ -195,6 +195,7 @@ export default function ExportToolbar({
 					<ResetViewButton views={views} />
 					<ShareViewButton views={views} />
 					<SavedFiltersButton views={views} />
+					<RestoredViewNotice views={views} />
 				</>
 			) : null}
 			{exportConfig && (

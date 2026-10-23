@@ -122,7 +122,7 @@ export const usePatronRequestQueries = ({
 			};
 			return request({
 				url: `${apiBase}/graphql`,
-				document: getPatronRequests,
+				document: getPatronRequests(),
 				variables: queryVariables,
 				requestHeaders: await authHeaders(),
 				signal,

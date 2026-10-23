@@ -61,6 +61,24 @@ test("a new search starts at its first page", async ({ app, page }) => {
 	expect(searches[1].searchParams.get("offset")).toBe("0");
 });
 
+test("the address names its page one-based, and a link from before 2.0.0 still opens", async ({
+	app,
+	page,
+}) => {
+	const searches = await openSearch(
+		app,
+		page,
+		"/requesting?filters=keyword%3Amiddlemarch&page=4&pageSize=10",
+	);
+	await expect.poll(() => searches.length).toBe(1);
+	expect(searches[0].searchParams.get("offset")).toBe("30");
+	expect(searches[0].searchParams.get("limit")).toBe("10");
+
+	// pageno was zero-based: 3 is the fourth page, as it always was
+	await page.goto("/requesting?filters=keyword%3Amiddlemarch&pageno=3&pagesize=10");
+	await expect.poll(() => searches.at(-1)?.searchParams.get("offset")).toBe("30");
+});
+
 test("a cluster record ID that is not one is refused before it is sent", async ({
 	app,
 	page,

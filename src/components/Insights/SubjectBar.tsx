@@ -2,7 +2,8 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@mui/material";
 
 import { CustomLink } from "@components/CustomLink";
-import { SUBJECTS, Subject } from "@helpers/insightsSubjects";
+import { visibleSubjects } from "@helpers/insightsSubjects";
+import type { Subject } from "@helpers/insightsSearch";
 import { SUBJECT_BAR_HEIGHT, SUBJECT_BAR_TOP } from "@helpers/stickyOffsets";
 
 /**
@@ -14,6 +15,8 @@ import { SUBJECT_BAR_HEIGHT, SUBJECT_BAR_TOP } from "@helpers/stickyOffsets";
  */
 export default function SubjectBar({ current }: { current: Subject }) {
 	const { t } = useTranslation();
+	const subjects = visibleSubjects();
+	if (subjects.length === 0) return null;
 
 	return (
 		<Box
@@ -31,7 +34,7 @@ export default function SubjectBar({ current }: { current: Subject }) {
 				borderColor: "divider",
 			}}
 		>
-			{SUBJECTS.map((subject) => {
+			{subjects.map((subject) => {
 				const selected = subject === current;
 
 				return (

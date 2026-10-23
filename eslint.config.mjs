@@ -79,7 +79,7 @@ export default defineConfig(
 						"insightsPlotStore was deleted: the range and the plotted series live in the URL now. See insightsSearch.ts.",
 				},
 
-				// Mobius serves this app at /dcb-admin-for-libraries/ beside dcb-admin on one
+				// A shared host serves this app at /dcb-admin-for-libraries/ beside dcb-admin on one
 				// origin, and only the router adds the base: a root-relative href or a bare
 				// window.open leaves the app.
 				{

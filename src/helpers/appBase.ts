@@ -1,7 +1,7 @@
 /**
  * Base-path awareness for deployments that mount several OpenRS apps at path
- * prefixes on ONE origin (mobius.kihosting.net/dcb-admin,
- * mobius.kihosting.net/dcb-admin-for-libraries, ...).
+ * prefixes on ONE origin (consortium.example.org/dcb-admin,
+ * consortium.example.org/dcb-admin-for-libraries, ...).
  *
  * Standalone startup uses Vite's asset base. KI bootloader startup uses "/"
  * because its assets resolve relative to ki-bootstrap.js independently. The
