@@ -29,7 +29,9 @@ import { expandedFilterPanelTypes } from "@constants/dataGrid/types";
 import { SxProps, Theme, Tooltip, TooltipProps } from "@mui/material";
 import ExportToolbar from "./components/ExportToolbar";
 import type { GridExportConfig } from "@/hooks/useExport";
-import type { GridViews } from "@/hooks/useSyncedDataGrid";
+import type { ColumnLayout, GridViews } from "@/hooks/useSyncedDataGrid";
+import { useColumnLayout } from "./useColumnLayout";
+import { ColumnMenuMoveItem } from "./components/ColumnMenuMoveItem";
 
 declare module "@mui/x-data-grid-premium" {
 	interface ToolbarPropsOverrides {
@@ -98,6 +100,8 @@ interface DataGridProps {
 	checkboxSelection: boolean;
 	columns: GridColDef[];
 	columnVisibilityModel?: GridColumnVisibilityModel;
+	/** Pinning and order from the grid's URL (useSyncedDataGrid's columnLayout). */
+	columnLayout?: ColumnLayout;
 	disableAggregation: boolean;
 	disableHoverInteractions: boolean;
 	disablePivoting: boolean;
@@ -151,6 +155,7 @@ export default function DataGrid({
 	autoRowHeight,
 	checkboxSelection,
 	columns,
+	columnLayout,
 	columnVisibilityModel,
 	disableAggregation,
 	disableHoverInteractions,
@@ -200,6 +205,8 @@ export default function DataGrid({
 	const getDetailPanelHeight = useCallback(() => "auto", []); // Only necessary because master detail is not applicable to all grids yet
 	const internalApiRef = useGridApiRef();
 	const apiRef = parentApiRef || internalApiRef;
+	const remountKey = `${clock}|${locale}`;
+	const layout = useColumnLayout(apiRef, columns, columnLayout, remountKey);
 
 	const announce = useAnnounce();
 	// The server's count after a filter, sort or page change has settled. The
@@ -279,12 +286,14 @@ export default function DataGrid({
 	return (
 		<div style={{ display: "flex", flexDirection: "column" }}>
 			<DataGridPremium
-				key={`${clock}|${locale}`}
+				key={remountKey}
 				aria-label={label}
 				apiRef={apiRef}
 				checkboxSelection={checkboxSelection}
-				columns={columns}
+				columns={layout.columns}
 				columnVisibilityModel={columnVisibilityModel}
+				pinnedColumns={layout.pinnedColumns}
+				onPinnedColumnsChange={layout.onPinnedColumnsChange}
 				disableAggregation={disableAggregation}
 				disableRowGrouping={disableRowGrouping}
 				disableRowSelectionOnClick
@@ -361,6 +370,21 @@ export default function DataGrid({
 						allDataLoading: isExporting, // Pass the loading state
 						onCleanup: enableCleanup ? onCleanup : undefined, // Pass cleanup handler
 						views,
+					},
+					// A menu or panel is page content: rendered in the grid's landmark or dialog, not after
+					// <main> at the end of <body>, where axe's region rule finds it outside every landmark
+					basePopper: {
+						material: {
+							container: () =>
+								apiRef.current?.rootElementRef?.current?.closest<HTMLElement>(
+									"main, [role='dialog']",
+								) ?? document.body,
+						},
+					},
+					columnMenu: {
+						slots: { columnMenuMoveItem: ColumnMenuMoveItem },
+						// After pinning (15), before filtering (20)
+						slotProps: { columnMenuMoveItem: { displayOrder: 16 } },
 					},
 					noRowsOverlay: { noResultsMessage: noResultsText },
 					noResultsOverlay: { noResultsMessage: noResultsText },

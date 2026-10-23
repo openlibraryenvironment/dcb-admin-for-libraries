@@ -40,6 +40,7 @@ export default function ClusterHistory() {
 			columns={query.columns}
 			columnVisibilityModel={grid.columnVisibilityModel}
 			onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
+			columnLayout={grid.columnLayout}
 			loading={query.isLoading || grid.isFiltering}
 			type="patronRequests"
 			label={t("requesting.history_label")}

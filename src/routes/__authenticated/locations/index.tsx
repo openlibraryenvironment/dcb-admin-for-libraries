@@ -153,6 +153,7 @@ function RouteComponent() {
 					columns={locationsGrid.columns}
 					columnVisibilityModel={grid.columnVisibilityModel}
 					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
+					columnLayout={grid.columnLayout}
 					type="locations"
 					label={t("nav.locations.title")}
 					identifier="locations"

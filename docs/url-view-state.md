@@ -22,6 +22,9 @@ compared across the repositories, so **change it in all of them or not at all**.
 | Page                    | `page`              | **one-based**                                            | the first page          |
 | Page size               | `pageSize`          | one of the grid's options                                | the grid's default      |
 | Columns                 | `hide`, `show`      | comma-separated fields, relative to the grid's defaults  | nothing differs         |
+| Pinned columns          | `pinLeft`, `pinRight` | comma-separated fields, in pinned order                | nothing pinned          |
+| Column order            | `order`             | the fewest leading fields that, followed by the rest in default order, give the reader's order | the default order |
+| Aggregation             | `agg`               | `field:function`, comma-separated; `none` for explicitly none | the grid's default |
 
 Field names are the grid's column `field`. Values are the server's values, never translated
 labels, so a link means the same in every language.
@@ -33,6 +36,14 @@ The operator is left out for equality. Otherwise: `not`, `contains`, `phrase`, `
 maps each grid operator to its word; `tests/gridFilterOperators.test.ts` fails for an operator a
 grid offers that does not reach the URL and read back. "Is any of" with one value reads back as
 "is": the URL has one word for both.
+
+Pinned columns are pinned from the column menu, and moved with **Move left** and **Move right**
+there as well as by dragging the header (WCAG 2.2 SC 2.5.7: no drag-only interaction). Pinned
+columns are not part of `order`: pinning one does not write an order. A field the grid does not
+render is dropped from either, and a column added later takes its default place. DAFL's grids
+aggregate nothing, so `agg` is read and ignored here. Column widths, density and selection are
+never in the URL. Popups (the column menu, the filter panel) render inside the grid's landmark or
+dialog, not at the end of `<body>`.
 
 A filter whose field or operator the grid does not offer is dropped, as is a value of the wrong
 type for its column, or a select value that is not one of the column's fixed options. A

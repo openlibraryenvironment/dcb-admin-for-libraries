@@ -233,6 +233,7 @@ function RouteComponent() {
 					columnVisibilityModel={grid.columnVisibilityModel}
 					checkboxSelection={true}
 					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
+					columnLayout={grid.columnLayout}
 					type="patronRequests"
 					label={t("nav.supplier_requests.title")}
 					identifier="supplierPatronRequests"

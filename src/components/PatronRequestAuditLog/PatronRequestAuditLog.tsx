@@ -66,6 +66,9 @@ export default function PatronRequestAuditLog({
 			rows={data?.audits?.content ?? []}
 			rowCount={data?.audits?.totalSize ?? 0}
 			columns={auditColumns}
+			columnVisibilityModel={grid.columnVisibilityModel}
+			onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
+			columnLayout={grid.columnLayout}
 			type="audits"
 			label={t("patron_request.audit_log")}
 			identifier="AuditPatronRequestDetails"

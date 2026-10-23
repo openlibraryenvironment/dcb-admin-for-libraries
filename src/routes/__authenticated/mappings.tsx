@@ -477,6 +477,7 @@ function RouteComponent() {
 					views={grid.views}
 					columnVisibilityModel={grid.columnVisibilityModel}
 					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
+					columnLayout={grid.columnLayout}
 					editMode="row"
 					rowModesModel={rowModesModel}
 					onRowModesModelChange={setRowModesModel}

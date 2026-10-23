@@ -7,6 +7,7 @@ import {
 	type GridFilterModel,
 	type GridFilterOperator,
 	type GridPaginationModel,
+	type GridPinnedColumnFields,
 	type GridSortModel,
 } from "@mui/x-data-grid-premium";
 
@@ -47,6 +48,9 @@ export interface GridModels {
 	sortModel: GridSortModel;
 	paginationModel: GridPaginationModel;
 	columnVisibilityModel: GridColumnVisibilityModel;
+	pinnedColumns: GridPinnedColumnFields;
+	/** Every field the reader can share, in the reader's order. */
+	columnOrder: string[];
 }
 
 /** What a grid keeps in its history entry rather than its URL. */
@@ -120,6 +124,8 @@ export interface GridRules {
 	filters: ReadonlyMap<string, FilterRule>;
 	sortable: ReadonlySet<string>;
 	fields: ReadonlySet<string>;
+	/** The fields in the grid's default order. */
+	order: readonly string[];
 }
 
 export const gridRules = (columns: readonly GridColDef[]): GridRules => {
@@ -140,8 +146,8 @@ export const gridRules = (columns: readonly GridColDef[]): GridRules => {
 			.map((column) => column.field),
 	);
 	// MUI's own columns (`__check__`) are not the reader's to share
-	const fields = new Set(columns.map((column) => column.field).filter(isFieldName));
-	return { filters, sortable, fields };
+	const order = columns.map((column) => column.field).filter(isFieldName);
+	return { filters, sortable, fields: new Set(order), order };
 };
 
 /** Values as a URL holds them: the date pickers hand over Dayjs objects, which serialise to ISO. */
@@ -389,6 +395,48 @@ export const visibilityFromView = (
 	return model;
 };
 
+const known = (rules: GridRules, fields: readonly string[] | undefined) =>
+	(fields ?? []).filter((field) => rules.fields.has(field));
+
+export const pinnedToView = (
+	rules: GridRules,
+	model: GridPinnedColumnFields,
+): Pick<UrlView, "pinLeft" | "pinRight"> => {
+	const pinLeft = known(rules, model.left);
+	const pinRight = known(rules, model.right).filter((field) => !pinLeft.includes(field));
+	return {
+		pinLeft: pinLeft.length ? pinLeft : undefined,
+		pinRight: pinRight.length ? pinRight : undefined,
+	};
+};
+
+export const pinnedFromView = (
+	rules: GridRules,
+	view: Pick<UrlView, "pinLeft" | "pinRight">,
+): GridPinnedColumnFields => ({
+	left: known(rules, view.pinLeft),
+	right: known(rules, view.pinRight),
+});
+
+/** The named fields first, without repeats, then the rest in the grid's default order. */
+export const orderFromView = (rules: GridRules, order: readonly string[] | undefined): string[] => {
+	const leading = [...new Set(known(rules, order))];
+	return [...leading, ...rules.order.filter((field) => !leading.includes(field))];
+};
+
+/** The shortest run of leading fields that orderFromView turns back into this order: undefined for the default. */
+export const orderToView = (rules: GridRules, order: readonly string[]): string[] | undefined => {
+	const full = orderFromView(rules, order);
+	for (let length = 0; length <= full.length; length++) {
+		const leading = full.slice(0, length);
+		const rebuilt = orderFromView(rules, leading);
+		if (rebuilt.every((field, index) => field === full[index])) {
+			return length === 0 ? undefined : leading;
+		}
+	}
+	return full;
+};
+
 /** The grid's models as a URL view, and what must stay out of it. */
 export const modelsToView = (
 	spec: GridViewSpec,
@@ -401,6 +449,11 @@ export const modelsToView = (
 		filters,
 		...visibilityToView(spec, rules, models.columnVisibilityModel),
 	};
+	const { pinLeft, pinRight } = pinnedToView(rules, models.pinnedColumns);
+	if (pinLeft) view.pinLeft = pinLeft;
+	if (pinRight) view.pinRight = pinRight;
+	const order = orderToView(rules, models.columnOrder);
+	if (order) view.order = order;
 	if (logic) view.logic = logic;
 	const sort = sortToView(spec, rules, models.sortModel);
 	if (sort) view.sort = sort;

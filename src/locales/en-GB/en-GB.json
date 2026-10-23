@@ -1496,6 +1496,10 @@
 			"title": "Title"
 		},
 		"data_grid": {
+			"column_menu": {
+				"move_left": "Move left",
+				"move_right": "Move right"
+			},
 			"active_filters_one": "{{count}} active filter",
 			"active_filters_other": "{{count}} active filters",
 			"cleanup": {

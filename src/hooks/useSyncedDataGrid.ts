@@ -4,6 +4,7 @@ import type {
 	GridColumnVisibilityModel,
 	GridFilterModel,
 	GridPaginationModel,
+	GridPinnedColumnFields,
 	GridSortModel,
 } from "@mui/x-data-grid-premium";
 
@@ -15,9 +16,13 @@ import {
 	filterToView,
 	itemToFilter,
 	modelsToView,
+	orderFromView,
+	orderToView,
 	paginationFromView,
 	paginationToView,
 	parsePrivateState,
+	pinnedFromView,
+	pinnedToView,
 	sortFromView,
 	sortToView,
 	visibilityFromView,
@@ -42,8 +47,19 @@ const FILTER_PARAMS = ["filters", "logic"] as const satisfies ViewParam[];
 const SORT_PARAMS = ["sort"] as const satisfies ViewParam[];
 const PAGE_PARAMS = ["page", "pageSize"] as const satisfies ViewParam[];
 const COLUMN_PARAMS = ["hide", "show"] as const satisfies ViewParam[];
+const PIN_PARAMS = ["pinLeft", "pinRight"] as const satisfies ViewParam[];
+const ORDER_PARAMS = ["order"] as const satisfies ViewParam[];
 
 type Search = Record<string, unknown>;
+
+/** A grid's pinning and order, read from and written to its URL. DataGrid applies them. */
+export interface ColumnLayout {
+	pinnedColumns: GridPinnedColumnFields;
+	onPinnedColumnsChange: (model: GridPinnedColumnFields) => void;
+	/** The shareable fields, in order; columns the URL cannot name keep their places. */
+	columnOrder: readonly string[];
+	onColumnOrderChange: (fields: string[]) => void;
+}
 
 /** What the toolbar needs to share the grid's view as a link, save its filter, and reset it. */
 export interface GridViews {
@@ -146,6 +162,16 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 		const [hide, show] = JSON.parse(columnPart) as [string[], string[]];
 		return visibilityFromView(grid, rules, { hide, show });
 	}, [grid, rules, columnPart]);
+	const pinPart = JSON.stringify([view.pinLeft ?? [], view.pinRight ?? []]);
+	const appliedPinned = useMemo(() => {
+		const [pinLeft, pinRight] = JSON.parse(pinPart) as [string[], string[]];
+		return pinnedFromView(rules, { pinLeft, pinRight });
+	}, [rules, pinPart]);
+	const orderPart = JSON.stringify(view.order ?? []);
+	const appliedOrder = useMemo(
+		() => orderFromView(rules, JSON.parse(orderPart) as string[]),
+		[rules, orderPart],
+	);
 
 	// What the reader just did, shown until somebody else moves the address. A navigation
 	// commits a tick later, and MUI X resets the page on a sort or filter prop it sees late.
@@ -155,6 +181,8 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 		sortModel: pending.sortModel ?? appliedSort,
 		paginationModel: pending.paginationModel ?? appliedPagination,
 		columnVisibilityModel: pending.columnVisibilityModel ?? appliedVisibility,
+		pinnedColumns: pending.pinnedColumns ?? appliedPinned,
+		columnOrder: pending.columnOrder ?? appliedOrder,
 	};
 	const shownRef = useRef(shown);
 	useEffect(() => {
@@ -346,6 +374,30 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 		[grid, remember, write],
 	);
 
+	const handlePinnedColumnsChange = useCallback(
+		(model: GridPinnedColumnFields) => {
+			setPending((current) => ({ ...current, pinnedColumns: model }));
+			remember({ pinnedColumns: model });
+			void write(pinnedToView(rules, model), PIN_PARAMS);
+		},
+		[rules, remember, write],
+	);
+
+	const handleColumnOrderChange = useCallback(
+		(unpinned: string[]) => {
+			// Pinned columns keep their default places in the order: pinning alone is not a reorder
+			const { left = [], right = [] } = shownRef.current.pinnedColumns;
+			const pinned = new Set([...left, ...right]);
+			const moved = orderFromView(rules, unpinned).filter((field) => !pinned.has(field));
+			let next = 0;
+			const columnOrder = rules.order.map((field) => (pinned.has(field) ? field : moved[next++]));
+			setPending((current) => ({ ...current, columnOrder }));
+			remember({ columnOrder });
+			void write({ order: orderToView(rules, columnOrder) }, ORDER_PARAMS);
+		},
+		[rules, remember, write],
+	);
+
 	const handleColumnVisibilityChange = useCallback(
 		(model: GridColumnVisibilityModel) => {
 			setPending((current) => ({ ...current, columnVisibilityModel: model }));
@@ -384,6 +436,8 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 			sortModel: grid.defaultSort,
 			paginationModel: paginationFromView(grid, emptyView(), MAX_PAGE),
 			columnVisibilityModel: visibilityFromView(grid, rules, emptyView()),
+			pinnedColumns: pinnedFromView(rules, emptyView()),
+			columnOrder: orderFromView(rules, undefined),
 		});
 		void write(emptyView(), VIEW_PARAMS, null);
 	}, [grid, rules, id, forgetView, write]);
@@ -425,6 +479,13 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 		sortModel: shown.sortModel,
 		paginationModel: shown.paginationModel,
 		columnVisibilityModel: shown.columnVisibilityModel,
+		/** Pinning and order, for DataGrid's columnLayout. */
+		columnLayout: {
+			pinnedColumns: shown.pinnedColumns,
+			onPinnedColumnsChange: handlePinnedColumnsChange,
+			columnOrder: shown.columnOrder,
+			onColumnOrderChange: handleColumnOrderChange,
+		} satisfies ColumnLayout,
 		// Any change the server has not answered yet, a removal included
 		isFiltering:
 			pending.filterModel !== undefined && filterKey(grid, pending.filterModel) !== appliedFilterKey,

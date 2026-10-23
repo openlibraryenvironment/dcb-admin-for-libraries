@@ -16,8 +16,11 @@ import {
 	filterToView,
 	hasDraftItems,
 	modelsToView,
+	orderFromView,
+	orderToView,
 	paginationFromView,
 	parsePrivateState,
+	pinnedFromView,
 	sortFromView,
 	visibilityFromView,
 	type GridModels,
@@ -55,6 +58,8 @@ const read = (target: GridDefinition, href: string, privateState?: unknown): Gri
 		sortModel: sortFromView(target, target.rules, view.sort),
 		paginationModel: paginationFromView(target, view, MAX_PAGE),
 		columnVisibilityModel: visibilityFromView(target, target.rules, view),
+		pinnedColumns: pinnedFromView(target.rules, view),
+		columnOrder: orderFromView(target.rules, view.order),
 	};
 };
 
@@ -63,6 +68,8 @@ const defaults = (target: GridDefinition): GridModels => ({
 	sortModel: target.defaultSort,
 	paginationModel: { page: 0, pageSize: target.defaultPageSize },
 	columnVisibilityModel: target.defaultColumnVisibility,
+	pinnedColumns: { left: [], right: [] },
+	columnOrder: [...target.rules.order],
 });
 
 describe("a grid's view in the URL", () => {
@@ -135,6 +142,8 @@ describe("a grid's view in the URL", () => {
 			sortModel: [{ field: "dateUpdated", sort: "asc" }],
 			paginationModel: { page: 3, pageSize: 10 },
 			columnVisibilityModel: { ...grid.defaultColumnVisibility, status: false, description: true },
+			pinnedColumns: { left: ["status"], right: ["id"] },
+			columnOrder: orderFromView(rules, ["dateUpdated", "description"]),
 		};
 
 		const { href, privateState } = hrefOf(grid, models);
@@ -146,6 +155,8 @@ describe("a grid's view in the URL", () => {
 		expect(back.filterModel.quickFilterValues).toEqual([QUICK]);
 		expect(back.filterModel.items).toEqual(models.filterModel.items);
 		expect(back.columnVisibilityModel).toMatchObject({ status: false, description: true });
+		expect(back.pinnedColumns).toEqual(models.pinnedColumns);
+		expect(back.columnOrder).toEqual(models.columnOrder);
 	});
 
 	it("writes nothing for the grid's defaults, so a shared link says only what was chosen", () => {
@@ -377,5 +388,47 @@ describe("the route's own list of a grid's parameters", () => {
 		const { GRID_PARAMS } = await import("@helpers/viewState/gridSearch");
 		const { VIEW_PARAMS } = await import("@helpers/viewState/urlViewCodec");
 		expect(GRID_PARAMS).toEqual(VIEW_PARAMS);
+	});
+});
+
+describe("pinning and column order", () => {
+	it("write as the pinned lists and the shortest run of leading columns", () => {
+		const { href } = hrefOf(grid, {
+			...defaults(grid),
+			pinnedColumns: { left: ["status"], right: [] },
+			columnOrder: orderFromView(rules, ["dateUpdated", "status"]),
+		});
+		expect(href).toBe("?pinLeft=status&order=dateUpdated,status");
+	});
+
+	it("drop a column the grid does not render, and keep a new one in its default place", () => {
+		const models = read(grid, "?pinLeft=noSuchColumn,status&order=noSuchColumn,description");
+		expect(models.pinnedColumns).toEqual({ left: ["status"], right: [] });
+		expect(models.columnOrder[0]).toBe("description");
+		expect([...models.columnOrder].sort()).toEqual([...rules.order].sort());
+	});
+
+	it("never write the default order", () => {
+		expect(orderToView(rules, rules.order)).toBeUndefined();
+	});
+
+	it("always find the shortest prefix that gives the order back", () => {
+		// A seeded shuffle: the same orders every run
+		let seed = 7;
+		const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+		for (let run = 0; run < 200; run++) {
+			const order = [...rules.order];
+			const moves = 1 + Math.floor(random() * 3);
+			for (let move = 0; move < moves; move++) {
+				const from = Math.floor(random() * order.length);
+				const [field] = order.splice(from, 1);
+				order.splice(Math.floor(random() * order.length), 0, field);
+			}
+			const prefix = orderToView(rules, order) ?? [];
+			expect(orderFromView(rules, prefix)).toEqual(order);
+			if (prefix.length > 0) {
+				expect(orderFromView(rules, prefix.slice(0, -1))).not.toEqual(order);
+			}
+		}
 	});
 });

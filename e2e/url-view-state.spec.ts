@@ -177,3 +177,66 @@ test("Back undoes this visit's changes once, then leaves the grid", async ({ pag
 	await page.goBack();
 	await expect(page).not.toHaveURL(/\/patronRequests/);
 });
+
+const openColumnMenu = async (page: Page, column: string) => {
+	const header = page.getByRole("columnheader", { name: column });
+	await header.hover();
+	await header.getByRole("button", { name: /menu/i }).click();
+	const menu = page.getByRole("menu");
+	await expect(menu).toBeVisible();
+	return menu;
+};
+
+const headerNames = async (page: Page) =>
+	(await page.getByRole("columnheader").allInnerTexts()).map((text) => text.trim()).filter(Boolean);
+
+test("a pinned column is pinned in the link, and pinned where it is opened", async ({
+	page,
+	browser,
+}) => {
+	await mockGrid(page);
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	const menu = await openColumnMenu(page, "Status");
+	await menu.getByRole("menuitem", { name: "Pin to left" }).click();
+	await expect.poll(() => search(page)).toBe("?pinLeft=status");
+
+	const context = await browser.newContext();
+	const elsewhere = await context.newPage();
+	await injectRuntimeConfig(elsewhere);
+	await seedAuth(elsewhere);
+	await mockGrid(elsewhere);
+	await elsewhere.goto(page.url());
+	await expect(
+		elsewhere.locator('[role="columnheader"][data-field="status"]'),
+	).toHaveClass(/pinnedLeft/);
+	await context.close();
+});
+
+test("a column moves from the keyboard, and stays moved across a reload", async ({
+	app,
+	page,
+}) => {
+	await mockGrid(page);
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+	const before = await headerNames(page);
+	const status = before.indexOf("Status");
+	expect(status).toBeGreaterThan(0);
+
+	const menu = await openColumnMenu(page, "Status");
+	await app.expectNoAccessibilityViolations();
+	const moveLeft = menu.getByRole("menuitem", { name: "Move left" });
+	await moveLeft.focus();
+	await page.keyboard.press("Enter");
+
+	await expect.poll(() => search(page)).toMatch(/^\?order=/);
+	const after = await headerNames(page);
+	expect(after.indexOf("Status")).toBe(status - 1);
+	expect(after[status]).toBe(before[status - 1]);
+
+	await page.reload();
+	await expect(page.getByRole("grid")).toBeVisible();
+	await expect.poll(() => headerNames(page)).toEqual(after);
+});

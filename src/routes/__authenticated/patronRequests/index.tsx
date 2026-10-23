@@ -253,6 +253,7 @@ function RouteComponent() {
 					columns={dynamicPatronRequestColumns}
 					columnVisibilityModel={grid.columnVisibilityModel}
 					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
+					columnLayout={grid.columnLayout}
 					type="patronRequests"
 					label={t("nav.patron_requests.title")}
 					identifier="patronRequestsMain"

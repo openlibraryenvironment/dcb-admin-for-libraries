@@ -150,6 +150,7 @@ function RouteComponent() {
 					columns={bibsGrid.columns}
 					columnVisibilityModel={grid.columnVisibilityModel}
 					onColumnVisibilityModelChange={grid.handleColumnVisibilityChange}
+					columnLayout={grid.columnLayout}
 					type="bibs"
 					label={t("nav.bibs.title")}
 					identifier="bibs"
