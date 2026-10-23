@@ -19,7 +19,8 @@
 		},
 		"Patron requests grid": {
 			"source": "src/routes/__authenticated/patronRequests/index.tsx",
-			"budget": 470300
+			"budget": 497100,
+			"_note": "Raised from 470,300 on 2026-10-23, to Supplier requests' figure: the page now offers the same bulk clean up (22 Oct, with its dialogs loaded on first use) and the readable URL with columns and the last view (about 6 KB, as DCB Admin measured). 475,548 measured; 497,100 is inside the routes' measured-plus-5% rule."
 		},
 		"Patron request detail": {
 			"source": "src/routes/__authenticated/patronRequests/$id/index.tsx",
