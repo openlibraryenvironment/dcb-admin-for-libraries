@@ -8,8 +8,7 @@ import { useDataGridErrorSafely } from "@/hooks/useDataGridErrorSafely";
 import { useSyncedDataGrid } from "@/hooks/useSyncedDataGrid";
 import { usePatronRequestExport } from "@/hooks/useExport";
 import { usePatronRequestCleanup } from "@/hooks/usePatronRequestCleanup";
-import { CleanupProgressDialog } from "@components/DataGrid/components/CleanupProgressDialog";
-import { CleanupOverrideDialog } from "@components/CleanupOverrideDialog/CleanupOverrideDialog";
+import { LazyCleanupDialogs } from "@components/CleanupDialogs/LazyCleanupDialogs";
 import DataGrid from "@components/DataGrid/DataGrid";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -267,29 +266,7 @@ function RouteComponent() {
 					parentApiRef={apiRef}
 				/>
 			}
-			<CleanupProgressDialog
-				open={cleanup.cleanupState.open}
-				isCleaning={cleanup.cleanupState.isCleaning}
-				progress={
-					cleanup.cleanupState.total > 0
-						? (cleanup.cleanupState.processed / cleanup.cleanupState.total) * 100
-						: 0
-				}
-				total={cleanup.cleanupState.total}
-				processed={cleanup.cleanupState.processed}
-				successRows={cleanup.cleanupState.successRows}
-				errorRows={cleanup.cleanupState.errorRows}
-				skippedRows={cleanup.cleanupState.skippedRows}
-				refusedRows={cleanup.cleanupState.refusedRows}
-				onOverride={cleanup.requestOverride}
-				onClose={cleanup.handleCloseCleanup}
-			/>
-			<CleanupOverrideDialog
-				open={cleanup.overrideConfirmOpen}
-				count={cleanup.cleanupState.refusedRows.length}
-				onClose={cleanup.cancelOverride}
-				onConfirm={() => void cleanup.confirmOverride()}
-			/>
+			<LazyCleanupDialogs cleanup={cleanup} />
 
 			{
 				<TimedAlert

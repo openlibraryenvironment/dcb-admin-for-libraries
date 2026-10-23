@@ -194,3 +194,5 @@ export const usePatronRequestCleanup = ({
 		confirmOverride,
 	};
 };
+
+export type PatronRequestCleanup = ReturnType<typeof usePatronRequestCleanup>;
