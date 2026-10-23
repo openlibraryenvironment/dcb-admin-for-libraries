@@ -1,0 +1,179 @@
+import type { Page } from "@playwright/test";
+import { test, expect } from "./fixtures/test";
+import { injectRuntimeConfig } from "./fixtures/runtime-config";
+import { seedAuth } from "./fixtures/auth";
+import { mockGraphQL } from "./fixtures/graphql";
+import library from "./fixtures-data/library.json" with { type: "json" };
+import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
+
+/** A grid's view in its address, readably, and the reader's last view: docs/url-view-state.md. */
+
+interface Sent {
+	query: string;
+	pageno: number;
+	order: string;
+	orderBy: string;
+}
+
+const mockGrid = async (page: Page): Promise<Sent[]> => {
+	const sent: Sent[] = [];
+	await mockGraphQL(page, {
+		LoadLibrary: library,
+		LoadLibraries: library,
+		LoadPatronRequests: (variables) => {
+			sent.push(variables as unknown as Sent);
+			return { patronRequests: { ...patronRequests.patronRequests, totalSize: 60 } };
+		},
+	});
+	return sent;
+};
+
+const search = (page: Page) => decodeURIComponent(new URL(page.url()).search);
+
+/** The address's parameters, in order of name: the order they were written in is the reader's. */
+const params = (page: Page) =>
+	[...new URL(page.url()).searchParams].map(([key, value]) => `${key}=${value}`).sort();
+
+const filterButton = (page: Page) =>
+	page.getByRole("toolbar").getByRole("button", { name: /^Show filters/ });
+
+const filterStatus = async (page: Page, label: string) => {
+	const header = page.getByRole("columnheader", { name: "Status" });
+	await header.hover();
+	await header.getByRole("button", { name: /menu/i }).click();
+	await page.getByRole("menuitem", { name: "Filter" }).click();
+	await page.getByRole("tooltip").getByRole("combobox", { name: "Value" }).click();
+	await page.getByRole("option", { name: label }).click();
+	await page.keyboard.press("Escape");
+};
+
+const notice = (page: Page) => page.getByText("Showing your last view");
+
+const goToRequestsByNavigation = async (page: Page) => {
+	await page.getByRole("tab", { name: "Patron requests" }).click();
+	await expect(page.getByRole("grid")).toBeVisible();
+};
+
+test.beforeEach(async ({ app }) => {
+	await app.signIn();
+});
+
+test("the address reads as what the grid shows", async ({ page }) => {
+	await mockGrid(page);
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	await filterStatus(page, "Completed");
+	await expect.poll(() => search(page)).toBe("?filters=status:COMPLETED");
+	await page.getByRole("columnheader", { name: "Status" }).click();
+	await page.getByRole("button", { name: "Go to next page" }).click();
+
+	await expect
+		.poll(() => search(page))
+		.toBe("?filters=status:COMPLETED&sort=status:asc&page=2");
+});
+
+test("a link carries the columns, and opens with them in another browser", async ({
+	page,
+	browser,
+}) => {
+	await mockGrid(page);
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	const header = page.getByRole("columnheader", { name: "Status" });
+	await header.hover();
+	await header.getByRole("button", { name: /menu/i }).click();
+	await page.getByRole("menuitem", { name: "Hide column" }).click();
+	await expect.poll(() => search(page)).toBe("?hide=status");
+
+	const context = await browser.newContext();
+	const elsewhere = await context.newPage();
+	await injectRuntimeConfig(elsewhere);
+	await seedAuth(elsewhere);
+	await mockGrid(elsewhere);
+	await elsewhere.goto(page.url());
+	await expect(elsewhere.getByRole("grid")).toBeVisible();
+	await expect(elsewhere.getByRole("columnheader", { name: "Request created" })).toBeVisible();
+	await expect(elsewhere.getByRole("columnheader", { name: "Status" })).toHaveCount(0);
+	await context.close();
+});
+
+test("a bare address opens the reader's last view, says so, and Reset returns the defaults", async ({
+	app,
+	page,
+}) => {
+	const sent = await mockGrid(page);
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+	await page.getByRole("columnheader", { name: "Status" }).click();
+	await expect.poll(() => search(page)).toBe("?sort=status:asc");
+	await expect(notice(page)).toHaveCount(0);
+
+	await page.getByRole("tab", { name: "Home" }).click();
+	await goToRequestsByNavigation(page);
+
+	await expect(page).toHaveURL(/\/patronRequests\?sort=status(%3A|:)asc$/);
+	await expect(notice(page)).toBeVisible();
+	await expect.poll(() => sent.at(-1)?.order).toBe("status");
+	await app.expectNoAccessibilityViolations();
+
+	await page.getByRole("button", { name: "Reset to default" }).click();
+	await expect.poll(() => search(page)).toBe("");
+	await expect(notice(page)).toHaveCount(0);
+	// The defaults' page is the one first fetched, so it comes from the cache
+	await expect(page.getByRole("columnheader", { name: "Status" })).not.toHaveAttribute(
+		"aria-sort",
+		"ascending",
+	);
+
+	// Reset forgets it: the next bare address opens the defaults
+	await page.getByRole("tab", { name: "Home" }).click();
+	await goToRequestsByNavigation(page);
+	await expect.poll(() => search(page)).toBe("");
+});
+
+test("opening a link never replaces the last view (Rule 1)", async ({ page }) => {
+	await mockGrid(page);
+	await page.goto("/patronRequests");
+	await expect(page.getByRole("grid")).toBeVisible();
+	await filterStatus(page, "Completed");
+	await expect.poll(() => search(page)).toBe("?filters=status:COMPLETED");
+
+	// A colleague's link, opened and paged through, but not changed
+	await page.goto("/patronRequests?filters=status:ERROR&sort=dateCreated:asc");
+	await expect(filterButton(page)).toHaveAccessibleName("Show filters, 1 applied");
+	await expect(notice(page)).toHaveCount(0);
+	await page.getByRole("button", { name: "Go to next page" }).click();
+	await expect.poll(() => search(page)).toContain("page=2");
+
+	await page.getByRole("tab", { name: "Home" }).click();
+	await goToRequestsByNavigation(page);
+	await expect.poll(() => search(page)).toBe("?filters=status:COMPLETED");
+	await expect(notice(page)).toBeVisible();
+});
+
+test("Back undoes this visit's changes once, then leaves the grid", async ({ page }) => {
+	await mockGrid(page);
+	await page.goto("/");
+	await goToRequestsByNavigation(page);
+	await expect.poll(() => search(page)).toBe("");
+
+	await page.getByRole("columnheader", { name: "Status" }).click();
+	await filterStatus(page, "Completed");
+	// A changed filter starts on page 1, so page once it has landed
+	await expect.poll(() => search(page)).toContain("filters=status:COMPLETED");
+	await page.getByRole("button", { name: "Go to next page" }).click();
+	await expect
+		.poll(() => params(page))
+		.toEqual(["filters=status:COMPLETED", "page=2", "sort=status:asc"]);
+
+	// One entry for the whole visit, not one per change
+	await page.goBack();
+	await expect(page).toHaveURL(/\/patronRequests$/);
+	await expect(page.getByRole("grid")).toBeVisible();
+	await expect(filterButton(page)).toHaveAccessibleName("Show filters");
+
+	await page.goBack();
+	await expect(page).not.toHaveURL(/\/patronRequests/);
+});

@@ -1,4 +1,5 @@
-import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
+import { validateGridSearch } from "@helpers/viewState/gridSearch";
+import { auditLogView } from "@helpers/viewState/gridViewIds";
 import { useClock } from "@/hooks/useThemeStore";
 import { formatTimestamp } from "@helpers/formatters";
 import { Attribute } from "@components/Attribute/Attribute";
@@ -85,7 +86,6 @@ import { z } from "zod";
 const requestSearchSchema = z.object({
 	// The open tab, so a shared or restored link to the audit log opens on it
 	tab: z.number().int().min(1).max(5).optional().catch(undefined),
-	audit: gridSearchSchema.optional().catch(undefined),
 });
 
 /**
@@ -110,7 +110,10 @@ function LibraryWithContact({ library }: { library: Library }) {
 }
 
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
-	validateSearch: requestSearchSchema,
+	validateSearch: (search: Record<string, unknown>) => ({
+		...requestSearchSchema.parse(search),
+		...validateGridSearch(search, [auditLogView.namespace ?? ""]),
+	}),
 	head:() => ({ meta: [{ title: pageTitle("patron_request.title") }] }),
 	component: RouteComponent,
 });

@@ -9,8 +9,8 @@ import patronRequests from "./fixtures-data/patronRequests.json" with { type: "j
 /** A grid's view shared as its address, and saved for the tab: docs/saved-filters.md. */
 
 const BARCODE = "PB8675309";
-const ERRORS = JSON.stringify([{ id: 1, field: "status", operator: "is", value: "ERROR" }]);
-const FILTERED = `/patronRequests?filters=${encodeURIComponent(ERRORS)}`;
+const ERRORS = "status:ERROR";
+const FILTERED = `/patronRequests?filters=${ERRORS}`;
 
 const toolbar = (page: Page) => page.getByRole("toolbar");
 const savedFilters = (page: Page) =>

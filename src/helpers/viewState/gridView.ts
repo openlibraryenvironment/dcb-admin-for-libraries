@@ -1,0 +1,437 @@
+import {
+	getGridDefaultColumnTypes,
+	GridLogicOperator,
+	type GridColDef,
+	type GridColumnVisibilityModel,
+	type GridFilterItem,
+	type GridFilterModel,
+	type GridFilterOperator,
+	type GridPaginationModel,
+	type GridSortModel,
+} from "@mui/x-data-grid-premium";
+
+import { operatorWord, WORD_OF } from "./operatorWords";
+import {
+	encodeFilter,
+	isFieldName,
+	type UrlFilter,
+	type UrlSort,
+	type UrlView,
+} from "./urlViewCodec";
+import type { GridViewId } from "./gridViewIds";
+
+// MUI X's grid models to and from the URL's view: docs/url-view-state.md.
+
+/**
+ * Filter fields whose values never go in a URL, a remembered view or a saved filter: a patron
+ * barcode is personal data and close to a credential, and a requester note is text a patron
+ * wrote. Quick-search text is treated the same. docs/url-view-state.md.
+ */
+export const PRIVATE_FILTER_FIELDS: readonly string[] = [
+	"patronBarcode",
+	"requesterNote",
+];
+
+export const isPrivateField = (field: string) =>
+	PRIVATE_FILTER_FIELDS.includes(field);
+
+export interface GridViewSpec extends GridViewId {
+	defaultSort: GridSortModel;
+	defaultPageSize: number;
+	pageSizeOptions: readonly number[];
+	defaultColumnVisibility: GridColumnVisibilityModel;
+}
+
+export interface GridModels {
+	filterModel: GridFilterModel;
+	sortModel: GridSortModel;
+	paginationModel: GridPaginationModel;
+	columnVisibilityModel: GridColumnVisibilityModel;
+}
+
+/** What a grid keeps in its history entry rather than its URL. */
+export interface PrivateGridState {
+	/** Each with its position in the full filter list, so the panel keeps its order. */
+	items: { index: number; item: GridFilterItem }[];
+	quickFilterValues: string[];
+}
+
+type ValueKind = "none" | "scalar" | "list" | "range";
+
+const RANGE_OPERATORS = new Set(["between", "luceneDateRange"]);
+/** Built as dates whatever the column's type, so their values must be dates. */
+const DATE_OPERATORS = new Set(["luceneDateRange", "onOrAfter", "onOrBefore"]);
+const EQUALITY_OPERATORS = ["equals", "is", "="];
+const MAX_TEXT = 256;
+const MAX_QUICK_FILTER_VALUES = 10;
+const MAX_PRIVATE_ITEMS = 20;
+const NUMERIC = /^-?\d+(\.\d+)?$/;
+
+const kindOf = (operator: GridFilterOperator): ValueKind => {
+	if (operator.value === "isAnyOf") return "list";
+	if (RANGE_OPERATORS.has(operator.value)) return "range";
+	return operator.requiresFilterValue === false || !operator.InputComponent
+		? "none"
+		: "scalar";
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+	typeof value === "object" && value !== null && !Array.isArray(value);
+
+const isText = (value: unknown): value is string =>
+	typeof value === "string" && value.length <= MAX_TEXT;
+
+const isDateText = (value: string) =>
+	value.length <= 64 && !Number.isNaN(Date.parse(value));
+
+/** What a column's value may be, as URL text. A select with options fixed in its definition takes only those. */
+const acceptsFor = (column: GridColDef): ((value: string) => boolean) => {
+	switch (column.type) {
+		case "number":
+			return (value) => NUMERIC.test(value);
+		case "boolean":
+			return (value) => value === "true" || value === "false";
+		case "date":
+		case "dateTime":
+			return isDateText;
+		case "singleSelect": {
+			const valueOptions = "valueOptions" in column ? column.valueOptions : undefined;
+			// Options fetched at runtime (libraries) are not known here: any bounded text
+			if (!Array.isArray(valueOptions)) return isText;
+			const options = new Set(
+				valueOptions.map((option: unknown) =>
+					String(isRecord(option) ? option.value : option),
+				),
+			);
+			return (value) => options.has(value);
+		}
+		default:
+			return isText;
+	}
+};
+
+interface FilterRule {
+	operators: ReadonlyMap<string, ValueKind>;
+	accepts: (value: string) => boolean;
+}
+
+/** The allow-lists: a field the grid does not filter on, or an operator it does not offer, is refused. */
+export interface GridRules {
+	filters: ReadonlyMap<string, FilterRule>;
+	sortable: ReadonlySet<string>;
+	fields: ReadonlySet<string>;
+}
+
+export const gridRules = (columns: readonly GridColDef[]): GridRules => {
+	const types = getGridDefaultColumnTypes();
+	const filters = new Map<string, FilterRule>();
+	for (const column of columns) {
+		if (column.filterable === false || column.type === "actions") continue;
+		const operators =
+			column.filterOperators ?? types[column.type ?? "string"]?.filterOperators ?? [];
+		filters.set(column.field, {
+			operators: new Map(operators.map((op) => [op.value, kindOf(op)])),
+			accepts: acceptsFor(column),
+		});
+	}
+	const sortable = new Set(
+		columns
+			.filter((column) => column.sortable !== false && column.type !== "actions")
+			.map((column) => column.field),
+	);
+	// MUI's own columns (`__check__`) are not the reader's to share
+	const fields = new Set(columns.map((column) => column.field).filter(isFieldName));
+	return { filters, sortable, fields };
+};
+
+/** Values as a URL holds them: the date pickers hand over Dayjs objects, which serialise to ISO. */
+const plainText = (value: unknown): string | null => {
+	if (value === null || value === undefined || value === "") return null;
+	if (typeof value === "string") return value;
+	if (typeof value === "number" || typeof value === "boolean") return String(value);
+	if (typeof (value as { toJSON?: unknown }).toJSON === "function") {
+		const json = (value as { toJSON: () => unknown }).toJSON();
+		return typeof json === "string" ? json : null;
+	}
+	return null;
+};
+
+const acceptsFilterValue = (rule: FilterRule, operator: string) =>
+	DATE_OPERATORS.has(operator) ? isDateText : rule.accepts;
+
+/** One grid filter as the URL states it, or null for a row not finished or not allowed. */
+export const itemToFilter = (
+	rules: GridRules,
+	item: Pick<GridFilterItem, "field" | "operator" | "value">,
+): UrlFilter | null => {
+	const rule = rules.filters.get(item.field);
+	const kind = rule?.operators.get(item.operator);
+	const operator = operatorWord(item.operator);
+	if (!rule || !kind || !operator) return null;
+	const accepts = acceptsFilterValue(rule, item.operator);
+
+	if (kind === "none") return { field: item.field, operator, values: [] };
+	if (kind === "scalar") {
+		const value = plainText(item.value);
+		return value !== null && accepts(value)
+			? { field: item.field, operator, values: [value] }
+			: null;
+	}
+	if (kind === "list") {
+		if (!Array.isArray(item.value) || item.value.length === 0) return null;
+		const values = item.value.map(plainText);
+		return values.every((value): value is string => value !== null && accepts(value))
+			? { field: item.field, operator, values }
+			: null;
+	}
+	if (!Array.isArray(item.value) || item.value.length !== 2) return null;
+	const bounds = item.value.map(plainText);
+	if (bounds.every((bound) => bound === null)) return null;
+	if (!bounds.every((bound) => bound === null || accepts(bound))) return null;
+	return { field: item.field, operator, values: bounds.map((bound) => bound ?? "") };
+};
+
+/** The column's own operator for a URL word: `is` with several values is `isAnyOf`. */
+const operatorFor = (rule: FilterRule, filter: UrlFilter): string | undefined => {
+	const offered = [...rule.operators.keys()];
+	if (filter.operator === "is") {
+		if (filter.values.length > 1) return offered.find((op) => op === "isAnyOf");
+		return (
+			EQUALITY_OPERATORS.find((op) => offered.includes(op)) ??
+			offered.find((op) => op === "isAnyOf")
+		);
+	}
+	return offered.find((op) => WORD_OF[op] === filter.operator);
+};
+
+/** A URL filter as a grid item for this grid, or null where the grid cannot take it. */
+export const filterToItem = (
+	rules: GridRules,
+	filter: UrlFilter,
+	id: number,
+): GridFilterItem | null => {
+	const rule = rules.filters.get(filter.field);
+	const operator = rule && operatorFor(rule, filter);
+	const kind = operator ? rule.operators.get(operator) : undefined;
+	if (!rule || !operator || !kind) return null;
+	const accepts = acceptsFilterValue(rule, operator);
+	const item: GridFilterItem = { id, field: filter.field, operator };
+
+	if (kind === "none") return filter.values.length === 0 ? item : null;
+	if (kind === "scalar") {
+		const [value] = filter.values;
+		return filter.values.length === 1 && accepts(value) ? { ...item, value } : null;
+	}
+	if (kind === "list") {
+		return filter.values.length > 0 && filter.values.every(accepts)
+			? { ...item, value: filter.values }
+			: null;
+	}
+	const bounds = filter.values.map((bound) => (bound === "" ? null : bound));
+	return bounds.length === 2 && bounds.every((bound) => bound === null || accepts(bound))
+		? { ...item, value: bounds }
+		: null;
+};
+
+/** Kept in the history entry: a patron's identity or words, or a filter the grammar cannot state. */
+const staysInHistory = (filter: UrlFilter) =>
+	isPrivateField(filter.field) || encodeFilter(filter) === null;
+
+/** A row the URL cannot carry yet: kept on screen, unapplied, until it is finished or removed. */
+export const hasDraftItems = (rules: GridRules, model: GridFilterModel) =>
+	model.items.some((item) => itemToFilter(rules, item) === null);
+
+export interface FilterPart {
+	filters: UrlFilter[];
+	logic?: "or";
+	privateState?: PrivateGridState;
+}
+
+export const filterToView = (rules: GridRules, model: GridFilterModel): FilterPart => {
+	const filters: UrlFilter[] = [];
+	const privateItems: PrivateGridState["items"] = [];
+	model.items.forEach((item, index) => {
+		const filter = itemToFilter(rules, item);
+		if (!filter) return;
+		if (staysInHistory(filter)) privateItems.push({ index, item });
+		else filters.push(filter);
+	});
+	const quickFilterValues = (model.quickFilterValues ?? [])
+		.filter(isText)
+		.filter((value) => value !== "")
+		.slice(0, MAX_QUICK_FILTER_VALUES);
+	const part: FilterPart = { filters };
+	// MUI keeps OR after all but one filter is removed; with fewer than two it joins nothing
+	if (
+		model.logicOperator === GridLogicOperator.Or &&
+		filters.length + privateItems.length > 1
+	) {
+		part.logic = "or";
+	}
+	if (privateItems.length > 0 || quickFilterValues.length > 0) {
+		part.privateState = { items: privateItems, quickFilterValues };
+	}
+	return part;
+};
+
+export const filterFromView = (
+	rules: GridRules,
+	view: Pick<UrlView, "filters" | "logic">,
+	privateState?: PrivateGridState,
+): GridFilterModel => {
+	const items = view.filters
+		.filter((filter) => !isPrivateField(filter.field))
+		.map((filter, index) => filterToItem(rules, filter, index))
+		.filter((item): item is GridFilterItem => item !== null);
+	const privateItems = [...(privateState?.items ?? [])].sort((a, b) => a.index - b.index);
+	for (const { index, item } of privateItems) {
+		items.splice(Math.min(index, items.length), 0, item);
+	}
+	const model: GridFilterModel = {
+		// Ids are the panel's row keys: unique across the URL's rows and the history entry's
+		items: items.map((item, position) => ({ ...item, id: position })),
+	};
+	if (view.logic === "or") model.logicOperator = GridLogicOperator.Or;
+	if (privateState?.quickFilterValues.length) {
+		model.quickFilterValues = privateState.quickFilterValues;
+	}
+	return model;
+};
+
+/** Filters in the form links and saved filters wrote before the readable one: MUI items. */
+export const filtersFromItems = (rules: GridRules, raw: readonly unknown[]): UrlFilter[] =>
+	raw.slice(0, MAX_PRIVATE_ITEMS).flatMap((entry) => {
+		if (!isRecord(entry)) return [];
+		const { field, operator, value } = entry;
+		if (typeof field !== "string" || typeof operator !== "string") return [];
+		const filter = itemToFilter(rules, { field, operator, value });
+		return filter && !isPrivateField(filter.field) ? [filter] : [];
+	});
+
+const sameSort = (a: GridSortModel, b: GridSortModel) =>
+	a.length === b.length &&
+	a.every((entry, index) => entry.field === b[index].field && entry.sort === b[index].sort);
+
+/** Undefined when the grid's default order is in force. The server always orders, so an empty sort is the default too. */
+export const sortToView = (
+	spec: GridViewSpec,
+	rules: GridRules,
+	model: GridSortModel,
+): UrlView["sort"] => {
+	const sort = model.filter((entry) => entry.sort && rules.sortable.has(entry.field));
+	if (sort.length === 0 || sameSort(sort, spec.defaultSort)) return undefined;
+	return sort.map((entry): UrlSort => ({
+		field: entry.field,
+		direction: entry.sort === "asc" ? "asc" : "desc",
+	}));
+};
+
+export const sortFromView = (
+	spec: GridViewSpec,
+	rules: GridRules,
+	sort: UrlView["sort"],
+): GridSortModel => {
+	if (sort === "none") return spec.defaultSort;
+	const allowed = (sort ?? []).filter((entry) => rules.sortable.has(entry.field));
+	return allowed.length > 0
+		? allowed.map((entry) => ({ field: entry.field, sort: entry.direction }))
+		: spec.defaultSort;
+};
+
+export const paginationToView = (
+	spec: GridViewSpec,
+	model: GridPaginationModel,
+): Pick<UrlView, "page" | "pageSize"> => ({
+	page: model.page > 0 ? model.page : undefined,
+	pageSize:
+		model.pageSize !== spec.defaultPageSize && spec.pageSizeOptions.includes(model.pageSize)
+			? model.pageSize
+			: undefined,
+});
+
+export const paginationFromView = (
+	spec: GridViewSpec,
+	view: Pick<UrlView, "page" | "pageSize">,
+	maxPage: number,
+): GridPaginationModel => ({
+	page: view.page !== undefined && view.page <= maxPage ? view.page : 0,
+	pageSize:
+		view.pageSize !== undefined && spec.pageSizeOptions.includes(view.pageSize)
+			? view.pageSize
+			: spec.defaultPageSize,
+});
+
+const visibleIn = (model: GridColumnVisibilityModel, field: string) => model[field] !== false;
+
+export const visibilityToView = (
+	spec: GridViewSpec,
+	rules: GridRules,
+	model: GridColumnVisibilityModel,
+): Pick<UrlView, "hide" | "show"> => {
+	const hide: string[] = [];
+	const show: string[] = [];
+	for (const field of rules.fields) {
+		const shown = visibleIn(model, field);
+		if (shown === visibleIn(spec.defaultColumnVisibility, field)) continue;
+		(shown ? show : hide).push(field);
+	}
+	return { hide, show };
+};
+
+export const visibilityFromView = (
+	spec: GridViewSpec,
+	rules: GridRules,
+	view: Pick<UrlView, "hide" | "show">,
+): GridColumnVisibilityModel => {
+	const model: GridColumnVisibilityModel = { ...spec.defaultColumnVisibility };
+	for (const field of view.hide) if (rules.fields.has(field)) model[field] = false;
+	for (const field of view.show) if (rules.fields.has(field)) model[field] = true;
+	return model;
+};
+
+/** The grid's models as a URL view, and what must stay out of it. */
+export const modelsToView = (
+	spec: GridViewSpec,
+	rules: GridRules,
+	models: GridModels,
+): { view: UrlView; privateState: PrivateGridState | undefined } => {
+	const { filters, logic, privateState } = filterToView(rules, models.filterModel);
+	const { page, pageSize } = paginationToView(spec, models.paginationModel);
+	const view: UrlView = {
+		filters,
+		...visibilityToView(spec, rules, models.columnVisibilityModel),
+	};
+	if (logic) view.logic = logic;
+	const sort = sortToView(spec, rules, models.sortModel);
+	if (sort) view.sort = sort;
+	if (page !== undefined) view.page = page;
+	if (pageSize !== undefined) view.pageSize = pageSize;
+	return { view, privateState };
+};
+
+/** History state is written by this app but read back from the browser: checked like a URL. */
+export const parsePrivateState = (
+	rules: GridRules,
+	raw: unknown,
+): PrivateGridState | undefined => {
+	if (!isRecord(raw)) return undefined;
+	const items = (Array.isArray(raw.items) ? raw.items : [])
+		.slice(0, MAX_PRIVATE_ITEMS)
+		.flatMap((entry) => {
+			if (!isRecord(entry) || !isRecord(entry.item)) return [];
+			const { index } = entry;
+			if (typeof index !== "number" || !Number.isSafeInteger(index) || index < 0) return [];
+			const { field, operator, value } = entry.item;
+			if (typeof field !== "string" || typeof operator !== "string") return [];
+			const filter = itemToFilter(rules, { field, operator, value });
+			if (!filter || !staysInHistory(filter)) return [];
+			const item = filterToItem(rules, filter, index);
+			return item ? [{ index, item }] : [];
+		});
+	const quickFilterValues = (Array.isArray(raw.quickFilterValues) ? raw.quickFilterValues : [])
+		.filter(isText)
+		.slice(0, MAX_QUICK_FILTER_VALUES);
+	return items.length > 0 || quickFilterValues.length > 0
+		? { items, quickFilterValues }
+		: undefined;
+};

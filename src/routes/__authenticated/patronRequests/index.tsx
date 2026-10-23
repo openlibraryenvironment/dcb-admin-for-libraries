@@ -1,4 +1,5 @@
-import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
+import { validateGridSearch } from "@helpers/viewState/gridSearch";
+import { patronRequestsView } from "@helpers/viewState/gridViewIds";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
@@ -36,6 +37,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	useRouter,
+	redirect,
 } from "@tanstack/react-router";
 import request from "graphql-request";
 import { useMemo, useState } from "react";
@@ -43,7 +45,13 @@ import { useTranslation } from "react-i18next";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/patronRequests/")({
-	validateSearch: gridSearchSchema,
+	validateSearch: validateGridSearch,
+	beforeLoad: async ({ search, location }) => {
+		// Loaded here, not with the route: the first load of every page would carry the codec
+		const { rememberedViewRedirect } = await import("@helpers/viewState/viewRoute");
+		const restore = rememberedViewRedirect(patronRequestsView, search, location.state);
+		if (restore) throw redirect({ to: "/patronRequests", ...restore });
+	},
 	head: () => ({ meta: [{ title: pageTitle("nav.patron_requests.title") }] }),
 	component: RouteComponent,
 });

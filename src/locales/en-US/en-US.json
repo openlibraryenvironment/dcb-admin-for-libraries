@@ -1613,11 +1613,12 @@
 				"saved_as": "Saved as {{name}}.",
 				"applied": "Showing {{name}}.",
 				"no_filter": "No filters",
-				"unsorted": "Not sorted",
 				"sorted_asc": "Sorted by {{field}}, ascending",
 				"sorted_desc": "Sorted by {{field}}, descending",
 				"reset": "Clear filters and sort",
-				"reset_done": "Filters and sort cleared."
+				"reset_done": "Filters and sort cleared.",
+				"restored": "Showing your last view",
+				"restored_reset": "Reset to default"
 			}
 		},
 		"feedback": {

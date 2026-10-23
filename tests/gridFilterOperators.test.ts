@@ -3,7 +3,12 @@ import dayjs from "dayjs";
 import type { GridColDef } from "@mui/x-data-grid-premium";
 
 import * as grids from "@helpers/dataGrid/gridDefinitions";
-import { PRIVATE_FILTER_FIELDS, filterToSearch } from "@helpers/dataGrid/gridSearch";
+import {
+	PRIVATE_FILTER_FIELDS,
+	filterFromView,
+	filterToView,
+} from "@helpers/viewState/gridView";
+import { decodeFilter, encodeFilter } from "@helpers/viewState/urlViewCodec";
 
 /** A value as the column's own filter input hands it over: a picker gives Dayjs, a select an option. */
 const inputValue = (column: GridColDef): unknown => {
@@ -32,9 +37,9 @@ const DATE_OPERATORS = new Set(["luceneDateRange", "onOrAfter", "onOrBefore"]);
 
 const cases = Object.values(grids).flatMap((grid) =>
 	grid.columns
-		.filter((column) => column.filterable !== false && grid.filters.has(column.field))
+		.filter((column) => column.filterable !== false && grid.rules.filters.has(column.field))
 		.flatMap((column) =>
-			[...grid.filters.get(column.field)!.operators].map(([operator, kind]) => ({
+			[...grid.rules.filters.get(column.field)!.operators].map(([operator, kind]) => ({
 				grid,
 				column,
 				operator,
@@ -49,7 +54,7 @@ describe("every filter each grid offers", () => {
 		expect(cases.length).toBeGreaterThan(50);
 	});
 
-	it.each(cases)("$name survives the URL with the value its input gives", ({
+	it.each(cases)("$name survives the URL, readably, with the value its input gives", ({
 		grid,
 		column,
 		operator,
@@ -66,13 +71,25 @@ describe("every filter each grid offers", () => {
 					: kind === "range"
 						? [sample, null]
 						: sample;
-		const { search, state } = filterToSearch(grid, {
+		const { filters, privateState } = filterToView(grid.rules, {
 			items: [{ id: 1, field: column.field, operator, value }],
 		});
 
-		const carried = PRIVATE_FILTER_FIELDS.includes(column.field)
-			? state?.items.length
-			: search.filters?.length;
-		expect(carried).toBe(1);
+		if (PRIVATE_FILTER_FIELDS.includes(column.field)) {
+			expect(filters).toEqual([]);
+			expect(privateState?.items).toHaveLength(1);
+			return;
+		}
+		expect(filters).toHaveLength(1);
+		const text = encodeFilter(filters[0]);
+		expect(text, "the grammar states it").not.toBeNull();
+		const [item] = filterFromView(grid.rules, { filters: [decodeFilter(text)!] }).items;
+		// One value of "is any of" is "is": the URL has one word for both, read back as the column's equality
+		const readBackAs =
+			kind === "list" && !Array.isArray(item?.value)
+				? ["is", "equals", "="]
+				: [operator];
+		expect(item, "and the grid reads it back").toMatchObject({ field: column.field });
+		expect(readBackAs).toContain(item.operator);
 	});
 });

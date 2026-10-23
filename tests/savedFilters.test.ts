@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { patronRequestsGrid } from "@helpers/dataGrid/gridDefinitions";
-import { savedSearchOf } from "@helpers/dataGrid/gridSearch";
+import { savedSearchOf } from "@helpers/viewState/savedSearch";
 import { storageKey } from "@helpers/appBase";
 import {
 	MAX_SAVED_FILTERS,
 	SavedFilterLimitError,
+	type SavedFilterSearch,
 	clearSessionSavedFilters,
 	sessionSavedFilterStore as store,
 } from "@helpers/savedFilters";
@@ -22,7 +23,11 @@ const memoryStorage = () => {
 };
 
 const GRID = "patronRequests";
-const STATUS = { filters: [{ id: 1, field: "status", operator: "is", value: "ERROR" }] };
+const STATUS: SavedFilterSearch = {
+	filters: [{ field: "status", operator: "is", values: ["ERROR"] }],
+};
+/** What an earlier release stored: the grid's own filter items. */
+const LEGACY_STATUS = { filters: [{ id: 1, field: "status", operator: "is", value: "ERROR" }] };
 let storage: ReturnType<typeof memoryStorage>;
 
 beforeEach(() => {
@@ -42,7 +47,10 @@ describe("the session store", () => {
 
 	it("replaces a filter saved under the same name, whatever its case", async () => {
 		await store.save(GRID, "Errors", STATUS);
-		const replacement = await store.save(GRID, "errors", { sort: "dateCreated:asc" });
+		const replacement = await store.save(GRID, "errors", {
+			filters: [],
+			sort: [{ field: "dateCreated", direction: "asc" }],
+		});
 
 		expect(await store.list(GRID)).toEqual([replacement]);
 	});
@@ -111,25 +119,36 @@ describe("signing out", () => {
 });
 
 describe("a saved search, applied to its grid", () => {
+	const { rules } = patronRequestsGrid;
+
 	it("keeps only what the grid's URL may carry", () => {
 		expect(
-			savedSearchOf(patronRequestsGrid, {
+			savedSearchOf(rules, {
 				filters: [
 					...STATUS.filters,
-					{ id: 2, field: "patronBarcode", operator: "equals", value: "PB8675309" },
-					{ id: 3, field: "noSuchColumn", operator: "equals", value: "x" },
+					{ field: "patronBarcode", operator: "is", values: ["PB8675309"] },
+					{ field: "noSuchColumn", operator: "is", values: ["x"] },
 				],
-				sort: "dateCreated:asc",
+				sort: [{ field: "dateCreated", direction: "asc" }],
 				page: 4,
 			}),
-		).toEqual({ filters: STATUS.filters, logic: undefined, sort: "dateCreated:asc" });
+		).toEqual({ ...STATUS, sort: [{ field: "dateCreated", direction: "asc" }] });
+	});
+
+	it("reads what an earlier release stored, through the same allow-list", () => {
+		expect(
+			savedSearchOf(rules, {
+				filters: [
+					...LEGACY_STATUS.filters,
+					{ id: 2, field: "patronBarcode", operator: "equals", value: "PB8675309" },
+				],
+				sort: "dateCreated:asc",
+				logic: "or",
+			}),
+		).toEqual({ ...STATUS, sort: [{ field: "dateCreated", direction: "asc" }] });
 	});
 
 	it("is empty when what was stored is not a search", () => {
-		expect(savedSearchOf(patronRequestsGrid, "status:ERROR")).toEqual({
-			filters: undefined,
-			logic: undefined,
-			sort: undefined,
-		});
+		expect(savedSearchOf(rules, "status:ERROR")).toEqual({ filters: [] });
 	});
 });

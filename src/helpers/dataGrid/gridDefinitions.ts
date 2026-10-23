@@ -9,65 +9,56 @@ import { standardLocationsColumnVisibility } from "@helpers/dataGrid/columnVisib
 import { defaultPatronRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/patronRequestColumnVisibility";
 import { referenceValueMappingColumnVisibility } from "@helpers/dataGrid/columnVisibility/referenceValueMappingColumnVisibilityModel";
 import { defaultSupplierRequestColumnVisibility } from "@helpers/dataGrid/columnVisibility/supplierRequestColumnVisibility";
-import { defineGrid } from "@helpers/dataGrid/gridSearch";
+import { defineGrid } from "@helpers/viewState/defineGrid";
+import {
+	auditLogView,
+	bibsView,
+	locationsView,
+	mappingsView,
+	patronRequestsView,
+	recordHistoryView,
+	supplierRequestsView,
+} from "@helpers/viewState/gridViewIds";
 
-// The ids predate the URL: they key each grid's persisted column visibility.
-
-export const patronRequestsGrid = defineGrid({
-	id: "mainPatronRequests",
-	searchKey: null,
+export const patronRequestsGrid = defineGrid(patronRequestsView, {
 	columns: standardPatronRequestColumns,
 	defaultSort: [{ field: "dateCreated", sort: "desc" }],
 	defaultColumnVisibility: defaultPatronRequestColumnVisibility,
 });
 
-export const supplierRequestsGrid = defineGrid({
-	id: "supplierPatronRequests",
-	searchKey: null,
+export const supplierRequestsGrid = defineGrid(supplierRequestsView, {
 	columns: standardSupplierRequestColumns,
 	defaultSort: [{ field: "dateCreated", sort: "desc" }],
 	defaultColumnVisibility: defaultSupplierRequestColumnVisibility,
 });
 
-export const mappingsGrid = defineGrid({
-	id: "referenceValueMappings",
-	searchKey: null,
+export const mappingsGrid = defineGrid(mappingsView, {
 	columns: standardRefValueMappingColumns,
 	defaultSort: [{ field: "lastImported", sort: "desc" }],
 	defaultColumnVisibility: referenceValueMappingColumnVisibility,
 });
 
-export const locationsGrid = defineGrid({
-	id: "locations",
-	searchKey: null,
+export const locationsGrid = defineGrid(locationsView, {
 	columns: defaultLocationColumns,
 	defaultSort: [{ field: "name", sort: "asc" }],
 	defaultColumnVisibility: standardLocationsColumnVisibility,
 });
 
-export const bibsGrid = defineGrid({
-	id: "bibs",
-	searchKey: null,
+export const bibsGrid = defineGrid(bibsView, {
 	columns: standardBibColumns,
 	// No bib column sorts, and dcb-service ignores the order for bibs
 	defaultSort: [],
 	defaultColumnVisibility: standardBibColumnVisibility,
 });
 
-/** One id for every record: the record is in the path, not the grid. */
-export const recordHistoryGrid = defineGrid({
-	id: "requestingHistory",
-	searchKey: null,
+export const recordHistoryGrid = defineGrid(recordHistoryView, {
 	columns: standardPatronRequestColumns,
 	defaultSort: [{ field: "dateCreated", sort: "desc" }],
 	defaultPageSize: 100,
 	defaultColumnVisibility: defaultPatronRequestColumnVisibility,
 });
 
-/** A tab of the request page, so namespaced under one key of that route's search. */
-export const auditLogGrid = defineGrid({
-	id: "patronRequestAuditLog",
-	searchKey: "audit",
+export const auditLogGrid = defineGrid(auditLogView, {
 	columns: auditColumns,
 	defaultSort: [{ field: "auditDate", sort: "desc" }],
 	defaultColumnVisibility: {},

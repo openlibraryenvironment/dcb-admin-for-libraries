@@ -27,7 +27,7 @@ export default function PatronRequestAuditLog({
 }: PatronRequestAuditLogProps) {
 	const { t } = useTranslation();
 
-	const grid = useSyncedDataGrid(auditLogGrid, route.useSearch().audit);
+	const grid = useSyncedDataGrid(auditLogGrid, route.useSearch());
 
 	const page = gridPage(
 		grid.appliedFilterModel,

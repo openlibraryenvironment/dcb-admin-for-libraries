@@ -1,11 +1,10 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { storageKey } from "@helpers/appBase";
-import type { GridSearch } from "@helpers/dataGrid/gridSearch";
 import { queryKeys } from "@helpers/queryKeys";
+import type { SavedFilterSearch } from "@helpers/viewState/savedSearch";
 
-/** What a saved filter restores: a grid's filter and sort, never its page. */
-export type SavedFilterSearch = Pick<GridSearch, "filters" | "logic" | "sort">;
+export type { SavedFilterSearch };
 
 export interface SavedFilter {
 	id: string;

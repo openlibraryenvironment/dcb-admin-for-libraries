@@ -1,4 +1,5 @@
-import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
+import { validateGridSearch } from "@helpers/viewState/gridSearch";
+import { bibsView } from "@helpers/viewState/gridViewIds";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
@@ -20,6 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	useRouter,
+	redirect,
 } from "@tanstack/react-router";
 import request from "graphql-request";
 import { useState } from "react";
@@ -27,7 +29,13 @@ import { useTranslation } from "react-i18next";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/bibs/")({
-	validateSearch: gridSearchSchema,
+	validateSearch: validateGridSearch,
+	beforeLoad: async ({ search, location }) => {
+		// Loaded here, not with the route: the first load of every page would carry the codec
+		const { rememberedViewRedirect } = await import("@helpers/viewState/viewRoute");
+		const restore = rememberedViewRedirect(bibsView, search, location.state);
+		if (restore) throw redirect({ to: "/bibs", ...restore });
+	},
 	head: () => ({ meta: [{ title: pageTitle("nav.bibs.title") }] }),
 	component: RouteComponent,
 });

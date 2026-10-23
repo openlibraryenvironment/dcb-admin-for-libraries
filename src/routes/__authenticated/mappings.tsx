@@ -1,4 +1,5 @@
-import { gridSearchSchema } from "@helpers/dataGrid/gridSearchSchema";
+import { validateGridSearch } from "@helpers/viewState/gridSearch";
+import { mappingsView } from "@helpers/viewState/gridViewIds";
 import { clampPageSize } from "@constants/dataGrid/pagination";
 import { pageTitle } from "@helpers/pageTitle";
 import Typography from "@mui/material/Typography";
@@ -38,14 +39,20 @@ import { getMappings } from "@queries/getMappings";
 import { UserFacingError, userFacingReason } from "@helpers/userFacingReason";
 import { useAnnounce } from "@/hooks/useAnnouncer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter, redirect } from "@tanstack/react-router";
 import request from "graphql-request";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAgencyCodes } from "@/hooks/useAgencyCodes";
 
 export const Route = createFileRoute("/__authenticated/mappings")({
-	validateSearch: gridSearchSchema,
+	validateSearch: validateGridSearch,
+	beforeLoad: async ({ search, location }) => {
+		// Loaded here, not with the route: the first load of every page would carry the codec
+		const { rememberedViewRedirect } = await import("@helpers/viewState/viewRoute");
+		const restore = rememberedViewRedirect(mappingsView, search, location.state);
+		if (restore) throw redirect({ to: "/mappings", ...restore });
+	},
 	head: () => ({ meta: [{ title: pageTitle("nav.mappings.title") }] }),
 	component: RouteComponent,
 });

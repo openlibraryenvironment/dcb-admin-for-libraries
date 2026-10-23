@@ -2,6 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { applyLanguage } from "./i18n";
 import { createRouter, type AnyRouter } from "@tanstack/react-router";
+import { stringifySearch } from "@helpers/viewState/searchSerialiser";
 import { routeTree } from "./routeTree.gen";
 import { LicenseInfo } from "@mui/x-license";
 import { AuthProvider } from "react-oidc-context";
@@ -126,6 +127,9 @@ export async function mountDcbAdminForLibraries(
 		//
 		// Without these, TanStack renders `<p>Not Found</p>` for an unmatched URL
 		// and its own ErrorComponent - which prints error.message - for a throw.
+		// Arrays as repeated keys and `:` `,` left raw, so a grid's view reads in the address bar.
+		// The default parser is kept: it reads that and every older JSON link. docs/url-view-state.md.
+		stringifySearch,
 		defaultNotFoundComponent: NotFound,
 		defaultErrorComponent: RouteError,
 		defaultPreload: "intent",
