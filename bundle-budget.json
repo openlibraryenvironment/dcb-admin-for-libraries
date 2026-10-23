@@ -54,11 +54,13 @@
 		},
 		"British English catalogue": {
 			"source": "src/locales/en-GB/en-GB.json",
-			"budget": 25800
+			"budget": 25900,
+			"_note": "Raised from 25,800 on 2026-10-23 for the column menu's Move left and Move right, the keyboard alternative to dragging a column (WCAG 2.2 SC 2.5.7). 25,832 measured."
 		},
 		"American English catalogue": {
 			"source": "src/locales/en-US/en-US.json",
-			"budget": 25800
+			"budget": 25900,
+			"_note": "Raised from 25,800 on 2026-10-23 for the column menu's Move left and Move right, the keyboard alternative to dragging a column (WCAG 2.2 SC 2.5.7). 25,828 measured."
 		},
 		"Saved filters dialog": {
 			"source": "src/components/DataGrid/components/SavedFiltersDialog.tsx",
