@@ -1919,20 +1919,20 @@
 				"body": "The Home page now shows a personalised summary of your library's OpenRS activity for today, the last 7 days or the last 30 days."
 			},
 			"views": {
-				"heading": "Share, save and clear a grid's filters",
-				"body": "Copy a link to what a grid is showing, save filters for this browser tab, and clear filters and sorting in one step."
+				"heading": "Lists you can share, come back to and export",
+				"body": "A list's address now reads as what it shows: its filters, sort, page and columns. Copy it to share the view, and a list you come back to opens as you left it, with Reset to return to the default. Save filters for this browser tab, and export patron requests the way you need with the new export wizard."
 			},
 			"accessibility": {
 				"heading": "More accessible, and set up the way you work",
 				"body": "In Preferences, choose your colour scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change, and Insights charts come with their numbers as a table."
 			},
+			"views_read_only": {
+				"heading": "Share and save what a list shows",
+				"body": "A list's address now reads as what it shows: its filters, sort, page and columns. Copy it to share the view, and save filters for this browser tab."
+			},
 			"accessibility_read_only": {
 				"heading": "More accessible, and set up the way you work",
 				"body": "In Preferences, choose your colour scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change."
-			},
-			"exports": {
-				"heading": "New and improved exports",
-				"body": "A new export wizard lets you customise your patron request exports."
 			}
 		},
 		"notes_link": "Read the full release notes on GitHub (opens in a new tab)",

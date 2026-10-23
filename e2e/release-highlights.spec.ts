@@ -40,9 +40,9 @@ test.describe("a user who has not seen this release's highlights", () => {
 
 		const dialog = highlights(page);
 		await expect(dialog).toHaveAccessibleName("What's new in version 1.14.0");
-		await expect(dialog.getByRole("listitem")).toHaveCount(6);
+		await expect(dialog.getByRole("listitem")).toHaveCount(5);
 		// The wording is rewritten each release; each item has its heading
-		await expect(dialog.getByRole("heading", { level: 3 })).toHaveCount(6);
+		await expect(dialog.getByRole("heading", { level: 3 })).toHaveCount(5);
 		await expect(
 			dialog.getByRole("heading", { level: 3, name: "Clean up protects an item that is out" }),
 		).toBeVisible();
@@ -92,7 +92,7 @@ test("a read-only user is shown only what they can use", async ({ app, page }) =
 	const dialog = highlights(page);
 	await expect(dialog.getByRole("heading", { level: 3 })).toHaveText([
 		"Quick walk-up requests for everyone at the desk",
-		"Share, save and clear a grid's filters",
+		"Share and save what a list shows",
 		"More accessible, and set up the way you work",
 	]);
 	await expect(dialog).toContainText("In Preferences, choose your colour scheme");
