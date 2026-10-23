@@ -3,6 +3,7 @@ import * as ReactDOM from "react-dom/client";
 import { applyLanguage } from "./i18n";
 import { createRouter, type AnyRouter } from "@tanstack/react-router";
 import { stringifySearch } from "@helpers/viewState/searchSerialiser";
+import { trackAbandonedQueries } from "@helpers/abandonedQueries";
 import { routeTree } from "./routeTree.gen";
 import { LicenseInfo } from "@mui/x-license";
 import { AuthProvider } from "react-oidc-context";
@@ -91,6 +92,15 @@ const handleServiceErrors = (error: unknown) => {
 	if (failure === "network") window.location.href = appPath("networkError");
 };
 
+const queryCache = new QueryCache({
+	onError: (error, query) => {
+		// A query from a page the reader has left failing, often on its retry, is not theirs to see
+		if (query.meta?.optional || isAbandoned(query)) return;
+		handleServiceErrors(error);
+	},
+});
+const isAbandoned = trackAbandonedQueries(queryCache);
+
 const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
@@ -100,12 +110,7 @@ const queryClient = new QueryClient({
 	},
 	// Mutations are absent on purpose: a user's action reports its own failure where it was
 	// taken, and leaving the page would lose the form and the answer to "did it go through?".
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			if (query.meta?.optional) return;
-			handleServiceErrors(error);
-		},
-	}),
+	queryCache,
 });
 
 export async function mountDcbAdminForLibraries(

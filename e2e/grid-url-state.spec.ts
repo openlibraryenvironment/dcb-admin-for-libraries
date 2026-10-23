@@ -492,3 +492,48 @@ test("with agency scoping, the patron request grid searches once on a cold load"
 
 	expect(searches).toBe(1);
 });
+
+test("a request page left before its query fails does not send the reader to the error page", async ({
+	page,
+}) => {
+	await mockGrid(page);
+	let release: () => void = () => undefined;
+	const held = new Promise<void>((resolve) => (release = resolve));
+	let asked = false;
+	await page.route(`${API_BASE}/graphql`, async (route) => {
+		if (route.request().postDataJSON()?.operationName !== "LoadPatronRequest") {
+			return route.fallback();
+		}
+		asked = true;
+		await held;
+		await route.abort("failed");
+	});
+	const failed: string[] = [];
+	page.on("requestfailed", (request) => {
+		if (request.postDataJSON()?.operationName === "LoadPatronRequest") failed.push(request.url());
+	});
+
+	await page.goto("/patronRequests");
+	await page.getByRole("link", { name: /2026-09-01/ }).first().click();
+	await expect(page).toHaveURL(/\/patronRequests\/11111111-/);
+	// In flight, and held, before the reader leaves
+	await expect.poll(() => asked).toBe(true);
+	await page.goBack();
+	await expect(page.getByRole("grid")).toBeVisible();
+
+	// The request fails after the reader has gone. The error page, had it come, is a full
+	// page load from the failure's own handler: past two frames, it has started
+	release();
+	await expect.poll(() => failed.length).toBeGreaterThan(0);
+	const stillOn = await page
+		.evaluate(
+			() =>
+				new Promise<string>((resolve) =>
+					requestAnimationFrame(() => requestAnimationFrame(() => resolve(location.pathname))),
+				),
+		)
+		.catch(() => "navigated away");
+	expect(stillOn).toBe("/patronRequests");
+	await expect(page).toHaveURL(/\/patronRequests$/);
+	await expect(page.getByRole("grid")).toBeVisible();
+});
