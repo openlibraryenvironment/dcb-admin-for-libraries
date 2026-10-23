@@ -184,6 +184,7 @@ has to name the test that decides it instead:
 |---|---|---|
 | `color-contrast` | it cannot resolve a ground behind MUI's elevation gradient, so it fires on every Paper | `tests/themeContrast.test.ts`, which computes ratios from the tokens rather than sampling pixels |
 | `aria-hidden-focus` | with a Dialog open, MUI marks `#root` `aria-hidden` and **not** `inert`; axe asks whether those elements are "tabbable in the current state", which is a keyboard question | `e2e/cleanup.spec.ts` presses Tab ten times and asserts focus never leaves the dialog |
+| `aria-valid-attr-value`, `controlsWithinPopup` only | axe 4.13 marks every `aria-controls` on an `aria-haspopup` element for review whether or not the popup exists: an open column menu's button always lands here | decided by `e2e/fixtures/axe.ts` itself: the node is dropped only when the element it controls is in the page. The rule's other findings still count |
 
 Both were measured before being listed. For the second: twelve presses of Tab
 with the cleanup dialog open never reached the grid behind it, so the focus

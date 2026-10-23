@@ -50,6 +50,33 @@ const VENDOR_EXCLUSIONS = ['[style*="z-index: 100000"]'];
  */
 const UNDECIDABLE = new Set(["color-contrast", "aria-hidden-focus"]);
 
+/**
+ * axe 4.13 marks every aria-controls on an aria-haspopup element for review, whether or not the
+ * popup is there (aria-valid-attr-value's pre-check returns before looking). This decides it: the
+ * node is dropped only when the element it controls is in the page.
+ */
+const decidePopupControls = async (page: Page, results: Result[]): Promise<Result[]> => {
+	const decided: Result[] = [];
+	for (const result of results) {
+		const nodes = [];
+		for (const node of result.nodes) {
+			const checks = [...node.any, ...node.all, ...node.none];
+			const popup = checks.find(
+				(check) => (check.data as { messageKey?: string } | null)?.messageKey === "controlsWithinPopup",
+			);
+			const id = /aria-controls="([^"]*)"/.exec(
+				String((popup?.data as { needsReview?: string } | null)?.needsReview ?? ""),
+			)?.[1];
+			const present =
+				id !== undefined &&
+				(await page.evaluate((controlled) => document.getElementById(controlled) !== null, id));
+			if (!present) nodes.push(node);
+		}
+		if (nodes.length > 0) decided.push({ ...result, nodes });
+	}
+	return decided;
+};
+
 export interface AxeFindings {
 	violations: Result[];
 	/**
@@ -118,7 +145,10 @@ export async function analyse(page: Page): Promise<AxeFindings> {
 	const { violations, incomplete, passes } = await builder.analyze();
 	return {
 		violations,
-		incomplete: incomplete.filter((result) => !UNDECIDABLE.has(result.id)),
+		incomplete: await decidePopupControls(
+			page,
+			incomplete.filter((result) => !UNDECIDABLE.has(result.id)),
+		),
 		passes,
 	};
 }
