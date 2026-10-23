@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 
 import { test, expect } from "./fixtures/test";
 import { covers } from "./fixtures/coverage";
+import { configure } from "./fixtures/runtime-config";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
@@ -547,4 +548,43 @@ test("at 320px, the activity chart fits its card and names statuses as the grids
 	await expect(card.locator("svg").first()).toBeVisible();
 	const overflow = await card.evaluate((element) => element.scrollWidth - element.clientWidth);
 	expect(overflow).toBeLessThanOrEqual(0);
+});
+
+// VITE_INSIGHTS_PAGES and VITE_INSIGHTS_PANELS: docs/DEPLOYMENT.md, 2d
+test.describe("A deployment's choice of Insights pages and panels", () => {
+	test.beforeEach(async ({ app }) => {
+		await app.signIn();
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.mockGraphQL(mocks);
+		await app.mockStats();
+	});
+
+	test("leaves out a subject and a panel, and a link to the subject opens another", async ({
+		page,
+	}) => {
+		await configure(page, { VITE_INSIGHTS_PANELS: "all,-partners,-service.peerBenchmark" });
+		await page.goto("/insights?tab=service");
+
+		const nav = page.getByRole("navigation", { name: "Insights subjects" });
+		await expect(nav.getByRole("link")).toHaveCount(5);
+		await expect(nav.getByRole("link", { name: "Partners" })).toHaveCount(0);
+
+		// Below where peer benchmarking sat: had it been shown, it would have mounted first
+		await reveal(page, "Why requests fail");
+		await expect(page.getByRole("heading", { name: "Peer benchmarking" })).toHaveCount(0);
+
+		await page.goto("/insights?tab=partners");
+		await expect(nav.getByRole("link", { name: "Trends" })).toHaveAttribute(
+			"aria-current",
+			"page",
+		);
+	});
+
+	test("leaves out the Insights page, its tab and a typed link to it", async ({ page }) => {
+		await configure(page, { VITE_INSIGHTS_PAGES: "all,-insights" });
+		await page.goto("/insights");
+
+		await expect(page).toHaveURL((url) => url.pathname === "/");
+		await expect(page.getByRole("tab", { name: "Insights" })).toHaveCount(0);
+	});
 });
