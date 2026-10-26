@@ -61,7 +61,7 @@ test("a copied link never carries a barcode, and says it left one out", async ({
 	await header.getByRole("button", { name: /menu/i }).click();
 	await page.getByRole("menuitem", { name: "Filter" }).click();
 	await page
-		.getByRole("tooltip")
+		.getByRole("dialog")
 		.getByRole("textbox", { name: "Value" })
 		.pressSequentially(BARCODE, { delay: 30 });
 	// The grid's input waits a moment on typing, so wait for it before closing the panel, while
