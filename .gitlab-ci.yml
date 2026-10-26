@@ -110,14 +110,21 @@ verify_static:
     # eslint exits 0 on warnings; a warning here is broken code, not advice.
     - npm run lint -- --max-warnings=0
     # NOT `npm run test` - that script is bare `vitest`, which is watch mode.
-    - npx vitest run --reporter=default --reporter=junit --outputFile.junit=reports/unit-junit.xml
+    - npx vitest run --coverage --reporter=default --reporter=junit --outputFile.junit=reports/unit-junit.xml
   artifacts:
     when: always
     paths:
+      - coverage/
       - reports/
     reports:
       junit: reports/unit-junit.xml
+      # Annotates the lines a merge request changed. A figure, not a gate.
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
     expire_in: 1 week
+  # The text-summary line GitLab turns into the job's coverage figure and its trend
+  coverage: '/^\s*Lines\s*:\s*([\d.]+)%/'
 
 verify_dependencies:
   extends: .records_status

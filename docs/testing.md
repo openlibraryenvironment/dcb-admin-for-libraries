@@ -142,6 +142,16 @@ machine is idle.
 runner, as `dcb-admin-ui` does. One worker per suite does not stop four suites
 contending for the same machine, and Lighthouse's CPU-bound timings need it quiet.
 
+## Coverage is a figure
+
+`verify_static` runs the unit suite with `--coverage`. It prints the summary, keeps
+`coverage/`, and hands GitLab `coverage/cobertura-coverage.xml`, which annotates the lines
+a merge request changed, and the `Lines` figure, which draws the job's trend. There is no
+threshold: a number picked before anything was measured is one that gets lowered under
+pressure. `coverage.include` names all of `src/`, so a module no test imports counts as
+0% rather than going missing, which is what makes the figure honest. It read 35.79% of
+lines over 413 files on 2026-10-26. `dcb-admin-ui` reports its figure the same way.
+
 ## A green suite that is not green
 
 Two failure modes, both observed in this estate, and each looks nothing like its
