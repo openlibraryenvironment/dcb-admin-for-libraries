@@ -240,3 +240,23 @@ test("a column moves from the keyboard, and stays moved across a reload", async 
 	await expect(page.getByRole("grid")).toBeVisible();
 	await expect.poll(() => headerNames(page)).toEqual(after);
 });
+
+test("Back to a later page under another sort opens that page, and Forward still returns", async ({
+	page,
+}) => {
+	await mockGrid(page);
+	await page.goto("/patronRequests?page=3");
+	await expect(page.getByText(/51.60 of 60/)).toBeVisible();
+	await page.getByRole("columnheader", { name: "Status" }).click();
+	await expect.poll(() => search(page)).toBe("?sort=status:asc");
+
+	await page.goBack();
+	await expect(page.getByText(/51.60 of 60/)).toBeVisible();
+	// MUI X answers a sort prop with page 1 two timer ticks later: past two frames it would have run
+	await page.evaluate(
+		() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+	);
+	expect(search(page)).toBe("?page=3");
+	await page.goForward();
+	await expect.poll(() => search(page)).toBe("?sort=status:asc");
+});

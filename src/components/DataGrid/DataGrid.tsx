@@ -205,7 +205,7 @@ export default function DataGrid({
 	const getDetailPanelHeight = useCallback(() => "auto", []); // Only necessary because master detail is not applicable to all grids yet
 	const internalApiRef = useGridApiRef();
 	const apiRef = parentApiRef || internalApiRef;
-	const remountKey = `${clock}|${locale}`;
+	const remountKey = `${clock}|${locale}|${columnLayout?.visit ?? 0}`;
 	const layout = useColumnLayout(apiRef, columns, columnLayout, remountKey);
 
 	const announce = useAnnounce();

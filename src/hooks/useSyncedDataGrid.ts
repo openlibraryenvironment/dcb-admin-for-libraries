@@ -59,6 +59,8 @@ export interface ColumnLayout {
 	/** The shareable fields, in order; columns the URL cannot name keep their places. */
 	columnOrder: readonly string[];
 	onColumnOrderChange: (fields: string[]) => void;
+	/** Bumped on Back, Forward or a link: DataGrid remounts the grid on it. */
+	visit: number;
 }
 
 /** What the toolbar needs to share the grid's view as a link, save its filter, and reset it. */
@@ -300,21 +302,27 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 
 	const entry = useLocation({ select: (location) => location.state.__TSR_key });
 	const entryMark = useLocation({ select: (location) => location.state.gridWrites?.[id] });
-	const seenEntry = useRef(entry);
+	// Back, Forward or a link is a new visit, decided while rendering so the grid never sees it under
+	// the last visit's models; the grid remounts on it, as MUI X answers a sort or filter prop with page 1
+	const [visit, setVisit] = useState({ entry, count: 0 });
+	if (visit.entry !== entry) {
+		const own = entryMark !== undefined && ownWrites.current.includes(entryMark);
+		setVisit({ entry, count: own ? visit.count : visit.count + 1 });
+		if (!own) setPending((current) => (Object.keys(current).length > 0 ? {} : current));
+	}
 	useEffect(() => {
-		if (entry === seenEntry.current) return;
-		seenEntry.current = entry;
 		const own = entryMark === undefined ? -1 : ownWrites.current.indexOf(entryMark);
-		if (own >= 0) {
-			ownWrites.current = ownWrites.current.slice(own + 1);
-			return;
-		}
-		// Back, forward or a link: a new visit, and a filter still being typed was for the view that left
+		if (own >= 0) ownWrites.current = ownWrites.current.slice(own + 1);
+	}, [entry, entryMark]);
+	const seenVisit = useRef(visit.count);
+	useEffect(() => {
+		if (visit.count === seenVisit.current) return;
+		seenVisit.current = visit.count;
+		// A filter still being typed was for the view that left
 		pushed.current = false;
 		clearTimeout(timer.current);
 		unwritten.current = null;
-		setPending((current) => (Object.keys(current).length > 0 ? {} : current));
-	}, [entry, entryMark]);
+	}, [visit.count]);
 
 	const appliedFilterKey = filterKey(grid, appliedFilter);
 	const appliedFilterKeyRef = useRef(appliedFilterKey);
@@ -485,6 +493,7 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 			onPinnedColumnsChange: handlePinnedColumnsChange,
 			columnOrder: shown.columnOrder,
 			onColumnOrderChange: handleColumnOrderChange,
+			visit: visit.count,
 		} satisfies ColumnLayout,
 		// Any change the server has not answered yet, a removal included
 		isFiltering:
