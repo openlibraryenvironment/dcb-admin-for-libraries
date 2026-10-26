@@ -1057,6 +1057,7 @@
 			"confirm": "Clean up anyway"
 		},
 		"cleanup_refused": "This request was not cleaned up. {{detail}}",
+		"cleanup_refused_rows": "Requests refused while the item is out",
 		"cleanup_skipped": "Requests skipped",
 		"cleanup_succeeded": "Requests cleaned up",
 		"cleanup_successful": "The request has been cleaned up and finalized.",

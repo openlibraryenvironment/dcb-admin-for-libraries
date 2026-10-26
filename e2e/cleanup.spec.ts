@@ -261,6 +261,12 @@ test.describe("Supplier requests clean up", () => {
 
 		const dialog = page.getByRole("dialog");
 		await expect(dialog.getByText(/Refused while the item is out/)).toBeVisible();
+		// "Clean up anyway" asks the reader to confirm where each item is, so each is named
+		await expect(
+			dialog
+				.getByRole("grid", { name: "Requests refused while the item is out" })
+				.getByRole("row", { name: new RegExp(BETA) }),
+		).toBeVisible();
 		// Nothing is forced until somebody asks
 		expect(calls.filter((call) => call.includes("force=true"))).toEqual([]);
 
