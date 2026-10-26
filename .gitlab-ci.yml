@@ -9,6 +9,12 @@ variables:
   # The runner's clone of gitlab.com has failed on a refused connection; retry it, not the job.
   GET_SOURCES_ATTEMPTS: "3"
 
+  # Set to "true" when running a pipeline by hand: docs/testing.md, "The report on demand"
+  ON_DEMAND_REPORT:
+    value: "false"
+    options: ["false", "true"]
+    description: "true runs every check and the release report on the chosen branch or tag, and ships nothing."
+
 default:
   # Node 24, as the Playwright image already is: npm 10 (node 22) refused a lock npm 11
   # wrote, failing `npm ci`. Floor: semantic-release 25 needs >=24.10.0. No bullseye build.
@@ -47,6 +53,8 @@ workflow:
   auto_cancel:
     on_new_commit: interruptible
   rules:
+    # First, so a branch with an open merge request, or a tag, can be reported on by hand
+    - if: $ON_DEMAND_REPORT == "true"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_COMMIT_BRANCH !~ /^(main|release)$/
       when: never
@@ -61,11 +69,13 @@ workflow:
     - when: on_success
   # The merge gate: a merge request, and main and release once a merge lands
   gate:
+    - if: $ON_DEMAND_REPORT == "true"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_PIPELINE_SOURCE != "schedule" && $CI_COMMIT_BRANCH =~ /^(main|release)$/
   # The gate, but a merge request that changes nothing the app is built or tested from (only
   # docs, Markdown or unit tests) skips it. tests/ciChangePaths.test.ts keeps this list whole.
   app:
+    - if: $ON_DEMAND_REPORT == "true"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         paths: &app_paths
@@ -293,7 +303,7 @@ verify_image:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "release"'
+    - if: '$CI_COMMIT_BRANCH == "release" || $ON_DEMAND_REPORT == "true"'
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
         paths:
@@ -354,29 +364,23 @@ report:
   stage: report
   timeout: 10m
   cache: []
+  # Release, which attaches it, and a pipeline run on demand: both run every check below
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
-    - when: always
-  # Optional: a push with no merge request runs only the quick checks
+    - if: $CI_COMMIT_BRANCH == "release" || $ON_DEMAND_REPORT == "true"
+      when: always
   needs:
-    - job: verify_static
-    - job: verify_naming
-    - job: verify_secrets
-    - job: verify_dependencies
-      optional: true
-    - job: verify_build
-      optional: true
-    - job: verify_e2e
-      optional: true
-    - job: verify_performance
-      optional: true
-    - job: verify_base_path
-      optional: true
-    - job: verify_ki_bootstrap
-      optional: true
-    - job: verify_image
-      optional: true
+    - verify_static
+    - verify_naming
+    - verify_secrets
+    - verify_dependencies
+    - verify_build
+    - verify_e2e
+    - verify_performance
+    - verify_base_path
+    - verify_ki_bootstrap
+    - verify_image
   script:
     - node scripts/release-report.ts
   artifacts:
@@ -412,7 +416,7 @@ release:
   timeout: 15m
   # No `needs`: it would let this start before the verify stage has passed.
   rules:
-    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   # The report, which .releaserc.json attaches to the GitLab Release
@@ -465,7 +469,7 @@ release:
 publish_image_next:
   extends: .publish_image
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   variables:
@@ -475,7 +479,7 @@ publish_image_next:
 publish_image_release:
   extends: .publish_image
   rules:
-    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   # No `dependencies`: $RELEASE_VERSION arrives as the release job's dotenv report.
@@ -495,7 +499,7 @@ deploy_tag_to_s3:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   image:
@@ -535,7 +539,7 @@ deploy_release_to_r2:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   image:
@@ -566,7 +570,7 @@ deploy_dev_to_s3:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   image:
@@ -594,7 +598,7 @@ deploy_dev_to_r2:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   image:

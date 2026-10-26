@@ -234,12 +234,13 @@ that say why.
 
 | Pipeline | Runs |
 |---|---|
-| A push to a branch with no merge request | `quick`: naming, static, secrets, and the report |
+| A push to a branch with no merge request | `quick`: naming, static and secrets |
 | A push to a branch with an open merge request | nothing: the merge request pipeline checks it |
-| **A merge request** | **the merge gate**: every check, the build, and the report; the image only when its files change. One that changes only documentation, Markdown or unit tests skips the browser gates, the speed checks and the build |
+| **A merge request** | **the merge gate**: every check and the build; the image only when its files change. One that changes only documentation, Markdown or unit tests skips the browser gates, the speed checks and the build |
 | `main` | the merge gate again, then the dev deploys |
-| `release` | the merge gate, the image, then the release and its deploys |
+| `release` | the merge gate, the image and the release report, then the release and its deploys |
 | A schedule | the dependency audit and the flake hunt; nothing that releases or deploys |
+| Run by hand with `ON_DEMAND_REPORT` set to `true` | every check, the image and the release report; nothing that releases, publishes or deploys |
 
 A skipped check is never the only check of a change: `main` and `release` run the
 whole gate whatever changed. The list that decides it is `&app_paths`, and
@@ -283,8 +284,8 @@ reader who does not read code: a verdict, each check with what it checks and why
 it matters, and accessibility set out page by page and criterion by criterion.
 
 The `report` job builds it after the verify stage, whether or not the checks
-passed, and every merge request links to it as **Release report**. Job artifacts
-expire, so `.releaserc.json` also attaches it to each GitLab Release, where it
+passed, on `release` and in a pipeline run on demand (below); a merge request
+does not make one. Job artifacts expire, so `.releaserc.json` also attaches it to each GitLab Release, where it
 stays. That copy is as visible as the release page. It is attached at the
 permanent path `release-report.html`, so
 `/-/releases/permalink/latest/downloads/release-report.html` on the project always
@@ -313,6 +314,28 @@ What it says comes from beside the checks themselves, so it changes when they do
 
 `e2e/release-report.spec.ts` holds the report to WCAG 2.2 AA in both colour
 schemes: it is offered as accessibility evidence.
+
+### The report on demand
+
+Every release pipeline makes the report and attaches it to the release. To make
+one at any other time, for a bid, a customer or a PO review, run a pipeline by
+hand:
+
+1. In GitLab, open **Build > Pipelines** and choose **Run pipeline**.
+2. Choose the branch, or a release tag.
+3. Set `ON_DEMAND_REPORT` to `true`. The form offers it with its description.
+4. When the pipeline finishes, the `report` job's **Release report** artifact is
+   the page. It expires after a month like any artifact, so press **Keep** on the
+   job to keep it.
+
+Such a run includes every check and the image, and nothing that releases,
+publishes or deploys, even on `release`. `tests/onDemandReport.test.ts` fails if
+a job that ships does not exclude it, or if the report would run in any other
+pipeline. A tag made before this change carries the older pipeline file, so it
+cannot be reported on this way.
+
+Set the variable only on a pipeline you run by hand. Set as a project variable,
+it would turn every pipeline into a report run, and nothing would ship.
 
 ## The harness
 
