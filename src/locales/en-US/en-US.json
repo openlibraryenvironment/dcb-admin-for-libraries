@@ -316,7 +316,7 @@
 		}
 	},
 	"insights": {
-		"title": "Library insights",
+		"title": "Library insights (Preview)",
 		"subtitle": "Requesting activity, fulfillment and value for {{library}}.",
 		"loading": "Loading insights",
 		"no_host_lms": "This library has no associated Host LMS, so insights cannot be shown.",
@@ -1004,7 +1004,7 @@
 			"tooltip": "The requests for which your library is acting as a supplier"
 		},
 		"insights": {
-			"title": "Insights"
+			"title": "Insights (Preview)"
 		},
 		"home": {
 			"title": "Home"
