@@ -17,6 +17,10 @@ import RenderAttribute from "@components/RenderAttribute/RenderAttribute";
 import { Alert, CircularProgress, Divider } from "@mui/material";
 import FormatArrayAsList from "@components/FormatArrayAsList/FormatArrayAsList";
 import PrivateData from "@components/PrivateData/PrivateData";
+import HostLmsConnection from "@components/HostLmsConnection/HostLmsConnection";
+import { isHostLmsProbesEnabled } from "@helpers/featureFlags";
+import { isReadOnly } from "@helpers/readOnlyAccess";
+import { useAuth } from "react-oidc-context";
 
 export const Route = createFileRoute("/__authenticated/service")({
 	head: () => ({ meta: [{ title: pageTitle("nav.library.service") }] }),
@@ -27,13 +31,16 @@ function ServiceComponent() {
 	const { cfg } = useRouter().options.context as { cfg: any };
 	const { t } = useTranslation();
 	const { agencyCode: code } = useAgencyCodes();
+	const auth = useAuth();
+	// Administrators only, whatever the route allows: dcb-service shows it to no one else either
+	const showConnection = isHostLmsProbesEnabled() && !isReadOnly(auth?.user?.profile?.roles);
 
 	const { data, isLoading, isError } = useQuery({
 		queryKey: queryKeys.library.serviceConfig(cfg.VITE_DCB_API_BASE, code ?? ""),
 		queryFn: async () =>
 			request(
 				cfg.VITE_DCB_API_BASE + "/graphql",
-				getLibraryServiceConfig,
+				getLibraryServiceConfig(),
 				{ query: "agencyCode:" + code },
 				await authHeaders()
 			),
@@ -122,6 +129,11 @@ function ServiceComponent() {
 							name: firstHostLms?.name,
 						})}
 					</Typography>
+				</Grid>
+			) : null}
+            {firstHostLms && showConnection ? (
+				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+					<HostLmsConnection lastPing={firstHostLms.lastPing} />
 				</Grid>
 			) : null}
             <Grid size={{ xs: 2, sm: 4, md: 4 }}>
@@ -351,6 +363,11 @@ function ServiceComponent() {
 							name: secondHostLms?.name,
 						})}
 					</Typography>
+				</Grid>
+			) : null}
+            {secondHostLms && showConnection ? (
+				<Grid size={{ xs: 4, sm: 8, md: 12 }}>
+					<HostLmsConnection lastPing={secondHostLms.lastPing} />
 				</Grid>
 			) : null}
             {secondHostLms ? (

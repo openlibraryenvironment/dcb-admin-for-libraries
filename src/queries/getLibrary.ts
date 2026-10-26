@@ -51,6 +51,8 @@ export const getLibrary = () => gql`
 					authProfile
 					isSupplyingAgency
 					isBorrowingAgency
+					maxConsortialLoans
+					${capabilitySelection("local_holds", "Agency")}
 					hostLms {
 						id
 						code

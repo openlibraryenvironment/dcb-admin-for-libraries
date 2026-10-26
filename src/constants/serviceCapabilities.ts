@@ -148,6 +148,26 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		fields: {},
 	},
 	{
+		id: "placed_by_staff",
+		flag: "VITE_FEATURE_PLACED_BY_STAFF",
+		since: "9.2.0",
+		fields: { PatronRequest: ["placedByStaff"] },
+	},
+	{
+		// The flag DCB Admin uses for the same release's Host LMS checks
+		id: "host_lms_last_ping",
+		flag: "VITE_FEATURE_HOST_LMS_PROBES",
+		since: "9.2.0",
+		fields: { HostLms: ["lastPing"] },
+	},
+	{
+		// The flag DCB Admin uses for the same field
+		id: "local_holds",
+		flag: "VITE_FEATURE_LOCAL_HOLDS",
+		since: "9.1.0",
+		fields: { Agency: ["maxLocalHolds"] },
+	},
+	{
 		// A REST route, so nothing to select.
 		id: "confirm_item_returned",
 		flag: "VITE_FEATURE_CONFIRM_ITEM_RETURNED",

@@ -239,6 +239,7 @@ const PAGES: Surface[] = [
 				"VITE_DISCOVERY_ACTIVE",
 				"VITE_FEATURE_LIBRARY_BRANDING",
 				"VITE_FEATURE_LIBRARY_SUPPORT_URL",
+				"VITE_FEATURE_LOCAL_HOLDS",
 			]);
 			await app.signIn();
 			await app.mockGraphQL({
@@ -604,12 +605,20 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
-		// Two Host LMS configurations, so every credential row and both sections render.
+		// Two Host LMS configurations, so every credential row and both sections render, and a
+		// refused connection check beside one with none recorded
 		name: "service",
 		path: "/service",
 		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_HOST_LMS_PROBES"]);
 			await app.signIn();
-			await app.mockGraphQL({ LoadLibraryServiceConfig: polarisLibrary });
+			const checked = structuredClone(polarisLibrary);
+			(checked.libraries.content[0].agency.hostLms as Record<string, unknown>).lastPing = {
+				status: "ERROR",
+				failure: "REFUSED",
+				checkedAt: "2026-10-26T10:00:00Z",
+			};
+			await app.mockGraphQL({ LoadLibraryServiceConfig: checked });
 		},
 		ready: async (page) => {
 			await expect(

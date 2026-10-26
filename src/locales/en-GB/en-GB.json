@@ -831,6 +831,11 @@
 		}
 	},
 	"library": {
+		"limits": {
+			"max_active_requests": "Maximum active requests per patron",
+			"max_local_holds": "Maximum holds per patron at your library system",
+			"not_set": "Not set: DCB does not check it"
+		},
 		"abbreviated_name": "Abbreviated name",
 		"backup_schedule": "Backup / downtime schedule",
 		"brand": {
@@ -882,6 +887,29 @@
 			"title": "Primary location"
 		},
 		"service": {
+			"connection": {
+				"title": "Connection check",
+				"none": "No check recorded",
+				"checked_at": "Checked {{when}}",
+				"last_ok_at": "Last worked {{when}}",
+				"never_ok": "Not working at any check DCB has recorded",
+				"state": {
+					"ok": "Working",
+					"refused": "Refused DCB's credentials",
+					"misconfigured": "Cannot be used with DCB's settings for it",
+					"unreachable": "Could not be reached",
+					"failing": "Answered with an error",
+					"unknown": "Failed for a reason DCB did not recognise"
+				},
+				"advice": {
+					"ok": "DCB reached your library system and it accepted DCB's credentials.",
+					"refused": "Your library system rejected DCB's credentials. Ask your consortium's DCB support to update them. Until they do, DCB may not ask your library to supply.",
+					"misconfigured": "DCB could not connect using its settings for your library system. Ask your consortium's DCB support to check them. Until they do, DCB may not ask your library to supply.",
+					"unreachable": "DCB could not connect: your library system may be down, or its address or firewall may have changed. If it keeps happening, tell your consortium's DCB support.",
+					"failing": "Your library system answered DCB with an error. Check the system's own status, and if it keeps happening, tell your consortium's DCB support.",
+					"unknown": "Tell your consortium's DCB support, with the time shown, so they can look it up."
+				}
+			},
 			"environments": {
 				"api": "Host LMS API",
 				"api_key": "API key",
@@ -1175,6 +1203,12 @@
 		"view": "View",
 		"virtual_item": "Virtual item",
 		"virtual_patron": "Virtual patron",
+		"placed_by": {
+			"label": "Placed by",
+			"staff": "Staff",
+			"patron": "The patron",
+			"unknown": "Not recorded"
+		},
 		"notes": {
 			"title": "Notes",
 			"none": "No notes yet.",
@@ -1960,6 +1994,9 @@
 			"request_tags": "Tags on requests",
 			"request_notes": "Notes on requests",
 			"pickup_requests": "Collecting here: other libraries' patrons collecting at your locations",
+			"placed_by_staff": "Whether staff or the patron placed a request",
+			"host_lms_last_ping": "Your library system's last connection check",
+			"local_holds": "Your library system's hold limit per patron",
 			"agency_scoped_requests": "Request lists for your library alone, not every library on its system"
 		},
 		"status": {

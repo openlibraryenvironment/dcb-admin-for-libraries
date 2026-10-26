@@ -73,6 +73,9 @@ does not show the feature.
 | `VITE_FEATURE_REQUEST_TAGS` | **9.2.0** or later | Tags on a request's page: what the libraries involved applied, and for their administrators, applying and removing their own ([request-tags.md](request-tags.md)) |
 | `VITE_FEATURE_REQUEST_NOTES` | **9.2.0** or later | Notes on a request's page, written as a library and readable by every library involved ([request-notes.md](request-notes.md)) |
 | `VITE_FEATURE_PICKUP_REQUESTS` | **9.2.0** or later | **Collecting here**: other libraries' patrons' requests collected at the library's locations, and Home's collecting counts linked to it ([pickup-requests.md](pickup-requests.md)) |
+| `VITE_FEATURE_PLACED_BY_STAFF` | **9.2.0** or later | "Placed by" on a request's page: staff, the patron, or not recorded ([library-details.md](library-details.md)) |
+| `VITE_FEATURE_HOST_LMS_PROBES` | **9.2.0** or later | On Service, for administrators: DCB's last connection check of each of the library's systems. The name DCB Admin uses for the same release ([library-details.md](library-details.md)) |
+| `VITE_FEATURE_LOCAL_HOLDS` | **9.1.0** or later | On the library page, for administrators: the library system's hold limit per patron, beside DCB's maximum active requests. The name DCB Admin uses ([library-details.md](library-details.md)) |
 | `VITE_FEATURE_INSIGHTS_TRENDS` | **9.1.0** or later (`/insights/trend`) | The duration trend panel on Insights → Trends. Needs `VITE_FEATURE_INSIGHTS` as well |
 | `VITE_FEATURE_ANNOUNCEMENTS` | **9.2.0** or later | The Announcements page. Off on anything older: on a service without the announcement operations, the page's whole GraphQL request is rejected |
 | `VITE_FEATURE_HOME_SINCE_LAST_VISIT` | any supported release | Home page: a "since your last visit" window, remembered per browser |
@@ -387,8 +390,8 @@ through them before the release pipeline runs, and the checks after it.
    | Flag | First served by |
    | --- | --- |
    | `VITE_FEATURE_INSIGHTS`, `VITE_FEATURE_LIBRARY_BRANDING`, `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`, `VITE_FEATURE_GUARDED_CLEANUP` | 9.0.0 |
-   | `VITE_FEATURE_INSIGHTS_TRENDS` | 9.1.0 |
-   | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP`, `VITE_FEATURE_CONFIRM_ITEM_RETURNED`, `VITE_FEATURE_REQUEST_TAGS`, `VITE_FEATURE_REQUEST_NOTES`, `VITE_FEATURE_PICKUP_REQUESTS` | 9.2.0 |
+   | `VITE_FEATURE_INSIGHTS_TRENDS`, `VITE_FEATURE_LOCAL_HOLDS` | 9.1.0 |
+   | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP`, `VITE_FEATURE_CONFIRM_ITEM_RETURNED`, `VITE_FEATURE_REQUEST_TAGS`, `VITE_FEATURE_REQUEST_NOTES`, `VITE_FEATURE_PICKUP_REQUESTS`, `VITE_FEATURE_PLACED_BY_STAFF`, `VITE_FEATURE_HOST_LMS_PROBES` | 9.2.0 |
    | `VITE_FEATURE_HOME_*` | a product choice, not a release: see section 2a for what each needs beside it |
 
    A flag that is absent from the table is off on every host, which is the safe failure for

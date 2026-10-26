@@ -173,6 +173,18 @@ export const isHomeLibrarySplitEnabled = (): boolean =>
  */
 export const isPickupRequestsEnabled = (): boolean => readFlag("VITE_FEATURE_PICKUP_REQUESTS");
 
+/** Whether staff or the patron placed a request - dcb-service 9.2.0 (PatronRequest.placedByStaff). */
+export const isPlacedByStaffEnabled = (): boolean => readFlag("VITE_FEATURE_PLACED_BY_STAFF");
+
+/**
+ * DCB's last connection check of the library's system - dcb-service 9.2.0 (HostLms.lastPing).
+ * The name DCB Admin gives the same release's Host LMS checks, so one worker rule sets both.
+ */
+export const isHostLmsProbesEnabled = (): boolean => readFlag("VITE_FEATURE_HOST_LMS_PROBES");
+
+/** The library system's own hold limit, as DCB records it - dcb-service 9.1.0 (Agency.maxLocalHolds). */
+export const isLocalHoldsEnabled = (): boolean => readFlag("VITE_FEATURE_LOCAL_HOLDS");
+
 // 9.0.0 and 9.1.0 hide requests a library only collects, so this would read 0 there; 9.2.0 does not
 export const isHomePickupHereEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_HOME_PICKUP_HERE") &&

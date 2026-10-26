@@ -34,6 +34,7 @@ import {
 	isAgencyScopedRequestsEnabled,
 	isConfirmItemReturnedEnabled,
 	isGuardedCleanupEnabled,
+	isPlacedByStaffEnabled,
 	isRequestNotesEnabled,
 	isRequestTagsEnabled,
 } from "@helpers/featureFlags";
@@ -664,6 +665,21 @@ function RouteComponent() {
 								/>
 							</Attribute>
 						</Grid>
+						{isPlacedByStaffEnabled() ? (
+							<Grid size={DETAIL_ITEM}>
+								<Attribute label={t("patron_request.placed_by.label")}>
+									<RenderAttribute
+										attribute={t(
+											patronRequest?.placedByStaff === true
+												? "patron_request.placed_by.staff"
+												: patronRequest?.placedByStaff === false
+													? "patron_request.placed_by.patron"
+													: "patron_request.placed_by.unknown",
+										)}
+									/>
+								</Attribute>
+							</Grid>
+						) : null}
 						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.request_updated")}>
 								<RenderAttribute

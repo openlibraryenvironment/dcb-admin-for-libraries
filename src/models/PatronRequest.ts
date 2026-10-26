@@ -56,6 +56,8 @@ export interface PatronRequest {
 	pickupBibId: string;
 	pickupItemBarcode: string;
 	isExpeditedCheckout: boolean;
+	/** Staff placed it, a patron did, or null when DCB cannot tell (9.2.0). */
+	placedByStaff?: boolean | null;
 	localHoldingId: string;
 	pickupHoldingId: string;
 	renewalStatus: RenewalStatus;
