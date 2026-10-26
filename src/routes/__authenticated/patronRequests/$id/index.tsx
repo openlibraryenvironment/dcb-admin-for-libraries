@@ -130,8 +130,8 @@ function RouteComponent() {
 	const [cleanupSuccessAlertVisibility, setCleanupSuccessAlertVisibility] =
 		useState(false);
 	const [updateErrorAlertVisibility, setErrorAlertVisibility] = useState(false);
-	const [cleanupErrorAlertVisibility, setCleanupErrorAlertVisibility] =
-		useState(false);
+	// The server's own words when it gave any, "" when it did not; null while nothing failed
+	const [cleanupFailure, setCleanupFailure] = useState<string | null>(null);
 	const [cleanupRefusal, setCleanupRefusal] = useState<string | null>(null);
 	// The server's reason for refusing, while the user decides whether to clean up anyway
 	const [overrideDetail, setOverrideDetail] = useState<string | null>(null);
@@ -378,7 +378,7 @@ function RouteComponent() {
 					return;
 				case "refused":
 					invalidateRequest();
-					if (guardedCleanup) {
+					if (guardedCleanup && outcome.overridable) {
 						setOverrideDetail(outcome.detail ?? "");
 						return;
 					}
@@ -390,7 +390,7 @@ function RouteComponent() {
 					return;
 				case "failed":
 					invalidateRequest();
-					setCleanupErrorAlertVisibility(true);
+					setCleanupFailure(outcome.detail ?? "");
 					return;
 			}
 		},
@@ -399,22 +399,28 @@ function RouteComponent() {
 	const confirmReturnMutation = useMutation({
 		mutationFn: () => confirmItemReturned(apiBase, patronRequest?.id),
 		onSuccess: (outcome) => {
-			if (outcome.kind === "confirmed") {
-				invalidateRequest();
-				setConfirmReturnSuccess(true);
-				return;
+			// 9.2.0 saves the item as back before it tries the release, so even a failure may have changed it
+			invalidateRequest();
+			switch (outcome.kind) {
+				case "confirmed":
+					setConfirmReturnSuccess(true);
+					return;
+				case "refused":
+					setConfirmReturnError(
+						t("patron_request.confirm_returned.refused", { detail: outcome.detail ?? "" }),
+					);
+					return;
+				case "forbidden":
+					setConfirmReturnError(t("patron_request.confirm_returned.forbidden"));
+					return;
+				case "failed":
+					setConfirmReturnError(
+						outcome.detail
+							? t("patron_request.confirm_returned.unsuccessful_detail", { detail: outcome.detail })
+							: t("patron_request.confirm_returned.unsuccessful"),
+					);
+					return;
 			}
-
-			setConfirmReturnError(
-				outcome.kind === "refused"
-					? t("patron_request.confirm_returned.refused", { detail: outcome.detail ?? "" })
-					: outcome.kind === "forbidden"
-						? t("patron_request.confirm_returned.forbidden")
-						: t("patron_request.confirm_returned.unsuccessful"),
-			);
-		},
-		onError: () => {
-			setConfirmReturnError(t("patron_request.confirm_returned.unsuccessful"));
 		},
 	});
 	const offerConfirmReturn =
@@ -685,12 +691,14 @@ function RouteComponent() {
 								}
 							/>
 							<TimedAlert
-								open={updateErrorAlertVisibility || cleanupErrorAlertVisibility}
+								open={updateErrorAlertVisibility || cleanupFailure !== null}
 								severityType="error"
 								alertText={
 									updateErrorAlertVisibility
 										? t("patron_request.check_unsuccessful")
-										: t("patron_request.cleanup_unsuccessful")
+										: cleanupFailure
+											? t("patron_request.cleanup_unsuccessful_detail", { detail: cleanupFailure })
+											: t("patron_request.cleanup_unsuccessful")
 								}
 								key={
 									updateErrorAlertVisibility
@@ -700,7 +708,7 @@ function RouteComponent() {
 								onCloseFunc={
 									updateErrorAlertVisibility
 										? () => setErrorAlertVisibility(false)
-										: () => setCleanupErrorAlertVisibility(false)
+										: () => setCleanupFailure(null)
 								}
 							/>
 						</Grid>

@@ -1062,6 +1062,7 @@
 		"cleanup_succeeded": "Requests cleaned up",
 		"cleanup_successful": "The request has been cleaned up and finalized.",
 		"cleanup_unsuccessful": "The request could not be cleaned up. Try again later, and if it keeps happening, contact your library administrator.",
+		"cleanup_unsuccessful_detail": "The request could not be cleaned up. DCB's reason: {{detail}}",
 		"cluster_record_uuid": "Cluster record UUID",
 		"date_created": "Date created",
 		"date_updated": "Date updated",
@@ -1181,7 +1182,8 @@
 			"successful": "The item was confirmed back, and the request has been released.",
 			"refused": "The item was not confirmed back. {{detail}}",
 			"forbidden": "Only the library that supplied this request can confirm its item is back.",
-			"unsuccessful": "Confirming the item is back failed, and the request is unchanged. Its audit log says why."
+			"unsuccessful": "The item may have been recorded as back, but the request was not released. Its audit log says what happened.",
+			"unsuccessful_detail": "The item may have been recorded as back, but the request was not released. DCB's reason: {{detail}}"
 		}
 	},
 	"requesting": {
