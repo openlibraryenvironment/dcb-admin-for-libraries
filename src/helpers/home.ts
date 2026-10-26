@@ -284,15 +284,21 @@ export const homeHistoryQueryOptions = (
 // An agency has tens of locations; past this the query string is the problem, not the count
 export const MAX_PICKUP_LOCATIONS = 50;
 
+const atLocations = (locationIds: readonly string[]): string =>
+	`pickupLocationCode:(${locationIds.slice(0, MAX_PICKUP_LOCATIONS).map(quoted).join(" OR ")})`;
+
 /** Requests collected at these locations whose patron is not the library's own. */
 export const pickupHereQuery = (
 	locationIds: readonly string[],
 	borrowedScope: string,
 	statusValue: string,
-): string => {
-	const ids = locationIds.slice(0, MAX_PICKUP_LOCATIONS).map(quoted).join(" OR ");
-	return `pickupLocationCode:(${ids}) AND status:${statusValue} AND NOT (${borrowedScope})`;
-};
+): string => `${atLocations(locationIds)} AND status:${statusValue} AND NOT (${borrowedScope})`;
+
+/** Every request collected at these locations whose patron is not the library's own: Collecting here. */
+export const collectingHereQuery = (
+	locationIds: readonly string[],
+	borrowedScope: string,
+): string => `${atLocations(locationIds)} AND NOT (${borrowedScope})`;
 
 export const homePickupHereQueryOptions = (
 	apiBase: string,

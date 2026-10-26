@@ -16,6 +16,7 @@ import {
 	locationsView,
 	mappingsView,
 	patronRequestsView,
+	pickupRequestsView,
 	recordHistoryView,
 	supplierRequestsView,
 } from "@helpers/viewState/gridViewIds";
@@ -30,6 +31,12 @@ export const supplierRequestsGrid = defineGrid(supplierRequestsView, {
 	columns: standardSupplierRequestColumns,
 	defaultSort: [{ field: "dateCreated", sort: "desc" }],
 	defaultColumnVisibility: defaultSupplierRequestColumnVisibility,
+});
+
+export const pickupRequestsGrid = defineGrid(pickupRequestsView, {
+	columns: standardPatronRequestColumns,
+	defaultSort: [{ field: "dateCreated", sort: "desc" }],
+	defaultColumnVisibility: defaultPatronRequestColumnVisibility,
 });
 
 export const mappingsGrid = defineGrid(mappingsView, {

@@ -34,12 +34,15 @@ import {
 	isAgencyScopedRequestsEnabled,
 	isConfirmItemReturnedEnabled,
 	isGuardedCleanupEnabled,
+	isPlacedByStaffEnabled,
+	isRequestNotesEnabled,
+	isRequestTagsEnabled,
 } from "@helpers/featureFlags";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import axios from "axios";
 import request from "graphql-request";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import { isUuidShaped } from "@helpers/isUuidShaped";
@@ -109,6 +112,10 @@ function LibraryWithContact({ library }: { library: Library }) {
 	);
 }
 
+
+// Loaded with the flag: an 8.71.0 deployment never fetches it
+const RequestTags = lazy(() => import("@components/RequestTags/RequestTags"));
+const RequestNotes = lazy(() => import("@components/RequestNotes/RequestNotes"));
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
 	validateSearch: (search: Record<string, unknown>) => ({
 		...requestSearchSchema.parse(search),
@@ -511,6 +518,32 @@ function RouteComponent() {
 								{t("patron_request.general")}
 							</Typography>
 						</Grid>
+						{isRequestTagsEnabled() && patronRequest?.id ? (
+							<Grid size={FULL_ROW}>
+								<Suspense
+									fallback={<CircularProgress size="1rem" aria-label={t("ui.info.loading.value")} />}>
+									<RequestTags
+										apiBase={apiBase}
+										patronRequestId={patronRequest.id}
+										agencyCodes={agencyCodes}
+										canWrite={auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") === true}
+									/>
+								</Suspense>
+							</Grid>
+						) : null}
+						{isRequestNotesEnabled() && patronRequest?.id ? (
+							<Grid size={FULL_ROW}>
+								<Suspense
+									fallback={<CircularProgress size="1rem" aria-label={t("ui.info.loading.value")} />}>
+									<RequestNotes
+										apiBase={apiBase}
+										patronRequestId={patronRequest.id}
+										agencyCodes={agencyCodes}
+										canWrite={auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") === true}
+									/>
+								</Suspense>
+							</Grid>
+						) : null}
 						{patronLibrary?.fullName ? (
 							<Grid size={DETAIL_ITEM}>
 								<Attribute label={t("patron_request.patron_library")}>
@@ -632,6 +665,21 @@ function RouteComponent() {
 								/>
 							</Attribute>
 						</Grid>
+						{isPlacedByStaffEnabled() ? (
+							<Grid size={DETAIL_ITEM}>
+								<Attribute label={t("patron_request.placed_by.label")}>
+									<RenderAttribute
+										attribute={t(
+											patronRequest?.placedByStaff === true
+												? "patron_request.placed_by.staff"
+												: patronRequest?.placedByStaff === false
+													? "patron_request.placed_by.patron"
+													: "patron_request.placed_by.unknown",
+										)}
+									/>
+								</Attribute>
+							</Grid>
+						) : null}
 						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.request_updated")}>
 								<RenderAttribute

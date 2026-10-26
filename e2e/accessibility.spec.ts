@@ -239,6 +239,7 @@ const PAGES: Surface[] = [
 				"VITE_DISCOVERY_ACTIVE",
 				"VITE_FEATURE_LIBRARY_BRANDING",
 				"VITE_FEATURE_LIBRARY_SUPPORT_URL",
+				"VITE_FEATURE_LOCAL_HOLDS",
 			]);
 			await app.signIn();
 			await app.mockGraphQL({
@@ -453,6 +454,26 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		name: "collecting here",
+		path: "/pickupRequests",
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_PICKUP_REQUESTS", "VITE_FEATURE_AGENCY_SCOPED_REQUESTS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraries: library,
+				LoadAgencyLocationsForExport: {
+					agencies: { totalSize: 1, content: [{ code: AGENCY_CODE, locations: [{ id: "loc-1" }] }] },
+				},
+				LoadPatronRequests: patronRequests,
+			});
+		},
+		ready: async (page) => {
+			await expect(page.getByRole("grid", { name: "Collecting here" })).toBeVisible();
+			await expect(page.getByRole("link", { name: /2026-09-01/ })).toBeVisible();
+		},
+	},
+	{
 		// Every control in it is a form control, in groups, with an error state.
 		name: "export wizard",
 		path: "/patronRequests",
@@ -584,12 +605,20 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
-		// Two Host LMS configurations, so every credential row and both sections render.
+		// Two Host LMS configurations, so every credential row and both sections render, and a
+		// refused connection check beside one with none recorded
 		name: "service",
 		path: "/service",
 		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_HOST_LMS_PROBES"]);
 			await app.signIn();
-			await app.mockGraphQL({ LoadLibraryServiceConfig: polarisLibrary });
+			const checked = structuredClone(polarisLibrary);
+			(checked.libraries.content[0].agency.hostLms as Record<string, unknown>).lastPing = {
+				status: "ERROR",
+				failure: "REFUSED",
+				checkedAt: "2026-10-26T10:00:00Z",
+			};
+			await app.mockGraphQL({ LoadLibraryServiceConfig: checked });
 		},
 		ready: async (page) => {
 			await expect(
@@ -770,6 +799,82 @@ const PAGES: Surface[] = [
 			await expect(
 				page.getByRole("button", { name: "Check for updates" }),
 			).toBeVisible();
+		},
+	},
+	{
+		// Tags from three parties, one removable, and the controls to apply another
+		name: "patron request tags",
+		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_REQUEST_TAGS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadPatronRequest: sparseRequest,
+				LoadHostLms: { hostLms: { content: [] } },
+				LoadRequestTags: {
+					requestTags: [
+						{ code: "DAMAGED", label: "Damaged", description: null, active: true },
+						{ code: "SLOW_TO_SHIP", label: "Slow to ship", description: null, active: true },
+					],
+				},
+				LoadPatronRequestTags: {
+					patronRequests: {
+						content: [
+							{
+								id: sparseRequest.patronRequests.content[0].id,
+								tags: [
+									{ code: "DAMAGED", label: "Damaged", agencyCodes: [AGENCY_CODE, "e2e-other"], consortium: true },
+								],
+								involvedAgencyCodes: [AGENCY_CODE, "e2e-other"],
+							},
+						],
+					},
+				},
+			});
+		},
+		ready: async (page) => {
+			const tags = page.getByRole("region", { name: "Tags" });
+			await expect(tags.getByRole("button", { name: /^Remove Damaged/ })).toBeVisible();
+			await expect(tags.getByRole("button", { name: "Add tag" })).toBeVisible();
+		},
+	},
+	{
+		// A long note, a removed one, the consortium's, and the form with Write as
+		name: "patron request notes",
+		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_REQUEST_NOTES"]);
+			await app.signIn({ agencyCode: `${AGENCY_CODE},e2e-other` });
+			const at = "2026-10-26T10:00:00Z";
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadPatronRequest: sparseRequest,
+				LoadHostLms: { hostLms: { content: [] } },
+				LoadPatronRequestNotes: {
+					patronRequests: {
+						content: [
+							{
+								id: sparseRequest.patronRequests.content[0].id,
+								involvedAgencyCodes: [AGENCY_CODE, "e2e-other"],
+								notes: {
+									totalSize: 30,
+									content: [
+										{ id: "n-3", authorKind: "LIBRARY", agencyCode: AGENCY_CODE, libraryName: "E2E Test Library", body: "Patron called twice about this request; the disc case arrived cracked and the booklet was missing from the box.", dateCreated: at, retracted: false, retractedBy: null },
+										{ id: "n-2", authorKind: "LIBRARY", agencyCode: "e2e-other", libraryName: "Other Branch", body: null, dateCreated: at, retracted: true, retractedBy: "LIBRARY" },
+										{ id: "n-1", authorKind: "CONSORTIUM", agencyCode: null, libraryName: null, body: "Please check the returns shelf.", dateCreated: at, retracted: false, retractedBy: null },
+									],
+								},
+							},
+						],
+					},
+				},
+			});
+		},
+		ready: async (page) => {
+			const notes = page.getByRole("region", { name: "Notes" });
+			await expect(notes.getByRole("combobox", { name: "Write as" })).toBeVisible();
+			await expect(notes.getByRole("button", { name: "Show older notes" })).toBeVisible();
 		},
 	},
 	{

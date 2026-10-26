@@ -80,7 +80,7 @@ part that needs a dcb-service capability also needs that capability's flag, and
 | `VITE_FEATURE_HOME_INSIGHTS` | The Insights overview tiles for the last 7 days: the same five tiles, and the same requests, as the Insights page. | `VITE_FEATURE_INSIGHTS` |
 | `VITE_FEATURE_HOME_ANNOUNCEMENTS` | The notices patrons can see now, up to three, with a link to manage them. | `VITE_FEATURE_ANNOUNCEMENTS` |
 | `VITE_FEATURE_HOME_LIBRARY_SPLIT` | For a user of more than one library, every count for each library, as a table. | `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` |
-| `VITE_FEATURE_HOME_PICKUP_HERE` | Other libraries' patrons' requests ready, or on their way, for collection at this library's locations. Counted, not linked: no grid lists them. | `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` **off** |
+| `VITE_FEATURE_HOME_PICKUP_HERE` | Other libraries' patrons' requests ready, or on their way, for collection at this library's locations. Linked to Collecting here where `VITE_FEATURE_PICKUP_REQUESTS` is on; counted only on 8.71.0, where no list holds them. | `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` **off**, or `VITE_FEATURE_PICKUP_REQUESTS` **on** |
 
 **"Since your last visit" is per browser.** The last visit is kept in this browser's
 storage, so a desk computer shared by several people shares one. Reopening the page within

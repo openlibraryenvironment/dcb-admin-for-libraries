@@ -9,7 +9,7 @@ import { Header } from "../Header/Header";
 import { CustomLink } from "@components/CustomLink";
 import { useTranslation } from "react-i18next";
 import { matchActiveTab } from "@helpers/activeTab";
-import { isInsightsPageShown } from "@helpers/featureFlags";
+import { isInsightsPageShown, isPickupRequestsEnabled } from "@helpers/featureFlags";
 import { MAIN_CONTENT_ID } from "@constants/landmarks";
 import { SkipLink } from "./SkipLink";
 import { useRouteAnnouncement } from "@/hooks/useRouteAnnouncement";
@@ -33,6 +33,7 @@ const TAB_PATHS = {
 	requesting: "/requesting",
 	patronRequests: "/patronRequests",
 	supplierRequests: "/supplierRequests",
+	pickupRequests: "/pickupRequests",
 	service: "/service",
 	mappings: "/mappings",
 	locations: "/locations",
@@ -73,6 +74,10 @@ export const Layout = ({ children }: LayoutProps) => {
 						label: t("nav.supplier_requests.title"),
 						value: TAB_PATHS.supplierRequests,
 					},
+					// Where dcb-service lets a pickup library read the request; the route guards the URL too
+					...(isPickupRequestsEnabled()
+						? [{ label: t("nav.pickup_requests.title"), value: TAB_PATHS.pickupRequests }]
+						: []),
 					{ label: t("nav.library.service"), value: TAB_PATHS.service },
 					{ label: t("nav.mappings.title"), value: TAB_PATHS.mappings },
 					{ label: t("nav.locations.title"), value: TAB_PATHS.locations },

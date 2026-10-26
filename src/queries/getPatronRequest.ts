@@ -29,6 +29,7 @@ export const getPatronRequest = () => gql`
 				localItemStatus
 				localItemType
 				isExpeditedCheckout
+				${capabilitySelection("placed_by_staff", "PatronRequest")}
 				localBibId
 				rawLocalItemStatus
 				rawLocalRequestStatus

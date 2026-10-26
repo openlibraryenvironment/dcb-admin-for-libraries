@@ -316,7 +316,7 @@
 		}
 	},
 	"insights": {
-		"title": "Library insights",
+		"title": "Library insights (Preview)",
 		"subtitle": "Requesting activity, fulfilment and value for {{library}}.",
 		"loading": "Loading insights",
 		"no_host_lms": "This library has no associated Host LMS, so insights cannot be shown.",
@@ -831,6 +831,11 @@
 		}
 	},
 	"library": {
+		"limits": {
+			"max_active_requests": "Maximum active requests per patron",
+			"max_local_holds": "Maximum holds per patron at your library system",
+			"not_set": "Not set: DCB does not check it"
+		},
 		"abbreviated_name": "Abbreviated name",
 		"backup_schedule": "Backup / downtime schedule",
 		"brand": {
@@ -882,6 +887,29 @@
 			"title": "Primary location"
 		},
 		"service": {
+			"connection": {
+				"title": "Connection check",
+				"none": "No check recorded",
+				"checked_at": "Checked {{when}}",
+				"last_ok_at": "Last worked {{when}}",
+				"never_ok": "Not working at any check DCB has recorded",
+				"state": {
+					"ok": "Working",
+					"refused": "Refused DCB's credentials",
+					"misconfigured": "Cannot be used with DCB's settings for it",
+					"unreachable": "Could not be reached",
+					"failing": "Answered with an error",
+					"unknown": "Failed for a reason DCB did not recognise"
+				},
+				"advice": {
+					"ok": "DCB reached your library system and it accepted DCB's credentials.",
+					"refused": "Your library system rejected DCB's credentials. Ask your consortium's DCB support to update them. Until they do, DCB may not ask your library to supply.",
+					"misconfigured": "DCB could not connect using its settings for your library system. Ask your consortium's DCB support to check them. Until they do, DCB may not ask your library to supply.",
+					"unreachable": "DCB could not connect: your library system may be down, or its address or firewall may have changed. If it keeps happening, tell your consortium's DCB support.",
+					"failing": "Your library system answered DCB with an error. Check the system's own status, and if it keeps happening, tell your consortium's DCB support.",
+					"unknown": "Tell your consortium's DCB support, with the time shown, so they can look it up."
+				}
+			},
 			"environments": {
 				"api": "Host LMS API",
 				"api_key": "API key",
@@ -999,12 +1027,15 @@
 		"requesting": {
 			"title": "Requesting"
 		},
+		"pickup_requests": {
+			"title": "Collecting here"
+		},
 		"supplier_requests": {
 			"title": "Supplier requests",
 			"tooltip": "The requests for which your library is acting as a supplier"
 		},
 		"insights": {
-			"title": "Insights"
+			"title": "Insights (Preview)"
 		},
 		"home": {
 			"title": "Home"
@@ -1172,6 +1203,58 @@
 		"view": "View",
 		"virtual_item": "Virtual item",
 		"virtual_patron": "Virtual patron",
+		"placed_by": {
+			"label": "Placed by",
+			"staff": "Staff",
+			"patron": "The patron",
+			"unknown": "Not recorded"
+		},
+		"notes": {
+			"title": "Notes",
+			"none": "No notes yet.",
+			"load_failed": "The notes could not be loaded.",
+			"older": "Show older notes",
+			"byline": "{{author}}, {{when}}",
+			"consortium": "The consortium",
+			"removed_by": "Removed by {{library}}",
+			"removed_by_consortium": "Removed by the consortium",
+			"as": "Write as",
+			"add_label": "Add a note",
+			"helper": "Every library involved in this request, and consortium staff, can read it. {{count}} of {{max}} characters.",
+			"empty": "Write the note first.",
+			"too_long": "A note can be at most {{max}} characters.",
+			"add": "Add note",
+			"added": "Note added.",
+			"remove": "Remove",
+			"remove_label": "Remove the note {{author}} wrote {{when}}",
+			"removed": "Note removed.",
+			"remove_confirm": {
+				"title": "Remove this note?",
+				"body": "Its text is deleted. Everyone who can see the request will see that your library removed a note."
+			},
+			"not_involved": "Only the borrowing, supplying and pickup libraries can write a note on this request.",
+			"failed": "The note could not be saved. Try again."
+		},
+		"tags": {
+			"title": "Tags",
+			"none": "No tags yet.",
+			"load_failed": "The tags could not be loaded.",
+			"applied": "{{tag}}: {{by}}",
+			"consortium": "the consortium",
+			"remove": "Remove",
+			"remove_label": "Remove {{tag}} for {{library}}",
+			"remove_for": "Remove for {{library}}",
+			"remove_for_label": "Remove for {{library}}: {{tag}}",
+			"as": "Tag as",
+			"choose": "Tag to add",
+			"add": "Add tag",
+			"added": "{{tag}} added.",
+			"removed": "{{tag}} removed.",
+			"all_applied": "Every tag is already applied by this library.",
+			"vocabulary_failed": "The list of tags could not be loaded.",
+			"not_involved": "Only the borrowing, supplying and pickup libraries can tag this request.",
+			"failed": "The tag could not be changed. Try again."
+		},
 		"confirm_returned": {
 			"button": "Confirm item is back",
 			"info": "Your library has not reported this item back on its shelf. Confirm it once it is.",
@@ -1185,6 +1268,13 @@
 			"unsuccessful": "The item may have been recorded as back, but the request was not released. Its audit log says what happened.",
 			"unsuccessful_detail": "The item may have been recorded as back, but the request was not released. DCB's reason: {{detail}}"
 		}
+	},
+	"pickup_requests": {
+		"description": "Requests other libraries' patrons will collect at your library's locations. Your own patrons' requests are under Patron requests.",
+		"none": "No other library's patrons are collecting at your locations.",
+		"no_locations": "Your library has no locations recorded, so nothing can be collected here.",
+		"too_many_locations_one": "Only your library's first {{count}} location is included.",
+		"too_many_locations_other": "Only your library's first {{count}} locations are included."
 	},
 	"requesting": {
 		"available_at": "Items present at {{institutions}}",
@@ -1597,6 +1687,7 @@
 			"search_audits": "Search by audit",
 			"search_locations": "Search by location",
 			"search_mappings": "Search by mappings",
+			"search_pickup_requests": "Search requests collecting here",
 			"search_supplier_requests": "Search supplier patron requests",
 			"views": {
 				"title": "Saved filters",
@@ -1811,6 +1902,7 @@
 		"pickup": {
 			"title": "Collecting at your locations for other libraries",
 			"description": "Other libraries' patrons collecting their items at your locations. Neither request grid lists these, so they are counted here only.",
+			"description_listed": "Other libraries' patrons collecting their items at your locations. Collecting here lists them.",
 			"load_failed": "These counts could not be loaded.",
 			"no_locations": "Your library has no locations recorded, so there is nothing to count.",
 			"counts": {
@@ -1899,6 +1991,12 @@
 			"insights_walk_up": "Insights: collected in person, or sent",
 			"guarded_cleanup": "Clean up that protects an item that is out",
 			"confirm_item_returned": "Confirm item is back",
+			"request_tags": "Tags on requests",
+			"request_notes": "Notes on requests",
+			"pickup_requests": "Collecting here: other libraries' patrons collecting at your locations",
+			"placed_by_staff": "Whether staff or the patron placed a request",
+			"host_lms_last_ping": "Your library system's last connection check",
+			"local_holds": "Your library system's hold limit per patron",
 			"agency_scoped_requests": "Request lists for your library alone, not every library on its system"
 		},
 		"status": {

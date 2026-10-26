@@ -38,7 +38,9 @@ import {
 	isDiscoveryActive,
 	isLibraryBrandingEnabled,
 	isLibrarySupportUrlEnabled,
+	isLocalHoldsEnabled,
 } from "@helpers/featureFlags";
+import { isReadOnly } from "@helpers/readOnlyAccess";
 import { UpdateLibraryResponse } from "../../models/UpdateLibraryResponse";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { libraryProfileSchema } from "@/schemas/libraryProfile";
@@ -634,6 +636,27 @@ function HomeComponent() {
 					<RenderAttribute attribute={library?.id} />
 				</Attribute>
 			</Grid>
+            {/* Administrators only, whatever the route allows: read-only staff place requests, not policy */}
+            {!isReadOnly(auth?.user?.profile?.roles) ? (
+				<>
+					<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+						<Attribute label={t("library.limits.max_active_requests")}>
+							<RenderAttribute
+								attribute={library?.agency?.maxConsortialLoans ?? t("library.limits.not_set")}
+							/>
+						</Attribute>
+					</Grid>
+					{isLocalHoldsEnabled() ? (
+						<Grid size={{ xs: 2, sm: 4, md: 4 }}>
+							<Attribute label={t("library.limits.max_local_holds")}>
+								<RenderAttribute
+									attribute={library?.agency?.maxLocalHolds ?? t("library.limits.not_set")}
+								/>
+							</Attribute>
+						</Grid>
+					) : null}
+				</>
+			) : null}
             {/* Two gates, and they answer different questions. `discoveryActive` asks
                 whether anything renders a patron logo at all. The branding flag asks
                 whether this environment's dcb-service can store one: before 9.0.0 Library

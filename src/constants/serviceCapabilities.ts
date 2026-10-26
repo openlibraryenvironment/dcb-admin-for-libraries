@@ -118,6 +118,56 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		fields: {},
 	},
 	{
+		// Selected only in their own documents, which are sent behind the flag
+		id: "request_tags",
+		flag: "VITE_FEATURE_REQUEST_TAGS",
+		since: "9.2.0",
+		fields: {
+			PatronRequest: ["tags", "involvedAgencyCodes"],
+			Query: ["requestTags"],
+			Mutation: ["tagPatronRequest", "untagPatronRequest"],
+		},
+	},
+	{
+		// Its own flag, not request_tags': notes are free text that often mentions the patron,
+		// so a consortium may want tags without them
+		id: "request_notes",
+		flag: "VITE_FEATURE_REQUEST_NOTES",
+		since: "9.2.0",
+		fields: {
+			PatronRequest: ["notes"],
+			Mutation: ["addPatronRequestNote", "retractPatronRequestNote"],
+		},
+	},
+	{
+		// Behaviour, not schema: 9.2.0 lets the pickup library read the request. 9.0.0 and 9.1.0
+		// hid it, and 8.71.0 scoped nothing, which this app never offered a list for.
+		id: "pickup_requests",
+		flag: "VITE_FEATURE_PICKUP_REQUESTS",
+		since: "9.2.0",
+		fields: {},
+	},
+	{
+		id: "placed_by_staff",
+		flag: "VITE_FEATURE_PLACED_BY_STAFF",
+		since: "9.2.0",
+		fields: { PatronRequest: ["placedByStaff"] },
+	},
+	{
+		// The flag DCB Admin uses for the same release's Host LMS checks
+		id: "host_lms_last_ping",
+		flag: "VITE_FEATURE_HOST_LMS_PROBES",
+		since: "9.2.0",
+		fields: { HostLms: ["lastPing"] },
+	},
+	{
+		// The flag DCB Admin uses for the same field
+		id: "local_holds",
+		flag: "VITE_FEATURE_LOCAL_HOLDS",
+		since: "9.1.0",
+		fields: { Agency: ["maxLocalHolds"] },
+	},
+	{
 		// A REST route, so nothing to select.
 		id: "confirm_item_returned",
 		flag: "VITE_FEATURE_CONFIRM_ITEM_RETURNED",

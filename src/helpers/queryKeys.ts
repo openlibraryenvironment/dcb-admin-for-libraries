@@ -74,6 +74,11 @@ export const queryKeys = {
 			["patronRequests", "detail", apiBase, id] as const,
 		essentials: (apiBase: string, id: string | null) =>
 			["patronRequests", "essentials", apiBase, id] as const,
+		tags: (apiBase: string, id: string) => ["patronRequests", "tags", apiBase, id] as const,
+		notes: (apiBase: string, id: string) => ["patronRequests", "notes", apiBase, id] as const,
+	},
+	requestTags: {
+		vocabulary: (apiBase: string) => ["requestTags", "vocabulary", apiBase] as const,
 	},
 	home: {
 		counts: (
@@ -102,6 +107,12 @@ export const queryKeys = {
 	},
 	savedFilters: {
 		list: (gridId: string) => ["savedFilters", "list", gridId] as const,
+	},
+	pickupRequests: {
+		lists: () => ["pickupRequests", "list"] as const,
+		/** `scope` is the Lucene the list is scoped by: its locations and the borrowing exclusion. */
+		list: (apiBase: string, agencyCode: string, scope: string, grid: GridPage) =>
+			["pickupRequests", "list", apiBase, agencyCode, scope, grid] as const,
 	},
 	supplierRequests: {
 		lists: () => ["supplierRequests", "list"] as const,
