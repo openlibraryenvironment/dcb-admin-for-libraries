@@ -287,48 +287,68 @@ verify_secrets:
       - reports/
     expire_in: 1 month
 
-# Nothing else here builds the image: on node 22 it stopped at `npm ci` while every job passed.
-# In the verify stage, so a release branch whose image cannot build does not release.
-verify_image:
+# The image that ships, driven in a browser: docs/testing.md, "The container gate". In the verify
+# stage, so a release branch whose image cannot build or start does not release.
+verify_container:
   extends: .records_status
   stage: verify
-  timeout: 20m
-  cache: []
-  # Always before a release; otherwise only when the image's own files change. A merge
-  # request's `changes` are compared with its target branch.
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
+  timeout: 40m
+  # Always before a release and on demand; otherwise only when what decides the image changes.
+  # A merge request's `changes` are compared with its target branch.
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
-    - if: '$CI_COMMIT_BRANCH == "release" || $ON_DEMAND_REPORT == "true"'
-    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_COMMIT_BRANCH == "release" || $ON_DEMAND_REPORT == "true"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         paths:
           - docker/**/*
           - .dockerignore
+          - e2e-container/**/*
+          - playwright.container.config.ts
+          - tsconfig.json
           - package.json
           - package-lock.json
+          - vite.config.ts
   image:
-    name: docker:27
+    name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
     pull_policy: if-not-present
   services:
     - name: docker:27-dind
       alias: docker
+      # ki-onprem bind-mounts the host's docker.sock into every container, so dind's default
+      # socket fails "device or resource busy"; as in dcb-admin-ui and symposia-service
+      command: ["dockerd", "--host=unix:///var/run/dind.sock", "--host=tcp://0.0.0.0:2375", "--tls=false"]
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
+    # The same major as the dind service
+    DOCKER_CLI_VERSION: "27.3.1"
   script:
-    # dind can still be starting; without this the first symptom is a build error about the daemon.
+    # The Playwright image has no docker client; the static one, not apt's, which brings a daemon
+    - |
+      if ! command -v docker >/dev/null 2>&1; then
+        curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_CLI_VERSION}.tgz" | tar xz --strip-components=1 -C /usr/local/bin docker/docker
+      fi
+    # dind can still be starting: wait about a minute, then say so rather than time out later
     - |
       for attempt in $(seq 1 30); do
         docker info >/dev/null 2>&1 && break
         sleep 2
       done
       docker info >/dev/null || { echo "No Docker daemon at $DOCKER_HOST: this job needs a runner that permits privileged containers."; exit 1; }
-    - docker build -f docker/production/Dockerfile -t "dcb-admin-for-libraries:$CI_COMMIT_SHORT_SHA" .
+    - npm ci --prefer-offline --no-audit --no-fund
+    - npm run e2e:container
   artifacts:
     when: always
+    expose_as: "Container report"
     paths:
+      - playwright-report/
       - reports/
+    reports:
+      junit: reports/container-junit.xml
     expire_in: 1 week
 
 # The browser tests several times over with no retries, so a test that passes only sometimes
@@ -394,7 +414,7 @@ report:
     - verify_performance
     - verify_base_path
     - verify_ki_bootstrap
-    - verify_image
+    - verify_container
   script:
     - mkdir -p reports
     # The last release's figures and the last nightly flake hunt. A first release has neither,

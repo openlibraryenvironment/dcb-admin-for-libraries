@@ -166,7 +166,7 @@ describe("gateResults and verdict", () => {
 		const results = gateResults(inputs({ statuses: { verify_static: "success", verify_e2e: "failed" } }));
 		expect(results.find((result) => result.job === "verify_static")?.outcome).toBe("passed");
 		expect(results.find((result) => result.job === "verify_e2e")?.outcome).toBe("failed");
-		expect(results.find((result) => result.job === "verify_image")?.outcome).toBe("not run");
+		expect(results.find((result) => result.job === "verify_container")?.outcome).toBe("not run");
 		expect(verdict(results)).toBe(`1 of ${results.length} checks failed.`);
 	});
 

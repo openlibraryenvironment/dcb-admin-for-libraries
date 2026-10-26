@@ -12,11 +12,11 @@ What the gates are, and the two ways each of them can lie to you.
 | E2E | `npx playwright test` | the production build under `vite preview` |
 | Accessibility | `npx playwright test e2e/accessibility.spec.ts` | zero axe violations on every surface, both schemes |
 | Bundle | `npm run budget:build` | fails if what every page loads first is over budget; reports what each route and on-demand feature adds |
-| Lighthouse | `npx lhci autorun` | transfer, CLS and the category scores |
+| Lighthouse | `npm run lighthouse` | transfer, CLS and the category scores |
 | Secrets | `npm run gates -- --only secrets` | gitleaks over the whole history; needs a binary or Docker |
 | Dependencies | `npm run gates -- --only dependencies` | no high or critical advisory in production dependencies; every production licence on the allow-list in `scripts/check-licences.mjs` |
-| Image | `npm run gates -- --only image` | the production Docker image builds; needs Docker |
-| **Everything** | **`npm run gates`** | **all nine CI gates** |
+| Container | `npm run e2e:container` | the production image builds, starts, and serves the app, its settings and its files to a browser; needs Docker. See "The container gate" |
+| **Everything** | **`npm run gates`** | **all eight CI gates** |
 | Release report | `npm run report`, after the gates | nothing: it explains them. See "The release report" |
 
 ### react-hooks/exhaustive-deps is an error, not a warning
@@ -251,11 +251,11 @@ that say why.
 |---|---|
 | A push to a branch with no merge request | `quick`: static and secrets |
 | A push to a branch with an open merge request | nothing: the merge request pipeline checks it |
-| **A merge request** | **the merge gate**: every check and the build; the image only when its files change. One that changes only documentation, Markdown or unit tests skips the browser gates, the speed checks and the build |
+| **A merge request** | **the merge gate**: every check and the build; the container gate only when what decides the image changes. One that changes only documentation, Markdown or unit tests skips the browser gates, the speed checks and the build |
 | `main` | the merge gate again, then the dev deploys |
-| `release` | the merge gate, the image and the release report, then the release and its deploys |
+| `release` | the merge gate, the container gate and the release report, then the release and its deploys |
 | A schedule | the dependency audit and the flake hunt; nothing that releases or deploys |
-| Run by hand with `ON_DEMAND_REPORT` set to `true` | every check, the image and the release report; nothing that releases, publishes or deploys |
+| Run by hand with `ON_DEMAND_REPORT` set to `true` | every check, the container gate and the release report; nothing that releases, publishes or deploys |
 
 A skipped check is never the only check of a change: `main` and `release` run the
 whole gate whatever changed. The list that decides it is `&app_paths`, and
@@ -354,7 +354,7 @@ hand:
    the page. It expires after a month like any artifact, so press **Keep** on the
    job to keep it.
 
-Such a run includes every check and the image, and nothing that releases,
+Such a run includes every check and the container gate, and nothing that releases,
 publishes or deploys, even on `release`. `tests/onDemandReport.test.ts` fails if
 a job that ships does not exclude it, or if the report would run in any other
 pipeline. A tag made before this change carries the older pipeline file, so it
@@ -362,6 +362,32 @@ cannot be reported on this way.
 
 Set the variable only on a pipeline you run by hand. Set as a project variable,
 it would turn every pipeline into a report run, and nothing would ship.
+
+## The container gate
+
+`npm run e2e:container` builds `docker/production/Dockerfile`, starts it on port 4214
+with a runtime configuration, and drives it in a browser. It is the only gate that tests
+the artefact that ships rather than `vite preview`. It checks that the sign-in page
+renders, that `inject_env.json` is the configuration the container was started with and
+is never cached, that `index.html` is never cached, that a route nginx does not know is
+handed to the app, and that every script `index.html` names is served as JavaScript.
+It was watched failing with `index.html`'s `no-store` removed.
+
+In CI, `verify_container` gets its daemon from a `docker:27-dind` service started on its
+own socket, because `ki-onprem` bind-mounts the host's. It runs before every release, on
+demand, and when `docker/`, `.dockerignore`, the container suite or its config,
+`tsconfig.json`, the package files or `vite.config.ts` change. It replaced
+`verify_image`, which only built the image, on 2026-10-26, so both admin apps test the
+image the same way.
+
+**What `dcb-admin-ui`'s container suite checks that this one cannot yet.** That image
+sends security headers on every path, including a Content Security Policy, compresses
+JavaScript and CSS, caches hashed assets as immutable, and pins nginx to an exact
+release. This image does none of those: `default.conf.template` sets only the two
+`no-store` headers, and the base is `nginx:stable-alpine`. Asserting them here would
+fail, and adding them changes what every deployment receives, the policy above all,
+which must allow each deployment's own API and Keycloak hosts. Each is a decision to
+take, and when it is taken, the assertion that proves it belongs in this suite.
 
 ## The harness
 
@@ -462,11 +488,15 @@ first.
 
 So the number says which repo and which gate — `41<gate><repo>`:
 
-| | e2e | bootloader | Lighthouse | base-path |
-|---|---|---|---|---|
-| `dcb-admin-ui` | 4173 | 4183 | 4193 | — |
-| **this repo** | **4174** | **4184** | **4194** | **4204** |
-| discovery UI | 4175 | 4185 | 4195 | — |
+| | e2e | bootloader | Lighthouse | base-path | container |
+|---|---|---|---|---|---|
+| `dcb-admin-ui` | 4173 | 4183 | 4193 | 4203 | 4213 |
+| **this repo** | **4174** | **4184** | **4194** | **4204** | **4214** |
+| discovery UI | 4175 | 4185 | 4195 | — | — |
+
+The container band is the one gate that is not a `vite preview`: it maps the image's
+port 80, and never reuses a server, because a container left running would serve an
+image built from older code.
 
 The e2e column is the allocation: one memorable primary port per repo. The
 bands exist because a repo has more than one gate — this one uses all four — so
@@ -527,17 +557,16 @@ that is broken, and exits non-zero if any gate failed.
   PASS  e2e             93s  (verify_e2e)
   PASS  base-path       45s  (verify_base_path)
   PASS  ki-bootstrap    35s  (verify_ki_bootstrap)
-  PASS  image           90s  (verify_image)
+  PASS  container       75s  (verify_container)
 ```
 
 **A gap closed when this was written, which had already cost a red pipeline.**
 `verify_secrets` had no local path of any kind, because gitleaks is not an npm
 package: the runner uses a `gitleaks` binary if there is one, Docker if the daemon is
 up, and otherwise reports **SKIP** rather than counting a gate it did not run. The
-`image` gate, `docker build` of `docker/production/Dockerfile`, skips the same way
-without a daemon. Nothing else builds the image, and it once stopped at `npm ci` while
-every other gate passed; CI runs it on the `release` branch, and wherever `docker/`,
-`.dockerignore` or the package files change.
+`container` gate, which builds and drives the image, skips the same way without a
+daemon. Nothing else builds the image, and it once stopped at `npm ci` while every
+other gate passed.
 
 **The runner sets `CI=1`**, because the pipeline has it set and both Playwright configs
 read it: workers 1 rather than 4, retries 2 rather than 0, and `reuseExistingServer`
