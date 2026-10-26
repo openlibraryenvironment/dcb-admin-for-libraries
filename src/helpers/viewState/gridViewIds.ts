@@ -16,6 +16,8 @@ export const patronRequestsView: GridViewId = { id: "mainPatronRequests", rememb
 
 export const supplierRequestsView: GridViewId = { id: "supplierPatronRequests", remember: true };
 
+export const pickupRequestsView: GridViewId = { id: "pickupPatronRequests", remember: true };
+
 export const mappingsView: GridViewId = { id: "referenceValueMappings", remember: true };
 
 export const locationsView: GridViewId = { id: "locations", remember: true };

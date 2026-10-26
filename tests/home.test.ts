@@ -18,6 +18,7 @@ import {
 	comparesWithLastWeek,
 	lastWeekOf,
 	pickupHereQuery,
+	collectingHereQuery,
 	homeCountQuery,
 	homeCountsQueryOptions,
 	homeHistoryQueryOptions,
@@ -138,6 +139,12 @@ describe("collections at the library's own locations", () => {
 	it("are other libraries' patrons' requests, at these locations, in this status", () => {
 		expect(pickupHereQuery(["loc-1", "loc-2"], SCOPES.borrowed, "READY_FOR_PICKUP")).toBe(
 			'pickupLocationCode:("loc-1" OR "loc-2") AND status:READY_FOR_PICKUP AND NOT (patronHostlmsCode:e2e-lms)',
+		);
+	});
+
+	it("are, for Collecting here, the same question in every status", () => {
+		expect(collectingHereQuery(["loc-1", "loc-2"], "patronAgencyCode:e2e-agency")).toBe(
+			'pickupLocationCode:("loc-1" OR "loc-2") AND NOT (patronAgencyCode:e2e-agency)',
 		);
 	});
 

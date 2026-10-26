@@ -20,6 +20,7 @@ export const invalidateRequestLists = (queryClient: QueryClient) =>
 	Promise.all([
 		queryClient.invalidateQueries({ queryKey: queryKeys.patronRequests.lists() }),
 		queryClient.invalidateQueries({ queryKey: queryKeys.supplierRequests.lists() }),
+		queryClient.invalidateQueries({ queryKey: queryKeys.pickupRequests.lists() }),
 	]);
 
 /** Everything that shows this library's name or profile: after the profile is saved. */

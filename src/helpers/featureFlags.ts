@@ -166,9 +166,17 @@ export const isHomeAnnouncementsEnabled = (): boolean =>
 export const isHomeLibrarySplitEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_HOME_LIBRARY_SPLIT") && isAgencyScopedRequestsEnabled();
 
-// 9.0.0's AgencyAccessScope hides requests a library only collects, so this would read 0 there
+/**
+ * Collecting here: other libraries' patrons' requests collected at this library. dcb-service
+ * 9.2.0 makes the pickup library a party to a request; 9.0.0 and 9.1.0 hide such a request from
+ * it, so the list would read empty there.
+ */
+export const isPickupRequestsEnabled = (): boolean => readFlag("VITE_FEATURE_PICKUP_REQUESTS");
+
+// 9.0.0 and 9.1.0 hide requests a library only collects, so this would read 0 there; 9.2.0 does not
 export const isHomePickupHereEnabled = (): boolean =>
-	readFlag("VITE_FEATURE_HOME_PICKUP_HERE") && !isAgencyScopedRequestsEnabled();
+	readFlag("VITE_FEATURE_HOME_PICKUP_HERE") &&
+	(!isAgencyScopedRequestsEnabled() || isPickupRequestsEnabled());
 
 /** A setting that is not on or off, read from where readFlag reads. */
 const readSetting = (name: string): string | undefined => {

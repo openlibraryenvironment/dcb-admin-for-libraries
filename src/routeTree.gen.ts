@@ -22,6 +22,7 @@ import { Route as _authenticatedDataChangeLogRouteImport } from './routes/__auth
 import { Route as _authenticatedInsightsRouteImport } from './routes/__authenticated/insights'
 import { Route as _authenticatedLibraryRouteImport } from './routes/__authenticated/library'
 import { Route as _authenticatedMappingsRouteImport } from './routes/__authenticated/mappings'
+import { Route as _authenticatedPickupRequestsRouteImport } from './routes/__authenticated/pickupRequests'
 import { Route as _authenticatedPreferencesRouteImport } from './routes/__authenticated/preferences'
 import { Route as _authenticatedServiceRouteImport } from './routes/__authenticated/service'
 import { Route as _authenticatedSettingsRouteImport } from './routes/__authenticated/settings'
@@ -106,6 +107,12 @@ const _authenticatedMappingsRoute = _authenticatedMappingsRouteImport.update({
   path: '/mappings',
   getParentRoute: () => _authenticatedRoute,
 } as any)
+const _authenticatedPickupRequestsRoute =
+  _authenticatedPickupRequestsRouteImport.update({
+    id: '/pickupRequests',
+    path: '/pickupRequests',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
 const _authenticatedPreferencesRoute =
   _authenticatedPreferencesRouteImport.update({
     id: '/preferences',
@@ -213,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/insights': typeof _authenticatedInsightsRoute
   '/library': typeof _authenticatedLibraryRoute
   '/mappings': typeof _authenticatedMappingsRoute
+  '/pickupRequests': typeof _authenticatedPickupRequestsRoute
   '/preferences': typeof _authenticatedPreferencesRoute
   '/service': typeof _authenticatedServiceRoute
   '/settings': typeof _authenticatedSettingsRoute
@@ -242,6 +250,7 @@ export interface FileRoutesByTo {
   '/insights': typeof _authenticatedInsightsRoute
   '/library': typeof _authenticatedLibraryRoute
   '/mappings': typeof _authenticatedMappingsRoute
+  '/pickupRequests': typeof _authenticatedPickupRequestsRoute
   '/preferences': typeof _authenticatedPreferencesRoute
   '/service': typeof _authenticatedServiceRoute
   '/settings': typeof _authenticatedSettingsRoute
@@ -273,6 +282,7 @@ export interface FileRoutesById {
   '/__authenticated/insights': typeof _authenticatedInsightsRoute
   '/__authenticated/library': typeof _authenticatedLibraryRoute
   '/__authenticated/mappings': typeof _authenticatedMappingsRoute
+  '/__authenticated/pickupRequests': typeof _authenticatedPickupRequestsRoute
   '/__authenticated/preferences': typeof _authenticatedPreferencesRoute
   '/__authenticated/service': typeof _authenticatedServiceRoute
   '/__authenticated/settings': typeof _authenticatedSettingsRoute
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/insights'
     | '/library'
     | '/mappings'
+    | '/pickupRequests'
     | '/preferences'
     | '/service'
     | '/settings'
@@ -335,6 +346,7 @@ export interface FileRouteTypes {
     | '/insights'
     | '/library'
     | '/mappings'
+    | '/pickupRequests'
     | '/preferences'
     | '/service'
     | '/settings'
@@ -365,6 +377,7 @@ export interface FileRouteTypes {
     | '/__authenticated/insights'
     | '/__authenticated/library'
     | '/__authenticated/mappings'
+    | '/__authenticated/pickupRequests'
     | '/__authenticated/preferences'
     | '/__authenticated/service'
     | '/__authenticated/settings'
@@ -483,6 +496,13 @@ declare module '@tanstack/react-router' {
       path: '/mappings'
       fullPath: '/mappings'
       preLoaderRoute: typeof _authenticatedMappingsRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/pickupRequests': {
+      id: '/__authenticated/pickupRequests'
+      path: '/pickupRequests'
+      fullPath: '/pickupRequests'
+      preLoaderRoute: typeof _authenticatedPickupRequestsRouteImport
       parentRoute: typeof _authenticatedRoute
     }
     '/__authenticated/preferences': {
@@ -629,6 +649,7 @@ interface _authenticatedRouteChildren {
   _authenticatedInsightsRoute: typeof _authenticatedInsightsRoute
   _authenticatedLibraryRoute: typeof _authenticatedLibraryRoute
   _authenticatedMappingsRoute: typeof _authenticatedMappingsRoute
+  _authenticatedPickupRequestsRoute: typeof _authenticatedPickupRequestsRoute
   _authenticatedPreferencesRoute: typeof _authenticatedPreferencesRoute
   _authenticatedServiceRoute: typeof _authenticatedServiceRoute
   _authenticatedSettingsRoute: typeof _authenticatedSettingsRoute
@@ -653,6 +674,7 @@ const _authenticatedRouteChildren: _authenticatedRouteChildren = {
   _authenticatedInsightsRoute: _authenticatedInsightsRoute,
   _authenticatedLibraryRoute: _authenticatedLibraryRoute,
   _authenticatedMappingsRoute: _authenticatedMappingsRoute,
+  _authenticatedPickupRequestsRoute: _authenticatedPickupRequestsRoute,
   _authenticatedPreferencesRoute: _authenticatedPreferencesRoute,
   _authenticatedServiceRoute: _authenticatedServiceRoute,
   _authenticatedSettingsRoute: _authenticatedSettingsRoute,

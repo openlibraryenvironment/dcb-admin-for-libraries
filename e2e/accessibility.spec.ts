@@ -453,6 +453,26 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		name: "collecting here",
+		path: "/pickupRequests",
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_PICKUP_REQUESTS", "VITE_FEATURE_AGENCY_SCOPED_REQUESTS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadLibraries: library,
+				LoadAgencyLocationsForExport: {
+					agencies: { totalSize: 1, content: [{ code: AGENCY_CODE, locations: [{ id: "loc-1" }] }] },
+				},
+				LoadPatronRequests: patronRequests,
+			});
+		},
+		ready: async (page) => {
+			await expect(page.getByRole("grid", { name: "Collecting here" })).toBeVisible();
+			await expect(page.getByRole("link", { name: /2026-09-01/ })).toBeVisible();
+		},
+	},
+	{
 		// Every control in it is a form control, in groups, with an error state.
 		name: "export wizard",
 		path: "/patronRequests",

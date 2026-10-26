@@ -72,6 +72,7 @@ does not show the feature.
 | `VITE_FEATURE_CONFIRM_ITEM_RETURNED` | **9.2.0** or later | "Confirm item is back" on a request the library supplied, once its item is waiting to come back to the library |
 | `VITE_FEATURE_REQUEST_TAGS` | **9.2.0** or later | Tags on a request's page: what the libraries involved applied, and for their administrators, applying and removing their own ([request-tags.md](request-tags.md)) |
 | `VITE_FEATURE_REQUEST_NOTES` | **9.2.0** or later | Notes on a request's page, written as a library and readable by every library involved ([request-notes.md](request-notes.md)) |
+| `VITE_FEATURE_PICKUP_REQUESTS` | **9.2.0** or later | **Collecting here**: other libraries' patrons' requests collected at the library's locations, and Home's collecting counts linked to it ([pickup-requests.md](pickup-requests.md)) |
 | `VITE_FEATURE_INSIGHTS_TRENDS` | **9.1.0** or later (`/insights/trend`) | The duration trend panel on Insights → Trends. Needs `VITE_FEATURE_INSIGHTS` as well |
 | `VITE_FEATURE_ANNOUNCEMENTS` | **9.2.0** or later | The Announcements page. Off on anything older: on a service without the announcement operations, the page's whole GraphQL request is rejected |
 | `VITE_FEATURE_HOME_SINCE_LAST_VISIT` | any supported release | Home page: a "since your last visit" window, remembered per browser |
@@ -80,7 +81,7 @@ does not show the feature.
 | `VITE_FEATURE_HOME_INSIGHTS` | with `VITE_FEATURE_INSIGHTS` | Home page: the Insights overview tiles for the last 7 days. Off while `VITE_FEATURE_INSIGHTS` is |
 | `VITE_FEATURE_HOME_ANNOUNCEMENTS` | with `VITE_FEATURE_ANNOUNCEMENTS` | Home page: the notices live for the library's patrons. Off while `VITE_FEATURE_ANNOUNCEMENTS` is |
 | `VITE_FEATURE_HOME_LIBRARY_SPLIT` | with `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` | Home page: a by-library table for users who administer more than one library. Off while agency scoping is |
-| `VITE_FEATURE_HOME_PICKUP_HERE` | **8.71.0 only** | Home page: other libraries' patrons collecting at the library's locations. Off whenever `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is on, because 9.0.0 and later do not show a library the requests it only collects |
+| `VITE_FEATURE_HOME_PICKUP_HERE` | **8.71.0**, or **9.2.0** with `VITE_FEATURE_PICKUP_REQUESTS` | Home page: other libraries' patrons collecting at the library's locations. Off when `VITE_FEATURE_AGENCY_SCOPED_REQUESTS` is on without `VITE_FEATURE_PICKUP_REQUESTS`, because 9.0.0 and 9.1.0 do not show a library the requests it only collects |
 
 **On the kihosting.net hosts you do not set these.** Those deployments are served by the
 shared Cloudflare worker that also serves DCB Admin, which derives the whole flag block
@@ -387,7 +388,7 @@ through them before the release pipeline runs, and the checks after it.
    | --- | --- |
    | `VITE_FEATURE_INSIGHTS`, `VITE_FEATURE_LIBRARY_BRANDING`, `VITE_FEATURE_AGENCY_SCOPED_REQUESTS`, `VITE_FEATURE_GUARDED_CLEANUP` | 9.0.0 |
    | `VITE_FEATURE_INSIGHTS_TRENDS` | 9.1.0 |
-   | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP`, `VITE_FEATURE_CONFIRM_ITEM_RETURNED`, `VITE_FEATURE_REQUEST_TAGS`, `VITE_FEATURE_REQUEST_NOTES` | 9.2.0 |
+   | `VITE_FEATURE_LIBRARY_SUPPORT_URL`, `VITE_FEATURE_ANNOUNCEMENTS`, `VITE_FEATURE_INSIGHTS_WALK_UP`, `VITE_FEATURE_CONFIRM_ITEM_RETURNED`, `VITE_FEATURE_REQUEST_TAGS`, `VITE_FEATURE_REQUEST_NOTES`, `VITE_FEATURE_PICKUP_REQUESTS` | 9.2.0 |
    | `VITE_FEATURE_HOME_*` | a product choice, not a release: see section 2a for what each needs beside it |
 
    A flag that is absent from the table is off on every host, which is the safe failure for

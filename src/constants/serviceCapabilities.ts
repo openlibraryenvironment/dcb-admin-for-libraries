@@ -140,6 +140,14 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		},
 	},
 	{
+		// Behaviour, not schema: 9.2.0 lets the pickup library read the request. 9.0.0 and 9.1.0
+		// hid it, and 8.71.0 scoped nothing, which this app never offered a list for.
+		id: "pickup_requests",
+		flag: "VITE_FEATURE_PICKUP_REQUESTS",
+		since: "9.2.0",
+		fields: {},
+	},
+	{
 		// A REST route, so nothing to select.
 		id: "confirm_item_returned",
 		flag: "VITE_FEATURE_CONFIRM_ITEM_RETURNED",
