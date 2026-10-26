@@ -5,7 +5,7 @@ import supplierRequests from "./fixtures-data/supplier-requests.json" with { typ
 
 /**
  * Clean up on the request grids and the request page: offered to the borrowing library and
- * to a supplying one, as dcb-service allows. Against 9.0.0 and later the server refuses a
+ * to a supplying one, by the rule in docs/cleanup.md. Against 9.0.0 and later the server refuses a
  * clean up that would orphan an item still out, and a refusal can be cleaned up anyway after
  * a second confirmation. docs/cleanup.md.
  */

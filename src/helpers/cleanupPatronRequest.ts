@@ -55,8 +55,9 @@ export const isBorrowedByCaller = (
 };
 
 /**
- * Whether to offer cleanup for this request: to the borrowing library or a supplying one,
- * which is who dcb-service lets clean up. docs/cleanup.md.
+ * Whether to offer cleanup for this request: to the borrowing library or a supplying one, the
+ * borrower by agency where the request records it, otherwise by Host LMS, which on a shared
+ * system is every co-tenant. docs/cleanup.md.
  *
  * Guarded, the server refuses an item-out request and the caller may override, so only the
  * terminal states are filtered. Unguarded (8.71.0) there is no refusal, so the status list
