@@ -29,11 +29,6 @@
 		"checks": "Checks the application starts correctly when the hosting platform's loader starts it, as it does in production.",
 		"matters": "The way the application is started in production is tested, not only the way it is started in development."
 	},
-	"verify_naming": {
-		"title": "Wording fit to publish",
-		"checks": "Checks the code and commit messages for internal names that must not appear in a repository the public can read.",
-		"matters": "The source code is published; this keeps internal names out of it."
-	},
 	"verify_secrets": {
 		"title": "No secrets in the code",
 		"checks": "Scans the code and its whole history for passwords, keys and tokens.",

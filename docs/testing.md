@@ -13,7 +13,6 @@ What the gates are, and the two ways each of them can lie to you.
 | Accessibility | `npx playwright test e2e/accessibility.spec.ts` | zero axe violations on every surface, both schemes |
 | Bundle | `npm run budget:build` | fails if what every page loads first is over budget; reports what each route and on-demand feature adds |
 | Lighthouse | `npx lhci autorun` | transfer, CLS and the category scores |
-| Naming | `npm run naming` | no name that only means something inside this workspace |
 | Secrets | `npm run gates -- --only secrets` | gitleaks over the whole history; needs a binary or Docker |
 | Dependencies | `npm run gates -- --only dependencies` | no high or critical advisory in production dependencies; every production licence on the allow-list in `scripts/check-licences.mjs` |
 | Image | `npm run gates -- --only image` | the production Docker image builds; needs Docker |
@@ -234,7 +233,7 @@ that say why.
 
 | Pipeline | Runs |
 |---|---|
-| A push to a branch with no merge request | `quick`: naming, static and secrets |
+| A push to a branch with no merge request | `quick`: static and secrets |
 | A push to a branch with an open merge request | nothing: the merge request pipeline checks it |
 | **A merge request** | **the merge gate**: every check and the build; the image only when its files change. One that changes only documentation, Markdown or unit tests skips the browser gates, the speed checks and the build |
 | `main` | the merge gate again, then the dev deploys |
@@ -487,70 +486,14 @@ Measured on one build, both on Chromium 156, headless, `/login`:
 `onlyCategories` keeps the four categories the release report explains. Lighthouse
 13 adds agentic browsing, which nothing here asserts.
 
-## Names that only mean something here
-
-`npm run naming` reads `naming-gate.json` and fails on a name a reader outside this
-workspace cannot resolve. It runs in CI as `verify_naming`, over the tracked tree and,
-where `origin/main` resolves, the commit messages on the branch.
-
-It exists because this repository is **mirrored to a public GitHub remote**, and the
-shared doctrine used to say to name the components in prose and comments. That rule put
-an unannounced product name into nine lines across eight files, and would have put it
-into a merge commit subject as well.
-
-Three rules ship. `product-codename` is at zero and stays there. `plan-reference` was
-the interesting one: thirteen occurrences of `§V-11.1` and its siblings, section numbers
-from a planning document that lives in the workspace and ships to nobody. None needed a
-replacement - every one sat beside prose that already said what it meant, so the
-reference told a reader who could resolve it something they already had, and everyone
-else nothing. `plan-document` catches a `*_PLAN.md` pointer and has never fired; it is
-here because the workspace plans are where the other two rules’ names come from.
-
-The plan prefix list is `N`, `R` and `V`. It began as `N` and `V` only, and nineteen
-`R-17`/`R-19` references sat in fourteen files under a green gate until the prefix was
-added; widening it to any capital letter matched those nineteen and nothing else.
-
-**The `.graphqls` files are excluded from `plan-reference` and hold thirteen more.** They
-are copied from dcb-service and re-taken whenever that contract moves, so editing their
-comments here is drift that the next copy silently reverts. That fix belongs upstream.
-
-**Each rule says where it applies**, and the first CI run is what forced that. The gate
-failed on the commit message that introduced it, because that message quotes the
-references the rule catches - and more importantly because the shared doctrine sends a
-plan’s section numbers to "`docs/`, an ADR, or **the commit message**". A gate failing
-on the third would contradict the rule it exists to enforce. So `plan-reference` and
-`plan-document` are `"scope": ["files"]`, and `product-codename` keeps both: a product
-name in a commit message reaches the mirror exactly as code does, and that is where the
-leak this gate was written for actually was.
-
-**Three ways out, narrowest first.** Use the narrowest that fits:
-
-1. `naming-gate:allow <rule-id> - <reason>` on a single line, in a file that is otherwise
-   checked. Names the rule, so switching one off leaves the others on. **In a commit
-   message it applies to the whole commit**, as a trailer: a line of prose cannot carry a
-   marker without mangling the sentence, and a message that is already pushed cannot be
-   corrected without rewriting published history. A gate whose only remedy is a force
-   push is one people turn off.
-2. A rule’s own `exclude`, for a class of file it cannot speak to - `*.graphqls` is
-   excluded from `plan-reference` because those files are copied from dcb-service.
-3. `exemptPaths`, for a file that is *about* the rules: this document, the config, the
-   checker. They cannot explain or implement a rule without containing what it forbids,
-   and making them fight the gate on every edit is how an exemption ends up spelled
-   `--no-verify` instead.
-
-**Every one of them prints on every run**, green or red. An exemption nobody sees is one
-nobody reviews, and this list getting longer is the signal that a rule is wrong rather
-than the code.
-
 ## Running the gates locally
 
 `npm run gates` runs every `verify_*` job the pipeline runs, with the same commands,
-and prints a summary. `--only naming,static` and `--skip e2e,performance` narrow it;
+and prints a summary. `--only static,e2e` and `--skip e2e,performance` narrow it;
 `--list` shows the names. It continues past a failure so one run tells you everything
 that is broken, and exits non-zero if any gate failed.
 
 ```
-  PASS  naming           0s  (verify_naming)
   PASS  static          64s  (verify_static)
   PASS  secrets         30s  (verify_secrets)
   PASS  performance    230s  (verify_performance)
@@ -560,10 +503,8 @@ that is broken, and exits non-zero if any gate failed.
   PASS  image           90s  (verify_image)
 ```
 
-**Two gaps closed when this was written, and both had already cost a red pipeline.**
-`npm run naming` ran without `--messages`, so the commit-message half - the half that
-failed in CI twice - never ran locally at all. It now carries the same range CI uses.
-And `verify_secrets` had no local path of any kind, because gitleaks is not an npm
+**A gap closed when this was written, which had already cost a red pipeline.**
+`verify_secrets` had no local path of any kind, because gitleaks is not an npm
 package: the runner uses a `gitleaks` binary if there is one, Docker if the daemon is
 up, and otherwise reports **SKIP** rather than counting a gate it did not run. The
 `image` gate, `docker build` of `docker/production/Dockerfile`, skips the same way

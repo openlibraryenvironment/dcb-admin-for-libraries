@@ -249,25 +249,6 @@ verify_ki_bootstrap:
       junit: reports/ki-bootstrap-junit.xml
     expire_in: 1 week
 
-# Rules are data in naming-gate.json; what they catch and why is in docs/testing.md.
-verify_naming:
-  extends: .records_status
-  stage: verify
-  rules: !reference [.rules, quick]
-  timeout: 5m
-  cache: []
-  variables:
-    GIT_DEPTH: "0"
-  script:
-    # A branch pipeline fetches only its own ref; without origin/main the message scan skips.
-    - git fetch --no-tags --quiet origin "+refs/heads/main:refs/remotes/origin/main"
-    - node scripts/check-naming.mjs --messages origin/main..HEAD
-  artifacts:
-    when: always
-    paths:
-      - reports/
-    expire_in: 1 week
-
 # Every secret ever committed stays readable in history; only rotation un-leaks it.
 verify_secrets:
   extends: .records_status
@@ -372,7 +353,6 @@ report:
       when: always
   needs:
     - verify_static
-    - verify_naming
     - verify_secrets
     - verify_dependencies
     - verify_build

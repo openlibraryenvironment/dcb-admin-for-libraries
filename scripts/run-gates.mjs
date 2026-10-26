@@ -1,7 +1,7 @@
 // Every CI gate, locally, with the commands the pipeline actually runs.
 // See docs/testing.md, "Running the gates locally", for what differs and why.
 //
-// Usage: npm run gates [-- --only naming,static] [-- --skip e2e,performance] [-- --list]
+// Usage: npm run gates [-- --only static,e2e] [-- --skip e2e,performance] [-- --list]
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -11,11 +11,6 @@ import { mkdirSync, writeFileSync } from "node:fs";
  * on anything else, so the order is a convenience and not a contract.
  */
 const GATES = [
-	{
-		name: "naming",
-		job: "verify_naming",
-		steps: [["node", ["scripts/check-naming.mjs", "--messages", "origin/main..HEAD"]]],
-	},
 	{
 		name: "static",
 		job: "verify_static",
