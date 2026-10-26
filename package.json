@@ -20,6 +20,8 @@
 		"i18n:remove-unused": "i18n-unused remove-unused",
 		"i18n:unused": "i18n-unused display-unused",
 		"lint": "eslint",
+		"lint:pipeline": "vitest run --config vitest.pipeline.config.ts",
+		"ci:lint": "node scripts/ci-lint.mjs",
 		"preview": "vite preview",
 		"semantic-release": "semantic-release",
 		"test": "vitest",
@@ -93,6 +95,7 @@
 		"typescript": "6.0.3",
 		"typescript-eslint": "8.72.0",
 		"vite": "8.3.5",
-		"vitest": "5.0.5"
+		"vitest": "5.0.5",
+		"yaml": "2.9.1"
 	}
 }

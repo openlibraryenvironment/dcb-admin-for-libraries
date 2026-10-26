@@ -38,6 +38,8 @@ const GATES = [
 			["npm", ["run", "lighthouse"]],
 		],
 	},
+	// Local only, no pipeline job: docs/testing.md, "The pipeline checks are local"
+	{ name: "pipeline", job: "local_pipeline_checks", steps: [["npm", ["run", "lint:pipeline"]]] },
 	{ name: "e2e", job: "verify_e2e", steps: [["npm", ["run", "e2e"]]] },
 	{ name: "base-path", job: "verify_base_path", steps: [["npm", ["run", "e2e:base-path"]]] },
 	{ name: "ki-bootstrap", job: "verify_ki_bootstrap", steps: [["npm", ["run", "e2e:ki-bootstrap"]]] },

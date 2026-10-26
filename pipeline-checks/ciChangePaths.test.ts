@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
  * Files that cannot change what the browser gates test, so a merge request touching only
  * these skips them. Adding a pattern here is a claim about the app: review it as one.
  */
-const NOT_APP = ["docs/**/*", "antora/**/*", "**/*.md", "tests/**/*", "LICENSE", ".vscode/**/*"];
+const NOT_APP = ["docs/**/*", "antora/**/*", "**/*.md", "tests/**/*", "pipeline-checks/**/*", "LICENSE", ".vscode/**/*"];
 
 /** The `&app_paths` list in .gitlab-ci.yml: what a merge request must touch to run the gates. */
 const appPaths = (() => {

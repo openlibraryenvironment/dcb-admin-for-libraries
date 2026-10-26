@@ -259,7 +259,7 @@ that say why.
 
 A skipped check is never the only check of a change: `main` and `release` run the
 whole gate whatever changed. The list that decides it is `&app_paths`, and
-`tests/ciChangePaths.test.ts` fails on a tracked file that list does not account
+`pipeline-checks/ciChangePaths.test.ts` fails on a tracked file that list does not account
 for, so a new kind of file runs the gates until someone decides otherwise.
 
 The browser tests and the speed checks test one build, made by `verify_build`
@@ -276,6 +276,48 @@ pipelines and merge trains, which would catch that first, are Premium.
 
 A rule with no `if` matches a merge request pipeline as well as a branch one,
 which is how `verify_image` once made a merge request pipeline of one job.
+
+## The pipeline checks are local
+
+Everything that checks the pipeline file itself runs on a developer's machine, not in the
+pipeline: `npm run lint:pipeline` runs `pipeline-checks/`, and `npm run gates` includes it
+as **pipeline**. Run it before pushing a change to `.gitlab-ci.yml`, to `scripts/gates.json`
+or to anything the `app` path list names. Decided 2026-10-26, for both admin apps; the
+unit suite, and so `verify_static`, does not collect the folder.
+
+| Check | Fails when |
+|---|---|
+| `pipelineSimulation.test.ts` | a job in some pipeline needs or depends on one that pipeline may not contain, or on one in a later stage, or sits in a stage `stages` does not declare |
+| `gitlabCiConfig.test.ts` | an `expose_as` breaks GitLab's rules (letters, digits, `-`, `_` and spaces, at most 128 characters, and only beside `artifacts:paths`), or a job leaves the `ki-onprem` runner |
+| `onDemandReport.test.ts` | a job that ships would run on demand, or the report joins another pipeline |
+| `ciChangePaths.test.ts` | a tracked file is on neither the `app` path list nor the list of files that cannot change a browser gate |
+| `gateCatalogue.test.ts` | a `verify_*` job has no explanation in `scripts/gates.json` for the release report |
+
+**`pipelineSimulation.test.ts` works out each pipeline from the rules themselves**, for a
+push to `main`, a push to `release`, a merge request, a push to a branch with no merge
+request, the nightly schedule and a run on demand. That matters because GitLab checks
+`needs` and `dependencies` only for the jobs a pipeline contains, so a mistake in a job
+that exists only on `release` is otherwise first seen on release day. Its first run here
+flagged `verify_e2e` and `verify_performance` needing `verify_build`; they share the `app`
+rules, so they are always in the same pipelines, and the simulator now knows that two jobs
+with identical rules travel together. Its limits:
+
+- **It evaluates only the rule syntax these files use:** `$VAR`, `==`, `!=`, `=~`, `!~`,
+  `null`, `&&` and `||`. Anything else fails the check rather than being guessed at.
+- **It cannot know `changes`.** A job behind one may or may not be in a push or merge
+  request pipeline, so a job that needs it must share its rules or mark the need `optional`.
+- **It is not GitLab's validator**, which checks keywords, values and limits.
+
+GitLab's own validator is `npm run ci:lint`, with a personal access token of your own
+(scope `read_api`, or `api` if GitLab refuses that):
+
+```bash
+GITLAB_CI_LINT_TOKEN=<a personal access token> npm run ci:lint
+```
+
+It sends `.gitlab-ci.yml` to the project's lint endpoint, simulating a push to `main` and to
+`release`, and prints the jobs each would run. `CI_JOB_TOKEN` cannot call that endpoint,
+which is why it is not a pipeline job; `dcb-admin-ui` runs the same two commands.
 
 ## Nightly
 
@@ -332,7 +374,7 @@ What it says comes from beside the checks themselves, so it changes when they do
 - **Each axe scan** attaches every rule's outcome and the criteria the rule
   tests, which is how a criterion is reported as checked automatically.
 - **Each pipeline check** is explained in `scripts/gates.json`.
-  `tests/gateCatalogue.test.ts` fails when a `verify_*` job has no entry.
+  `pipeline-checks/gateCatalogue.test.ts` fails when a `verify_*` job has no entry.
 - **A criterion nothing automated checks** is reported as assessed by hand, with
   the conformance the VPAT states for it, read from that document's tables, so
   a VPAT row must open with its criterion in bold, linked, and give its
@@ -355,7 +397,7 @@ hand:
    job to keep it.
 
 Such a run includes every check and the container gate, and nothing that releases,
-publishes or deploys, even on `release`. `tests/onDemandReport.test.ts` fails if
+publishes or deploys, even on `release`. `pipeline-checks/onDemandReport.test.ts` fails if
 a job that ships does not exclude it, or if the report would run in any other
 pipeline. A tag made before this change carries the older pipeline file, so it
 cannot be reported on this way.
