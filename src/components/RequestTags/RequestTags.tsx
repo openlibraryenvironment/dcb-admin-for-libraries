@@ -16,13 +16,8 @@ import {
 import { authHeaders } from "@helpers/auth";
 import { libraryNamesQueryOptions } from "@helpers/libraryNamesQuery";
 import { queryKeys } from "@helpers/queryKeys";
-import {
-	addableTags,
-	removableBy,
-	taggableAs,
-	type AppliedTag,
-	type VocabularyTag,
-} from "@helpers/requestTags";
+import { authorableAs } from "@helpers/requestAuthorship";
+import { addableTags, removableBy, type AppliedTag, type VocabularyTag } from "@helpers/requestTags";
 import { userFacingReason } from "@helpers/userFacingReason";
 import { getPatronRequestTags, getRequestTagVocabulary } from "@queries/getPatronRequestTags";
 import { tagPatronRequest, untagPatronRequest } from "@mutations/requestTags";
@@ -94,7 +89,7 @@ export default function RequestTags({
 	});
 
 	const applied = tagsQuery.data?.tags ?? [];
-	const taggable = taggableAs(agencyCodes, tagsQuery.data?.involvedAgencyCodes ?? []);
+	const taggable = authorableAs(agencyCodes, tagsQuery.data?.involvedAgencyCodes ?? []);
 
 	const named = [...new Set([...applied.flatMap((tag) => tag.agencyCodes), ...taggable])].sort();
 	const namesQuery = useQuery({

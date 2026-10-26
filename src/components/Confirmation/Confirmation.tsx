@@ -36,8 +36,8 @@ const Confirmation = ({
 }: ConfirmationType) => {
 	const { t } = useTranslation();
 	// The rest are changes to shared records, and ask for a reason for the data change log
-	const recordsChange = !["unsavedChanges", "cleanup", "withdraw", "confirmReturned"].includes(action);
-	const destructive = ["deletion", "cleanup", "withdraw"].includes(action);
+	const recordsChange = !["unsavedChanges", "cleanup", "withdraw", "confirmReturned", "retractNote"].includes(action);
+	const destructive = ["deletion", "cleanup", "withdraw", "retractNote"].includes(action);
 
 	const getCharCountHelperText = (
 		value: string,
@@ -104,6 +104,8 @@ const Confirmation = ({
 				return t("patron_request.confirm_returned.title");
 			case "withdraw":
 				return t("announcements.withdraw_confirm.title", { headline: entityName });
+			case "retractNote":
+				return t("patron_request.notes.remove_confirm.title");
 		}
 	};
 
@@ -152,6 +154,12 @@ const Confirmation = ({
 						{t("announcements.withdraw_confirm.body")}
 					</Typography>
 				);
+			case "retractNote":
+				return (
+					<Typography variant="body1">
+						{t("patron_request.notes.remove_confirm.body")}
+					</Typography>
+				);
 		}
 	};
 	const getButtonText = () => {
@@ -169,6 +177,8 @@ const Confirmation = ({
 				return t("patron_request.confirm_returned.confirm");
 			case "withdraw":
 				return t("announcements.withdraw");
+			case "retractNote":
+				return t("patron_request.notes.remove");
 		}
 	};
 	const onSubmit = async (data: ConfirmationForm) => {

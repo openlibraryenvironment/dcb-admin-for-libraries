@@ -129,6 +129,17 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		},
 	},
 	{
+		// Its own flag, not request_tags': notes are free text that often mentions the patron,
+		// so a consortium may want tags without them
+		id: "request_notes",
+		flag: "VITE_FEATURE_REQUEST_NOTES",
+		since: "9.2.0",
+		fields: {
+			PatronRequest: ["notes"],
+			Mutation: ["addPatronRequestNote", "retractPatronRequestNote"],
+		},
+	},
+	{
 		// A REST route, so nothing to select.
 		id: "confirm_item_returned",
 		flag: "VITE_FEATURE_CONFIRM_ITEM_RETURNED",

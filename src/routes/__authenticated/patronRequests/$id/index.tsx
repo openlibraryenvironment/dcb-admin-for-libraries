@@ -34,6 +34,7 @@ import {
 	isAgencyScopedRequestsEnabled,
 	isConfirmItemReturnedEnabled,
 	isGuardedCleanupEnabled,
+	isRequestNotesEnabled,
 	isRequestTagsEnabled,
 } from "@helpers/featureFlags";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -113,6 +114,7 @@ function LibraryWithContact({ library }: { library: Library }) {
 
 // Loaded with the flag: an 8.71.0 deployment never fetches it
 const RequestTags = lazy(() => import("@components/RequestTags/RequestTags"));
+const RequestNotes = lazy(() => import("@components/RequestNotes/RequestNotes"));
 export const Route = createFileRoute("/__authenticated/patronRequests/$id/")({
 	validateSearch: (search: Record<string, unknown>) => ({
 		...requestSearchSchema.parse(search),
@@ -520,6 +522,19 @@ function RouteComponent() {
 								<Suspense
 									fallback={<CircularProgress size="1rem" aria-label={t("ui.info.loading.value")} />}>
 									<RequestTags
+										apiBase={apiBase}
+										patronRequestId={patronRequest.id}
+										agencyCodes={agencyCodes}
+										canWrite={auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") === true}
+									/>
+								</Suspense>
+							</Grid>
+						) : null}
+						{isRequestNotesEnabled() && patronRequest?.id ? (
+							<Grid size={FULL_ROW}>
+								<Suspense
+									fallback={<CircularProgress size="1rem" aria-label={t("ui.info.loading.value")} />}>
+									<RequestNotes
 										apiBase={apiBase}
 										patronRequestId={patronRequest.id}
 										agencyCodes={agencyCodes}

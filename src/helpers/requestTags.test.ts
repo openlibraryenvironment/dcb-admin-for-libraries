@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { addableTags, removableBy, taggableAs, type AppliedTag } from "./requestTags";
+import { addableTags, removableBy, type AppliedTag } from "./requestTags";
+import { authorableAs } from "./requestAuthorship";
 
 const damaged: AppliedTag = { code: "DAMAGED", label: "Damaged", agencyCodes: ["AG_A"], consortium: false };
 const vocabulary = [
@@ -10,8 +11,8 @@ const vocabulary = [
 
 describe("tagging a request", () => {
 	it("tags as the user's libraries that are party to the request, and no other", () => {
-		expect(taggableAs(["AG_B", "AG_A", "AG_A"], ["AG_A", "AG_B", "AG_C"])).toEqual(["AG_A", "AG_B"]);
-		expect(taggableAs(["AG_X"], ["AG_A"])).toEqual([]);
+		expect(authorableAs(["AG_B", "AG_A", "AG_A"], ["AG_A", "AG_B", "AG_C"])).toEqual(["AG_A", "AG_B"]);
+		expect(authorableAs(["AG_X"], ["AG_A"])).toEqual([]);
 	});
 
 	it("offers only active tags the library has not applied already", () => {

@@ -811,6 +811,44 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// A long note, a removed one, the consortium's, and the form with Write as
+		name: "patron request notes",
+		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_REQUEST_NOTES"]);
+			await app.signIn({ agencyCode: `${AGENCY_CODE},e2e-other` });
+			const at = "2026-10-26T10:00:00Z";
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadPatronRequest: sparseRequest,
+				LoadHostLms: { hostLms: { content: [] } },
+				LoadPatronRequestNotes: {
+					patronRequests: {
+						content: [
+							{
+								id: sparseRequest.patronRequests.content[0].id,
+								involvedAgencyCodes: [AGENCY_CODE, "e2e-other"],
+								notes: {
+									totalSize: 30,
+									content: [
+										{ id: "n-3", authorKind: "LIBRARY", agencyCode: AGENCY_CODE, libraryName: "E2E Test Library", body: "Patron called twice about this request; the disc case arrived cracked and the booklet was missing from the box.", dateCreated: at, retracted: false, retractedBy: null },
+										{ id: "n-2", authorKind: "LIBRARY", agencyCode: "e2e-other", libraryName: "Other Branch", body: null, dateCreated: at, retracted: true, retractedBy: "LIBRARY" },
+										{ id: "n-1", authorKind: "CONSORTIUM", agencyCode: null, libraryName: null, body: "Please check the returns shelf.", dateCreated: at, retracted: false, retractedBy: null },
+									],
+								},
+							},
+						],
+					},
+				},
+			});
+		},
+		ready: async (page) => {
+			const notes = page.getByRole("region", { name: "Notes" });
+			await expect(notes.getByRole("combobox", { name: "Write as" })).toBeVisible();
+			await expect(notes.getByRole("button", { name: "Show older notes" })).toBeVisible();
+		},
+	},
+	{
 		name: "patron request audit log",
 		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
 		prepare: async (app) => {

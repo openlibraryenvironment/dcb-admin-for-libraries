@@ -18,6 +18,8 @@ that have it.
 
 ## Which library a tag is applied as
 
+The same rule decides which library a note is written as ([request-notes.md](request-notes.md)).
+
 dcb-service takes the user's agencies that are involved in the request: the borrowing library,
 the current supplier and the pickup library. When there is exactly one, the app sends it. When
 there are several, as on a shared system, **Tag as** asks which. When there are none, as for a
@@ -34,4 +36,4 @@ involved can tag the request, and dcb-service would refuse it anyway.
   query cannot name them. The table has the index a filter would use
   (`idx_pr_tag_code (tag_code, patron_request_id)`), so it is a dcb-service change, not a
   database one.
-- **No notes.** Notes on requests arrived in the same release and are not built here yet.
+- **Notes** are their own feature, behind their own flag: [request-notes.md](request-notes.md).

@@ -62,6 +62,8 @@ const FLAG_ONLY: Record<string, string> = {
 	"mutations/announcements.ts": "VITE_FEATURE_ANNOUNCEMENTS",
 	"queries/getPatronRequestTags.ts": "VITE_FEATURE_REQUEST_TAGS",
 	"mutations/requestTags.ts": "VITE_FEATURE_REQUEST_TAGS",
+	"queries/getPatronRequestNotes.ts": "VITE_FEATURE_REQUEST_NOTES",
+	"mutations/requestNotes.ts": "VITE_FEATURE_REQUEST_NOTES",
 };
 
 const gatedBy = (file: string): string | undefined => {

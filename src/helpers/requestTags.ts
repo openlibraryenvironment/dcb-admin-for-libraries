@@ -13,16 +13,6 @@ export interface VocabularyTag {
 	active: boolean;
 }
 
-/**
- * The user's libraries that are party to the request: who they may tag it as. dcb-service
- * applies the same rule, and refuses a library outside it.
- */
-export const taggableAs = (
-	agencyCodes: readonly string[],
-	involvedAgencyCodes: readonly string[],
-): string[] =>
-	[...new Set(agencyCodes)].filter((code) => involvedAgencyCodes.includes(code)).sort();
-
 /** What a library can still apply: the active tags it has not applied already. */
 export const addableTags = (
 	vocabulary: readonly VocabularyTag[],
