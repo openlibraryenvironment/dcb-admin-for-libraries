@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/mini";
 
 /**
  * The six subjects, the same six as DCB Admin, in reading order: what is happening, how
@@ -41,29 +41,36 @@ export const DEFAULT_SERIES = [
 export const MAX_PLOT_SERIES = 8;
 
 const csv = <T>(parse: (value: string) => T | null) =>
-	z.string().transform((value) =>
-		value
-			.split(",")
-			.map((part) => part.trim())
-			.map(parse)
-			.filter((part): part is T => part !== null),
+	z.pipe(
+		z.string(),
+		z.transform((value: string) =>
+			value
+				.split(",")
+				.map((part) => part.trim())
+				.map(parse)
+				.filter((part): part is T => part !== null),
+		),
 	);
 
 export const insightsSearchSchema = z.object({
 	// Which subject is open. A name this app does not offer - an old link, a link copied
 	// from DCB Admin, which has a sixth - falls back rather than rendering nothing.
-	tab: z.enum(SUBJECTS).optional().catch(undefined),
-	range: z.enum(RANGE_PRESETS).optional().catch(undefined),
+	tab: z.catch(z.optional(z.enum(SUBJECTS)), undefined),
+	range: z.catch(z.optional(z.enum(RANGE_PRESETS)), undefined),
 	// Only meaningful together, and only when the reader chose an explicit window.
-	from: z.string().date().optional().catch(undefined),
-	to: z.string().date().optional().catch(undefined),
-	series: csv((part) => (/^[A-Z_]+$/.test(part) ? part : null))
-		.optional()
-		.catch(undefined),
+	from: z.catch(z.optional(z.iso.date()), undefined),
+	to: z.catch(z.optional(z.iso.date()), undefined),
+	series: z.catch(
+		z.optional(csv((part) => (/^[A-Z_]+$/.test(part) ? part : null))),
+		undefined,
+	),
 	// The reader's own assumption, in the link, so a figure shared into a board pack
 	// carries the number it was computed with rather than whatever the recipient last
 	// typed. Negative and absurd values fall back rather than producing a negative saving.
-	unitCost: z.coerce.number().min(0).max(10_000).optional().catch(undefined),
+	unitCost: z.catch(
+		z.optional(z.coerce.number().check(z.minimum(0), z.maximum(10_000))),
+		undefined,
+	),
 });
 
 export type InsightsSearch = z.infer<typeof insightsSearchSchema>;

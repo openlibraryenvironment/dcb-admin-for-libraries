@@ -81,11 +81,11 @@ import {
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 import { dcbStatusLabel } from "@constants/statuses/DCBStatuses";
 import PatronRequestAuditLog from "@components/PatronRequestAuditLog/PatronRequestAuditLog";
-import { z } from "zod";
+import { z } from "zod/mini";
 
 const requestSearchSchema = z.object({
 	// The open tab, so a shared or restored link to the audit log opens on it
-	tab: z.number().int().min(1).max(5).optional().catch(undefined),
+	tab: z.catch(z.optional(z.int().check(z.minimum(1), z.maximum(5))), undefined),
 });
 
 /**
