@@ -457,36 +457,35 @@ Adding a gate means taking the next free band for this repo's digit and adding
 it to the table above *and*, if you are using the K-Int Agent Harness for
 AI-assisted development, to `openrs-harness-pack/instructions/workspace.md`.
 
-## The Lighthouse toolchain is pinned by hand
+## Lighthouse runs from a script
 
-`package.json` carries an `overrides` block that exists for one reason:
-`@lhci/cli@0.15.1` is the latest release, its last commit to `main` was
-2025-06-26, and every advisory `npm audit` reported here came through it. It
-pins `lighthouse: 12.6.1` exactly, so there is no version of it to upgrade to.
+`npm run lighthouse` is `scripts/lighthouse.mjs`, which reads `lighthouserc.cjs` the way
+`lhci autorun` did: the server command and its ready marker, the URL, three runs, the
+settings and the assertions. It runs Lighthouse's own CLI against Playwright's Chromium
+and judges each assertion on the median of the runs. It writes
+`.lighthouseci/manifest.json` and `assertion-results.json` in the shape the release
+report reads, and fails on an `error` assertion that misses. A setting or aggregation
+method it would otherwise ignore is refused, and Chrome runs headless unless the flags
+say otherwise, as it did under lhci. `dcb-admin-ui` runs the same script.
 
-| Override | Replaces | Why |
-|---|---|---|
-| `tmp: ^0.2.7` | `0.1.0` under lhci, `0.0.33` under `external-editor` | blanket, because the nested copy is what the path-traversal advisory names; overriding it dedupes both onto one `0.2.7` |
-| `@lhci/cli > uuid: ^11.1.1` | `8.3.2` | scoped, because `uuid` is also a direct dependency at `14.0.2` and a blanket override is `EOVERRIDE` |
-| `@lhci/cli > @puppeteer/browsers: ^3.2.3` | `2.13.2` | 3.x replaced `extract-zip` with `modern-tar`. `extract-zip@2.0.1` is both the latest release and the vulnerable one, so this is the only way to clear those two advisories |
+It replaced `@lhci/cli` 0.15.1 on 2026-10-26, and with it the `overrides` block that
+patched lhci's `tmp`, `uuid` and `@puppeteer/browsers`. lhci had not released since
+June 2025, it pinned Lighthouse 12.6.1, and the fixes it needed had sat unmerged
+upstream since April 2026. Lighthouse 13.5.0 added 84 packages and no advisory, and 248
+went with lhci.
 
-Upstream already accepts all three — PRs
-[#1139](https://github.com/GoogleChrome/lighthouse-ci/pull/1139),
-[#1140](https://github.com/GoogleChrome/lighthouse-ci/pull/1140) and
-[#1141](https://github.com/GoogleChrome/lighthouse-ci/pull/1141), open since
-April 2026 with nobody merging them. **Delete this block the day an `@lhci/cli`
-ships with them in**, and re-check
-[#1136](https://github.com/GoogleChrome/lighthouse-ci/issues/1136) (Lighthouse
-13 support) while you are there.
+Measured on one build, both on Chromium 156, headless, `/login`:
 
-The `@puppeteer/browsers` line is a major bump of a dependency
-`puppeteer-core@24` never declared compatibility with, so it is the one to
-re-verify after any change here. `npm run lighthouse` is that check:
-`lighthouserc.cjs` points `CHROME_PATH` at Playwright's Chrome, which is why
-puppeteer's own browser-resolution path is barely exercised and the bump is
-survivable at all. Green means zero `error`-level assertions in
-`.lighthouseci/assertion-results.json` — the two `warn` ones are warnings by
-design.
+| Measure | lhci (Lighthouse 12.6.1) | Script (Lighthouse 13.5.0) |
+|---|---:|---:|
+| `total-byte-weight` | 351,302 | 351,302 |
+| CLS, accessibility, best practices, SEO | same | same |
+| LCP | 4,005 ms | 3,903 ms |
+| TBT | 156 ms | 98 ms |
+| The step, start to finish | 74 s | 67 s |
+
+`onlyCategories` keeps the four categories the release report explains. Lighthouse
+13 adds agentic browsing, which nothing here asserts.
 
 ## Names that only mean something here
 
