@@ -74,6 +74,10 @@ export const queryKeys = {
 			["patronRequests", "detail", apiBase, id] as const,
 		essentials: (apiBase: string, id: string | null) =>
 			["patronRequests", "essentials", apiBase, id] as const,
+		tags: (apiBase: string, id: string) => ["patronRequests", "tags", apiBase, id] as const,
+	},
+	requestTags: {
+		vocabulary: (apiBase: string) => ["requestTags", "vocabulary", apiBase] as const,
 	},
 	home: {
 		counts: (

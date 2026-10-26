@@ -34,6 +34,12 @@ export const isConfirmItemReturnedEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_CONFIRM_ITEM_RETURNED");
 
 /**
+ * Tags on a patron request, from the consortium's list - dcb-service 9.2.0 and later
+ * (PatronRequest.tags, tagPatronRequest). An older service rejects the whole document.
+ */
+export const isRequestTagsEnabled = (): boolean => readFlag("VITE_FEATURE_REQUEST_TAGS");
+
+/**
  * Insights depends on the /insights/** endpoints, first released in dcb-service 9.0.0.
  * Enable with VITE_FEATURE_INSIGHTS=true once the environment's dcb-service is new
  * enough - an older one answers 404 to all of them.

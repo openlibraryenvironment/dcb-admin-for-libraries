@@ -1172,6 +1172,26 @@
 		"view": "View",
 		"virtual_item": "Virtual item",
 		"virtual_patron": "Virtual patron",
+		"tags": {
+			"title": "Tags",
+			"none": "No tags yet.",
+			"load_failed": "The tags could not be loaded.",
+			"applied": "{{tag}}: {{by}}",
+			"consortium": "the consortium",
+			"remove": "Remove",
+			"remove_label": "Remove {{tag}} for {{library}}",
+			"remove_for": "Remove for {{library}}",
+			"remove_for_label": "Remove for {{library}}: {{tag}}",
+			"as": "Tag as",
+			"choose": "Tag to add",
+			"add": "Add tag",
+			"added": "{{tag}} added.",
+			"removed": "{{tag}} removed.",
+			"all_applied": "Every tag is already applied by this library.",
+			"vocabulary_failed": "The list of tags could not be loaded.",
+			"not_involved": "Only the borrowing, supplying and pickup libraries can tag this request.",
+			"failed": "The tag could not be changed. Try again."
+		},
 		"confirm_returned": {
 			"button": "Confirm item is back",
 			"info": "Your library has not reported this item back on its shelf. Confirm it once it is.",
@@ -1899,6 +1919,7 @@
 			"insights_walk_up": "Insights: collected in person, or sent",
 			"guarded_cleanup": "Clean up that protects an item that is out",
 			"confirm_item_returned": "Confirm item is back",
+			"request_tags": "Tags on requests",
 			"agency_scoped_requests": "Request lists for your library alone, not every library on its system"
 		},
 		"status": {

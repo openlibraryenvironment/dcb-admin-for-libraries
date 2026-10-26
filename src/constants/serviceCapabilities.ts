@@ -118,6 +118,17 @@ export const SERVICE_CAPABILITIES: readonly ServiceCapability[] = [
 		fields: {},
 	},
 	{
+		// Selected only in their own documents, which are sent behind the flag
+		id: "request_tags",
+		flag: "VITE_FEATURE_REQUEST_TAGS",
+		since: "9.2.0",
+		fields: {
+			PatronRequest: ["tags", "involvedAgencyCodes"],
+			Query: ["requestTags"],
+			Mutation: ["tagPatronRequest", "untagPatronRequest"],
+		},
+	},
+	{
 		// A REST route, so nothing to select.
 		id: "confirm_item_returned",
 		flag: "VITE_FEATURE_CONFIRM_ITEM_RETURNED",

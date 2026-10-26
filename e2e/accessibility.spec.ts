@@ -773,6 +773,44 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// Tags from three parties, one removable, and the controls to apply another
+		name: "patron request tags",
+		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
+		prepare: async (app) => {
+			await app.enableFeatures(["VITE_FEATURE_REQUEST_TAGS"]);
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadPatronRequest: sparseRequest,
+				LoadHostLms: { hostLms: { content: [] } },
+				LoadRequestTags: {
+					requestTags: [
+						{ code: "DAMAGED", label: "Damaged", description: null, active: true },
+						{ code: "SLOW_TO_SHIP", label: "Slow to ship", description: null, active: true },
+					],
+				},
+				LoadPatronRequestTags: {
+					patronRequests: {
+						content: [
+							{
+								id: sparseRequest.patronRequests.content[0].id,
+								tags: [
+									{ code: "DAMAGED", label: "Damaged", agencyCodes: [AGENCY_CODE, "e2e-other"], consortium: true },
+								],
+								involvedAgencyCodes: [AGENCY_CODE, "e2e-other"],
+							},
+						],
+					},
+				},
+			});
+		},
+		ready: async (page) => {
+			const tags = page.getByRole("region", { name: "Tags" });
+			await expect(tags.getByRole("button", { name: /^Remove Damaged/ })).toBeVisible();
+			await expect(tags.getByRole("button", { name: "Add tag" })).toBeVisible();
+		},
+	},
+	{
 		name: "patron request audit log",
 		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
 		prepare: async (app) => {

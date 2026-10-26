@@ -60,6 +60,8 @@ const modules = import.meta.glob("../{queries,mutations}/*.ts");
 const FLAG_ONLY: Record<string, string> = {
 	"queries/getAnnouncements.ts": "VITE_FEATURE_ANNOUNCEMENTS",
 	"mutations/announcements.ts": "VITE_FEATURE_ANNOUNCEMENTS",
+	"queries/getPatronRequestTags.ts": "VITE_FEATURE_REQUEST_TAGS",
+	"mutations/requestTags.ts": "VITE_FEATURE_REQUEST_TAGS",
 };
 
 const gatedBy = (file: string): string | undefined => {
