@@ -369,28 +369,30 @@ function RouteComponent() {
 				refreshFirst: guardedCleanup,
 				override,
 			}),
-		// A refusal is the server declining, not a transport failure, so it arrives here.
+		// cleanupPatronRequest never throws: every answer, a server failure included, arrives here
 		onSuccess: (outcome) => {
-			if (outcome.kind === "cleaned") {
-				invalidateRequest();
-				setCleanupSuccessAlertVisibility(true);
-				return;
+			switch (outcome.kind) {
+				case "cleaned":
+					invalidateRequest();
+					setCleanupSuccessAlertVisibility(true);
+					return;
+				case "refused":
+					invalidateRequest();
+					if (guardedCleanup) {
+						setOverrideDetail(outcome.detail ?? "");
+						return;
+					}
+					setCleanupRefusal(outcome.detail ?? "");
+					return;
+				case "forbidden":
+				case "notFound":
+					setCleanupRefusal(t("patron_request.cleanup_not_party"));
+					return;
+				case "failed":
+					invalidateRequest();
+					setCleanupErrorAlertVisibility(true);
+					return;
 			}
-
-			if (outcome.kind === "refused" && guardedCleanup) {
-				invalidateRequest();
-				setOverrideDetail(outcome.detail ?? "");
-				return;
-			}
-
-			setCleanupRefusal(
-				outcome.kind === "refused"
-					? (outcome.detail ?? "")
-					: t("patron_request.cleanup_not_party"),
-			);
-		},
-		onError: () => {
-			setCleanupErrorAlertVisibility(true);
 		},
 	});
 

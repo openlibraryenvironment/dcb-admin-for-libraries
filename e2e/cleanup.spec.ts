@@ -433,6 +433,38 @@ test.describe("Patron request clean up", () => {
 		await expect.poll(() => calls).toEqual([expect.stringMatching(/\/transition\/cleanup$/)]);
 	});
 
+	test("says a clean up failed when the service fails, not that the library is not a party", async ({
+		app,
+		page,
+	}) => {
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadPatronRequest: { patronRequests: { totalSize: 1, content: [alpha] } },
+			LoadHostLms: { hostLms: { content: [] } },
+		});
+		await page.route("**/patrons/requests/**/transition/cleanup", (route) =>
+			route.fulfill({
+				status: 500,
+				contentType: "application/problem+json",
+				json: { title: "Internal Server Error", detail: "Cleanup failed; see its audit log" },
+			}),
+		);
+
+		await page.goto(`/patronRequests/${alpha.id}`);
+		await page.getByRole("button", { name: "Clean up", exact: true }).click();
+		await page
+			.getByRole("dialog", { name: "Clean up this request?" })
+			.getByRole("button", { name: "Clean up", exact: true })
+			.click();
+
+		await expect(
+			page.getByRole("alert").filter({ hasText: "The request could not be cleaned up." }),
+		).toBeVisible();
+		await expect(page.getByText(/Only the borrowing library or a supplying library/)).toBeHidden();
+	});
+
 	test("offers to clean up anyway when the service refuses, with its reason", async ({
 		app,
 		page,
