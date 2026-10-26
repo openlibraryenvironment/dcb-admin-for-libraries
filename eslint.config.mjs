@@ -154,7 +154,7 @@ export default defineConfig(
 			},
 		},
 		// lighthouserc.cjs is CommonJS BECAUSE this package is "type": "module" -
-		// lhci require()s its config, so an ESM one throws. require() is the point.
+		// scripts/lighthouse.mjs require()s its config, so an ESM one throws. require() is the point.
 		rules: { "@typescript-eslint/no-require-imports": "off" },
 	},
 	{

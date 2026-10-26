@@ -43,9 +43,9 @@ if (wrongBase) {
 	process.exit(1);
 }
 
-// lhci watches this output for a readiness marker. It cannot watch for the port
+// scripts/lighthouse.mjs watches this output for a readiness marker. It cannot watch for the port
 // number: `npm run` echoes the command it is about to run, so "4194" appears on
-// stdout BEFORE anything is listening, and lhci then audits a dead port and
+// stdout BEFORE anything is listening, and it then audits a dead port and
 // reports a 404 that reads like a missing route.
 const preview = spawn(
 	"npm",

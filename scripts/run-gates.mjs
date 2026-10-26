@@ -1,7 +1,7 @@
 // Every CI gate, locally, with the commands the pipeline actually runs.
 // See docs/testing.md, "Running the gates locally", for what differs and why.
 //
-// Usage: npm run gates [-- --only naming,static] [-- --skip e2e,performance] [-- --list]
+// Usage: npm run gates [-- --only static,e2e] [-- --skip e2e,performance] [-- --list]
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -11,11 +11,6 @@ import { mkdirSync, writeFileSync } from "node:fs";
  * on anything else, so the order is a convenience and not a contract.
  */
 const GATES = [
-	{
-		name: "naming",
-		job: "verify_naming",
-		steps: [["node", ["scripts/check-naming.mjs", "--messages", "origin/main..HEAD"]]],
-	},
 	{
 		name: "static",
 		job: "verify_static",
@@ -43,15 +38,12 @@ const GATES = [
 			["npm", ["run", "lighthouse"]],
 		],
 	},
+	// Local only, no pipeline job: docs/testing.md, "The pipeline checks are local"
+	{ name: "pipeline", job: "local_pipeline_checks", steps: [["npm", ["run", "lint:pipeline"]]] },
 	{ name: "e2e", job: "verify_e2e", steps: [["npm", ["run", "e2e"]]] },
 	{ name: "base-path", job: "verify_base_path", steps: [["npm", ["run", "e2e:base-path"]]] },
 	{ name: "ki-bootstrap", job: "verify_ki_bootstrap", steps: [["npm", ["run", "e2e:ki-bootstrap"]]] },
-	{
-		name: "image",
-		job: "verify_image",
-		needsDocker: true,
-		steps: [["docker", ["build", "-f", "docker/production/Dockerfile", "-t", "dcb-admin-for-libraries:gates", "."]]],
-	},
+	{ name: "container", job: "verify_container", needsDocker: true, steps: [["npm", ["run", "e2e:container"]]] },
 ];
 
 const GITLEAKS_IMAGE = "zricethezav/gitleaks:v8.30.1";
@@ -138,7 +130,7 @@ for (const gate of selected) {
 		}
 	} else if (gate.needsDocker && !dockerUp()) {
 		status = "skipped";
-		console.log("  SKIPPED: no Docker daemon. Start Docker and this builds the image.");
+		console.log("  SKIPPED: no Docker daemon. Start Docker and this builds and drives the image.");
 	} else {
 		for (const [command, args, env] of gate.steps) {
 			const outcome = run(command, args, env);

@@ -1,5 +1,5 @@
 // .cjs, not .js: this package is "type": "module", so a .js config is ESM and
-// lhci's require() of it fails with "require is not defined". The discovery UI's
+// scripts/lighthouse.mjs's require() of it fails with "require is not defined". The discovery UI's
 // equivalent is .js because that package is CommonJS.
 //
 // Audit in the Chrome Playwright pins, so this and the e2e suite share one browser.
@@ -36,6 +36,9 @@ module.exports = {
 			numberOfRuns: 3,
 			settings: {
 				chromeFlags: "--no-sandbox --disable-dev-shm-usage",
+				// The four the release report explains. Lighthouse 13 added agentic-browsing,
+				// which nothing here asserts and the report would show unexplained.
+				onlyCategories: ["performance", "accessibility", "best-practices", "seo"],
 			},
 		},
 

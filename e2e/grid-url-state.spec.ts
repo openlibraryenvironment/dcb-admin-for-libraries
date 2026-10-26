@@ -70,8 +70,8 @@ async function filterOn(page: Page, column: string) {
 		.getByRole("button", { name: /menu/i })
 		.click();
 	await page.getByRole("menuitem", { name: "Filter" }).click();
-	return page.getByRole("tooltip").getByRole("textbox", { name: "Value" })
-		.or(page.getByRole("tooltip").getByRole("combobox", { name: "Value" }));
+	return page.getByRole("dialog").getByRole("textbox", { name: "Value" })
+		.or(page.getByRole("dialog").getByRole("combobox", { name: "Value" }));
 }
 
 test.beforeEach(async ({ app }) => {

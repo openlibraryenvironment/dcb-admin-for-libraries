@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 import {
 	accessibility,
 	e2eTests,
+	figures,
 	gateResults,
 	junitCounts,
 	render,
+	unitCases,
 	verdict,
 	vpatConformance,
 	type E2ETest,
@@ -164,7 +166,7 @@ describe("gateResults and verdict", () => {
 		const results = gateResults(inputs({ statuses: { verify_static: "success", verify_e2e: "failed" } }));
 		expect(results.find((result) => result.job === "verify_static")?.outcome).toBe("passed");
 		expect(results.find((result) => result.job === "verify_e2e")?.outcome).toBe("failed");
-		expect(results.find((result) => result.job === "verify_image")?.outcome).toBe("not run");
+		expect(results.find((result) => result.job === "verify_container")?.outcome).toBe("not run");
 		expect(verdict(results)).toBe(`1 of ${results.length} checks failed.`);
 	});
 
@@ -202,5 +204,61 @@ describe("render", () => {
 		const html = render(inputs());
 		expect(html).toMatch(/^<!doctype html>\n<html lang="en">/);
 		expect(html.match(/<h1>/g)).toHaveLength(1);
+	});
+});
+
+describe("unitCases", () => {
+	it("reads each case and whether it failed, from the JUnit file the flake hunt writes", () => {
+		const xml = `<testsuites><testsuite>
+<testcase classname="grid.spec.ts" name="filters live in the URL"></testcase>
+<testcase classname="grid.spec.ts" name="back restores them"><failure message="timeout"/></testcase>
+<testcase classname="grid.spec.ts" name="later" /></testsuite></testsuites>`;
+		expect(unitCases(xml)).toEqual([
+			{ file: "grid.spec.ts", name: "filters live in the URL", outcome: "passed" },
+			{ file: "grid.spec.ts", name: "back restores them", outcome: "failed" },
+			{ file: "grid.spec.ts", name: "later", outcome: "passed" },
+		]);
+	});
+});
+
+describe("the comparison with the last release", () => {
+	const build = inputs({ junit: { unit: { tests: 1937, passed: 1937, failed: 0, skipped: 0 } } });
+
+	it("records the figures the next release compares itself with", () => {
+		expect(figures(build)).toEqual([{ label: "Unit tests", value: 1937 }]);
+	});
+
+	it("shows each figure against the last release's, with the change", () => {
+		const html = render({ ...build, previous: { figures: [{ label: "Unit tests", value: 1931 }], pipeline: { tag: "v2.1.0" } } });
+		const row = html.split("<th scope=\"row\">Unit tests</th>")[1].split("</tr>")[0];
+		expect(html).toContain("This build against v2.1.0");
+		expect(row).toContain("1,937");
+		expect(row).toContain("1,931");
+		expect(row).toContain("+6");
+	});
+
+	it("says so when there is no earlier report", () => {
+		expect(render(build)).toContain("No earlier release report was available to compare with.");
+	});
+});
+
+describe("test reliability", () => {
+	it("names what failed in the last nightly flake hunt, once each", () => {
+		const html = render(
+			inputs({
+				nightly: [
+					{ file: "a.spec.ts", name: "a flaky test", outcome: "failed" },
+					{ file: "a.spec.ts", name: "a flaky test", outcome: "failed" },
+					{ file: "a.spec.ts", name: "a steady test", outcome: "passed" },
+				],
+			}),
+		);
+		expect(html).toContain("ran 2 browser tests several times each");
+		expect(html).toContain("1 failed at least once.");
+		expect(html.split("<li>a flaky test</li>")).toHaveLength(2);
+	});
+
+	it("says so when no nightly result was available", () => {
+		expect(render(inputs())).toContain("No nightly flake-hunt result was available.");
 	});
 });

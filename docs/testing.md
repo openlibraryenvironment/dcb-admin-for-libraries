@@ -12,12 +12,11 @@ What the gates are, and the two ways each of them can lie to you.
 | E2E | `npx playwright test` | the production build under `vite preview` |
 | Accessibility | `npx playwright test e2e/accessibility.spec.ts` | zero axe violations on every surface, both schemes |
 | Bundle | `npm run budget:build` | fails if what every page loads first is over budget; reports what each route and on-demand feature adds |
-| Lighthouse | `npx lhci autorun` | transfer, CLS and the category scores |
-| Naming | `npm run naming` | no name that only means something inside this workspace |
+| Lighthouse | `npm run lighthouse` | transfer, CLS and the category scores |
 | Secrets | `npm run gates -- --only secrets` | gitleaks over the whole history; needs a binary or Docker |
 | Dependencies | `npm run gates -- --only dependencies` | no high or critical advisory in production dependencies; every production licence on the allow-list in `scripts/check-licences.mjs` |
-| Image | `npm run gates -- --only image` | the production Docker image builds; needs Docker |
-| **Everything** | **`npm run gates`** | **all nine CI gates** |
+| Container | `npm run e2e:container` | the production image builds, starts, and serves the app, its settings and its files to a browser; needs Docker. See "The container gate" |
+| **Everything** | **`npm run gates`** | **all eight CI gates** |
 | Release report | `npm run report`, after the gates | nothing: it explains them. See "The release report" |
 
 ### react-hooks/exhaustive-deps is an error, not a warning
@@ -137,6 +136,22 @@ Four is a balance, not a magic number — about three minutes against the
 default's one, on the runs where the default works at all. Raise it if your
 machine is idle.
 
+**In CI the browser suites also take turns.** `verify_e2e`, `verify_performance`,
+`verify_base_path`, `verify_ki_bootstrap` and `nightly_flake_hunt` share
+`resource_group: browser-suites`, so GitLab runs one at a time on the `ki-onprem`
+runner, as `dcb-admin-ui` does. One worker per suite does not stop four suites
+contending for the same machine, and Lighthouse's CPU-bound timings need it quiet.
+
+## Coverage is a figure
+
+`verify_static` runs the unit suite with `--coverage`. It prints the summary, keeps
+`coverage/`, and hands GitLab `coverage/cobertura-coverage.xml`, which annotates the lines
+a merge request changed, and the `Lines` figure, which draws the job's trend. There is no
+threshold: a number picked before anything was measured is one that gets lowered under
+pressure. `coverage.include` names all of `src/`, so a module no test imports counts as
+0% rather than going missing, which is what makes the figure honest. It read 35.79% of
+lines over 413 files on 2026-10-26. `dcb-admin-ui` reports its figure the same way.
+
 ## A green suite that is not green
 
 Two failure modes, both observed in this estate, and each looks nothing like its
@@ -234,16 +249,17 @@ that say why.
 
 | Pipeline | Runs |
 |---|---|
-| A push to a branch with no merge request | `quick`: naming, static, secrets, and the report |
+| A push to a branch with no merge request | `quick`: static and secrets |
 | A push to a branch with an open merge request | nothing: the merge request pipeline checks it |
-| **A merge request** | **the merge gate**: every check, the build, and the report; the image only when its files change. One that changes only documentation, Markdown or unit tests skips the browser gates, the speed checks and the build |
+| **A merge request** | **the merge gate**: every check and the build; the container gate only when what decides the image changes. One that changes only documentation, Markdown or unit tests skips the browser gates, the speed checks and the build |
 | `main` | the merge gate again, then the dev deploys |
-| `release` | the merge gate, the image, then the release and its deploys |
+| `release` | the merge gate, the container gate and the release report, then the release and its deploys |
 | A schedule | the dependency audit and the flake hunt; nothing that releases or deploys |
+| Run by hand with `ON_DEMAND_REPORT` set to `true` | every check, the container gate and the release report; nothing that releases, publishes or deploys |
 
 A skipped check is never the only check of a change: `main` and `release` run the
 whole gate whatever changed. The list that decides it is `&app_paths`, and
-`tests/ciChangePaths.test.ts` fails on a tracked file that list does not account
+`pipeline-checks/ciChangePaths.test.ts` fails on a tracked file that list does not account
 for, so a new kind of file runs the gates until someone decides otherwise.
 
 The browser tests and the speed checks test one build, made by `verify_build`
@@ -261,6 +277,48 @@ pipelines and merge trains, which would catch that first, are Premium.
 A rule with no `if` matches a merge request pipeline as well as a branch one,
 which is how `verify_image` once made a merge request pipeline of one job.
 
+## The pipeline checks are local
+
+Everything that checks the pipeline file itself runs on a developer's machine, not in the
+pipeline: `npm run lint:pipeline` runs `pipeline-checks/`, and `npm run gates` includes it
+as **pipeline**. Run it before pushing a change to `.gitlab-ci.yml`, to `scripts/gates.json`
+or to anything the `app` path list names. Decided 2026-10-26, for both admin apps; the
+unit suite, and so `verify_static`, does not collect the folder.
+
+| Check | Fails when |
+|---|---|
+| `pipelineSimulation.test.ts` | a job in some pipeline needs or depends on one that pipeline may not contain, or on one in a later stage, or sits in a stage `stages` does not declare |
+| `gitlabCiConfig.test.ts` | an `expose_as` breaks GitLab's rules (letters, digits, `-`, `_` and spaces, at most 128 characters, and only beside `artifacts:paths`), or a job leaves the `ki-onprem` runner |
+| `onDemandReport.test.ts` | a job that ships would run on demand, or the report joins another pipeline |
+| `ciChangePaths.test.ts` | a tracked file is on neither the `app` path list nor the list of files that cannot change a browser gate |
+| `gateCatalogue.test.ts` | a `verify_*` job has no explanation in `scripts/gates.json` for the release report |
+
+**`pipelineSimulation.test.ts` works out each pipeline from the rules themselves**, for a
+push to `main`, a push to `release`, a merge request, a push to a branch with no merge
+request, the nightly schedule and a run on demand. That matters because GitLab checks
+`needs` and `dependencies` only for the jobs a pipeline contains, so a mistake in a job
+that exists only on `release` is otherwise first seen on release day. Its first run here
+flagged `verify_e2e` and `verify_performance` needing `verify_build`; they share the `app`
+rules, so they are always in the same pipelines, and the simulator now knows that two jobs
+with identical rules travel together. Its limits:
+
+- **It evaluates only the rule syntax these files use:** `$VAR`, `==`, `!=`, `=~`, `!~`,
+  `null`, `&&` and `||`. Anything else fails the check rather than being guessed at.
+- **It cannot know `changes`.** A job behind one may or may not be in a push or merge
+  request pipeline, so a job that needs it must share its rules or mark the need `optional`.
+- **It is not GitLab's validator**, which checks keywords, values and limits.
+
+GitLab's own validator is `npm run ci:lint`, with a personal access token of your own
+(scope `read_api`, or `api` if GitLab refuses that):
+
+```bash
+GITLAB_CI_LINT_TOKEN=<a personal access token> npm run ci:lint
+```
+
+It sends `.gitlab-ci.yml` to the project's lint endpoint, simulating a push to `main` and to
+`release`, and prints the jobs each would run. `CI_JOB_TOKEN` cannot call that endpoint,
+which is why it is not a pipeline job; `dcb-admin-ui` runs the same two commands.
+
 ## Nightly
 
 Two jobs run only in a scheduled pipeline:
@@ -269,7 +327,9 @@ Two jobs run only in a scheduled pipeline:
   has changed, and would otherwise be found by the next merge request.
 - **`nightly_flake_hunt`**, the browser suite `FLAKE_REPEAT` times over (3 by
   default) with no retries. In a merge request `retries: 2` turns a test that
-  passes only sometimes into a pass; here it fails, and the report names it.
+  passes only sometimes into a pass; here it fails, and the report names it. The
+  job itself always succeeds, so the next release report can fetch its results,
+  and `nightly_flake_verdict` fails the pipeline when it found failures.
 
 A failed scheduled pipeline is emailed to the schedule's owner. The schedule
 itself is set up in GitLab, not in this repository: **CI/CD > Schedules > New
@@ -283,15 +343,28 @@ reader who does not read code: a verdict, each check with what it checks and why
 it matters, and accessibility set out page by page and criterion by criterion.
 
 The `report` job builds it after the verify stage, whether or not the checks
-passed, and every merge request links to it as **Release report**. Job artifacts
-expire, so `.releaserc.json` also attaches it to each GitLab Release, where it
-stays. That copy is as visible as the release page.
+passed, on `release` and in a pipeline run on demand (below); a merge request
+does not make one. Job artifacts expire, so `.releaserc.json` also attaches it to each GitLab Release, where it
+stays. That copy is as visible as the release page, and `release-report.json`,
+the data behind it, goes with it. The report is attached at the
+permanent path `release-report.html`, so
+`/-/releases/permalink/latest/downloads/release-report.html` on the project always
+opens the latest release's report, and `/-/releases/<tag>/downloads/release-report.html`
+a given one. `tests/releaseConfig.test.ts` fails if that path changes.
 
 It reads what the checks leave in `reports/`: how each job ended
 (`reports/status/`, written by `.records_status`), Playwright's JSON report, the
 JUnit files, `bundle-budget.json` and `.lighthouseci/`. To make one locally, run
 `npm run gates` and then `npm run report`; anything a gate did not produce is
 reported as not run.
+
+Two sections read beyond this pipeline. **Compared with the last release** sets this
+build's figures beside the ones in the last release's `release-report.json`, which
+the `report` job fetches from the `release` branch's latest report. **Test
+reliability** names tests that passed only on a retry here, and every test that
+failed in the last nightly flake hunt, fetched from `main`. A first release, or a
+month without one, has no figures to compare, and the report says so. The same two
+sections are in `dcb-admin-ui`'s report.
 
 What it says comes from beside the checks themselves, so it changes when they do:
 
@@ -301,7 +374,7 @@ What it says comes from beside the checks themselves, so it changes when they do
 - **Each axe scan** attaches every rule's outcome and the criteria the rule
   tests, which is how a criterion is reported as checked automatically.
 - **Each pipeline check** is explained in `scripts/gates.json`.
-  `tests/gateCatalogue.test.ts` fails when a `verify_*` job has no entry.
+  `pipeline-checks/gateCatalogue.test.ts` fails when a `verify_*` job has no entry.
 - **A criterion nothing automated checks** is reported as assessed by hand, with
   the conformance the VPAT states for it, read from that document's tables, so
   a VPAT row must open with its criterion in bold, linked, and give its
@@ -309,6 +382,54 @@ What it says comes from beside the checks themselves, so it changes when they do
 
 `e2e/release-report.spec.ts` holds the report to WCAG 2.2 AA in both colour
 schemes: it is offered as accessibility evidence.
+
+### The report on demand
+
+Every release pipeline makes the report and attaches it to the release. To make
+one at any other time, for a bid, a customer or a PO review, run a pipeline by
+hand:
+
+1. In GitLab, open **Build > Pipelines** and choose **Run pipeline**.
+2. Choose the branch, or a release tag.
+3. Set `ON_DEMAND_REPORT` to `true`. The form offers it with its description.
+4. When the pipeline finishes, the `report` job's **Release report** artifact is
+   the page. It expires after a month like any artifact, so press **Keep** on the
+   job to keep it.
+
+Such a run includes every check and the container gate, and nothing that releases,
+publishes or deploys, even on `release`. `pipeline-checks/onDemandReport.test.ts` fails if
+a job that ships does not exclude it, or if the report would run in any other
+pipeline. A tag made before this change carries the older pipeline file, so it
+cannot be reported on this way.
+
+Set the variable only on a pipeline you run by hand. Set as a project variable,
+it would turn every pipeline into a report run, and nothing would ship.
+
+## The container gate
+
+`npm run e2e:container` builds `docker/production/Dockerfile`, starts it on port 4214
+with a runtime configuration, and drives it in a browser. It is the only gate that tests
+the artefact that ships rather than `vite preview`. It checks that the sign-in page
+renders, that `inject_env.json` is the configuration the container was started with and
+is never cached, that `index.html` is never cached, that a route nginx does not know is
+handed to the app, and that every script `index.html` names is served as JavaScript.
+It was watched failing with `index.html`'s `no-store` removed.
+
+In CI, `verify_container` gets its daemon from a `docker:27-dind` service started on its
+own socket, because `ki-onprem` bind-mounts the host's. It runs before every release, on
+demand, and when `docker/`, `.dockerignore`, the container suite or its config,
+`tsconfig.json`, the package files or `vite.config.ts` change. It replaced
+`verify_image`, which only built the image, on 2026-10-26, so both admin apps test the
+image the same way.
+
+**What `dcb-admin-ui`'s container suite checks that this one cannot yet.** That image
+sends security headers on every path, including a Content Security Policy, compresses
+JavaScript and CSS, caches hashed assets as immutable, and pins nginx to an exact
+release. This image does none of those: `default.conf.template` sets only the two
+`no-store` headers, and the base is `nginx:stable-alpine`. Asserting them here would
+fail, and adding them changes what every deployment receives, the policy above all,
+which must allow each deployment's own API and Keycloak hosts. Each is a decision to
+take, and when it is taken, the assertion that proves it belongs in this suite.
 
 ## The harness
 
@@ -409,11 +530,15 @@ first.
 
 So the number says which repo and which gate — `41<gate><repo>`:
 
-| | e2e | bootloader | Lighthouse | base-path |
-|---|---|---|---|---|
-| `dcb-admin-ui` | 4173 | 4183 | 4193 | — |
-| **this repo** | **4174** | **4184** | **4194** | **4204** |
-| discovery UI | 4175 | 4185 | 4195 | — |
+| | e2e | bootloader | Lighthouse | base-path | container |
+|---|---|---|---|---|---|
+| `dcb-admin-ui` | 4173 | 4183 | 4193 | 4203 | 4213 |
+| **this repo** | **4174** | **4184** | **4194** | **4204** | **4214** |
+| discovery UI | 4175 | 4185 | 4195 | — | — |
+
+The container band is the one gate that is not a `vite preview`: it maps the image's
+port 80, and never reuses a server, because a container left running would serve an
+image built from older code.
 
 The e2e column is the allocation: one memorable primary port per repo. The
 bands exist because a repo has more than one gate — this one uses all four — so
@@ -430,120 +555,60 @@ Adding a gate means taking the next free band for this repo's digit and adding
 it to the table above *and*, if you are using the K-Int Agent Harness for
 AI-assisted development, to `openrs-harness-pack/instructions/workspace.md`.
 
-## The Lighthouse toolchain is pinned by hand
+## Lighthouse runs from a script
 
-`package.json` carries an `overrides` block that exists for one reason:
-`@lhci/cli@0.15.1` is the latest release, its last commit to `main` was
-2025-06-26, and every advisory `npm audit` reported here came through it. It
-pins `lighthouse: 12.6.1` exactly, so there is no version of it to upgrade to.
+`npm run lighthouse` is `scripts/lighthouse.mjs`, which reads `lighthouserc.cjs` the way
+`lhci autorun` did: the server command and its ready marker, the URL, three runs, the
+settings and the assertions. It runs Lighthouse's own CLI against Playwright's Chromium
+and judges each assertion on the median of the runs. It writes
+`.lighthouseci/manifest.json` and `assertion-results.json` in the shape the release
+report reads, and fails on an `error` assertion that misses. A setting or aggregation
+method it would otherwise ignore is refused, and Chrome runs headless unless the flags
+say otherwise, as it did under lhci. `dcb-admin-ui` runs the same script.
 
-| Override | Replaces | Why |
-|---|---|---|
-| `tmp: ^0.2.7` | `0.1.0` under lhci, `0.0.33` under `external-editor` | blanket, because the nested copy is what the path-traversal advisory names; overriding it dedupes both onto one `0.2.7` |
-| `@lhci/cli > uuid: ^11.1.1` | `8.3.2` | scoped, because `uuid` is also a direct dependency at `14.0.2` and a blanket override is `EOVERRIDE` |
-| `@lhci/cli > @puppeteer/browsers: ^3.2.3` | `2.13.2` | 3.x replaced `extract-zip` with `modern-tar`. `extract-zip@2.0.1` is both the latest release and the vulnerable one, so this is the only way to clear those two advisories |
+It replaced `@lhci/cli` 0.15.1 on 2026-10-26, and with it the `overrides` block that
+patched lhci's `tmp`, `uuid` and `@puppeteer/browsers`. lhci had not released since
+June 2025, it pinned Lighthouse 12.6.1, and the fixes it needed had sat unmerged
+upstream since April 2026. Lighthouse 13.5.0 added 84 packages and no advisory, and 248
+went with lhci.
 
-Upstream already accepts all three — PRs
-[#1139](https://github.com/GoogleChrome/lighthouse-ci/pull/1139),
-[#1140](https://github.com/GoogleChrome/lighthouse-ci/pull/1140) and
-[#1141](https://github.com/GoogleChrome/lighthouse-ci/pull/1141), open since
-April 2026 with nobody merging them. **Delete this block the day an `@lhci/cli`
-ships with them in**, and re-check
-[#1136](https://github.com/GoogleChrome/lighthouse-ci/issues/1136) (Lighthouse
-13 support) while you are there.
+Measured on one build, both on Chromium 156, headless, `/login`:
 
-The `@puppeteer/browsers` line is a major bump of a dependency
-`puppeteer-core@24` never declared compatibility with, so it is the one to
-re-verify after any change here. `npm run lighthouse` is that check:
-`lighthouserc.cjs` points `CHROME_PATH` at Playwright's Chrome, which is why
-puppeteer's own browser-resolution path is barely exercised and the bump is
-survivable at all. Green means zero `error`-level assertions in
-`.lighthouseci/assertion-results.json` — the two `warn` ones are warnings by
-design.
+| Measure | lhci (Lighthouse 12.6.1) | Script (Lighthouse 13.5.0) |
+|---|---:|---:|
+| `total-byte-weight` | 351,302 | 351,302 |
+| CLS, accessibility, best practices, SEO | same | same |
+| LCP | 4,005 ms | 3,903 ms |
+| TBT | 156 ms | 98 ms |
+| The step, start to finish | 74 s | 67 s |
 
-## Names that only mean something here
-
-`npm run naming` reads `naming-gate.json` and fails on a name a reader outside this
-workspace cannot resolve. It runs in CI as `verify_naming`, over the tracked tree and,
-where `origin/main` resolves, the commit messages on the branch.
-
-It exists because this repository is **mirrored to a public GitHub remote**, and the
-shared doctrine used to say to name the components in prose and comments. That rule put
-an unannounced product name into nine lines across eight files, and would have put it
-into a merge commit subject as well.
-
-Three rules ship. `product-codename` is at zero and stays there. `plan-reference` was
-the interesting one: thirteen occurrences of `§V-11.1` and its siblings, section numbers
-from a planning document that lives in the workspace and ships to nobody. None needed a
-replacement - every one sat beside prose that already said what it meant, so the
-reference told a reader who could resolve it something they already had, and everyone
-else nothing. `plan-document` catches a `*_PLAN.md` pointer and has never fired; it is
-here because the workspace plans are where the other two rules’ names come from.
-
-The plan prefix list is `N`, `R` and `V`. It began as `N` and `V` only, and nineteen
-`R-17`/`R-19` references sat in fourteen files under a green gate until the prefix was
-added; widening it to any capital letter matched those nineteen and nothing else.
-
-**The `.graphqls` files are excluded from `plan-reference` and hold thirteen more.** They
-are copied from dcb-service and re-taken whenever that contract moves, so editing their
-comments here is drift that the next copy silently reverts. That fix belongs upstream.
-
-**Each rule says where it applies**, and the first CI run is what forced that. The gate
-failed on the commit message that introduced it, because that message quotes the
-references the rule catches - and more importantly because the shared doctrine sends a
-plan’s section numbers to "`docs/`, an ADR, or **the commit message**". A gate failing
-on the third would contradict the rule it exists to enforce. So `plan-reference` and
-`plan-document` are `"scope": ["files"]`, and `product-codename` keeps both: a product
-name in a commit message reaches the mirror exactly as code does, and that is where the
-leak this gate was written for actually was.
-
-**Three ways out, narrowest first.** Use the narrowest that fits:
-
-1. `naming-gate:allow <rule-id> - <reason>` on a single line, in a file that is otherwise
-   checked. Names the rule, so switching one off leaves the others on. **In a commit
-   message it applies to the whole commit**, as a trailer: a line of prose cannot carry a
-   marker without mangling the sentence, and a message that is already pushed cannot be
-   corrected without rewriting published history. A gate whose only remedy is a force
-   push is one people turn off.
-2. A rule’s own `exclude`, for a class of file it cannot speak to - `*.graphqls` is
-   excluded from `plan-reference` because those files are copied from dcb-service.
-3. `exemptPaths`, for a file that is *about* the rules: this document, the config, the
-   checker. They cannot explain or implement a rule without containing what it forbids,
-   and making them fight the gate on every edit is how an exemption ends up spelled
-   `--no-verify` instead.
-
-**Every one of them prints on every run**, green or red. An exemption nobody sees is one
-nobody reviews, and this list getting longer is the signal that a rule is wrong rather
-than the code.
+`onlyCategories` keeps the four categories the release report explains. Lighthouse
+13 adds agentic browsing, which nothing here asserts.
 
 ## Running the gates locally
 
 `npm run gates` runs every `verify_*` job the pipeline runs, with the same commands,
-and prints a summary. `--only naming,static` and `--skip e2e,performance` narrow it;
+and prints a summary. `--only static,e2e` and `--skip e2e,performance` narrow it;
 `--list` shows the names. It continues past a failure so one run tells you everything
 that is broken, and exits non-zero if any gate failed.
 
 ```
-  PASS  naming           0s  (verify_naming)
   PASS  static          64s  (verify_static)
   PASS  secrets         30s  (verify_secrets)
   PASS  performance    230s  (verify_performance)
   PASS  e2e             93s  (verify_e2e)
   PASS  base-path       45s  (verify_base_path)
   PASS  ki-bootstrap    35s  (verify_ki_bootstrap)
-  PASS  image           90s  (verify_image)
+  PASS  container       75s  (verify_container)
 ```
 
-**Two gaps closed when this was written, and both had already cost a red pipeline.**
-`npm run naming` ran without `--messages`, so the commit-message half - the half that
-failed in CI twice - never ran locally at all. It now carries the same range CI uses.
-And `verify_secrets` had no local path of any kind, because gitleaks is not an npm
+**A gap closed when this was written, which had already cost a red pipeline.**
+`verify_secrets` had no local path of any kind, because gitleaks is not an npm
 package: the runner uses a `gitleaks` binary if there is one, Docker if the daemon is
 up, and otherwise reports **SKIP** rather than counting a gate it did not run. The
-`image` gate, `docker build` of `docker/production/Dockerfile`, skips the same way
-without a daemon. Nothing else builds the image, and it once stopped at `npm ci` while
-every other gate passed; CI runs it on the `release` branch, and wherever `docker/`,
-`.dockerignore` or the package files change.
+`container` gate, which builds and drives the image, skips the same way without a
+daemon. Nothing else builds the image, and it once stopped at `npm ci` while every
+other gate passed.
 
 **The runner sets `CI=1`**, because the pipeline has it set and both Playwright configs
 read it: workers 1 rather than 4, retries 2 rather than 0, and `reuseExistingServer`

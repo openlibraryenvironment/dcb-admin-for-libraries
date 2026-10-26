@@ -29,11 +29,6 @@
 		"checks": "Checks the application starts correctly when the hosting platform's loader starts it, as it does in production.",
 		"matters": "The way the application is started in production is tested, not only the way it is started in development."
 	},
-	"verify_naming": {
-		"title": "Wording fit to publish",
-		"checks": "Checks the code and commit messages for internal names that must not appear in a repository the public can read.",
-		"matters": "The source code is published; this keeps internal names out of it."
-	},
 	"verify_secrets": {
 		"title": "No secrets in the code",
 		"checks": "Scans the code and its whole history for passwords, keys and tokens.",
@@ -44,9 +39,9 @@
 		"checks": "Checks the libraries the application ships for known serious security vulnerabilities, and that every licence is one we may use.",
 		"matters": "Most of the code that runs is written by others; this is where their problems would become ours."
 	},
-	"verify_image": {
-		"title": "Docker image builds",
-		"checks": "Builds the production Docker image. Runs on the release branch, and when the image's own files change.",
-		"matters": "An image that cannot be built cannot be deployed, and nothing else builds it."
+	"verify_container": {
+		"title": "The container image",
+		"checks": "Builds the container image the application is deployed in, starts it, and checks in a browser that it serves the application, its settings and its files correctly. Runs before every release, on demand, and when the image's files or the build settings change.",
+		"matters": "Tests what is actually deployed, not only a test server."
 	}
 }

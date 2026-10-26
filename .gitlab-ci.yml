@@ -4,10 +4,16 @@ variables:
   CACHE_COMPRESSION_LEVEL: "fast"
   # Must equal @playwright/test in package.json: the browsers are baked into the image.
   # verify_static fails if the two drift.
-  PLAYWRIGHT_VERSION: "1.62.1"
+  PLAYWRIGHT_VERSION: "1.64.1"
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
   # The runner's clone of gitlab.com has failed on a refused connection; retry it, not the job.
   GET_SOURCES_ATTEMPTS: "3"
+
+  # Set to "true" when running a pipeline by hand: docs/testing.md, "The report on demand"
+  ON_DEMAND_REPORT:
+    value: "false"
+    options: ["false", "true"]
+    description: "true runs every check and the release report on the chosen branch or tag, and ships nothing."
 
 default:
   # Node 24, as the Playwright image already is: npm 10 (node 22) refused a lock npm 11
@@ -47,6 +53,8 @@ workflow:
   auto_cancel:
     on_new_commit: interruptible
   rules:
+    # First, so a branch with an open merge request, or a tag, can be reported on by hand
+    - if: $ON_DEMAND_REPORT == "true"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_COMMIT_BRANCH !~ /^(main|release)$/
       when: never
@@ -61,11 +69,14 @@ workflow:
     - when: on_success
   # The merge gate: a merge request, and main and release once a merge lands
   gate:
+    - if: $ON_DEMAND_REPORT == "true"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_PIPELINE_SOURCE != "schedule" && $CI_COMMIT_BRANCH =~ /^(main|release)$/
   # The gate, but a merge request that changes nothing the app is built or tested from (only
-  # docs, Markdown or unit tests) skips it. tests/ciChangePaths.test.ts keeps this list whole.
+  # docs, Markdown or unit tests) skips it. pipeline-checks/ciChangePaths.test.ts, run locally,
+  # keeps this list whole.
   app:
+    - if: $ON_DEMAND_REPORT == "true"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         paths: &app_paths
@@ -100,14 +111,21 @@ verify_static:
     # eslint exits 0 on warnings; a warning here is broken code, not advice.
     - npm run lint -- --max-warnings=0
     # NOT `npm run test` - that script is bare `vitest`, which is watch mode.
-    - npx vitest run --reporter=default --reporter=junit --outputFile.junit=reports/unit-junit.xml
+    - npx vitest run --coverage --reporter=default --reporter=junit --outputFile.junit=reports/unit-junit.xml
   artifacts:
     when: always
     paths:
+      - coverage/
       - reports/
     reports:
       junit: reports/unit-junit.xml
+      # Annotates the lines a merge request changed. A figure, not a gate.
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
     expire_in: 1 week
+  # The text-summary line GitLab turns into the job's coverage figure and its trend
+  coverage: '/^\s*Lines\s*:\s*([\d.]+)%/'
 
 verify_dependencies:
   extends: .records_status
@@ -148,6 +166,8 @@ verify_build:
 verify_e2e:
   extends: .records_status
   stage: verify
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
   rules: !reference [.rules, app]
   needs: [verify_build]
   variables:
@@ -173,6 +193,8 @@ verify_e2e:
 verify_performance:
   extends: .records_status
   stage: verify
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
   rules: !reference [.rules, app]
   needs: [verify_build]
   variables:
@@ -200,6 +222,8 @@ verify_performance:
 verify_base_path:
   extends: .records_status
   stage: verify
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
   rules: !reference [.rules, app]
   timeout: 20m
   image:
@@ -221,6 +245,8 @@ verify_base_path:
 verify_ki_bootstrap:
   extends: .records_status
   stage: verify
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
   rules: !reference [.rules, app]
   timeout: 20m
   image:
@@ -237,25 +263,6 @@ verify_ki_bootstrap:
       - reports/
     reports:
       junit: reports/ki-bootstrap-junit.xml
-    expire_in: 1 week
-
-# Rules are data in naming-gate.json; what they catch and why is in docs/testing.md.
-verify_naming:
-  extends: .records_status
-  stage: verify
-  rules: !reference [.rules, quick]
-  timeout: 5m
-  cache: []
-  variables:
-    GIT_DEPTH: "0"
-  script:
-    # A branch pipeline fetches only its own ref; without origin/main the message scan skips.
-    - git fetch --no-tags --quiet origin "+refs/heads/main:refs/remotes/origin/main"
-    - node scripts/check-naming.mjs --messages origin/main..HEAD
-  artifacts:
-    when: always
-    paths:
-      - reports/
     expire_in: 1 week
 
 # Every secret ever committed stays readable in history; only rotation un-leaks it.
@@ -281,54 +288,76 @@ verify_secrets:
       - reports/
     expire_in: 1 month
 
-# Nothing else here builds the image: on node 22 it stopped at `npm ci` while every job passed.
-# In the verify stage, so a release branch whose image cannot build does not release.
-verify_image:
+# The image that ships, driven in a browser: docs/testing.md, "The container gate". In the verify
+# stage, so a release branch whose image cannot build or start does not release.
+verify_container:
   extends: .records_status
   stage: verify
-  timeout: 20m
-  cache: []
-  # Always before a release; otherwise only when the image's own files change. A merge
-  # request's `changes` are compared with its target branch.
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
+  timeout: 40m
+  # Always before a release and on demand; otherwise only when what decides the image changes.
+  # A merge request's `changes` are compared with its target branch.
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
-    - if: '$CI_COMMIT_BRANCH == "release"'
-    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_COMMIT_BRANCH == "release" || $ON_DEMAND_REPORT == "true"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         paths:
           - docker/**/*
           - .dockerignore
+          - e2e-container/**/*
+          - playwright.container.config.ts
+          - tsconfig.json
           - package.json
           - package-lock.json
+          - vite.config.ts
   image:
-    name: docker:27
+    name: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
     pull_policy: if-not-present
   services:
     - name: docker:27-dind
       alias: docker
+      # ki-onprem bind-mounts the host's docker.sock into every container, so dind's default
+      # socket fails "device or resource busy"; as in dcb-admin-ui and symposia-service
+      command: ["dockerd", "--host=unix:///var/run/dind.sock", "--host=tcp://0.0.0.0:2375", "--tls=false"]
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
+    # The same major as the dind service
+    DOCKER_CLI_VERSION: "27.3.1"
   script:
-    # dind can still be starting; without this the first symptom is a build error about the daemon.
+    # The Playwright image has no docker client; the static one, not apt's, which brings a daemon
+    - |
+      if ! command -v docker >/dev/null 2>&1; then
+        curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_CLI_VERSION}.tgz" | tar xz --strip-components=1 -C /usr/local/bin docker/docker
+      fi
+    # dind can still be starting: wait about a minute, then say so rather than time out later
     - |
       for attempt in $(seq 1 30); do
         docker info >/dev/null 2>&1 && break
         sleep 2
       done
       docker info >/dev/null || { echo "No Docker daemon at $DOCKER_HOST: this job needs a runner that permits privileged containers."; exit 1; }
-    - docker build -f docker/production/Dockerfile -t "dcb-admin-for-libraries:$CI_COMMIT_SHORT_SHA" .
+    - npm ci --prefer-offline --no-audit --no-fund
+    - npm run e2e:container
   artifacts:
     when: always
+    expose_as: "Container report"
     paths:
+      - playwright-report/
       - reports/
+    reports:
+      junit: reports/container-junit.xml
     expire_in: 1 week
 
 # The browser tests several times over with no retries, so a test that passes only sometimes
 # fails here, where CI's `retries: 2` would have retried it into a pass.
 nightly_flake_hunt:
   stage: verify
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
   rules: !reference [.rules, nightly]
   timeout: 3h
   image:
@@ -338,15 +367,32 @@ nightly_flake_hunt:
     FLAKE_REPEAT: "3"
   script:
     - npm ci --prefer-offline --no-audit --no-fund
-    - npx playwright test --repeat-each="$FLAKE_REPEAT" --retries=0
+    - mkdir -p reports
+    # Succeeds either way, because the report reads only a successful job's artifacts;
+    # nightly_flake_verdict fails the pipeline instead
+    - npx playwright test --repeat-each="$FLAKE_REPEAT" --retries=0 || touch reports/flake-hunt-failed
   artifacts:
     when: always
     expose_as: "Flake hunt report"
     paths:
       - playwright-report/
+      - reports/
     reports:
       junit: reports/e2e-junit.xml
     expire_in: 2 weeks
+
+# The flake hunt's verdict, so a failed hunt still fails the nightly pipeline and emails its owner
+nightly_flake_verdict:
+  stage: report
+  rules: !reference [.rules, nightly]
+  needs: [nightly_flake_hunt]
+  cache: []
+  script:
+    - |
+      if [ -e reports/flake-hunt-failed ]; then
+        echo "The flake hunt failed. Its report, nightly_flake_hunt's artifact, names the tests."
+        exit 1
+      fi
 
 # Every check's result in plain language, for people who do not read code: docs/testing.md,
 # "The release report". `when: always`, so a failed pipeline is explained too.
@@ -354,36 +400,37 @@ report:
   stage: report
   timeout: 10m
   cache: []
+  # Release, which attaches it, and a pipeline run on demand: both run every check below
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
-    - when: always
-  # Optional: a push with no merge request runs only the quick checks
+    - if: $CI_COMMIT_BRANCH == "release" || $ON_DEMAND_REPORT == "true"
+      when: always
   needs:
-    - job: verify_static
-    - job: verify_naming
-    - job: verify_secrets
-    - job: verify_dependencies
-      optional: true
-    - job: verify_build
-      optional: true
-    - job: verify_e2e
-      optional: true
-    - job: verify_performance
-      optional: true
-    - job: verify_base_path
-      optional: true
-    - job: verify_ki_bootstrap
-      optional: true
-    - job: verify_image
-      optional: true
+    - verify_static
+    - verify_secrets
+    - verify_dependencies
+    - verify_build
+    - verify_e2e
+    - verify_performance
+    - verify_base_path
+    - verify_ki_bootstrap
+    - verify_container
   script:
+    - mkdir -p reports
+    # The last release's figures and the last nightly flake hunt. A first release has neither,
+    # and the report says so
+    - |
+      api="$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts"
+      curl -sf --header "JOB-TOKEN: $CI_JOB_TOKEN" "$api/release/raw/reports/release-report.json?job=report" -o reports/previous-report.json || rm -f reports/previous-report.json
+      curl -sf --header "JOB-TOKEN: $CI_JOB_TOKEN" "$api/main/raw/reports/e2e-junit.xml?job=nightly_flake_hunt" -o reports/nightly-junit.xml || rm -f reports/nightly-junit.xml
     - node scripts/release-report.ts
   artifacts:
     when: always
     expose_as: "Release report"
     paths:
       - reports/release-report.html
+      - reports/release-report.json
     expire_in: 1 month
 
 build:
@@ -412,7 +459,7 @@ release:
   timeout: 15m
   # No `needs`: it would let this start before the verify stage has passed.
   rules:
-    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   # The report, which .releaserc.json attaches to the GitLab Release
@@ -465,7 +512,7 @@ release:
 publish_image_next:
   extends: .publish_image
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   variables:
@@ -475,7 +522,7 @@ publish_image_next:
 publish_image_release:
   extends: .publish_image
   rules:
-    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   # No `dependencies`: $RELEASE_VERSION arrives as the release job's dotenv report.
@@ -495,7 +542,7 @@ deploy_tag_to_s3:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   image:
@@ -535,7 +582,7 @@ deploy_release_to_r2:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   image:
@@ -566,7 +613,7 @@ deploy_dev_to_s3:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   image:
@@ -594,7 +641,7 @@ deploy_dev_to_r2:
   timeout: 15m
   cache: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != "schedule" && $ON_DEMAND_REPORT != "true"'
       when: on_success
     - when: never
   image:

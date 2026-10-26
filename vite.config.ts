@@ -155,6 +155,16 @@ export default defineConfig(({ mode }) => {
 		test: {
 			// Named directories only: checkouts under .worktrees/ hold test files that are not ours.
 			include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+			// A figure, not a gate: docs/testing.md, "Coverage is a figure". No threshold.
+			coverage: {
+				provider: "v8",
+				// Without it, a module no test imports is absent rather than 0%.
+				include: ["src/**/*.{ts,tsx}"],
+				// cobertura is the one GitLab turns into line annotations on a merge request.
+				reporter: ["text-summary", "json-summary", "html", "cobertura"],
+				reportsDirectory: "./coverage",
+				exclude: ["src/routeTree.gen.ts", "src/**/*.d.ts", "src/main.tsx", "**/*.test.{ts,tsx}"],
+			},
 		},
 		resolve: {
 			alias: {

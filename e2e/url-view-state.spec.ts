@@ -42,7 +42,7 @@ const filterStatus = async (page: Page, label: string) => {
 	await header.hover();
 	await header.getByRole("button", { name: /menu/i }).click();
 	await page.getByRole("menuitem", { name: "Filter" }).click();
-	await page.getByRole("tooltip").getByRole("combobox", { name: "Value" }).click();
+	await page.getByRole("dialog").getByRole("combobox", { name: "Value" }).click();
 	await page.getByRole("option", { name: label }).click();
 	await page.keyboard.press("Escape");
 };
