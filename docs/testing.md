@@ -136,6 +136,12 @@ Four is a balance, not a magic number — about three minutes against the
 default's one, on the runs where the default works at all. Raise it if your
 machine is idle.
 
+**In CI the browser suites also take turns.** `verify_e2e`, `verify_performance`,
+`verify_base_path`, `verify_ki_bootstrap` and `nightly_flake_hunt` share
+`resource_group: browser-suites`, so GitLab runs one at a time on the `ki-onprem`
+runner, as `dcb-admin-ui` does. One worker per suite does not stop four suites
+contending for the same machine, and Lighthouse's CPU-bound timings need it quiet.
+
 ## A green suite that is not green
 
 Two failure modes, both observed in this estate, and each looks nothing like its

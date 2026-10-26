@@ -158,6 +158,8 @@ verify_build:
 verify_e2e:
   extends: .records_status
   stage: verify
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
   rules: !reference [.rules, app]
   needs: [verify_build]
   variables:
@@ -183,6 +185,8 @@ verify_e2e:
 verify_performance:
   extends: .records_status
   stage: verify
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
   rules: !reference [.rules, app]
   needs: [verify_build]
   variables:
@@ -210,6 +214,8 @@ verify_performance:
 verify_base_path:
   extends: .records_status
   stage: verify
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
   rules: !reference [.rules, app]
   timeout: 20m
   image:
@@ -231,6 +237,8 @@ verify_base_path:
 verify_ki_bootstrap:
   extends: .records_status
   stage: verify
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
   rules: !reference [.rules, app]
   timeout: 20m
   image:
@@ -320,6 +328,8 @@ verify_image:
 # fails here, where CI's `retries: 2` would have retried it into a pass.
 nightly_flake_hunt:
   stage: verify
+  # One browser suite at a time on this runner: docs/testing.md, "Four workers, not sixteen"
+  resource_group: browser-suites
   rules: !reference [.rules, nightly]
   timeout: 3h
   image:
