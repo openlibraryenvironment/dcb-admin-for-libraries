@@ -72,6 +72,8 @@ export interface GridViews {
 	hasPrivate: boolean;
 	/** Rule 2: the view is the reader's last one, restored onto a bare address. */
 	restored: boolean;
+	/** The link named a patron barcode or requester note filter, which the route removed. */
+	privateRemoved: boolean;
 	/** Writes a filter still waiting on the debounce, so the address is the grid as shown. */
 	flush: () => Promise<void>;
 	apply: (search: SavedFilterSearch) => void;
@@ -136,6 +138,9 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 	const hidden = useLocation({ select: (location) => location.state.gridPrivate?.[id] });
 	const restored = useLocation({
 		select: (location) => location.state.gridRestored?.[id] === true,
+	});
+	const privateRemoved = useLocation({
+		select: (location) => location.state.gridPrivateRemoved?.[id] === true,
 	});
 
 	// Each model keyed on its own part's text, so paging does not hand MUI X a "new" filter
@@ -266,6 +271,7 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 					...previous,
 					gridWrites: { ...previous.gridWrites, [id]: mark },
 					gridRestored: { ...previous.gridRestored, [id]: undefined },
+					gridPrivateRemoved: { ...previous.gridPrivateRemoved, [id]: undefined },
 					...(privateState === undefined
 						? {}
 						: { gridPrivate: { ...previous.gridPrivate, [id]: privateState ?? undefined } }),
@@ -469,6 +475,7 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 			current,
 			hasPrivate: privateState !== undefined,
 			restored,
+			privateRemoved,
 			flush,
 			apply,
 			reset: resetFilterAndSort,
@@ -476,7 +483,7 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 			sanitise: (saved) => savedSearchOf(rules, saved),
 			toFilterModel: (saved) => filterFromView(rules, saved),
 		};
-	}, [grid, rules, id, shownFilter, shownSort, restored, flush, apply, resetFilterAndSort, resetView]);
+	}, [grid, rules, id, shownFilter, shownSort, restored, privateRemoved, flush, apply, resetFilterAndSort, resetView]);
 
 	const appliedFilterModel = appliedFilter;
 	return {

@@ -68,12 +68,25 @@ bare search page is a new search. Links written before 2.0.0 used `pageno`, zero
 ## What never goes in a URL
 
 Filters on a patron's barcode or a requester's note (`PRIVATE_FILTER_FIELDS` in
-`src/helpers/viewState/gridView.ts`), and quick-search text, are kept in the tab's history entry
+`src/helpers/viewState/gridSearch.ts`), and quick-search text, are kept in the tab's history entry
 instead. A URL reaches host request logs, every asset's `Referer`, a shared desk's browser history
 and wherever it is pasted. They survive Back, Forward and a reload of that tab, reach dcb-service
 only inside the GraphQL request body, and are left out of a copied link, a saved filter and the
 last view. Copy link says when it has left one out. A field that carries a patron's barcode or
 words is added to that constant and nowhere else.
+
+A link that carries one anyway, typed by hand or copied from a build before 2.0.0, is cleaned on
+arrival. `validateGridSearch` drops the filter, and must say `filters: undefined` to do it: the
+router lays a route's validated search over the link's own, so a key left out keeps the link's
+value, and every grid write would copy the barcode on. The router then replaces the address with
+the cleaned one before any `beforeLoad` runs, so `privateFilterRedirect` (`viewRoute.ts`) learns
+of it from a note `validateGridSearch` leaves, and replaces the entry with one flagged
+`gridPrivateRemoved`. The grid shows a warning saying the filter was removed and the list is not
+filtered by it, until it is dismissed or the reader changes the view. Patron requests, Supplier
+requests and a record's requesting history do this; no other grid has a private column.
+
+The private values the grid does keep live in each history entry's state, which outlives sign-out
+within the tab and returns with a reopened tab. They leave only when the tab is closed.
 
 ## Where a view comes from
 

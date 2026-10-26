@@ -1609,6 +1609,7 @@
 				"name_too_long_other": "Use {{count}} characters or fewer.",
 				"nothing_to_save": "Filter or sort the grid to save it here.",
 				"private_not_saved": "Patron barcode and requester note filters, and search text, are not saved.",
+				"private_removed": "This link included a patron barcode or requester note filter. Patron details are never kept in a link, so the filter has been removed from the address, and the list is not filtered by it.",
 				"limit_other": "You can save up to {{count}} filters here. Delete one to save another.",
 				"save_failed": "The filters could not be saved.",
 				"list_title": "Your saved filters",

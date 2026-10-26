@@ -260,3 +260,53 @@ test("Back to a later page under another sort opens that page, and Forward still
 	await page.goForward();
 	await expect.poll(() => search(page)).toBe("?sort=status:asc");
 });
+
+const privateRemoved = (page: Page) =>
+	page.getByRole("alert").filter({ hasText: "This link included a patron barcode or requester note filter." });
+
+for (const path of ["/patronRequests", "/supplierRequests"]) {
+	test(`a link's patron barcode is removed from ${path}, with nothing left in history, and the reader is told`, async ({
+		app,
+		page,
+	}) => {
+		await mockGrid(page);
+		await page.goto("/");
+		await page.goto(`${path}?filters=patronBarcode:PB8675309&filters=status:COMPLETED`);
+
+		await expect(privateRemoved(page)).toBeVisible();
+		await expect.poll(() => search(page)).toBe("?filters=status:COMPLETED");
+		await app.expectNoAccessibilityViolations();
+
+		await page.goBack();
+		await expect(page).not.toHaveURL(/PB8675309/);
+	});
+}
+
+test("an old link's JSON barcode filter is removed, and the last view is not put in its place", async ({
+	page,
+}) => {
+	await mockGrid(page);
+	await page.goto("/patronRequests");
+	await page.getByRole("columnheader", { name: "Status" }).click();
+	await expect.poll(() => search(page)).toBe("?sort=status:asc");
+
+	await page.goto(
+		`/patronRequests?filters=${encodeURIComponent(JSON.stringify([{ id: 1, field: "patronBarcode", operator: "equals", value: "PB8675309" }]))}`,
+	);
+	await expect(privateRemoved(page)).toBeVisible();
+	await expect(notice(page)).toBeHidden();
+	await expect.poll(() => search(page)).toBe("");
+});
+
+test("the notice goes when it is dismissed, and when the reader changes the view", async ({ page }) => {
+	await mockGrid(page);
+	await page.goto("/patronRequests?filters=patronBarcode:PB8675309");
+	await privateRemoved(page).getByRole("button", { name: "Close" }).click();
+	await expect(privateRemoved(page)).toBeHidden();
+
+	await page.goto("/patronRequests?filters=requesterNote:contains:late");
+	await expect(privateRemoved(page)).toBeVisible();
+	await page.getByRole("columnheader", { name: "Status" }).click();
+	await expect.poll(() => search(page)).toBe("?sort=status:asc");
+	await expect(privateRemoved(page)).toBeHidden();
+});
