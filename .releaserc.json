@@ -7,7 +7,13 @@
 		[
 			"@semantic-release/gitlab",
 			{
-				"assets": [{ "path": "reports/release-report.html", "label": "Release report: checks and accessibility" }]
+				"assets": [
+					{
+						"path": "reports/release-report.html",
+						"label": "Release report: checks and accessibility",
+						"filepath": "/release-report.html"
+					}
+				]
 			}
 		],
 		[

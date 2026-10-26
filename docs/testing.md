@@ -285,7 +285,11 @@ it matters, and accessibility set out page by page and criterion by criterion.
 The `report` job builds it after the verify stage, whether or not the checks
 passed, and every merge request links to it as **Release report**. Job artifacts
 expire, so `.releaserc.json` also attaches it to each GitLab Release, where it
-stays. That copy is as visible as the release page.
+stays. That copy is as visible as the release page. It is attached at the
+permanent path `release-report.html`, so
+`/-/releases/permalink/latest/downloads/release-report.html` on the project always
+opens the latest release's report, and `/-/releases/<tag>/downloads/release-report.html`
+a given one. `tests/releaseConfig.test.ts` fails if that path changes.
 
 It reads what the checks leave in `reports/`: how each job ended
 (`reports/status/`, written by `.records_status`), Playwright's JSON report, the
