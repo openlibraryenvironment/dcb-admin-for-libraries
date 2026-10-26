@@ -346,15 +346,32 @@ nightly_flake_hunt:
     FLAKE_REPEAT: "3"
   script:
     - npm ci --prefer-offline --no-audit --no-fund
-    - npx playwright test --repeat-each="$FLAKE_REPEAT" --retries=0
+    - mkdir -p reports
+    # Succeeds either way, because the report reads only a successful job's artifacts;
+    # nightly_flake_verdict fails the pipeline instead
+    - npx playwright test --repeat-each="$FLAKE_REPEAT" --retries=0 || touch reports/flake-hunt-failed
   artifacts:
     when: always
     expose_as: "Flake hunt report"
     paths:
       - playwright-report/
+      - reports/
     reports:
       junit: reports/e2e-junit.xml
     expire_in: 2 weeks
+
+# The flake hunt's verdict, so a failed hunt still fails the nightly pipeline and emails its owner
+nightly_flake_verdict:
+  stage: report
+  rules: !reference [.rules, nightly]
+  needs: [nightly_flake_hunt]
+  cache: []
+  script:
+    - |
+      if [ -e reports/flake-hunt-failed ]; then
+        echo "The flake hunt failed. Its report, nightly_flake_hunt's artifact, names the tests."
+        exit 1
+      fi
 
 # Every check's result in plain language, for people who do not read code: docs/testing.md,
 # "The release report". `when: always`, so a failed pipeline is explained too.
@@ -379,12 +396,20 @@ report:
     - verify_ki_bootstrap
     - verify_image
   script:
+    - mkdir -p reports
+    # The last release's figures and the last nightly flake hunt. A first release has neither,
+    # and the report says so
+    - |
+      api="$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts"
+      curl -sf --header "JOB-TOKEN: $CI_JOB_TOKEN" "$api/release/raw/reports/release-report.json?job=report" -o reports/previous-report.json || rm -f reports/previous-report.json
+      curl -sf --header "JOB-TOKEN: $CI_JOB_TOKEN" "$api/main/raw/reports/e2e-junit.xml?job=nightly_flake_hunt" -o reports/nightly-junit.xml || rm -f reports/nightly-junit.xml
     - node scripts/release-report.ts
   artifacts:
     when: always
     expose_as: "Release report"
     paths:
       - reports/release-report.html
+      - reports/release-report.json
     expire_in: 1 month
 
 build:

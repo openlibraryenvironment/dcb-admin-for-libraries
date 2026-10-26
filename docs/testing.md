@@ -285,7 +285,9 @@ Two jobs run only in a scheduled pipeline:
   has changed, and would otherwise be found by the next merge request.
 - **`nightly_flake_hunt`**, the browser suite `FLAKE_REPEAT` times over (3 by
   default) with no retries. In a merge request `retries: 2` turns a test that
-  passes only sometimes into a pass; here it fails, and the report names it.
+  passes only sometimes into a pass; here it fails, and the report names it. The
+  job itself always succeeds, so the next release report can fetch its results,
+  and `nightly_flake_verdict` fails the pipeline when it found failures.
 
 A failed scheduled pipeline is emailed to the schedule's owner. The schedule
 itself is set up in GitLab, not in this repository: **CI/CD > Schedules > New
@@ -301,7 +303,8 @@ it matters, and accessibility set out page by page and criterion by criterion.
 The `report` job builds it after the verify stage, whether or not the checks
 passed, on `release` and in a pipeline run on demand (below); a merge request
 does not make one. Job artifacts expire, so `.releaserc.json` also attaches it to each GitLab Release, where it
-stays. That copy is as visible as the release page. It is attached at the
+stays. That copy is as visible as the release page, and `release-report.json`,
+the data behind it, goes with it. The report is attached at the
 permanent path `release-report.html`, so
 `/-/releases/permalink/latest/downloads/release-report.html` on the project always
 opens the latest release's report, and `/-/releases/<tag>/downloads/release-report.html`
@@ -312,6 +315,14 @@ It reads what the checks leave in `reports/`: how each job ended
 JUnit files, `bundle-budget.json` and `.lighthouseci/`. To make one locally, run
 `npm run gates` and then `npm run report`; anything a gate did not produce is
 reported as not run.
+
+Two sections read beyond this pipeline. **Compared with the last release** sets this
+build's figures beside the ones in the last release's `release-report.json`, which
+the `report` job fetches from the `release` branch's latest report. **Test
+reliability** names tests that passed only on a retry here, and every test that
+failed in the last nightly flake hunt, fetched from `main`. A first release, or a
+month without one, has no figures to compare, and the report says so. The same two
+sections are in `dcb-admin-ui`'s report.
 
 What it says comes from beside the checks themselves, so it changes when they do:
 

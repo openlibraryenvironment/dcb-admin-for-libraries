@@ -12,6 +12,11 @@
 						"path": "reports/release-report.html",
 						"label": "Release report: checks and accessibility",
 						"filepath": "/release-report.html"
+					},
+					{
+						"path": "reports/release-report.json",
+						"label": "Release report data (JSON)",
+						"filepath": "/release-report.json"
 					}
 				]
 			}

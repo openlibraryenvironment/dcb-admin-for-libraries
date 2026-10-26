@@ -41,6 +41,17 @@ export interface Lighthouse {
 	failures: { auditId: string; level: string; actual: number; expected: number }[];
 }
 
+export interface UnitCase {
+	file: string;
+	name: string;
+	outcome: "passed" | "failed" | "skipped";
+}
+
+export interface Figure {
+	label: string;
+	value: number;
+}
+
 export interface Inputs {
 	statuses: Record<string, string>;
 	e2e?: E2ETest[];
@@ -48,8 +59,22 @@ export interface Inputs {
 	budget?: Budget;
 	lighthouse?: Lighthouse;
 	vpat: Map<string, string>;
+	/** The last release's report data, which this build's figures are compared with */
+	previous?: { figures?: Figure[]; pipeline?: { tag?: string } };
+	/** The last nightly flake hunt's browser tests */
+	nightly?: UnitCase[];
 	/** No version: on the release branch, semantic-release chooses it after this is built */
-	pipeline: { ref?: string; commit?: string; commitUrl?: string; pipelineUrl?: string; vpatUrl?: string; when: Date };
+	pipeline: { ref?: string; commit?: string; tag?: string; commitUrl?: string; pipelineUrl?: string; vpatUrl?: string; when: Date };
+}
+
+/** Each test case in a JUnit file, as the nightly flake hunt writes them. */
+export function unitCases(xml: string): UnitCase[] {
+	const attribute = (attributes: string, name: string) => new RegExp(`\\b${name}="([^"]*)"`).exec(attributes)?.[1] ?? "";
+	return [...xml.matchAll(/<testcase\b([^>]*?)(?:\/>|>([\s\S]*?)<\/testcase>)/g)].map(([, attributes, body = ""]) => ({
+		file: attribute(attributes, "classname"),
+		name: attribute(attributes, "name"),
+		outcome: /<(failure|error)\b/.test(body) ? "failed" : /<skipped\b/.test(body) ? "skipped" : "passed",
+	}));
 }
 
 /** The counts on a JUnit file's root element. Vitest leaves out `skipped`, so it is counted. */
@@ -315,6 +340,24 @@ function evidence(criterion: CriterionRow): string {
 	return found.length ? found.join("<br>") : "Not testable automatically; assessed by hand.";
 }
 
+/** The numbers worth comparing from one release to the next. */
+export function figures(inputs: Inputs): Figure[] {
+	const a11y = inputs.e2e ? accessibility(inputs.e2e, inputs.vpat) : undefined;
+	const out: Figure[] = [];
+	const add = (label: string, value: number | undefined) => {
+		if (value !== undefined) out.push({ label, value });
+	};
+	add("What every page loads first, KB", inputs.budget && Math.round(inputs.budget.firstLoad.size / 1024));
+	add("Unit tests", inputs.junit.unit?.tests);
+	add("Browser tests", inputs.e2e?.length);
+	add("Accessibility page checks", a11y?.scans.length);
+	add("Accessibility problems found", a11y?.problems);
+	for (const [category, score] of Object.entries(inputs.lighthouse?.scores ?? {})) {
+		add(`Lighthouse ${category.replace("-", " ")} on the sign-in page`, score);
+	}
+	return out;
+}
+
 export function render(inputs: Inputs): string {
 	const results = gateResults(inputs);
 	const a11y = inputs.e2e ? accessibility(inputs.e2e, inputs.vpat) : undefined;
@@ -378,6 +421,34 @@ ${inputs.budget ? `<p>Before any page can be used, the browser downloads ${kb(in
 ${inputs.lighthouse ? `<p>Google Lighthouse, on the sign-in page: ${Object.entries(inputs.lighthouse.scores).map(([category, score]) => `${escape(category.replace("-", " "))} ${score}`).join(", ")} (out of 100).${inputs.lighthouse.failures.length ? ` Over its limits: ${inputs.lighthouse.failures.map((failure) => `${escape(failure.auditId)} (${failure.level})`).join(", ")}.` : ""}</p>` : ""}`
 		: "";
 
+	const before = new Map((inputs.previous?.figures ?? []).map((figure) => [figure.label, figure.value]));
+	const against = inputs.previous?.pipeline?.tag ?? "the last release";
+	const comparison = `
+<h2>Compared with the last release</h2>
+${
+	before.size
+		? table(
+				`This build against ${against}`,
+				["Figure", "This build", sentenceCase(against), "Change"],
+				figures(inputs).map(({ label, value }) => {
+					const was = before.get(label);
+					const change = was === undefined ? "" : value === was ? "same" : `${value > was ? "+" : ""}${number(value - was)}`;
+					return [escape(label), number(value), was === undefined ? `<span class="muted">—</span>` : number(was), escape(change)];
+				}),
+			)
+		: "<p>No earlier release report was available to compare with.</p>"
+}`;
+
+	const retried = (inputs.e2e ?? []).filter((test) => test.outcome === "flaky");
+	const nightlyFailed = [...new Set((inputs.nightly ?? []).filter((test) => test.outcome === "failed").map((test) => test.name))];
+	const bullets = (items: string[]) => (items.length ? `<ul>${items.map((item) => `<li>${escape(item)}</li>`).join("\n")}</ul>` : "");
+	const reliability = `
+<h2>Test reliability</h2>
+<p>${inputs.e2e ? (retried.length ? `${number(retried.length)} browser tests passed only on a second try in this pipeline:` : "Every browser test that passed did so on its first try.") : "The browser tests did not run in this pipeline."}</p>
+${bullets(retried.map((test) => test.covers ?? test.title))}
+<p>${inputs.nightly ? `The last nightly flake hunt ran ${number(new Set(inputs.nightly.map((test) => test.name)).size)} browser tests several times each, with no retries: ${nightlyFailed.length ? `<span class="bad">${number(nightlyFailed.length)} failed at least once.</span>` : "none failed."}` : "No nightly flake-hunt result was available."}</p>
+${bullets(nightlyFailed)}`;
+
 	const failedTests = (inputs.e2e ?? []).filter((test) => test.outcome === "failed");
 	return `<!doctype html>
 <html lang="en">
@@ -398,6 +469,8 @@ ${inputs.lighthouse ? `<p>Google Lighthouse, on the sign-in page: ${Object.entri
 ${checks}
 ${accessibilitySection}
 ${speed}
+${comparison}
+${reliability}
 ${failedTests.length ? `<h2>Failed tests</h2><ul>${failedTests.map((test) => `<li>${escape(test.covers ?? test.title)} <span class="muted">(${escape(test.file)})</span></li>`).join("\n")}</ul>` : ""}
 </main>
 <footer class="muted"><p>Made from the results of this pipeline's own checks, not written by hand. What each check covers is written next to the check itself.</p></footer>
@@ -435,7 +508,8 @@ function main() {
 	const env = process.env;
 	const blob = (path: string) => (env.CI_PROJECT_URL && env.CI_COMMIT_SHA ? `${env.CI_PROJECT_URL}/-/blob/${env.CI_COMMIT_SHA}/${path}` : undefined);
 
-	const html = render({
+	const nightlyXml = read(join("reports", "nightly-junit.xml"));
+	const inputs: Inputs = {
 		statuses,
 		e2e: playwright ? e2eTests(playwright) : undefined,
 		junit: {
@@ -451,19 +525,25 @@ function main() {
 				}
 			: undefined,
 		vpat: vpatConformance(read(join("docs", "DCB_Admin_for_Libraries_VPAT.md")) ?? ""),
+		previous: parse<NonNullable<Inputs["previous"]>>(join("reports", "previous-report.json")),
+		nightly: nightlyXml === undefined ? undefined : unitCases(nightlyXml),
 		pipeline: {
 			ref: env.CI_COMMIT_REF_NAME,
 			commit: env.CI_COMMIT_SHORT_SHA,
+			tag: env.CI_COMMIT_TAG,
 			commitUrl: env.CI_PROJECT_URL && env.CI_COMMIT_SHA ? `${env.CI_PROJECT_URL}/-/commit/${env.CI_COMMIT_SHA}` : undefined,
 			pipelineUrl: env.CI_PIPELINE_URL,
 			vpatUrl: blob("docs/DCB_Admin_for_Libraries_VPAT.md"),
 			when: new Date(),
 		},
-	});
+	};
 	mkdirSync("reports", { recursive: true });
 	const out = join("reports", "release-report.html");
-	writeFileSync(out, html);
-	console.log(`Written to ${out}.`);
+	writeFileSync(out, render(inputs));
+	// What the next release's report compares itself with
+	const { ref, commit, tag } = inputs.pipeline;
+	writeFileSync(join("reports", "release-report.json"), `${JSON.stringify({ figures: figures(inputs), pipeline: { ref, commit, tag } }, null, 2)}\n`);
+	console.log(`Written to ${out}, with its data beside it.`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

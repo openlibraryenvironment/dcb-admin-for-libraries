@@ -16,11 +16,12 @@ const gitlabAssets =
 			Array.isArray(plugin) && plugin[0] === "@semantic-release/gitlab",
 	)?.[1].assets ?? [];
 
-/** Links to the latest report, in the wiki and docs/testing.md, are built on this path. */
+/** Links to the latest report, in the wiki and docs/testing.md, are built on these paths. */
 describe("the release report's permanent link", () => {
-	it("attaches the report to each release at /release-report.html", () => {
-		expect(gitlabAssets.find((asset) => asset.path === "reports/release-report.html")?.filepath).toBe(
-			"/release-report.html",
-		);
+	it.each([
+		["reports/release-report.html", "/release-report.html"],
+		["reports/release-report.json", "/release-report.json"],
+	])("attaches %s to each release at %s", (path, filepath) => {
+		expect(gitlabAssets.find((asset) => asset.path === path)?.filepath).toBe(filepath);
 	});
 });
