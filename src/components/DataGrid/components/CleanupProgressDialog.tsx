@@ -71,6 +71,8 @@ export const CleanupProgressDialog = ({
 	const [isSuccessRowsExpanded, setIsSuccessRowsExpanded] = useState(false);
 	const [isErrorRowsExpanded, setIsErrorRowsExpanded] = useState(false);
 	const [isSkippedRowsExpanded, setIsSkippedRowsExpanded] = useState(false);
+	// Open: "Clean up anyway" asks the reader to confirm where each of these items is
+	const [isRefusedRowsExpanded, setIsRefusedRowsExpanded] = useState(true);
 	const paginationModels = useGridStore((state) => state.paginationModel);
 	const filterModels = useGridStore((state) => state.filterModel);
 	const sortModels = useGridStore((state) => state.sortModel);
@@ -81,6 +83,7 @@ export const CleanupProgressDialog = ({
 	const successCleanupGridId = "cleanup-success-grid";
 	const skippedCleanupGridId = "cleanup-skipped-grid";
 	const failedCleanupGridId = "cleanup-error-grid";
+	const refusedCleanupGridId = "cleanup-refused-grid";
 	// Each grid's own state, under the id it is written to
 	const modelsFor = (gridId: string) => ({
 		paginationModel: paginationModels[gridId] ?? CLEANUP_PAGINATION,
@@ -261,13 +264,64 @@ export const CleanupProgressDialog = ({
 						</Stack>
 					) : null}
 					{refusedRows?.length > 0 ? (
-						<Stack direction={"row"} spacing={1} sx={{ mt: 2 }}>
-							<WarningAmber color="warning" />
-							<Typography variant="h3" sx={{ fontWeight: "bold" }}>
-								{t("ui.data_grid.cleanup.refused_count", {
-									count: refusedRows.length,
-								})}
-							</Typography>
+						<Stack direction="column" spacing={1}>
+							<Accordion
+								expanded={isRefusedRowsExpanded}
+								onChange={() => setIsRefusedRowsExpanded(!isRefusedRowsExpanded)}
+								sx={{ mt: 2 }}>
+								<AccordionSummary
+									expandIcon={<ExpandMore />}
+									aria-controls="refused-rows-content"
+									id="refused-rows-header">
+									<Stack direction={"row"} spacing={1}>
+										<WarningAmber color="warning" />
+										<Typography variant="h3" sx={{ fontWeight: "bold" }}>
+											{t("ui.data_grid.cleanup.refused_count", {
+												count: refusedRows.length,
+											})}
+										</Typography>
+									</Stack>
+								</AccordionSummary>
+								<AccordionDetails>
+									<DataGrid
+										rows={refusedRows}
+										columns={standardPatronRequestColumns}
+										columnVisibilityModel={cleanupPatronRequestVisibility}
+										type="refusedCleanupRequests"
+										disableAggregation
+										disableRowGrouping
+										toolbarVisible={false}
+										checkboxSelection={false}
+										disableHoverInteractions={false}
+										disablePivoting
+										filterMode="client"
+										onFilterModelChange={(newModel) =>
+											setCleanupFilterModel(refusedCleanupGridId, newModel)
+										}
+										label={t("patron_request.cleanup_refused_rows")}
+										identifier={refusedCleanupGridId}
+										pagination
+										paginationMode="client"
+										onPaginationModelChange={(newModel: GridPaginationModel) =>
+											setCleanupPaginationModel(refusedCleanupGridId, newModel)
+										}
+										listViewEnabled={false}
+										pivotingEnabled
+										loading={isCleaning}
+										paginationModel={modelsFor(refusedCleanupGridId).paginationModel}
+										filterModel={modelsFor(refusedCleanupGridId).filterModel}
+										rowModesModel={rowModesModel}
+										onRowModesModelChange={setRowModesModel}
+										onSortModelChange={(newModel) =>
+											setCleanupSortModel(refusedCleanupGridId, newModel)
+										}
+										sortModel={modelsFor(refusedCleanupGridId).sortModel}
+										sortingMode="client"
+										noResultsText={t("patron_request.no_requests")}
+										searchText=""
+									/>
+								</AccordionDetails>
+							</Accordion>
 						</Stack>
 					) : null}
 					{skippedRows?.length > 0 ? (

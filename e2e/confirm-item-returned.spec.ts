@@ -71,6 +71,55 @@ test.describe("Confirm an item is back", () => {
 		expect(posted).toHaveLength(1);
 	});
 
+	test("a release that fails says the item may be recorded back, gives DCB's reason, and refreshes", async ({
+		app,
+		page,
+	}) => {
+		let fetches = 0;
+		await app.enableFeatures(["VITE_FEATURE_CONFIRM_ITEM_RETURNED"]);
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadPatronRequest: () => {
+				fetches += 1;
+				return parked("AWAITING_RETURN_TO_SUPPLIER", AGENCY_CODE);
+			},
+			LoadHostLms: { hostLms: { content: [] } },
+			LoadAgencies: { agencies: { totalSize: 0, content: [] } },
+			LoadPatronIdentities: { patronIdentities: { totalSize: 0, content: [] } },
+			GetAuditsByPatronRequest: audit,
+		});
+		// As dcb-service 9.2.0 answers when the item was saved as back but the release did not happen
+		await page.route("**/patrons/requests/*/transition/confirm-returned", (route) =>
+			route.fulfill({
+				status: 500,
+				contentType: "application/problem+json",
+				json: {
+					title: "The request was not released",
+					status: "INTERNAL_SERVER_ERROR",
+					detail:
+						"The request is still AWAITING_RETURN_TO_SUPPLIER after the return was confirmed; see its audit log.",
+					parameters: { patronRequestStatus: "AWAITING_RETURN_TO_SUPPLIER" },
+				},
+			}),
+		);
+
+		await open(page);
+		const before = fetches;
+		await page.getByRole("button", { name: "Confirm item is back" }).click();
+		await page
+			.getByRole("dialog", { name: "Confirm this item is back on your shelf?" })
+			.getByRole("button", { name: "Confirm item is back" })
+			.click();
+
+		await expect(
+			page.getByText(
+				"The item may have been recorded as back, but the request was not released. DCB's reason: The request is still AWAITING_RETURN_TO_SUPPLIER",
+			),
+		).toBeVisible();
+		await expect.poll(() => fetches).toBeGreaterThan(before);
+	});
+
 	test("a library that only borrowed the request cannot confirm the supplier's shelf", async ({
 		app,
 		page,

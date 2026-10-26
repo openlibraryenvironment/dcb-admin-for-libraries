@@ -5,7 +5,7 @@ import supplierRequests from "./fixtures-data/supplier-requests.json" with { typ
 
 /**
  * Clean up on the request grids and the request page: offered to the borrowing library and
- * to a supplying one, as dcb-service allows. Against 9.0.0 and later the server refuses a
+ * to a supplying one, by the rule in docs/cleanup.md. Against 9.0.0 and later the server refuses a
  * clean up that would orphan an item still out, and a refusal can be cleaned up anyway after
  * a second confirmation. docs/cleanup.md.
  */
@@ -33,12 +33,16 @@ const recordCleanupCalls = async (page: Page, calls: string[]) => {
 				? route.fulfill({
 						status: 409,
 						contentType: "application/problem+json",
+						// As dcb-service 9.2.0 sends it: the Problem's own fields under "parameters"
 						json: {
 							title: "Cannot clean up a request while the item is out",
+							status: "CONFLICT",
 							detail:
 								"The item for this request is not back at the supplying library (status PICKUP_TRANSIT).",
-							patronRequestStatus: "PICKUP_TRANSIT",
-							lastKnownItemOutStatus: "PICKUP_TRANSIT",
+							parameters: {
+								patronRequestStatus: "PICKUP_TRANSIT",
+								lastKnownItemOutStatus: "PICKUP_TRANSIT",
+							},
 						},
 					})
 				: route.fulfill({ status: 200, json: "ok" });
@@ -261,6 +265,12 @@ test.describe("Supplier requests clean up", () => {
 
 		const dialog = page.getByRole("dialog");
 		await expect(dialog.getByText(/Refused while the item is out/)).toBeVisible();
+		// "Clean up anyway" asks the reader to confirm where each item is, so each is named
+		await expect(
+			dialog
+				.getByRole("grid", { name: "Requests refused while the item is out" })
+				.getByRole("row", { name: new RegExp(BETA) }),
+		).toBeVisible();
 		// Nothing is forced until somebody asks
 		expect(calls.filter((call) => call.includes("force=true"))).toEqual([]);
 
@@ -431,6 +441,87 @@ test.describe("Patron request clean up", () => {
 		await confirm.getByRole("button", { name: "Clean up", exact: true }).click();
 
 		await expect.poll(() => calls).toEqual([expect.stringMatching(/\/transition\/cleanup$/)]);
+	});
+
+	test("says a clean up failed when the service fails, not that the library is not a party", async ({
+		app,
+		page,
+	}) => {
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadPatronRequest: { patronRequests: { totalSize: 1, content: [alpha] } },
+			LoadHostLms: { hostLms: { content: [] } },
+		});
+		await page.route("**/patrons/requests/**/transition/cleanup", (route) =>
+			route.fulfill({
+				status: 500,
+				contentType: "application/problem+json",
+				json: {
+					title: "Cleanup failed",
+					status: "INTERNAL_SERVER_ERROR",
+					detail: "The request is still LOANED after cleanup was attempted; see its audit log.",
+				},
+			}),
+		);
+
+		await page.goto(`/patronRequests/${alpha.id}`);
+		await page.getByRole("button", { name: "Clean up", exact: true }).click();
+		await page
+			.getByRole("dialog", { name: "Clean up this request?" })
+			.getByRole("button", { name: "Clean up", exact: true })
+			.click();
+
+		await expect(
+			page.getByRole("alert").filter({
+				hasText:
+					"The request could not be cleaned up. DCB's reason: The request is still LOANED after cleanup was attempted; see its audit log.",
+			}),
+		).toBeVisible();
+		await expect(page.getByText(/Only the borrowing library or a supplying library/)).toBeHidden();
+	});
+
+	test("does not offer to clean up anyway when the service refuses for another reason", async ({
+		app,
+		page,
+	}) => {
+		await app.enableFeatures(["VITE_FEATURE_GUARDED_CLEANUP"]);
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadLibraryBasics: library,
+			LoadPatronRequest: { patronRequests: { totalSize: 1, content: [alpha] } },
+			LoadHostLms: { hostLms: { content: [] } },
+		});
+		const forced: string[] = [];
+		await page.route("**/patrons/requests/**", (route) => {
+			const url = new URL(route.request().url());
+			if (url.searchParams.get("force") === "true") forced.push(url.pathname);
+			if (!url.pathname.endsWith("/transition/cleanup")) return route.fulfill({ status: 200, json: "ok" });
+			// The request moved between suppliers after the page loaded: no override answers this
+			return route.fulfill({
+				status: 409,
+				contentType: "application/problem+json",
+				json: {
+					title: "Cleanup is not available from this status",
+					status: "CONFLICT",
+					detail: "Cleanup cannot be applied to a request in status NOT_SUPPLIED_CURRENT_SUPPLIER.",
+					parameters: { patronRequestStatus: "NOT_SUPPLIED_CURRENT_SUPPLIER" },
+				},
+			});
+		});
+
+		await page.goto(`/patronRequests/${alpha.id}`);
+		await page.getByRole("button", { name: "Clean up", exact: true }).click();
+		await page
+			.getByRole("dialog", { name: "Clean up this request?" })
+			.getByRole("button", { name: "Clean up", exact: true })
+			.click();
+
+		await expect(page.getByText(/Cleanup cannot be applied to a request in status NOT_SUPPLIED_CURRENT_SUPPLIER/)).toBeVisible();
+		await expect(page.getByRole("dialog", { name: "Clean up while the item is out?" })).toBeHidden();
+		expect(forced).toEqual([]);
 	});
 
 	test("offers to clean up anyway when the service refuses, with its reason", async ({

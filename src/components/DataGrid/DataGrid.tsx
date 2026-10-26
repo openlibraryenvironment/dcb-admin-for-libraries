@@ -28,6 +28,7 @@ import { appUrl } from "@helpers/appBase";
 import { expandedFilterPanelTypes } from "@constants/dataGrid/types";
 import { SxProps, Theme, Tooltip, TooltipProps } from "@mui/material";
 import ExportToolbar from "./components/ExportToolbar";
+import { PrivateFilterRemovedNotice } from "./components/GridViewControls";
 import type { GridExportConfig } from "@/hooks/useExport";
 import type { ColumnLayout, GridViews } from "@/hooks/useSyncedDataGrid";
 import { useColumnLayout } from "./useColumnLayout";
@@ -205,7 +206,7 @@ export default function DataGrid({
 	const getDetailPanelHeight = useCallback(() => "auto", []); // Only necessary because master detail is not applicable to all grids yet
 	const internalApiRef = useGridApiRef();
 	const apiRef = parentApiRef || internalApiRef;
-	const remountKey = `${clock}|${locale}`;
+	const remountKey = `${clock}|${locale}|${columnLayout?.visit ?? 0}`;
 	const layout = useColumnLayout(apiRef, columns, columnLayout, remountKey);
 
 	const announce = useAnnounce();
@@ -285,6 +286,7 @@ export default function DataGrid({
 	// changes twice.
 	return (
 		<div style={{ display: "flex", flexDirection: "column" }}>
+			{views ? <PrivateFilterRemovedNotice views={views} /> : null}
 			<DataGridPremium
 				key={remountKey}
 				aria-label={label}

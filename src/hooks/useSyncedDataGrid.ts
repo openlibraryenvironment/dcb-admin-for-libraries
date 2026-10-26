@@ -59,6 +59,8 @@ export interface ColumnLayout {
 	/** The shareable fields, in order; columns the URL cannot name keep their places. */
 	columnOrder: readonly string[];
 	onColumnOrderChange: (fields: string[]) => void;
+	/** Bumped on Back, Forward or a link: DataGrid remounts the grid on it. */
+	visit: number;
 }
 
 /** What the toolbar needs to share the grid's view as a link, save its filter, and reset it. */
@@ -70,6 +72,8 @@ export interface GridViews {
 	hasPrivate: boolean;
 	/** Rule 2: the view is the reader's last one, restored onto a bare address. */
 	restored: boolean;
+	/** The link named a patron barcode or requester note filter, which the route removed. */
+	privateRemoved: boolean;
 	/** Writes a filter still waiting on the debounce, so the address is the grid as shown. */
 	flush: () => Promise<void>;
 	apply: (search: SavedFilterSearch) => void;
@@ -134,6 +138,9 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 	const hidden = useLocation({ select: (location) => location.state.gridPrivate?.[id] });
 	const restored = useLocation({
 		select: (location) => location.state.gridRestored?.[id] === true,
+	});
+	const privateRemoved = useLocation({
+		select: (location) => location.state.gridPrivateRemoved?.[id] === true,
 	});
 
 	// Each model keyed on its own part's text, so paging does not hand MUI X a "new" filter
@@ -264,6 +271,7 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 					...previous,
 					gridWrites: { ...previous.gridWrites, [id]: mark },
 					gridRestored: { ...previous.gridRestored, [id]: undefined },
+					gridPrivateRemoved: { ...previous.gridPrivateRemoved, [id]: undefined },
 					...(privateState === undefined
 						? {}
 						: { gridPrivate: { ...previous.gridPrivate, [id]: privateState ?? undefined } }),
@@ -300,21 +308,27 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 
 	const entry = useLocation({ select: (location) => location.state.__TSR_key });
 	const entryMark = useLocation({ select: (location) => location.state.gridWrites?.[id] });
-	const seenEntry = useRef(entry);
+	// Back, Forward or a link is a new visit, decided while rendering so the grid never sees it under
+	// the last visit's models; the grid remounts on it, as MUI X answers a sort or filter prop with page 1
+	const [visit, setVisit] = useState({ entry, count: 0 });
+	if (visit.entry !== entry) {
+		const own = entryMark !== undefined && ownWrites.current.includes(entryMark);
+		setVisit({ entry, count: own ? visit.count : visit.count + 1 });
+		if (!own) setPending((current) => (Object.keys(current).length > 0 ? {} : current));
+	}
 	useEffect(() => {
-		if (entry === seenEntry.current) return;
-		seenEntry.current = entry;
 		const own = entryMark === undefined ? -1 : ownWrites.current.indexOf(entryMark);
-		if (own >= 0) {
-			ownWrites.current = ownWrites.current.slice(own + 1);
-			return;
-		}
-		// Back, forward or a link: a new visit, and a filter still being typed was for the view that left
+		if (own >= 0) ownWrites.current = ownWrites.current.slice(own + 1);
+	}, [entry, entryMark]);
+	const seenVisit = useRef(visit.count);
+	useEffect(() => {
+		if (visit.count === seenVisit.current) return;
+		seenVisit.current = visit.count;
+		// A filter still being typed was for the view that left
 		pushed.current = false;
 		clearTimeout(timer.current);
 		unwritten.current = null;
-		setPending((current) => (Object.keys(current).length > 0 ? {} : current));
-	}, [entry, entryMark]);
+	}, [visit.count]);
 
 	const appliedFilterKey = filterKey(grid, appliedFilter);
 	const appliedFilterKeyRef = useRef(appliedFilterKey);
@@ -461,6 +475,7 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 			current,
 			hasPrivate: privateState !== undefined,
 			restored,
+			privateRemoved,
 			flush,
 			apply,
 			reset: resetFilterAndSort,
@@ -468,7 +483,7 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 			sanitise: (saved) => savedSearchOf(rules, saved),
 			toFilterModel: (saved) => filterFromView(rules, saved),
 		};
-	}, [grid, rules, id, shownFilter, shownSort, restored, flush, apply, resetFilterAndSort, resetView]);
+	}, [grid, rules, id, shownFilter, shownSort, restored, privateRemoved, flush, apply, resetFilterAndSort, resetView]);
 
 	const appliedFilterModel = appliedFilter;
 	return {
@@ -485,6 +500,7 @@ export const useSyncedDataGrid = (grid: GridDefinition, search: Search | undefin
 			onPinnedColumnsChange: handlePinnedColumnsChange,
 			columnOrder: shown.columnOrder,
 			onColumnOrderChange: handleColumnOrderChange,
+			visit: visit.count,
 		} satisfies ColumnLayout,
 		// Any change the server has not answered yet, a removal included
 		isFiltering:

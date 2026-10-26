@@ -20,18 +20,11 @@ import {
 	type UrlView,
 } from "./urlViewCodec";
 import type { GridViewId } from "./gridViewIds";
+import { PRIVATE_FILTER_FIELDS } from "./gridSearch";
 
 // MUI X's grid models to and from the URL's view: docs/url-view-state.md.
 
-/**
- * Filter fields whose values never go in a URL, a remembered view or a saved filter: a patron
- * barcode is personal data and close to a credential, and a requester note is text a patron
- * wrote. Quick-search text is treated the same. docs/url-view-state.md.
- */
-export const PRIVATE_FILTER_FIELDS: readonly string[] = [
-	"patronBarcode",
-	"requesterNote",
-];
+export { PRIVATE_FILTER_FIELDS };
 
 export const isPrivateField = (field: string) =>
 	PRIVATE_FILTER_FIELDS.includes(field);

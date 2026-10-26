@@ -81,11 +81,11 @@ import {
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 import { dcbStatusLabel } from "@constants/statuses/DCBStatuses";
 import PatronRequestAuditLog from "@components/PatronRequestAuditLog/PatronRequestAuditLog";
-import { z } from "zod";
+import { z } from "zod/mini";
 
 const requestSearchSchema = z.object({
 	// The open tab, so a shared or restored link to the audit log opens on it
-	tab: z.number().int().min(1).max(5).optional().catch(undefined),
+	tab: z.catch(z.optional(z.int().check(z.minimum(1), z.maximum(5))), undefined),
 });
 
 /**
@@ -130,8 +130,8 @@ function RouteComponent() {
 	const [cleanupSuccessAlertVisibility, setCleanupSuccessAlertVisibility] =
 		useState(false);
 	const [updateErrorAlertVisibility, setErrorAlertVisibility] = useState(false);
-	const [cleanupErrorAlertVisibility, setCleanupErrorAlertVisibility] =
-		useState(false);
+	// The server's own words when it gave any, "" when it did not; null while nothing failed
+	const [cleanupFailure, setCleanupFailure] = useState<string | null>(null);
 	const [cleanupRefusal, setCleanupRefusal] = useState<string | null>(null);
 	// The server's reason for refusing, while the user decides whether to clean up anyway
 	const [overrideDetail, setOverrideDetail] = useState<string | null>(null);
@@ -369,50 +369,58 @@ function RouteComponent() {
 				refreshFirst: guardedCleanup,
 				override,
 			}),
-		// A refusal is the server declining, not a transport failure, so it arrives here.
+		// cleanupPatronRequest never throws: every answer, a server failure included, arrives here
 		onSuccess: (outcome) => {
-			if (outcome.kind === "cleaned") {
-				invalidateRequest();
-				setCleanupSuccessAlertVisibility(true);
-				return;
+			switch (outcome.kind) {
+				case "cleaned":
+					invalidateRequest();
+					setCleanupSuccessAlertVisibility(true);
+					return;
+				case "refused":
+					invalidateRequest();
+					if (guardedCleanup && outcome.overridable) {
+						setOverrideDetail(outcome.detail ?? "");
+						return;
+					}
+					setCleanupRefusal(outcome.detail ?? "");
+					return;
+				case "forbidden":
+				case "notFound":
+					setCleanupRefusal(t("patron_request.cleanup_not_party"));
+					return;
+				case "failed":
+					invalidateRequest();
+					setCleanupFailure(outcome.detail ?? "");
+					return;
 			}
-
-			if (outcome.kind === "refused" && guardedCleanup) {
-				invalidateRequest();
-				setOverrideDetail(outcome.detail ?? "");
-				return;
-			}
-
-			setCleanupRefusal(
-				outcome.kind === "refused"
-					? (outcome.detail ?? "")
-					: t("patron_request.cleanup_not_party"),
-			);
-		},
-		onError: () => {
-			setCleanupErrorAlertVisibility(true);
 		},
 	});
 
 	const confirmReturnMutation = useMutation({
 		mutationFn: () => confirmItemReturned(apiBase, patronRequest?.id),
 		onSuccess: (outcome) => {
-			if (outcome.kind === "confirmed") {
-				invalidateRequest();
-				setConfirmReturnSuccess(true);
-				return;
+			// 9.2.0 saves the item as back before it tries the release, so even a failure may have changed it
+			invalidateRequest();
+			switch (outcome.kind) {
+				case "confirmed":
+					setConfirmReturnSuccess(true);
+					return;
+				case "refused":
+					setConfirmReturnError(
+						t("patron_request.confirm_returned.refused", { detail: outcome.detail ?? "" }),
+					);
+					return;
+				case "forbidden":
+					setConfirmReturnError(t("patron_request.confirm_returned.forbidden"));
+					return;
+				case "failed":
+					setConfirmReturnError(
+						outcome.detail
+							? t("patron_request.confirm_returned.unsuccessful_detail", { detail: outcome.detail })
+							: t("patron_request.confirm_returned.unsuccessful"),
+					);
+					return;
 			}
-
-			setConfirmReturnError(
-				outcome.kind === "refused"
-					? t("patron_request.confirm_returned.refused", { detail: outcome.detail ?? "" })
-					: outcome.kind === "forbidden"
-						? t("patron_request.confirm_returned.forbidden")
-						: t("patron_request.confirm_returned.unsuccessful"),
-			);
-		},
-		onError: () => {
-			setConfirmReturnError(t("patron_request.confirm_returned.unsuccessful"));
 		},
 	});
 	const offerConfirmReturn =
@@ -683,12 +691,14 @@ function RouteComponent() {
 								}
 							/>
 							<TimedAlert
-								open={updateErrorAlertVisibility || cleanupErrorAlertVisibility}
+								open={updateErrorAlertVisibility || cleanupFailure !== null}
 								severityType="error"
 								alertText={
 									updateErrorAlertVisibility
 										? t("patron_request.check_unsuccessful")
-										: t("patron_request.cleanup_unsuccessful")
+										: cleanupFailure
+											? t("patron_request.cleanup_unsuccessful_detail", { detail: cleanupFailure })
+											: t("patron_request.cleanup_unsuccessful")
 								}
 								key={
 									updateErrorAlertVisibility
@@ -698,7 +708,7 @@ function RouteComponent() {
 								onCloseFunc={
 									updateErrorAlertVisibility
 										? () => setErrorAlertVisibility(false)
-										: () => setCleanupErrorAlertVisibility(false)
+										: () => setCleanupFailure(null)
 								}
 							/>
 						</Grid>

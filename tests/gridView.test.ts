@@ -26,7 +26,8 @@ import {
 	type GridModels,
 	type PrivateGridState,
 } from "@helpers/viewState/gridView";
-import { validateGridSearch } from "@helpers/viewState/gridSearch";
+import { linksPrivateFilter, validateGridSearch } from "@helpers/viewState/gridSearch";
+import { privateFilterRedirect } from "@helpers/viewState/viewRoute";
 import { readView } from "@helpers/viewState/readView";
 import { stringifySearch } from "@helpers/viewState/searchSerialiser";
 import { emptyView, encodeView } from "@helpers/viewState/urlViewCodec";
@@ -219,6 +220,49 @@ describe("a hand-typed or stale address", () => {
 		);
 		expect(models.filterModel.items).toEqual([statusItem]);
 		expect(models.sortModel).toEqual(grid.defaultSort);
+	});
+
+	it("never carries a link's patron barcode or requester note on to the next address", () => {
+		const readable = defaultParseSearch(
+			`?filters=patronBarcode:${BARCODE}&filters=status:COMPLETED&filters=requesterNote:contains:late&sort=status:asc`,
+		);
+		expect(validateGridSearch(readable)).toEqual({ filters: ["status:COMPLETED"], sort: "status:asc" });
+
+		const legacy = defaultParseSearch(
+			`?filters=${encodeURIComponent(JSON.stringify([{ id: 1, field: "patronBarcode", operator: "equals", value: BARCODE }]))}`,
+		);
+		expect(validateGridSearch(legacy)).toEqual({});
+		expect(validateGridSearch({ filters: `requesterNote:${BARCODE}` })).toEqual({});
+		expect(validateGridSearch({ audit: { filters: [`patronBarcode:${BARCODE}`], page: 2 } }, ["audit"])).toEqual({
+			audit: { page: 2 },
+		});
+	});
+
+	it("tells a route its link named a private filter, so it can say what it removed", () => {
+		expect(linksPrivateFilter({ filters: `patronBarcode:${BARCODE}` })).toBe(true);
+		expect(linksPrivateFilter({ filters: ["status:COMPLETED", `requesterNote:${BARCODE}`] })).toBe(true);
+		expect(linksPrivateFilter({ filters: { field: "patronBarcode", value: BARCODE } })).toBe(true);
+		expect(linksPrivateFilter({ filters: "status:COMPLETED", sort: "patronBarcode:asc" })).toBe(false);
+		expect(linksPrivateFilter({ filters: "itemBarcode:123" })).toBe(false);
+		expect(linksPrivateFilter({ "audit.filters": `patronBarcode:${BARCODE}` }, "audit")).toBe(true);
+
+		// What the router hands beforeLoad is the search validateSearch left, the filter already gone
+		const search = validateGridSearch(
+			defaultParseSearch(`?filters=patronBarcode:${BARCODE}&filters=status:COMPLETED`),
+		);
+		expect(search).toEqual({ filters: ["status:COMPLETED"] });
+		const arrival = { __TSR_index: 0, __TSR_key: "k", key: "k" };
+		const redirect = privateFilterRedirect(grid, search, arrival);
+		expect(redirect).toMatchObject({ search, replace: true });
+		const flagged = redirect?.state(arrival);
+		expect(flagged?.gridPrivateRemoved).toEqual({ [grid.id]: true });
+		// A second beforeLoad of the same first load redirects too; the flagged entry ends it
+		expect(privateFilterRedirect(grid, search, arrival)).toBeDefined();
+		expect(privateFilterRedirect(grid, search, flagged ?? arrival)).toBeUndefined();
+		expect(privateFilterRedirect(grid, search, arrival)).toBeUndefined();
+		expect(
+			privateFilterRedirect(grid, validateGridSearch({ filters: "status:COMPLETED" }), arrival),
+		).toBeUndefined();
 	});
 
 	it("is dropped past any page a person pages to, which is an offset of millions", () => {

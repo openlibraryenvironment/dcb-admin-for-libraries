@@ -1,6 +1,7 @@
 import type { ParsedLocation } from "@tanstack/react-router";
 
 import { rememberedView } from "@/hooks/rememberedViewStore";
+import { forgetPrivateRemoval, removedPrivateFilter } from "./gridSearch";
 import type { GridViewId } from "./gridViewIds";
 import type { PrivateGridState } from "./gridView";
 import { encodeView, paramName, VIEW_PARAMS } from "./urlViewCodec";
@@ -16,6 +17,8 @@ declare module "@tanstack/react-router" {
 		gridWrites?: Record<string, string>;
 		/** Per grid id: the view came from the reader's last one, not from the link. */
 		gridRestored?: Record<string, true | undefined>;
+		/** Per grid id: the link named a patron barcode or requester note filter, now removed. */
+		gridPrivateRemoved?: Record<string, true | undefined>;
 	}
 }
 
@@ -33,8 +36,15 @@ export const rememberedViewRedirect = (
 	state: HistoryEntryState,
 ) => {
 	if (!grid.remember) return undefined;
-	// The grid wrote this entry itself, a Reset among them, or it holds a private filter
-	if (state.gridWrites?.[grid.id] || state.gridPrivate?.[grid.id]) return undefined;
+	// The grid wrote this entry itself, a Reset among them, or it holds a private filter, or a
+	// link's private filter was just removed from it
+	if (
+		state.gridWrites?.[grid.id] ||
+		state.gridPrivate?.[grid.id] ||
+		state.gridPrivateRemoved?.[grid.id]
+	) {
+		return undefined;
+	}
 	const own = new Set(VIEW_PARAMS.map((param) => paramName(param, grid.namespace)));
 	const linked = Object.entries(search).some(
 		([key, value]) => value !== undefined && (own.has(key) || !VIEW_PARAM_KEY.test(key)),
@@ -48,6 +58,31 @@ export const rememberedViewRedirect = (
 		state: (previous: HistoryEntryState) => ({
 			...previous,
 			gridRestored: { ...previous.gridRestored, [grid.id]: true as const },
+		}),
+	};
+};
+
+/**
+ * Where a link that named a patron barcode or requester note filter goes instead: the same view,
+ * already without it, flagged so the grid says what was removed. For the route's `beforeLoad`.
+ */
+export const privateFilterRedirect = (
+	grid: GridViewId,
+	search: Record<string, unknown>,
+	state: HistoryEntryState,
+) => {
+	// A first load can run beforeLoad twice over, so the note is kept until the flag has landed
+	if (state.gridPrivateRemoved?.[grid.id]) {
+		forgetPrivateRemoval();
+		return undefined;
+	}
+	if (!removedPrivateFilter(search)) return undefined;
+	return {
+		search,
+		replace: true,
+		state: (previous: HistoryEntryState) => ({
+			...previous,
+			gridPrivateRemoved: { ...previous.gridPrivateRemoved, [grid.id]: true as const },
 		}),
 	};
 };

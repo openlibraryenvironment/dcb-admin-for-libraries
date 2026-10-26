@@ -97,6 +97,8 @@ deployment would have:
 | the release's own | `schema.v9.0.0.graphqls` | a 9.0.0 deployment |
 | the release's own | `schema.v9.1.0.graphqls` | a 9.1.0 deployment |
 | the release's own | `schema.v9.2.0.graphqls` | a 9.2.0 deployment |
+| the newest release's, less any one, and none | `schema.v9.2.0.graphqls` | a host whose worker table lags its release |
+| every product choice (Home panels, discovery) on | `schema.v8.71.0.graphqls` | an 8.71.0 deployment that chose them |
 
 **The per-release passes are the ones that were missing**, and they stopped
 being optional when `schema.graphqls` diverged from the 9.0.0 tag: `supportUrl`
@@ -104,6 +106,11 @@ arrived in 9.2.0. Neither of the others can catch a field gated at the
 wrong *threshold* — all-flags-on validates against a schema that has
 everything, all-flags-off against one that has nothing, and a deployment on the
 9.0.0 release is in neither state.
+
+**The lagging passes cover the state hosts were actually in** on 26 October 2026:
+dcb-service 9.2.1 behind a worker that set three of its nine flags. A document
+that keeps a field 9.x removed behind a flag's *off* branch passes every other row:
+8.71.0 still has the field, and the 9.2.0 row never takes that branch.
 
 The flags change the documents themselves, so the flag state has to be set
 before a document is **built**, not merely before it is rendered.

@@ -107,6 +107,10 @@ describe("who may clean a request up", () => {
 		expect(
 			isCleanupEligible({ ...suppliedByUs, status: "FINALISED" }, options),
 		).toBe(false);
+		// Between suppliers: 9.2.0's transition refuses it, and force cannot overcome that
+		expect(
+			isCleanupEligible({ ...suppliedByUs, status: "NOT_SUPPLIED_CURRENT_SUPPLIER" }, options),
+		).toBe(false);
 	});
 });
 
@@ -164,10 +168,13 @@ describe("cleaning up one request", () => {
 	});
 
 	it("reports a refusal, a refusal of access, and a failure apart", async () => {
+		// The shape dcb-service 9.2.0 sends: micronaut-problem-json nests the Problem's own fields
 		post.mockRejectedValueOnce(
 			httpError(409, {
+				title: "Cannot clean up a request while the item is out",
+				status: "CONFLICT",
 				detail: "The item for this request is not back at the supplying library.",
-				lastKnownItemOutStatus: "PICKUP_TRANSIT",
+				parameters: { patronRequestStatus: "ERROR", lastKnownItemOutStatus: "PICKUP_TRANSIT" },
 			}),
 		);
 		expect(
@@ -176,6 +183,24 @@ describe("cleaning up one request", () => {
 			kind: "refused",
 			status: "PICKUP_TRANSIT",
 			detail: "The item for this request is not back at the supplying library.",
+			overridable: true,
+		});
+
+		post.mockRejectedValueOnce(
+			httpError(409, {
+				title: "Cleanup is not available from this status",
+				status: "CONFLICT",
+				detail: "Cleanup cannot be applied to a request in status NOT_SUPPLIED_CURRENT_SUPPLIER.",
+				parameters: { patronRequestStatus: "NOT_SUPPLIED_CURRENT_SUPPLIER" },
+			}),
+		);
+		expect(
+			await cleanupPatronRequest("/api", { id: "pr-1", status: "RESOLVED" }),
+		).toEqual({
+			kind: "refused",
+			status: "NOT_SUPPLIED_CURRENT_SUPPLIER",
+			detail: "Cleanup cannot be applied to a request in status NOT_SUPPLIED_CURRENT_SUPPLIER.",
+			overridable: false,
 		});
 
 		post.mockRejectedValueOnce(httpError(403));

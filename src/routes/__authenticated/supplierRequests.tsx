@@ -40,7 +40,11 @@ export const Route = createFileRoute("/__authenticated/supplierRequests")({
 	validateSearch: validateGridSearch,
 	beforeLoad: async ({ search, location }) => {
 		// Loaded here, not with the route: the first load of every page would carry the codec
-		const { rememberedViewRedirect } = await import("@helpers/viewState/viewRoute");
+		const { privateFilterRedirect, rememberedViewRedirect } = await import(
+			"@helpers/viewState/viewRoute"
+		);
+		const removed = privateFilterRedirect(supplierRequestsView, search, location.state);
+		if (removed) throw redirect({ to: "/supplierRequests", ...removed });
 		const restore = rememberedViewRedirect(supplierRequestsView, search, location.state);
 		if (restore) throw redirect({ to: "/supplierRequests", ...restore });
 	},

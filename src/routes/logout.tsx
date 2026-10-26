@@ -11,13 +11,13 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import LoginIcon from "@mui/icons-material/Login";
 import { useAuth } from "react-oidc-context";
 import { clearUserState } from "@helpers/clearUserState";
-import { z } from "zod";
+import { z } from "zod/mini";
 import { useTranslation } from "react-i18next";
 import { appUrl } from "@helpers/appBase";
 
 // Define the search params to handle the ?loggedOut=true flag
 const logoutSearchSchema = z.object({
-	loggedOut: z.boolean().optional().catch(false),
+	loggedOut: z.catch(z.optional(z.boolean()), false),
 });
 
 export const Route = createFileRoute("/logout")({

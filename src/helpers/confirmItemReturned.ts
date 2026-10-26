@@ -37,7 +37,7 @@ export type ConfirmReturnOutcome =
 	| { kind: "confirmed" }
 	| { kind: "refused"; detail?: string }
 	| { kind: "forbidden" }
-	| { kind: "failed" };
+	| { kind: "failed"; detail?: string };
 
 export const confirmItemReturned = async (
 	apiBase: string,
@@ -64,7 +64,7 @@ export const confirmItemReturned = async (
 			case 404:
 				return { kind: "forbidden" };
 			default:
-				return { kind: "failed" };
+				return { kind: "failed", detail: body?.detail };
 		}
 	}
 };

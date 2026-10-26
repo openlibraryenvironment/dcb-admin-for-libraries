@@ -7,12 +7,13 @@ supplied), and on the page of a single request.
 
 ## Who may clean up
 
-The rule is dcb-service's own, so the app offers exactly what the service accepts.
+From 9.2.0 the rule is dcb-service's own, and it refuses anyone else with a 403. Before 9.2.0
+dcb-service checks only the role, so what the app offers is the only rule.
 
 | | dcb-service 8.71.0 | dcb-service 9.0.0 and later |
 |---|---|---|
 | Roles | `LIBRARY_ADMIN` (and consortium roles) | the same |
-| Which library | the borrowing library or a supplying library | the same; 9.2.0 refuses anyone else with a 403 |
+| Which library | a supplying library, or any library on the borrowing Host LMS, co-tenants included | the borrowing library by its agency, or a supplying library; 9.2.0 refuses anyone else with a 403 |
 | Status | in error, or not yet shipped; never while the item is out | any status but a finished one (`COMPLETED`, `FINALISED`, `CANCELLED`, `ARCHIVED`, `HANDED_OFF_AS_LOCAL`) |
 | Item out | not offered | refused with a reason, and can be cleaned up anyway |
 
@@ -20,7 +21,8 @@ The rule is dcb-service's own, so the app offers exactly what the service accept
 is out deletes the borrowing library's records while the item is still in a patron's hands or
 in transit, and leaves the supplying library nothing to check it in against. So against 8.71.0
 the app offers it only where the item has not left the library, and the borrowing library is
-known by its Host LMS, as the Patron requests grid scopes it.
+known by its Host LMS, as the Patron requests grid scopes it. On a Host LMS shared by several
+libraries that is every one of them, as in 1.13.2: a known gap until the dcb-service upgrade.
 
 Against 9.0.0 and later (`VITE_FEATURE_GUARDED_CLEANUP`) the request is checked for updates
 first, and the service decides. The borrowing library is known by the request's

@@ -1057,10 +1057,12 @@
 			"confirm": "Clean up anyway"
 		},
 		"cleanup_refused": "This request was not cleaned up. {{detail}}",
+		"cleanup_refused_rows": "Requests refused while the item is out",
 		"cleanup_skipped": "Requests skipped",
 		"cleanup_succeeded": "Requests cleaned up",
 		"cleanup_successful": "The request has been cleaned up and finalised.",
 		"cleanup_unsuccessful": "The request could not be cleaned up. Try again later, and if it keeps happening, contact your library administrator.",
+		"cleanup_unsuccessful_detail": "The request could not be cleaned up. DCB's reason: {{detail}}",
 		"cluster_record_uuid": "Cluster record UUID",
 		"date_created": "Date created",
 		"date_updated": "Date updated",
@@ -1180,7 +1182,8 @@
 			"successful": "The item was confirmed back, and the request has been released.",
 			"refused": "The item was not confirmed back. {{detail}}",
 			"forbidden": "Only the library that supplied this request can confirm its item is back.",
-			"unsuccessful": "Confirming the item is back failed, and the request is unchanged. Its audit log says why."
+			"unsuccessful": "The item may have been recorded as back, but the request was not released. Its audit log says what happened.",
+			"unsuccessful_detail": "The item may have been recorded as back, but the request was not released. DCB's reason: {{detail}}"
 		}
 	},
 	"requesting": {
@@ -1608,6 +1611,7 @@
 				"name_too_long_other": "Use {{count}} characters or fewer.",
 				"nothing_to_save": "Filter or sort the grid to save it here.",
 				"private_not_saved": "Patron barcode and requester note filters, and search text, are not saved.",
+				"private_removed": "This link included a patron barcode or requester note filter. Patron details are never kept in a link, so the filter has been removed from the address, and the list is not filtered by it.",
 				"limit_other": "You can save up to {{count}} filters here. Delete one to save another.",
 				"save_failed": "The filters could not be saved.",
 				"list_title": "Your saved filters",

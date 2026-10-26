@@ -89,7 +89,7 @@ export const usePatronRequestCleanup = ({
 					if (outcome.kind === "cleaned") {
 						batchSuccess.push(row);
 						cleanedIds.push(row.id);
-					} else if (outcome.kind === "refused") {
+					} else if (outcome.kind === "refused" && outcome.overridable) {
 						batchRefused.push(row);
 					} else {
 						batchError.push(row);

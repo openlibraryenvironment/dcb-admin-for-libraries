@@ -88,6 +88,20 @@ describe("confirming an item is back", () => {
 		});
 	});
 
+	it("reports a failure with the server's reason", async () => {
+		post.mockRejectedValue(
+			httpError(500, {
+				status: "INTERNAL_SERVER_ERROR",
+				detail: "The request is still AWAITING_RETURN_TO_SUPPLIER after the return was confirmed; see its audit log.",
+			}),
+		);
+
+		expect(await confirmItemReturned("https://dcb", "pr-1")).toEqual({
+			kind: "failed",
+			detail: "The request is still AWAITING_RETURN_TO_SUPPLIER after the return was confirmed; see its audit log.",
+		});
+	});
+
 	it("reports a request that is not the library's", async () => {
 		post.mockRejectedValue(httpError(403));
 

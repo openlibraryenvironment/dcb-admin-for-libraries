@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BookmarksOutlined, FilterAltOffOutlined, LinkRounded } from "@mui/icons-material";
-import { Box, Button, Tooltip, Typography } from "@mui/material";
+import { Alert, Box, Button, Tooltip, Typography } from "@mui/material";
 import { ToolbarButton } from "@mui/x-data-grid-premium";
 
 import TimedAlert from "@components/TimedAlert/TimedAlert";
@@ -98,6 +98,23 @@ export function ResetViewButton({ views }: { views: GridViews }) {
 				<FilterAltOffOutlined fontSize="small" />
 			</ToolbarButton>
 		</Tooltip>
+	);
+}
+
+/** A link's patron barcode or requester note filter was removed on arrival: says so until dismissed or the view changes. */
+export function PrivateFilterRemovedNotice({ views }: { views: GridViews }) {
+	const { t } = useTranslation();
+	const [dismissed, setDismissed] = useState(false);
+
+	if (!views.privateRemoved || dismissed) return null;
+	return (
+		<Alert
+			severity="warning"
+			closeText={t("ui.actions.close")}
+			onClose={() => setDismissed(true)}
+			sx={{ mb: 1 }}>
+			{t("ui.data_grid.views.private_removed")}
+		</Alert>
 	);
 }
 

@@ -3,13 +3,17 @@ import { authHeaders } from "@helpers/auth";
 import { cleanupStatuses } from "@constants/statuses/cleanupStatuses";
 import { untrackedStatuses } from "@constants/statuses/untrackedStatuses";
 
-/** Cleanup can never apply: the request is finished, or is not DCB's to finish. */
+/**
+ * Cleanup can never apply: the request is finished, is not DCB's to finish, or is between
+ * suppliers, which dcb-service's cleanup transition does not accept and force cannot overcome.
+ */
 export const neverCleanableStatuses = [
 	"COMPLETED",
 	"FINALISED",
 	"CANCELLED",
 	"ARCHIVED",
 	"HANDED_OFF_AS_LOCAL",
+	"NOT_SUPPLIED_CURRENT_SUPPLIER",
 ];
 
 export interface CleanableRequest {
@@ -55,8 +59,9 @@ export const isBorrowedByCaller = (
 };
 
 /**
- * Whether to offer cleanup for this request: to the borrowing library or a supplying one,
- * which is who dcb-service lets clean up. docs/cleanup.md.
+ * Whether to offer cleanup for this request: to the borrowing library or a supplying one, the
+ * borrower by agency where the request records it, otherwise by Host LMS, which on a shared
+ * system is every co-tenant. docs/cleanup.md.
  *
  * Guarded, the server refuses an item-out request and the caller may override, so only the
  * terminal states are filtered. Unguarded (8.71.0) there is no refusal, so the status list
@@ -83,7 +88,8 @@ export const isCleanupEligible = (
 
 export type CleanupOutcome =
 	| { kind: "cleaned" }
-	| { kind: "refused"; status?: string; detail?: string }
+	/** Overridable only while the item is out: force=true answers that refusal and no other. */
+	| { kind: "refused"; status?: string; detail?: string; overridable: boolean }
 	| { kind: "forbidden" }
 	| { kind: "notFound" }
 	| { kind: "failed"; detail?: string };
@@ -124,20 +130,22 @@ export const cleanupPatronRequest = async (
 	} catch (error) {
 		if (!axios.isAxiosError(error)) return { kind: "failed" };
 
+		// micronaut-problem-json nests a Problem's own fields under "parameters"
 		const body = error.response?.data as
 			| {
 					detail?: string;
-					patronRequestStatus?: string;
-					lastKnownItemOutStatus?: string;
+					parameters?: { patronRequestStatus?: string; lastKnownItemOutStatus?: string };
 			  }
 			| undefined;
+		const itemOut = body?.parameters?.lastKnownItemOutStatus;
 
 		switch (error.response?.status) {
 			case 409:
 				return {
 					kind: "refused",
-					status: body?.lastKnownItemOutStatus ?? body?.patronRequestStatus,
+					status: itemOut ?? body?.parameters?.patronRequestStatus,
 					detail: body?.detail,
+					overridable: itemOut !== undefined,
 				};
 			case 403:
 				return { kind: "forbidden" };
