@@ -10,9 +10,9 @@ import {
 
 /**
  * Every document this application can emit must be valid against the
- * dcb-service it will be sent to. Three passes, because a field gated
- * at the wrong THRESHOLD is invisible to all-on and all-off alike.
- * docs/service-compatibility.md.
+ * dcb-service it will be sent to, in each flag state a deployment can be in:
+ * a field gated at the wrong threshold, or kept behind a flag's off branch, is
+ * invisible to all-on and all-off alike. docs/service-compatibility.md.
  */
 
 const repoRoot = process.cwd();
@@ -141,6 +141,63 @@ describe("documents validate against the dcb-service they target", () => {
 			);
 		});
 	});
+
+	// A host on the newest release can run with fewer flags than it serves, while the worker's
+	// table lags the release: every document must still be valid with any one of them off
+	const NEWEST = RELEASE_PASSES[RELEASE_PASSES.length - 1];
+	const LAGGING = [
+		{ missing: "every flag", flags: {} as Record<string, string> },
+		...NEWEST.capabilities.map(({ flag }) => ({
+			missing: flag,
+			flags: Object.fromEntries(Object.entries(NEWEST.flags).filter(([name]) => name !== flag)),
+		})),
+	];
+
+	describe.each(LAGGING)(`dcb-service ${NEWEST.version} without $missing`, ({ flags }) => {
+		it.each(
+			files.filter((file) => {
+				const gate = gatedBy(file);
+				return !gate || gate in flags;
+			}),
+		)(`%s is valid against dcb-service ${NEWEST.version}`, async (file) => {
+			vi.stubGlobal("window", { __APP_ENV__: flags });
+
+			const documents = documentsFrom(
+				(await modules[file]()) as Record<string, unknown>,
+			);
+			documents.forEach((document) =>
+				assertValid(document, NEWEST.schema, `${file} against schema.v${NEWEST.version}.graphqls`),
+			);
+		});
+	});
+
+	// The flags no release decides - which Home panels, whether a discovery UI is live - are a
+	// deployment's choice on 8.71.0 too
+	const PRODUCT_FLAGS = Object.fromEntries(
+		[...readFileSync(path.resolve(repoRoot, "src/helpers/featureFlags.ts"), "utf8").matchAll(/readFlag\("([A-Z_]+)"\)/g)]
+			.map((match) => match[1])
+			.filter((flag) => !SERVICE_CAPABILITIES.some((entry) => entry.flag === flag))
+			.map((flag) => [flag, "true"]),
+	);
+
+	it("finds the product-choice flags", () => {
+		expect(Object.keys(PRODUCT_FLAGS)).toContain("VITE_FEATURE_HOME_INSIGHTS");
+		expect(Object.keys(PRODUCT_FLAGS)).not.toContain("VITE_FEATURE_INSIGHTS");
+	});
+
+	it.each(files.filter((file) => !gatedBy(file)))(
+		"%s is valid against dcb-service 8.71.0 with every product-choice flag on",
+		async (file) => {
+			vi.stubGlobal("window", { __APP_ENV__: PRODUCT_FLAGS });
+
+			const documents = documentsFrom(
+				(await modules[file]()) as Record<string, unknown>,
+			);
+			documents.forEach((document) =>
+				assertValid(document, LEGACY, `${file} against schema.v8.71.0.graphqls`),
+			);
+		},
+	);
 
 	it("every flag-only exclusion names a flag that exists", () => {
 		const declared = readFileSync(
