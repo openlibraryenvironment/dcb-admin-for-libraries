@@ -4,7 +4,7 @@ variables:
   CACHE_COMPRESSION_LEVEL: "fast"
   # Must equal @playwright/test in package.json: the browsers are baked into the image.
   # verify_static fails if the two drift.
-  PLAYWRIGHT_VERSION: "1.62.1"
+  PLAYWRIGHT_VERSION: "1.64.1"
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
   # The runner's clone of gitlab.com has failed on a refused connection; retry it, not the job.
   GET_SOURCES_ATTEMPTS: "3"

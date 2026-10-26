@@ -65,10 +65,10 @@
 		"zustand": "5.0.15"
 	},
 	"devDependencies": {
-		"@axe-core/playwright": "4.13.0",
+		"@axe-core/playwright": "4.14.0",
 		"@eslint/js": "9.39.5",
 		"@lhci/cli": "0.15.1",
-		"@playwright/test": "1.62.1",
+		"@playwright/test": "1.64.1",
 		"@semantic-release/changelog": "7.0.0",
 		"@semantic-release/git": "11.0.1",
 		"@semantic-release/gitlab": "13.3.3",

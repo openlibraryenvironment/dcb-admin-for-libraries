@@ -1,6 +1,6 @@
 # dcb-admin-for-libraries — agent notes
 
-Library-facing administration UI for DCB. React 19, TanStack Router + Query, Vite 8, Vitest 4, GraphQL against `dcb-service`.
+Library-facing administration UI for DCB. React 19, TanStack Router + Query, Vite 8, Vitest 5, GraphQL against `dcb-service`.
 
 ## Non-negotiables
 
@@ -16,12 +16,12 @@ Corrected 2026-09-21, and the correction is the point: this table said MUI 9.3.1
 
 | | this repo | `dcb-admin-ui` |
 |---|---|---|
-| MUI | **9.4.0** | 9.4.0 |
-| MUI X (grid, charts, pickers, license) | **9.15.0** | 9.15.0 |
-| TanStack Router | **1.170.31** | 1.170.17 |
+| MUI | **9.5.0** | 9.5.0 |
+| MUI X (grid, charts, pickers, license) | **9.16.0** | 9.16.0 |
+| TanStack Router | **1.170.45** | 1.170.46 |
 | TypeScript | **6.0.3** | 6.0.3 |
-| Vite | **8.2.1** | 8.1.3 |
-| React | **19.2.8** | 19.2.7 |
+| Vite | **8.3.5** | 8.3.5 |
+| React | **19.3.1** | 19.3.1 |
 
 The two admin apps are on the same generation, so an API that works in one usually works here. MUI X 9 is where the two repos are pinned in lockstep on purpose — those packages share `x-license` and `x-internals`, and a mixed set is a runtime hazard rather than untidiness. Bump them together or not at all - and bump to whatever `dcb-admin-ui` is on, not to whatever npm calls latest. `@mui/x-license` lags the other X packages (9.13.0 when the rest offered 9.14.0), so "latest" is itself a mixed set. A caret range does it too: `x-data-grid-premium@9.13.0` resolved `x-data-grid-pro` and `x-data-grid` at 9.14.0 until 2026-10-14. Check `npm ls @mui/x-data-grid-pro`, not only `package.json`.
 
