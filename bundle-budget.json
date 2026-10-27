@@ -1,8 +1,9 @@
 {
-	"_why": "Gzipped bytes of scripts and stylesheets, measured from the build manifest by scripts/check-bundle-budget.mjs (npm run budget). The first load FAILS the build when over; each route and on-demand feature is REPORTED. Routes and features are named by their source file, so a regrouping by the bundler does not move them. Never raise a number to make a build pass, or to sit just above it: cut the weight, or write the argument here and in the commit. docs/testing.md, 'What the bundle budget measures'.",
+	"_why": "Gzipped bytes of scripts and stylesheets, measured from the build manifest by scripts/check-bundle-budget.mjs (npm run budget). Every overrun is REPORTED; the build FAILS only when the first load is more than firstLoad.blockAbovePercent over its budget. Routes and features are named by their source file, so a regrouping by the bundler does not move them. Never raise a number to make a build pass, or to sit just above it: cut the weight, or write the argument here and in the commit. docs/testing.md, 'What the bundle budget measures'.",
 	"firstLoad": {
 		"budget": 252100,
-		"_note": "What every page loads before its own route code, /login included. 247,141 measured on 2026-10-14 when the catalogue left the first load, plus 2%, and held as a ceiling since."
+		"blockAbovePercent": 5,
+		"_note": "What every page loads before its own route code, /login included. Advisory from 2026-10-27, as in DCB Admin: over the budget is reported, and only more than blockAbovePercent over fails the build (limit 264,705). 247,141 measured on 2026-10-14 when the catalogue left the first load, plus 2%, and held as a ceiling since."
 	},
 	"routes": {
 		"Home": {

@@ -41,7 +41,7 @@ stylesheets against `bundle-budget.json`. It prints a report and writes it to
 
 | Budget | Measures | When over |
 |---|---|---|
-| `firstLoad` | what every page loads before its own route code: the entry, the app shell it boots, and their static imports | **fails the build** |
+| `firstLoad` | what every page loads before its own route code: the entry, the app shell it boots, and their static imports | reported; **fails the build** more than `blockAbovePercent` (5%) over |
 | `routes` | what a page adds to that: its route file, the layout routes above it, and their static imports | reported |
 | `onDemand` | what a feature adds to the first load, from its entry point: Excel export, each translation catalogue, the saved filters dialog | reported |
 | the total | everything the build emits | printed, never budgeted |
@@ -51,7 +51,18 @@ name, so a regrouping does not move a budget. A route or feature that is no long
 reported, so a budget nobody checks does not linger.
 
 **Why only the first load fails.** It is what every user pays, `/login` included, and it is
-where both of 2.0's real regressions landed. Route and feature budgets are a report: a route
+where both of 2.0's real regressions landed. Since 27 October 2026 it fails only when it is
+more than `firstLoad.blockAbovePercent` (5%) over its budget, the rule DCB Admin adopted the
+day before: at 252,100 the limit is 264,705. Anything over the budget but under the limit is
+reported with the size, the overrun and the limit, and the gate passes. Five per cent is about
+12.6 KB gzipped. The budget is a held ceiling, not what is measured: on 27 October main
+measured 225,490, so the build fails only after about 39 KB of growth. That still fails the
++190 KB regression, and the +40 KB one by under 1 KB. A warning is the prompt to cut the weight
+or record the argument in `bundle-budget.json`, so the number keeps meaning what every page
+should load. The rule is `firstLoadVerdict` in `scripts/budget-verdict.ts`, tested by
+`tests/budgetVerdict.test.ts`.
+
+Route and feature budgets are a report: a route
 that grows by tens of KB shows as over in every run until someone cuts it or argues a new
 number, but it does not hold up an unrelated change. The total is not a budget at all. It
 counted the Excel library, which only an export loads, and it failed a change that took 65 KB

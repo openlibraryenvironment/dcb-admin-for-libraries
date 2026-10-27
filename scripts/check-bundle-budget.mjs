@@ -1,6 +1,7 @@
-// Gzipped bundle budgets over dist/: what every page loads first, which FAILS when over,
-// and what each route and each on-demand feature adds to it, which is REPORTED. What each
-// measures and why: docs/testing.md, "What the bundle budget measures".
+// Gzipped bundle budgets over dist/: what every page loads first, and what each route and
+// each on-demand feature adds to it. Every overrun is REPORTED; only a first load more than
+// blockAbovePercent over its budget FAILS. What each measures and why: docs/testing.md,
+// "What the bundle budget measures".
 //
 // Usage: npm run budget            measures the build already in dist/
 //        npm run budget -- --build builds first, as CI does, then measures
@@ -8,6 +9,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { dirname, join, posix } from "node:path";
+import { firstLoadVerdict } from "./budget-verdict.ts";
 
 const BUDGET = JSON.parse(readFileSync("bundle-budget.json", "utf8"));
 const MANIFEST = join("dist", ".vite", "manifest.json");
@@ -100,16 +102,23 @@ const lines = [];
 const row = (name, size, budget, note) =>
 	lines.push(`| ${name} | ${size ?? "-"} | ${budget ?? "-"} | ${note} |`);
 
-lines.push("# Bundle budget", "", "Gzipped bytes. Only the first load fails the build; the rest is reported.", "");
+lines.push(
+	"# Bundle budget",
+	"",
+	`Gzipped bytes. Every overrun is reported; the build fails only when the first load is more than ${BUDGET.firstLoad.blockAbovePercent}% over its budget.`,
+	"",
+);
 lines.push("| What | Measured | Budget | |", "|---|---:|---:|---|");
-const firstLoadOver = firstLoad > BUDGET.firstLoad.budget;
+const verdict = firstLoadVerdict(firstLoad, BUDGET.firstLoad.budget, BUDGET.firstLoad.blockAbovePercent);
 row(
 	"**First load** (every page)",
 	firstLoad,
 	BUDGET.firstLoad.budget,
-	firstLoadOver
-		? `**OVER by ${firstLoad - BUDGET.firstLoad.budget}: fails**`
-		: `${BUDGET.firstLoad.budget - firstLoad} to spare`,
+	verdict.blocks
+		? `**OVER by ${verdict.over}, above the limit of ${verdict.limit}: fails**`
+		: verdict.over > 0
+			? `**OVER by ${verdict.over}: reported; fails above ${verdict.limit}**`
+			: `${-verdict.over} to spare`,
 );
 lines.push("", "**What each route adds to the first load**", "", "| Route | Measured | Budget | |", "|---|---:|---:|---|");
 for (const route of routes) row(route.name, route.size, route.budget, status(route));
@@ -140,11 +149,22 @@ if (reported.length > 0) {
 			"Cut the weight, or bring a written argument for a new number in bundle-budget.json.",
 	);
 }
-if (firstLoadOver) {
+const findWhatMoved =
+	"Find what moved into the route tree or the app shell; a route file's loader and validateSearch load eagerly.";
+if (verdict.blocks) {
 	console.error(
-		`\nBundle budget: what every page loads first is ${firstLoad}, over ${BUDGET.firstLoad.budget}. ` +
-			"Find what moved into the route tree or the app shell; a route file's loader and validateSearch load eagerly.",
+		`\nBundle budget: what every page loads first is ${firstLoad}, more than ` +
+			`${BUDGET.firstLoad.blockAbovePercent}% over ${BUDGET.firstLoad.budget} (limit ${verdict.limit}, +${verdict.over}). ` +
+			findWhatMoved,
 	);
 	process.exit(1);
 }
-console.log("\nBundle budget: first load within budget.");
+if (verdict.over > 0) {
+	console.warn(
+		`\nBundle budget: what every page loads first is ${firstLoad}, over ${BUDGET.firstLoad.budget} ` +
+			`(+${verdict.over}): reported, not failed. The build fails above ${verdict.limit}. ` +
+			findWhatMoved,
+	);
+} else {
+	console.log("\nBundle budget: first load within budget.");
+}
