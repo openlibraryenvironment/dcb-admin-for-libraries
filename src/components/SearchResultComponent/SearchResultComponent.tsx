@@ -1,6 +1,7 @@
 import { SearchInstance } from "@models/SearchTypes";
 import { useItemAvailability } from "@/hooks/useItemAvailability";
 import { CustomLink } from "@components/CustomLink";
+import InfoTooltip from "@components/InfoTooltip/InfoTooltip";
 import { Button, CardActions, Link, Tooltip } from "@mui/material";
 import Card from "@mui/material/Card";
 import Skeleton from "@mui/material/Skeleton";
@@ -249,9 +250,17 @@ export const SearchResult = ({ record }: SearchResultProps) => {
 								)}
 								<Typography variant="body2">
 									{isAvailableForWalkUp
-										? t("requesting.available_for_walk_up_description")
-										: t("requesting.not_available_for_walk_up_description")}
+										? t("requesting.available_for_walk_up")
+										: t("requesting.not_available_for_walk_up")}
 								</Typography>
+								<InfoTooltip
+									label={t("requesting.about_walk_up")}
+									title={
+										isAvailableForWalkUp
+											? t("requesting.available_for_walk_up_description")
+											: t("requesting.not_available_for_walk_up_description")
+									}
+								/>
 							</Stack>
 
 							<Stack direction="row" spacing={1} sx={{
@@ -267,9 +276,17 @@ export const SearchResult = ({ record }: SearchResultProps) => {
 								)}
 								<Typography variant="body2">
 									{isAvailableForStaffRequesting
-										? t("requesting.available_for_staff_request_description")
-										: t("requesting.not_available_for_staff_request_description")}
+										? t("requesting.available_for_staff_request")
+										: t("requesting.not_available_for_staff_request")}
 								</Typography>
+								<InfoTooltip
+									label={t("requesting.about_staff_request")}
+									title={
+										isAvailableForStaffRequesting
+											? t("requesting.available_for_staff_request_description")
+											: t("requesting.not_available_for_staff_request_description")
+									}
+								/>
 							</Stack>
 							<Stack direction="row" spacing={1} sx={{
                                 alignItems: "center"
