@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BookmarksOutlined, FilterAltOffOutlined, LinkRounded } from "@mui/icons-material";
-import { Alert, Box, Button, Tooltip, Typography } from "@mui/material";
+import { Alert, Box, Button, Portal, Tooltip, Typography } from "@mui/material";
 import { ToolbarButton } from "@mui/x-data-grid-premium";
 
 import TimedAlert from "@components/TimedAlert/TimedAlert";
@@ -15,6 +15,8 @@ const SavedFiltersDialog = lazy(() => import("./SavedFiltersDialog"));
 export function ShareViewButton({ views }: { views: GridViews }) {
 	const { t } = useTranslation();
 	const [result, setResult] = useState<"copied" | "failed" | null>(null);
+	// A new alert per copy, so a second copy is shown and announced while the first is still open
+	const [copies, setCopies] = useState(0);
 
 	const share = async () => {
 		await views.flush();
@@ -24,6 +26,7 @@ export function ShareViewButton({ views }: { views: GridViews }) {
 		} catch {
 			setResult("failed");
 		}
+		setCopies((count) => count + 1);
 	};
 
 	return (
@@ -33,20 +36,24 @@ export function ShareViewButton({ views }: { views: GridViews }) {
 					<LinkRounded fontSize="small" />
 				</ToolbarButton>
 			</Tooltip>
-			<TimedAlert
-				open={result !== null}
-				onCloseFunc={(_event: unknown, reason?: string) =>
-					reason !== "clickaway" && setResult(null)
-				}
-				severityType={result === "failed" ? "error" : views.hasPrivate ? "warning" : "success"}
-				alertText={
-					result === "failed"
-						? t("ui.data_grid.views.share_failed")
-						: views.hasPrivate
-							? t("ui.data_grid.views.share_copied_private")
-							: t("ui.data_grid.views.share_copied")
-				}
-			/>
+			{/* The grid root's transform would otherwise pin this fixed Snackbar to the grid, not the viewport */}
+			<Portal>
+				<TimedAlert
+					key={copies}
+					open={result !== null}
+					onCloseFunc={(_event: unknown, reason?: string) =>
+						reason !== "clickaway" && setResult(null)
+					}
+					severityType={result === "failed" ? "error" : views.hasPrivate ? "warning" : "success"}
+					alertText={
+						result === "failed"
+							? t("ui.data_grid.views.share_failed")
+							: views.hasPrivate
+								? t("ui.data_grid.views.share_copied_private")
+								: t("ui.data_grid.views.share_copied")
+					}
+				/>
+			</Portal>
 		</>
 	);
 }

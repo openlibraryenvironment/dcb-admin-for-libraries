@@ -44,6 +44,29 @@ test("copies the address of the view, filters included", async ({ app, page }) =
 	expect(new URL(copied).searchParams.get("filters")).toBe(ERRORS);
 });
 
+test("says so at the foot of the window, and again on every copy", async ({ app, page }) => {
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadLibraries: library,
+		LoadPatronRequests: patronRequests,
+	});
+	await page.goto(FILTERED);
+	await expect(page.getByRole("grid")).toBeVisible();
+	const copy = toolbar(page).getByRole("button", { name: "Copy link to this view" });
+
+	await copy.click();
+	const first = page.getByRole("alert");
+	await expect(first).toContainText("Link to this view copied.");
+	// Snackbar sits 24px above the viewport's foot; inside the grid it sat at the grid's
+	const box = (await first.boundingBox())!;
+	expect(page.viewportSize()!.height - (box.y + box.height)).toBeLessThan(48);
+
+	const shown = await first.elementHandle();
+	await copy.click();
+	await expect.poll(() => shown!.evaluate((node) => node.isConnected)).toBe(false);
+	await expect(page.getByRole("alert")).toContainText("Link to this view copied.");
+});
+
 test("a copied link never carries a barcode, and says it left one out", async ({
 	app,
 	page,
