@@ -2,7 +2,14 @@
 	"branches": ["release"],
 	"plugins": [
 		"@semantic-release/commit-analyzer",
-		"@semantic-release/release-notes-generator",
+		[
+			"@semantic-release/release-notes-generator",
+			{
+				"parserOpts": {
+					"issuePrefixes": null
+				}
+			}
+		],
 		"@semantic-release/changelog",
 		[
 			"@semantic-release/gitlab",
