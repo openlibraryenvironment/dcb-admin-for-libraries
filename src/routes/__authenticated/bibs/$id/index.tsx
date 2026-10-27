@@ -1,6 +1,7 @@
 import { useClock } from "@/hooks/useThemeStore";
 import { formatTimestamp } from "@helpers/formatters";
 import { Attribute } from "@components/Attribute/Attribute";
+import { CustomLink } from "@components/CustomLink";
 import { pageTitle } from "@helpers/pageTitle";
 import Error from "@components/Error/Error";
 import Loading from "@components/Loading/Loading";
@@ -209,7 +210,15 @@ function RouteComponent() {
 			</Grid>
 			<Grid size={DETAIL_ITEM}>
 				<Attribute label={t("bibs.cluster_uuid")}>
-					<RenderAttribute attribute={bibRecord?.contributesTo?.id} />
+					{cfg.VITE_DCB_SEARCH_BASE && bibRecord?.contributesTo?.id ? (
+						<CustomLink
+							to="/requesting/$recordId"
+							params={{ recordId: bibRecord.contributesTo.id }}>
+							{bibRecord.contributesTo.id}
+						</CustomLink>
+					) : (
+						<RenderAttribute attribute={bibRecord?.contributesTo?.id} />
+					)}
 				</Attribute>
 			</Grid>
 			<Grid size={FULL_ROW}>

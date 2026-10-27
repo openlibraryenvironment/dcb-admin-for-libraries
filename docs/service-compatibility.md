@@ -182,11 +182,15 @@ fallback the two cards would vanish on 8.71.0 with nothing on screen to say why.
 
 ## Telling library staff why a feature is missing
 
-Preferences, under About, has a **Feature availability** table: every registry row a
-release serves, the release it needs, and whether this deployment has it, read from the
+Preferences, under About, has a **Feature availability** table: the features a library
+would notice, the release each needs, and whether this deployment has it, read from the
 version dcb-service reports on `/info`. It is how a library on 8.71.0 learns why the
-Insights tab is not there. A row with `since: null` is never shown, so nothing names a
-feature no release has; rows for what patrons see through a discovery front end are left
-out where `VITE_DISCOVERY_ACTIVE` says none is deployed. The two Insights panels with flags
-of their own are registry rows for this reason, with no fields. `e2e/feature-availability.spec.ts`
-holds the three outcomes.
+Insights tab is not there. The table is deliberately shorter than the registry: `FEATURES`
+in `FeatureAvailability.tsx` lists its rows, each over one or more registry rows. A feature
+made of several - Insights is `insights`, `insights_trends` and `insights_walk_up` - needs
+the newest of their releases and is available only with every one of their flags on.
+Registry rows that are not a feature a library looks for (who placed a request, the hold
+limit, Host LMS connection checks, confirming an item is back) are not listed. A feature
+with `since: null` is never shown, so nothing names a feature no release has; rows for what
+patrons see through a discovery front end are left out where `VITE_DISCOVERY_ACTIVE` says
+none is deployed. `e2e/feature-availability.spec.ts` holds the outcomes.

@@ -55,6 +55,7 @@ import { formatDuration } from "@helpers/formatDuration";
 import Loading from "@components/Loading/Loading";
 import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE, DETAIL_ITEM } from "@constants/detailGrid";
 import { CustomLink } from "@components/CustomLink";
+import InfoTooltip from "@components/InfoTooltip/InfoTooltip";
 import { SourceRecord } from "@models/SourceRecord";
 import { queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
@@ -98,17 +99,18 @@ const requestSearchSchema = z.object({
 function LibraryWithContact({ library }: { library: Library }) {
 	const { t } = useTranslation();
 	return (
-		<>
+		<Box component="span" sx={{ display: "inline-flex", alignItems: "center", columnGap: 0.5 }}>
 			<RenderAttribute attribute={library.fullName} />
-			<Typography variant="body2" color="text.secondary">
-				{t("patron_request.library_ils_contacts", {
+			<InfoTooltip
+				label={t("patron_request.about_library", { library: library.fullName })}
+				title={t("patron_request.library_ils_contacts", {
 					ils: getILS(library.agency?.hostLms?.lmsClientClass),
 					contact: library.contacts
 						? findPrimaryContacts(library.contacts)
 						: t("library.no_contact"),
 				})}
-			</Typography>
-		</>
+			/>
+		</Box>
 	);
 }
 

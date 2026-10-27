@@ -183,7 +183,7 @@ test.describe("Patron request detail", () => {
 	});
 });
 
-test("a library's ILS and contacts are written out, not left to a hover", async ({
+test("a library's ILS and contacts open from the keyboard, and close on Escape", async ({
 	app,
 	page,
 }) => {
@@ -203,7 +203,15 @@ test("a library's ILS and contacts are written out, not left to a hover", async 
 		.filter({ hasText: /^Supplier library$/ })
 		.locator("xpath=following-sibling::dd[1]");
 	await expect(supplier).toContainText("E2E Test Library");
-	await expect(supplier).toContainText("Primary contacts:");
+	const about = supplier.getByRole("button", { name: "System and contacts for E2E Test Library" });
+	await about.focus();
+	await page.keyboard.press("Shift+Tab");
+	await page.keyboard.press("Tab");
+
+	await expect(page.getByRole("tooltip")).toContainText("Primary contacts:");
+	await expect(about).toHaveAccessibleDescription(/Primary contacts:/);
+	await page.keyboard.press("Escape");
+	await expect(page.getByRole("tooltip")).toHaveCount(0);
 });
 
 test("on a phone, each of a request's details takes the whole row", covers("On a phone-width screen, each of a request's details takes the whole row.", ["1.4.10"]), async ({ app, page }) => {

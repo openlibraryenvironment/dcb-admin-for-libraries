@@ -148,18 +148,28 @@ test("at 320px wide, the page buttons are on screen", covers("On a phone-width s
 	}
 });
 
-test("a result says why it can or cannot be requested, without a hover", async ({
+test("a result says why it can or cannot be requested, from the keyboard", async ({
 	app,
 	page,
 }) => {
 	await openSearch(app, page, "/requesting?filters=12345");
 
-	await expect(
-		page.getByText(/^Not available for walk-up requesting: there is currently no available item/).first(),
-	).toBeVisible();
-	await expect(
-		page.getByText(/^Not available for staff requesting: there is currently no available item/).first(),
-	).toBeVisible();
+	await expect(page.getByText("Not available for walk-up requesting", { exact: true }).first()).toBeVisible();
+	const about = page.getByRole("button", { name: "About walk-up requesting for this record" }).first();
+	await about.focus();
+	await page.keyboard.press("Shift+Tab");
+	await page.keyboard.press("Tab");
+
+	const why = /^Not available for walk-up requesting: there is currently no available item/;
+	await expect(page.getByRole("tooltip")).toHaveText(why);
+	await expect(about).toHaveAccessibleDescription(why);
+	await page.keyboard.press("Escape");
+	await expect(page.getByRole("tooltip")).toHaveCount(0);
+
+	await page.getByRole("button", { name: "About staff requesting for this record" }).first().click();
+	await expect(page.getByRole("tooltip")).toHaveText(
+		/^Not available for staff requesting: there is currently no available item/,
+	);
 });
 
 test("a new page of results is announced, and says which page", async ({ app, page }) => {

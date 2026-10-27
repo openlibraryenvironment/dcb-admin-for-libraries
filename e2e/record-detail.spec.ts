@@ -3,6 +3,7 @@ import library from "./fixtures-data/library.json" with { type: "json" };
 
 const BIB_ID = "55555555-5555-4555-8555-555555555555";
 const LOCATION_ID = "66666666-6666-4666-8666-666666666666";
+const CLUSTER_ID = "88888888-8888-4888-8888-888888888888";
 
 const bib = {
 	id: BIB_ID,
@@ -15,6 +16,7 @@ const bib = {
 	// A cataloguer's string, not an instant.
 	dateOfPublication: "c1871.",
 	canonicalMetadata: { title: "Middlemarch" },
+	contributesTo: { id: CLUSTER_ID },
 };
 
 test.beforeEach(async ({ app }) => {
@@ -32,6 +34,19 @@ test("a bib shows its publication date as catalogued", async ({ app, page }) => 
 		page.getByRole("heading", { level: 1, name: "Middlemarch" }),
 	).toBeVisible();
 	await expect(page.getByText("c1871.")).toBeVisible();
+});
+
+test("a bib's cluster links to that record under Requesting", async ({ app, page }) => {
+	await app.mockGraphQL({
+		LoadLibrary: library,
+		LoadBibMainDetails: { sourceBibs: { content: [bib] } },
+	});
+
+	await page.goto(`/bibs/${BIB_ID}`);
+	await expect(page.getByRole("link", { name: CLUSTER_ID })).toHaveAttribute(
+		"href",
+		new RegExp(`/requesting/${CLUSTER_ID}$`),
+	);
 });
 
 test("a bib that does not exist is not found, not a blank page", async ({
