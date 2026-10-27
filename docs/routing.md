@@ -47,6 +47,13 @@ person decides when to try again. That also covers Keycloak sending back
 callback parameters suppressed its redirect and nothing else rendered.
 `e2e/login.spec.ts` asserts both.
 
+Before redirecting it keeps the whole address - path, query and hash - and the
+sign-in callback returns to it, so a bookmarked grid view or Insights window
+opens exactly as bookmarked. The same happens when silent renewal fails and the
+session has to start again. A patron barcode or requester note filter is never
+in the address, so it is the one part of a view a bookmark cannot carry.
+`e2e/sign-in-return.spec.ts` runs the round trip against a fake Keycloak.
+
 ## Read-only users
 
 `LIBRARY_READ_ONLY` may use `/requesting` and nothing else.
