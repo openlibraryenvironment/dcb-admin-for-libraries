@@ -33,7 +33,11 @@ test.describe("Feature availability", () => {
 		await expect(table).toBeVisible();
 		await expect(page.getByText("reports version 8.71.0")).toBeVisible();
 		await expect(statusOf(page, "Insights")).toHaveText("Needs a newer DCB service");
-		await expect(statusOf(page, "Confirm item is back")).toHaveText("Needs a newer DCB service");
+		await expect(statusOf(page, "Pickup requests")).toHaveText("Needs a newer DCB service");
+		// Folded into Insights, or not something a library would look for here
+		for (const absent of ["Insights: duration trends", "Confirm item is back"]) {
+			await expect(table.getByRole("rowheader", { name: absent })).toHaveCount(0);
+		}
 		// Nothing a patron sees through a discovery front end, where none is deployed
 		await expect(table.getByRole("rowheader", { name: "Announcements" })).toHaveCount(0);
 
@@ -44,14 +48,30 @@ test.describe("Feature availability", () => {
 		app,
 		page,
 	}) => {
-		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await app.enableFeatures([
+			"VITE_FEATURE_INSIGHTS",
+			"VITE_FEATURE_INSIGHTS_TRENDS",
+			"VITE_FEATURE_INSIGHTS_WALK_UP",
+		]);
 		await serviceReports(page, "9.2.0");
 		await page.goto("/preferences");
 
 		await expect(statusOf(page, "Insights")).toHaveText("Available");
-		await expect(statusOf(page, "Confirm item is back")).toHaveText(
+		await expect(statusOf(page, "Pickup requests")).toHaveText(
 			"Supported, but not switched on for your consortium yet",
 		);
+	});
+
+	test("Insights needs 9.2.0, and every one of its flags", async ({ app, page }) => {
+		await app.enableFeatures(["VITE_FEATURE_INSIGHTS"]);
+		await serviceReports(page, "9.1.0");
+		await page.goto("/preferences");
+
+		const insights = page
+			.getByRole("row")
+			.filter({ has: page.getByRole("rowheader", { name: "Insights", exact: true }) });
+		await expect(insights.getByRole("cell").first()).toHaveText("DCB service 9.2.0 or later");
+		await expect(statusOf(page, "Insights")).toHaveText("Needs a newer DCB service");
 	});
 
 	test("says it cannot tell when the version cannot be read", async ({ page }) => {

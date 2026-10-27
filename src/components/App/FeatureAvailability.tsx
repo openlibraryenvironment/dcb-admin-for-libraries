@@ -10,14 +10,38 @@ import {
 } from "@mui/material";
 
 import {
-	SERVICE_CAPABILITIES,
+	capability,
 	capabilityStatus,
+	meetsServiceVersion,
 } from "@constants/serviceCapabilities";
 import { isCapabilityEnabled, isDiscoveryActive } from "@helpers/featureFlags";
 import { useServiceVersion } from "@/hooks/useServiceVersion";
 
 // What patrons see through a discovery front end: nothing to say where none is deployed
 const DISCOVERY_ONLY = new Set(["library_branding", "library_support_url", "announcements"]);
+
+// Not every registry row: a row here is a feature a library would notice, over every
+// capability it is made of, and needs the newest of them
+const FEATURES: readonly { id: string; capabilities: readonly string[] }[] = [
+	{ id: "library_branding", capabilities: ["library_branding"] },
+	{ id: "announcements", capabilities: ["announcements"] },
+	{ id: "library_support_url", capabilities: ["library_support_url"] },
+	{ id: "insights", capabilities: ["insights", "insights_trends", "insights_walk_up"] },
+	{ id: "guarded_cleanup", capabilities: ["guarded_cleanup"] },
+	{ id: "request_tags", capabilities: ["request_tags"] },
+	{ id: "request_notes", capabilities: ["request_notes"] },
+	{ id: "pickup_requests", capabilities: ["pickup_requests"] },
+	{ id: "agency_scoped_requests", capabilities: ["agency_scoped_requests"] },
+];
+
+const newest = (versions: readonly (string | null)[]): string | null =>
+	versions.reduce((latest, since) =>
+		latest === null || since === null
+			? null
+			: meetsServiceVersion(since, latest)
+				? since
+				: latest,
+	);
 
 /**
  * Which features need which DCB service release, and whether this deployment has them, so
@@ -29,12 +53,17 @@ export function FeatureAvailability() {
 	const version = useServiceVersion();
 	const discoveryActive = isDiscoveryActive();
 
-	// A capability in no release is never named: since is null only for unreleased work
-	const rows = SERVICE_CAPABILITIES.filter(
-		(capability) =>
-			capability.since !== null &&
-			(discoveryActive || !DISCOVERY_ONLY.has(capability.id)),
-	);
+	// A feature in no release is never named: since is null only for unreleased work
+	const rows = FEATURES.filter((feature) => discoveryActive || !DISCOVERY_ONLY.has(feature.id))
+		.map((feature) => {
+			const parts = feature.capabilities.map(capability);
+			return {
+				id: feature.id,
+				since: newest(parts.map((part) => part.since)),
+				enabled: parts.every((part) => isCapabilityEnabled(part.flag)),
+			};
+		})
+		.filter((feature) => feature.since !== null);
 
 	return (
 		<>
@@ -62,14 +91,14 @@ export function FeatureAvailability() {
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{rows.map((capability) => (
-							<TableRow key={capability.id}>
+						{rows.map((feature) => (
+							<TableRow key={feature.id}>
 								<TableCell component="th" scope="row">
-									{t(`feature_availability.feature.${capability.id}`)}
+									{t(`feature_availability.feature.${feature.id}`)}
 								</TableCell>
 								<TableCell>
 									{t("feature_availability.needs_version", {
-										version: capability.since,
+										version: feature.since,
 									})}
 								</TableCell>
 								<TableCell>
@@ -77,8 +106,8 @@ export function FeatureAvailability() {
 										? t("feature_availability.checking")
 										: t(
 												`feature_availability.status.${capabilityStatus(
-													capability.since,
-													isCapabilityEnabled(capability.flag),
+													feature.since,
+													feature.enabled,
 													version,
 												)}`,
 											)}
