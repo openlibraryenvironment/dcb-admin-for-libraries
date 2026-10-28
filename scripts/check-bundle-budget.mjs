@@ -57,16 +57,29 @@ function filesOf(keys) {
 	return files;
 }
 
-// The entry, the app shell it boots, and their static imports
-const firstLoadFiles = filesOf([
-	"index.html",
-	...(manifest["index.html"]?.dynamicImports ?? []),
-]);
-const firstLoad = bytes(firstLoadFiles);
-
 const sourceOf = (key) => key.split("?")[0];
 const keysFor = (sources) =>
 	Object.keys(manifest).filter((key) => sources.has(sourceOf(key)));
+
+// Dynamic imports the app awaits before its first render, which the import graph cannot tell
+// from one a click triggers. A missing one would shrink the first load without a word.
+const beforeFirstRender = new Set(BUDGET.firstLoad.beforeFirstRender ?? []);
+const unbuilt = [...beforeFirstRender].filter((source) => keysFor(new Set([source])).length === 0);
+if (unbuilt.length > 0) {
+	console.error(
+		`firstLoad.beforeFirstRender names ${unbuilt.join(", ")}, which the build does not contain. ` +
+			"Point it at what the app now loads before its first render.",
+	);
+	process.exit(1);
+}
+
+// The entry, the app shell it boots, their static imports, and what the shell awaits first
+const firstLoadFiles = filesOf([
+	"index.html",
+	...(manifest["index.html"]?.dynamicImports ?? []),
+	...keysFor(beforeFirstRender),
+]);
+const firstLoad = bytes(firstLoadFiles);
 
 /** A route file and the layout routes above it, which load with it: a.tsx, a/b.tsx, a/b/route.tsx. */
 function routeChain(file) {

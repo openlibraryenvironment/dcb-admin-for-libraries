@@ -41,9 +41,9 @@ stylesheets against `bundle-budget.json`. It prints a report and writes it to
 
 | Budget | Measures | When over |
 |---|---|---|
-| `firstLoad` | what every page loads before its own route code: the entry, the app shell it boots, and their static imports | reported; **fails the build** more than `blockAbovePercent` (5%) over |
+| `firstLoad` | what every page loads before its first render: the entry, the app shell it boots, their static imports, and `beforeFirstRender`, the British English catalogue | reported; **fails the build** more than `blockAbovePercent` (5%) over |
 | `routes` | what a page adds to that: its route file, the layout routes above it, and their static imports | reported |
-| `onDemand` | what a feature adds to the first load, from its entry point: Excel export, each translation catalogue, the saved filters dialog | reported |
+| `onDemand` | what a feature adds to the first load, from its entry point: Excel export, the American English overlay, the saved filters dialog | reported |
 | the total | everything the build emits | printed, never budgeted |
 
 Routes and features are named by their source file, not by the chunk the bundler happens to
@@ -53,11 +53,20 @@ reported, so a budget nobody checks does not linger.
 **Why only the first load fails.** It is what every user pays, `/login` included, and it is
 where both of 2.0's real regressions landed. Since 27 October 2026 it fails only when it is
 more than `firstLoad.blockAbovePercent` (5%) over its budget, the rule DCB Admin adopted the
-day before: at 252,100 the limit is 264,705. Anything over the budget but under the limit is
-reported with the size, the overrun and the limit, and the gate passes. Five per cent is about
-12.6 KB gzipped. The budget is a held ceiling, not what is measured: on 27 October main
-measured 225,490, so the build fails only after about 39 KB of growth. That still fails the
-+190 KB regression, and the +40 KB one by under 1 KB. A warning is the prompt to cut the weight
+day before: at 280,000 the limit is 294,000. Anything over the budget but under the limit is
+reported with the size, the overrun and the limit, and the gate passes. Five per cent is
+14 KB gzipped. The budget is a held ceiling, not what is measured: on 28 October main
+measured 254,905, so the build fails only after about 39 KB of growth. That still fails the
++190 KB regression, and the +40 KB one by under 1 KB.
+
+**The catalogue counts as first load.** `src/application.tsx` awaits the British English
+catalogue before it renders anything, and every deployment loads it, en-US included, but it
+arrives by a dynamic import, which the manifest cannot tell from one a click triggers.
+`firstLoad.beforeFirstRender` names it, and the check fails if that source is no longer built,
+rather than count less without saying so. Until 28 October it had a reported-only budget of
+its own: it was raised twice and never prompted a cut, because every new screen must add
+strings to it. In the first load it is weighed against everything else every user downloads
+before they see a page. Loading only the strings a page needs is the way to make it smaller. A warning is the prompt to cut the weight
 or record the argument in `bundle-budget.json`, so the number keeps meaning what every page
 should load. The rule is `firstLoadVerdict` in `scripts/budget-verdict.ts`, tested by
 `tests/budgetVerdict.test.ts`.
@@ -68,8 +77,10 @@ number, but it does not hold up an unrelated change. The total is not a budget a
 counted the Excel library, which only an export loads, and it failed a change that took 65 KB
 off every grid page because splitting code adds a little to the total.
 
-**The numbers.** `firstLoad` is a held ceiling, 252,100: what was measured when the
-translation catalogue left the first load, plus 2%. Routes and features were set on
+**The numbers.** `firstLoad` is a held ceiling, 280,000: 252,100, what was measured when the
+catalogue left the static imports plus 2%, raised when the catalogue joined the count by what
+keeps the room before the build fails where it was (`bundle-budget.json` has the arithmetic).
+Routes and features were set on
 16 October 2026 to what was measured plus 5%, rounded up to 100: room for strings and
 dependency patches, none for tens of KB. Never raise one to make a build pass or to sit just
 above it: cut the weight, or write the argument in `bundle-budget.json` and the commit.
