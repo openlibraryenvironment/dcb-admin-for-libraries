@@ -2068,8 +2068,8 @@
 		"intro": "The main changes in this release of DCB Admin for Libraries.",
 		"items": {
 			"home": {
-				"heading": "A personalised OpenRS summary for your library",
-				"body": "The Home page now shows a personalised summary of your library's OpenRS activity for today, the last 7 days or the last 30 days."
+				"heading": "Where your requests stand, on Home",
+				"body": "Home shows where the requests on your lists stand, and what changed today, in the last 7 days or in the last 30. Select a count to open the list behind it."
 			},
 			"requests": {
 				"heading": "Working together on a request",

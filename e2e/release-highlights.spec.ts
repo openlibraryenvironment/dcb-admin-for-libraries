@@ -43,7 +43,7 @@ test.describe("a user who has not seen this release's highlights", () => {
 		await expect(
 			dialog.getByRole("heading", {
 				level: 3,
-				name: "A personalised OpenRS summary for your library",
+				name: "Where your requests stand, on Home",
 			}),
 		).toBeVisible();
 		const notes = dialog.getByRole("link", {
@@ -104,7 +104,7 @@ test.describe("what a deployment's DCB service has", () => {
 
 		const dialog = highlights(page);
 		await expect(dialog.getByRole("heading", { level: 3 })).toHaveText([
-			"A personalised OpenRS summary for your library",
+			"Where your requests stand, on Home",
 			"Quick walk-up requests for everyone at the desk",
 			"Lists you can share, come back to and export",
 			"More accessible, and set up the way you work",
@@ -139,7 +139,7 @@ test.describe("what a deployment's DCB service has", () => {
 
 		const dialog = highlights(page);
 		await expect(dialog.getByRole("heading", { level: 3 })).toHaveText([
-			"A personalised OpenRS summary for your library",
+			"Where your requests stand, on Home",
 			"Working together on a request",
 			"Quick walk-up requests for everyone at the desk",
 			"Lists you can share, come back to and export",
