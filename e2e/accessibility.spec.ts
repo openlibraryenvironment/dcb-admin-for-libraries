@@ -802,6 +802,25 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
+		// The popover renders in a portal, outside anything the closed page scan reaches
+		name: "patron request status help",
+		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
+		prepare: async (app) => {
+			await app.signIn();
+			await app.mockGraphQL({
+				LoadLibrary: library,
+				LoadPatronRequest: sparseRequest,
+				LoadHostLms: { hostLms: { content: [] } },
+			});
+		},
+		ready: async (page) => {
+			await page.getByRole("button", { name: "About Current status" }).click();
+			await expect(
+				page.getByRole("dialog", { name: "Current status: Error" }),
+			).toBeVisible();
+		},
+	},
+	{
 		// Tags from three parties, one removable, and the controls to apply another
 		name: "patron request tags",
 		path: `/patronRequests/${sparseRequest.patronRequests.content[0].id}`,
