@@ -75,7 +75,7 @@ describe("the highlights as written", () => {
 		}
 	});
 
-	it("need only features some release has, so 'needs DCB service' always names one", () => {
+	it("need only features some release has, so each line not switched on names one", () => {
 		for (const feature of HIGHLIGHTS.flatMap((item) => item.needs ?? [])) {
 			expect(featureSince(feature), feature).not.toBeNull();
 		}

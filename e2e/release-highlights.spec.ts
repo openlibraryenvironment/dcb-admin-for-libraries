@@ -110,11 +110,11 @@ test.describe("what a deployment's DCB service has", () => {
 			"More accessible, and set up the way you work",
 			"Not switched on here yet",
 		]);
-		await expect(dialog.getByRole("listitem").filter({ hasText: "needs DCB service" })).toHaveText([
-			"New request clean-up: needs DCB service 9.0.0 or later",
-			"Notes on requests: needs DCB service 9.2.0 or later",
-			"Tags on requests: needs DCB service 9.2.0 or later",
-			"Pickup requests: needs DCB service 9.2.0 or later",
+		await expect(dialog.getByRole("listitem").filter({ hasText: "DCB service" })).toHaveText([
+			"New request clean-up: DCB service 9.0.0 or later",
+			"Notes on requests: DCB service 9.2.0 or later",
+			"Tags on requests: DCB service 9.2.0 or later",
+			"Pickup requests: DCB service 9.2.0 or later",
 		]);
 		await app.expectNoAccessibilityViolations();
 
@@ -146,7 +146,7 @@ test.describe("what a deployment's DCB service has", () => {
 			"More accessible, and set up the way you work",
 		]);
 		await expect(dialog).toContainText("Pickup requests lists other libraries' patrons' requests collected at your locations");
-		await expect(dialog).not.toContainText("needs DCB service");
+		await expect(dialog).not.toContainText("DCB service");
 	});
 
 	test("with one of them left off, names only that one", async ({ app, page }) => {
@@ -157,9 +157,12 @@ test.describe("what a deployment's DCB service has", () => {
 		await expect(
 			dialog.getByRole("heading", { level: 3, name: "Not switched on here yet" }),
 		).toBeVisible();
-		await expect(dialog.getByRole("listitem").filter({ hasText: "needs DCB service" })).toHaveText([
-			"Notes on requests: needs DCB service 9.2.0 or later",
+		await expect(dialog.getByRole("listitem").filter({ hasText: "DCB service" })).toHaveText([
+			"Notes on requests: DCB service 9.2.0 or later",
 		]);
+		// A service new enough, with the feature left off: nothing may say it waits for an upgrade
+		await expect(dialog).toContainText("when its DCB service supports it");
+		await expect(dialog).not.toContainText(/new enough|needs/);
 	});
 });
 
@@ -177,7 +180,7 @@ test("a read-only user is shown only what they can use", async ({ app, page }) =
 		"More accessible, and set up the way you work",
 	]);
 	await expect(dialog).toContainText("In Preferences, choose your colour scheme");
-	await expect(dialog).not.toContainText(/Home page|Insights|export|needs DCB service/i);
+	await expect(dialog).not.toContainText(/Home page|Insights|export|DCB service/i);
 });
 
 test("a user who has seen them is not shown them again", async ({ app, page }) => {

@@ -2094,8 +2094,8 @@
 		},
 		"not_here": {
 			"heading": "Not switched on here yet",
-			"intro": "Your consortium switches these on once its DCB service is new enough.",
-			"feature": "{{feature}}: needs {{needs}}",
+			"intro": "Your consortium switches each of these on when its DCB service supports it. Feature availability shows which applies here.",
+			"feature": "{{feature}}: {{needs}}",
 			"link": "Feature availability, in Preferences"
 		},
 		"notes_link": "Read the full release notes on GitHub (opens in a new tab)",
