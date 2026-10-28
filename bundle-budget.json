@@ -59,8 +59,8 @@
 		},
 		"American English catalogue": {
 			"source": "src/locales/en-US/en-US.json",
-			"budget": 25900,
-			"_note": "Raised from 25,800 on 2026-10-23 for the column menu's Move left and Move right, the keyboard alternative to dragging a column (WCAG 2.2 SC 2.5.7). 25,828 measured."
+			"budget": 4000,
+			"_note": "Lowered from 25,900 on 2026-10-28, when en-US became an overlay of the strings that differ from en-GB rather than a full copy (docs/theming.md, 8. Language). 3,908 measured. An en-US deployment now loads the British catalogue as well, so it downloads this much more than an en-GB one."
 		},
 		"Saved filters dialog": {
 			"source": "src/components/DataGrid/components/SavedFiltersDialog.tsx",

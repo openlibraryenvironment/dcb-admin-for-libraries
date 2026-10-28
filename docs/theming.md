@@ -146,17 +146,25 @@ Dialog that never fires it never unmounts.
 ## 8. Language
 
 Two Englishes, `en-US` and `en-GB`, chosen per deployment by `VITE_LOCALE` and per user
-under Preferences (`docs/DEPLOYMENT.md`, "2c. Locale"). They are separate files rather than
-one with overrides, so neither is a list of exceptions to the other.
+under Preferences (`docs/DEPLOYMENT.md`, "2c. Locale").
+
+`en-GB.json` is the whole catalogue. `en-US.json` is an overlay: only the strings an
+American reader sees differently, 54 of 1,582 when it became one, with every other key
+falling back to en-GB. It used to be a full copy, so every new string was written twice
+and two files of 1,582 keys were kept in step for the sake of the 3% that differ. DCB
+Admin works the same way. `tests/localeParity.test.ts` holds the overlay to its job: only
+keys en-GB has, only strings that differ, the same interpolations, and no British spelling
+left for an American reader.
 
 `es` was removed earlier carrying 7 of 969 keys - 0.4%. i18next renders a missing key as
 the key itself, so selecting it would have put `ui.data_grid.export.current` on the export
 menu in front of a librarian. The four things a language needs to be safe to offer are now
 in place, and a third would inherit them:
 
-1. a **complete** bundle - `tests/localeParity.test.ts` fails on a key one file lacks;
-2. **lazy-loaded** locales - one chunk each, fetched before the first render, so a
-   deployment downloads only its own;
+1. a **complete** catalogue - `tests/translationKeys.test.ts` fails on a key en-GB lacks,
+   and a locale that falls back to it shows English for a gap, never a raw key;
+2. **lazy-loaded** locales - en-GB and the overlay in force, each a chunk of its own,
+   fetched before the first render. An en-GB deployment downloads no overlay;
 3. the choice **persisted** and validated on rehydrate, like the display preferences;
 4. `document.documentElement.lang` written on every change, so assistive technology
    pronounces the page as what it is (WCAG 3.1.1).

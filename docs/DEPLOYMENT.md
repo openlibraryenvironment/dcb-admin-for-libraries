@@ -169,9 +169,9 @@ that device, like the other display settings.
 reader's browser; `docs/formatting.md` says why.
 
 **Adding a third.** A locale is a translation file under `src/locales/<locale>/`, an entry
-in `SUPPORTED_LOCALES` and `DAYJS_LOCALES` in `src/helpers/locale.ts`, and a loader in
-`src/i18n.ts`. `tests/localeParity.test.ts` fails until the new file carries every key the
-others do.
+in `SUPPORTED_LOCALES` and `DAYJS_LOCALES` in `src/helpers/locale.ts`, and an entry in
+`OVERLAYS` in `src/i18n.ts`. Any key the new file lacks falls back to en-GB, so a language
+that is not English needs every key translated; `docs/theming.md`, "8. Language".
 
 ---
 

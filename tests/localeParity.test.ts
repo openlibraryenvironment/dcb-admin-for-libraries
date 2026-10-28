@@ -22,7 +22,9 @@ const tokens = (value: string) =>
 	(value.match(/\{\{[^}]+\}\}|\$t\([^)]*\)|<\/?[a-zA-Z]+\/?>/g) ?? []).sort();
 
 const gb = flatten(enGB as Tree);
-const us = flatten(enUS as Tree);
+const overlay = flatten(enUS as Tree);
+/** What an en-US reader sees: the overlay where it has the key, en-GB everywhere else. */
+const us = new Map([...gb, ...overlay]);
 
 /**
  * Lower- or title-case only: an upper-case FINALISED is a dcb-service status,
@@ -38,34 +40,35 @@ const matching = (bundle: Map<string, string>, spelling: RegExp) =>
 		.filter(([, value]) => spelling.test(value))
 		.map(([key, value]) => `${key}: ${value}`);
 
-describe("the two English translations", () => {
-	it("carry exactly the same keys", () => {
-		const onlyGb = [...gb.keys()].filter((key) => !us.has(key));
-		const onlyUs = [...us.keys()].filter((key) => !gb.has(key));
-
-		expect({ onlyGb, onlyUs }).toEqual({ onlyGb: [], onlyUs: [] });
+// en-US is an overlay on en-GB, which every key it lacks falls back to: docs/theming.md, "8. Language".
+describe("the en-US overlay", () => {
+	it("only overrides keys en-GB has", () => {
+		expect([...overlay.keys()].filter((key) => !gb.has(key))).toEqual([]);
 	});
 
-	it("keep every interpolation, nested key and tag in each string", () => {
-		const drifted = [...gb.entries()]
-			.filter(([key, value]) => {
-				const other = us.get(key);
-				return (
-					other !== undefined &&
-					JSON.stringify(tokens(value)) !== JSON.stringify(tokens(other))
-				);
-			})
+	it("only carries strings that differ, so it cannot drift back into a copy", () => {
+		expect(
+			[...overlay].filter(([key, value]) => gb.get(key) === value).map(([key]) => key),
+		).toEqual([]);
+	});
+
+	it("keeps every interpolation, nested key and tag in each string", () => {
+		const drifted = [...overlay]
+			.filter(
+				([key, value]) =>
+					JSON.stringify(tokens(value)) !== JSON.stringify(tokens(gb.get(key) ?? "")),
+			)
 			.map(([key]) => key);
 
 		expect(drifted).toEqual([]);
 	});
 
-	it("each spell their own way", () => {
+	it("leaves an en-US reader no British spelling, and en-GB no American one", () => {
 		expect(matching(us, BRITISH)).toEqual([]);
 		expect(matching(gb, AMERICAN)).toEqual([]);
 	});
 
-	it("are actually different Englishes", () => {
+	it("makes them actually different Englishes", () => {
 		expect(gb.get("display.mode.label")).toBe("Colour scheme");
 		expect(us.get("display.mode.label")).toBe("Color scheme");
 	});
