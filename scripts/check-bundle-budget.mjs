@@ -93,13 +93,20 @@ function routeChain(file) {
 	return chain;
 }
 
-const beyondFirstLoad = (files) => new Set([...files].filter((file) => !firstLoadFiles.has(file)));
+// What is loaded already: the first load, and the page a feature is opened from when it names one
+const loadedBefore = (openedFrom) =>
+	openedFrom
+		? new Set([...firstLoadFiles, ...filesOf(keysFor(routeChain(openedFrom)))])
+		: firstLoadFiles;
 
 function measure(entries, sourcesFor) {
-	return Object.entries(entries).map(([name, { source, budget }]) => {
+	return Object.entries(entries).map(([name, { source, budget, openedFrom }]) => {
 		const keys = keysFor(sourcesFor(source));
-		const built = keys.some((key) => sourceOf(key) === source);
-		const size = built ? bytes(beyondFirstLoad(filesOf(keys))) : null;
+		const built =
+			keys.some((key) => sourceOf(key) === source) &&
+			(!openedFrom || keysFor(new Set([openedFrom])).length > 0);
+		const loaded = loadedBefore(openedFrom);
+		const size = built ? bytes([...filesOf(keys)].filter((file) => !loaded.has(file))) : null;
 		return { name, source, budget, size };
 	});
 }
@@ -135,7 +142,7 @@ row(
 );
 lines.push("", "**What each route adds to the first load**", "", "| Route | Measured | Budget | |", "|---|---:|---:|---|");
 for (const route of routes) row(route.name, route.size, route.budget, status(route));
-lines.push("", "**What each on-demand feature adds to the first load**", "", "| Feature | Measured | Budget | |", "|---|---:|---:|---|");
+lines.push("", "**What each on-demand feature adds to the first load, or to the page it is opened from**", "", "| Feature | Measured | Budget | |", "|---|---:|---:|---|");
 for (const feature of onDemand) row(feature.name, feature.size, feature.budget, status(feature));
 lines.push("", `Everything the build emits: ${total}. For information; not a budget.`, "");
 

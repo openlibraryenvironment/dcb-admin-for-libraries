@@ -54,6 +54,7 @@
 	"onDemand": {
 		"Excel export": {
 			"source": "node_modules/@mui/x-internal-exceljs-fork/dist/exceljs.min.js",
+			"openedFrom": "src/routes/__authenticated/patronRequests/index.tsx",
 			"budget": 290200
 		},
 		"American English catalogue": {
@@ -63,11 +64,13 @@
 		},
 		"Saved filters dialog": {
 			"source": "src/components/DataGrid/components/SavedFiltersDialog.tsx",
-			"budget": 80200
+			"openedFrom": "src/routes/__authenticated/patronRequests/index.tsx",
+			"budget": 4900,
+			"_note": "Re-derived on 2026-10-28 when on-demand features began to be measured beyond the page they are opened from: 4,596 measured from Patron requests, plus 5%, rounded up to 100. Measured beyond the first load it read 348,904 against 80,200, because the dialog reads the grid's API (useFilterLabels) and since the dependency update of 2026-10-26 (fb3d8d9, MUI X 9.16.0) the code it imports is built into the same 203 KB chunk as the rest of the grid, which the page has already loaded."
 		}
 	},
 	"_notes": {
 		"routes": "What a page loads beyond the first load: its route file, the layout routes above it, and their static imports. Set on 2026-10-16 to what was measured plus 5%, rounded up to 100, and held: room for strings and dependency patches, not for tens of KB.",
-		"onDemand": "What a feature loads beyond the first load, from its entry point. The American English overlay loads at startup only where the deployment or the user chooses en-US, on top of the British catalogue the first load counts. Excel export loads only when someone exports to Excel. The saved filters dialog loads when it is opened, and most of what it counts is already on the grid page that opens it."
+		"onDemand": "What a feature loads beyond what is loaded already when it is opened: the first load, and the page named by openedFrom where it has one. The American English overlay loads at startup only where the deployment or the user chooses en-US, on top of the British catalogue the first load counts. Excel export loads only when someone exports to Excel. The saved filters dialog loads when it is opened from a grid's toolbar."
 	}
 }

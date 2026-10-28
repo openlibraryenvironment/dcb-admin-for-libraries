@@ -43,7 +43,7 @@ stylesheets against `bundle-budget.json`. It prints a report and writes it to
 |---|---|---|
 | `firstLoad` | what every page loads before its first render: the entry, the app shell it boots, their static imports, and `beforeFirstRender`, the British English catalogue | reported; **fails the build** more than `blockAbovePercent` (5%) over |
 | `routes` | what a page adds to that: its route file, the layout routes above it, and their static imports | reported |
-| `onDemand` | what a feature adds to the first load, from its entry point: Excel export, the American English overlay, the saved filters dialog | reported |
+| `onDemand` | what a feature adds, from its entry point, to what is loaded when it is opened: the first load, and the page named by `openedFrom`. Excel export and the saved filters dialog are opened from Patron requests; the American English overlay at startup | reported |
 | the total | everything the build emits | printed, never budgeted |
 
 Routes and features are named by their source file, not by the chunk the bundler happens to
