@@ -166,6 +166,7 @@ const PAGES: Surface[] = [
 			await app.enableFeatures([
 				"VITE_FEATURE_INSIGHTS",
 				"VITE_FEATURE_HOME_INSIGHTS",
+				"VITE_DISCOVERY_ACTIVE",
 				"VITE_FEATURE_ANNOUNCEMENTS",
 				"VITE_FEATURE_HOME_ANNOUNCEMENTS",
 				"VITE_FEATURE_AGENCY_SCOPED_REQUESTS",
@@ -260,7 +261,7 @@ const PAGES: Surface[] = [
 		name: "announcements",
 		path: "/announcements",
 		prepare: async (app) => {
-			await app.enableFeatures(["VITE_FEATURE_ANNOUNCEMENTS"]);
+			await app.enableFeatures(["VITE_DISCOVERY_ACTIVE", "VITE_FEATURE_ANNOUNCEMENTS"]);
 			await app.signIn();
 			await app.mockGraphQL({
 				LoadLibrary: library,
@@ -672,7 +673,7 @@ const PAGES: Surface[] = [
 		name: "announcements, with notices",
 		path: "/announcements",
 		prepare: async (app) => {
-			await app.enableFeatures(["VITE_FEATURE_ANNOUNCEMENTS"]);
+			await app.enableFeatures(["VITE_DISCOVERY_ACTIVE", "VITE_FEATURE_ANNOUNCEMENTS"]);
 			await app.signIn();
 			await app.mockGraphQL({
 				LoadLibraryBasics: library,

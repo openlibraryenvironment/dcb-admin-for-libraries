@@ -7,6 +7,7 @@ import RadioButtonUnchecked from "@mui/icons-material/RadioButtonUnchecked";
 
 import { CustomLink } from "@components/CustomLink";
 import {
+	isDiscoveryActive,
 	isLibraryBrandingEnabled,
 	isLibrarySupportUrlEnabled,
 } from "@helpers/featureFlags";
@@ -21,19 +22,25 @@ interface Item {
 const filled = (value: unknown) =>
 	value !== null && value !== undefined && String(value).trim() !== "";
 
-/** What the profile holds that patrons and other libraries see. Branded fields only where served. */
-const setupItems = (library: Library): Item[] => [
-	{ id: "address", done: filled(library.address) },
-	{ id: "location", done: filled(library.latitude) && filled(library.longitude) },
-	{ id: "website", done: filled(library.patronWebsite) },
-	{ id: "contacts", done: (library.contacts?.length ?? 0) > 0 },
-	...(isLibraryBrandingEnabled()
-		? [{ id: "logo", done: filled(library.brandLogoUrl) }]
-		: []),
-	...(isLibrarySupportUrlEnabled()
-		? [{ id: "support", done: filled(library.supportUrl) }]
-		: []),
-];
+/**
+ * What the profile holds that patrons and other libraries see. Only what the library page
+ * offers to edit: the patron fields need a discovery front end, as they do there.
+ */
+const setupItems = (library: Library): Item[] => {
+	const discovery = isDiscoveryActive();
+	return [
+		{ id: "address", done: filled(library.address) },
+		{ id: "location", done: filled(library.latitude) && filled(library.longitude) },
+		...(discovery ? [{ id: "website", done: filled(library.patronWebsite) }] : []),
+		{ id: "contacts", done: (library.contacts?.length ?? 0) > 0 },
+		...(discovery && isLibraryBrandingEnabled()
+			? [{ id: "logo", done: filled(library.brandLogoUrl) }]
+			: []),
+		...(discovery && isLibrarySupportUrlEnabled()
+			? [{ id: "support", done: filled(library.supportUrl) }]
+			: []),
+	];
+};
 
 /** Shown only to a library that has never borrowed or supplied: zeros say nothing to it. */
 export default function SetupChecklist({

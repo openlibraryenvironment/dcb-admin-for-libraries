@@ -26,7 +26,7 @@ import {
 	createAnnouncement,
 	deleteAnnouncement,
 } from "@mutations/announcements";
-import { isAnnouncementsEnabled } from "@helpers/featureFlags";
+import { isAnnouncementsEnabled, isDiscoveryActive } from "@helpers/featureFlags";
 import { pageTitle } from "@helpers/pageTitle";
 import { ownLibraryQueryOptions } from "@helpers/ownLibrary";
 import { authHeaders } from "@helpers/auth";
@@ -66,7 +66,13 @@ function AnnouncementsRoute() {
 				<Typography variant="h2" component="h1">
 					{t("announcements.title")}
 				</Typography>
-				<Alert severity="info">{t("announcements.unavailable")}</Alert>
+				<Alert severity="info">
+					{t(
+						isDiscoveryActive()
+							? "announcements.unavailable"
+							: "announcements.unavailable_no_discovery",
+					)}
+				</Alert>
 			</Stack>
 		);
 	}
