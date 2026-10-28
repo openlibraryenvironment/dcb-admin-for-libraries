@@ -454,7 +454,7 @@ const PAGES: Surface[] = [
 		},
 	},
 	{
-		name: "collecting here",
+		name: "pickup requests",
 		path: "/pickupRequests",
 		prepare: async (app) => {
 			await app.enableFeatures(["VITE_FEATURE_PICKUP_REQUESTS", "VITE_FEATURE_AGENCY_SCOPED_REQUESTS"]);
@@ -469,7 +469,7 @@ const PAGES: Surface[] = [
 			});
 		},
 		ready: async (page) => {
-			await expect(page.getByRole("grid", { name: "Collecting here" })).toBeVisible();
+			await expect(page.getByRole("grid", { name: "Pickup requests" })).toBeVisible();
 			await expect(page.getByRole("link", { name: /2026-09-01/ })).toBeVisible();
 		},
 	},

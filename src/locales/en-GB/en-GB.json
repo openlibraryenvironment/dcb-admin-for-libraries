@@ -1082,7 +1082,7 @@
 			"title": "Requesting"
 		},
 		"pickup_requests": {
-			"title": "Collecting here"
+			"title": "Pickup requests"
 		},
 		"supplier_requests": {
 			"title": "Supplier requests",
@@ -1748,7 +1748,7 @@
 			"search_audits": "Search by audit",
 			"search_locations": "Search by location",
 			"search_mappings": "Search by mappings",
-			"search_pickup_requests": "Search requests collecting here",
+			"search_pickup_requests": "Search pickup requests",
 			"search_supplier_requests": "Search supplier patron requests",
 			"views": {
 				"title": "Saved filters",
@@ -1963,7 +1963,7 @@
 		"pickup": {
 			"title": "Collecting at your locations for other libraries",
 			"description": "Other libraries' patrons collecting their items at your locations. Neither request grid lists these, so they are counted here only.",
-			"description_listed": "Other libraries' patrons collecting their items at your locations. Collecting here lists them.",
+			"description_listed": "Other libraries' patrons collecting their items at your locations. Pickup requests lists them.",
 			"load_failed": "These counts could not be loaded.",
 			"no_locations": "Your library has no locations recorded, so there is nothing to count.",
 			"counts": {
@@ -2073,7 +2073,7 @@
 			},
 			"requests": {
 				"heading": "Working together on a request",
-				"body": "Clean up a request from any list or its own page, keeping track of an item that is out. Requests now carry notes and tags from the libraries involved, and Collecting here lists what you collect for other libraries."
+				"body": "Clean up a request from any list or its own page, keeping track of an item that is out. Requests now carry notes and tags from the libraries involved, and Pickup requests lists other libraries' patrons' requests collected at your locations."
 			},
 			"walk_up": {
 				"heading": "Quick walk-up requests for everyone at the desk",

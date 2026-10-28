@@ -145,7 +145,7 @@ test.describe("what a deployment's DCB service has", () => {
 			"Lists you can share, come back to and export",
 			"More accessible, and set up the way you work",
 		]);
-		await expect(dialog).toContainText("Collecting here lists what you collect for other libraries");
+		await expect(dialog).toContainText("Pickup requests lists other libraries' patrons' requests collected at your locations");
 		await expect(dialog).not.toContainText("needs DCB service");
 	});
 

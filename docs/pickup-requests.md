@@ -1,8 +1,8 @@
-# Collecting here
+# Pickup requests
 
 dcb-service 9.2.0 makes the **pickup library** a party to a patron request, beside the borrowing
 library and the current supplier: it can read the request, its audit trail, notes and tags. 9.0.0
-and 9.1.0 hid such a request from it. **Collecting here** lists them, behind
+and 9.1.0 hid such a request from it. **Pickup requests** lists them, behind
 `VITE_FEATURE_PICKUP_REQUESTS` ([DEPLOYMENT.md](DEPLOYMENT.md)).
 
 ## What it lists

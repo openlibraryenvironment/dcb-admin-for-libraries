@@ -167,7 +167,7 @@ export const isHomeLibrarySplitEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_HOME_LIBRARY_SPLIT") && isAgencyScopedRequestsEnabled();
 
 /**
- * Collecting here: other libraries' patrons' requests collected at this library. dcb-service
+ * Pickup requests: other libraries' patrons' requests collected at this library. dcb-service
  * 9.2.0 makes the pickup library a party to a request; 9.0.0 and 9.1.0 hide such a request from
  * it, so the list would read empty there.
  */

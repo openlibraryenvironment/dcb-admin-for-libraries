@@ -16,7 +16,7 @@ import { Figure, TileList, TileSkeleton } from "./HomeSections";
 const STATUS_OF = { ready: "READY_FOR_PICKUP", arriving: "PICKUP_TRANSIT" } as const;
 
 /**
- * Other libraries' patrons collecting at this library. Linked to Collecting here where it is
+ * Other libraries' patrons collecting at this library. Linked to Pickup requests where it is
  * offered (9.2.0); on 8.71.0 no list holds them, so they are counted only. isHomePickupHereEnabled.
  */
 export default function PickupHere({
