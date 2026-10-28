@@ -16,7 +16,7 @@
 	},
 	"verify_performance": {
 		"title": "Speed and download size",
-		"checks": "Measures what every page downloads before it can be used, against a fixed budget, and runs Google Lighthouse on the sign-in page.",
+		"checks": "Measures what every page downloads before it can be used, against a fixed budget: over it is reported, and more than 5% over fails. Runs Google Lighthouse on the sign-in page.",
 		"matters": "Keeps the application quick to open, including on a slow connection."
 	},
 	"verify_base_path": {

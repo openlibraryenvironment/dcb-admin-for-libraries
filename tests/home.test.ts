@@ -142,7 +142,7 @@ describe("collections at the library's own locations", () => {
 		);
 	});
 
-	it("are, for Collecting here, the same question in every status", () => {
+	it("are, for Pickup requests, the same question in every status", () => {
 		expect(collectingHereQuery(["loc-1", "loc-2"], "patronAgencyCode:e2e-agency")).toBe(
 			'pickupLocationCode:("loc-1" OR "loc-2") AND NOT (patronAgencyCode:e2e-agency)',
 		);

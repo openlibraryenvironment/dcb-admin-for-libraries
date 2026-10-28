@@ -294,7 +294,7 @@ export const pickupHereQuery = (
 	statusValue: string,
 ): string => `${atLocations(locationIds)} AND status:${statusValue} AND NOT (${borrowedScope})`;
 
-/** Every request collected at these locations whose patron is not the library's own: Collecting here. */
+/** Every request collected at these locations whose patron is not the library's own: Pickup requests. */
 export const collectingHereQuery = (
 	locationIds: readonly string[],
 	borrowedScope: string,

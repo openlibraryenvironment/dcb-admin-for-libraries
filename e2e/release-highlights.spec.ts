@@ -40,11 +40,11 @@ test.describe("a user who has not seen this release's highlights", () => {
 
 		const dialog = highlights(page);
 		await expect(dialog).toHaveAccessibleName("What's new in version 1.14.0");
-		await expect(dialog.getByRole("listitem")).toHaveCount(5);
-		// The wording is rewritten each release; each item has its heading
-		await expect(dialog.getByRole("heading", { level: 3 })).toHaveCount(5);
 		await expect(
-			dialog.getByRole("heading", { level: 3, name: "Clean up protects an item that is out" }),
+			dialog.getByRole("heading", {
+				level: 3,
+				name: "Where your requests stand, on Home",
+			}),
 		).toBeVisible();
 		const notes = dialog.getByRole("link", {
 			name: "Read the full release notes on GitHub (opens in a new tab)",
@@ -82,6 +82,90 @@ test.describe("a user who has not seen this release's highlights", () => {
 	});
 });
 
+test.describe("what a deployment's DCB service has", () => {
+	const DCB_9_2_0 = [
+		"VITE_FEATURE_GUARDED_CLEANUP",
+		"VITE_FEATURE_REQUEST_NOTES",
+		"VITE_FEATURE_REQUEST_TAGS",
+		"VITE_FEATURE_PICKUP_REQUESTS",
+	];
+
+	test.beforeEach(async ({ app, page }) => {
+		await app.signIn({ releaseHighlightsSeen: false });
+		await app.mockGraphQL({ LoadLibrary: library });
+		await deployedAs(page, "v2.0.0");
+	});
+
+	test("on one without this release's request features, names them as not switched on", async ({
+		app,
+		page,
+	}) => {
+		await page.goto("/");
+
+		const dialog = highlights(page);
+		await expect(dialog.getByRole("heading", { level: 3 })).toHaveText([
+			"Where your requests stand, on Home",
+			"Quick walk-up requests for everyone at the desk",
+			"Lists you can share, come back to and export",
+			"More accessible, and set up the way you work",
+			"Not switched on here yet",
+		]);
+		await expect(dialog.getByRole("listitem").filter({ hasText: "DCB service" })).toHaveText([
+			"New request clean-up: DCB service 9.0.0 or later",
+			"Notes on requests: DCB service 9.2.0 or later",
+			"Tags on requests: DCB service 9.2.0 or later",
+			"Pickup requests: DCB service 9.2.0 or later",
+		]);
+		await app.expectNoAccessibilityViolations();
+
+		await dialog
+			.getByRole("link", { name: "Feature availability, in Preferences" })
+			.click();
+		await expect(dialog).toBeHidden();
+		await expect(page).toHaveURL(/\/preferences#feature-availability$/);
+		await expect(page.getByRole("heading", { name: "Feature availability" })).toBeVisible();
+
+		await page.reload();
+		await expect(page.getByRole("heading", { name: "Feature availability" })).toBeVisible();
+		await expect(highlights(page)).toHaveCount(0);
+	});
+
+	test("on 9.2.0 with them switched on, describes them and names nothing as missing", async ({
+		app,
+		page,
+	}) => {
+		await app.enableFeatures(DCB_9_2_0);
+		await page.goto("/preferences");
+
+		const dialog = highlights(page);
+		await expect(dialog.getByRole("heading", { level: 3 })).toHaveText([
+			"Where your requests stand, on Home",
+			"Working together on a request",
+			"Quick walk-up requests for everyone at the desk",
+			"Lists you can share, come back to and export",
+			"More accessible, and set up the way you work",
+		]);
+		await expect(dialog).toContainText("Pickup requests lists other libraries' patrons' requests collected at your locations");
+		await expect(dialog).not.toContainText("DCB service");
+	});
+
+	test("with one of them left off, names only that one", async ({ app, page }) => {
+		await app.enableFeatures(DCB_9_2_0.filter((flag) => flag !== "VITE_FEATURE_REQUEST_NOTES"));
+		await page.goto("/preferences");
+
+		const dialog = highlights(page);
+		await expect(
+			dialog.getByRole("heading", { level: 3, name: "Not switched on here yet" }),
+		).toBeVisible();
+		await expect(dialog.getByRole("listitem").filter({ hasText: "DCB service" })).toHaveText([
+			"Notes on requests: DCB service 9.2.0 or later",
+		]);
+		// A service new enough, with the feature left off: nothing may say it waits for an upgrade
+		await expect(dialog).toContainText("when its DCB service supports it");
+		await expect(dialog).not.toContainText(/new enough|needs/);
+	});
+});
+
 test("a read-only user is shown only what they can use", async ({ app, page }) => {
 	await app.signIn({ roles: READ_ONLY_ROLES, releaseHighlightsSeen: false });
 	await app.mockGraphQL({ LoadLibrary: library });
@@ -96,7 +180,7 @@ test("a read-only user is shown only what they can use", async ({ app, page }) =
 		"More accessible, and set up the way you work",
 	]);
 	await expect(dialog).toContainText("In Preferences, choose your colour scheme");
-	await expect(dialog).not.toContainText(/Home page|Insights|export/i);
+	await expect(dialog).not.toContainText(/Home page|Insights|export|DCB service/i);
 });
 
 test("a user who has seen them is not shown them again", async ({ app, page }) => {

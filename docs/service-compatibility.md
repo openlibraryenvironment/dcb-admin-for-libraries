@@ -186,7 +186,9 @@ Preferences, under About, has a **Feature availability** table: the features a l
 would notice, the release each needs, and whether this deployment has it, read from the
 version dcb-service reports on `/info`. It is how a library on 8.71.0 learns why the
 Insights tab is not there. The table is deliberately shorter than the registry: `FEATURES`
-in `FeatureAvailability.tsx` lists its rows, each over one or more registry rows. A feature
+in `src/helpers/libraryFeatures.ts` lists its rows, each over one or more registry rows, and
+What's new names the same features when one a highlight needs is off
+([release-highlights.md](release-highlights.md)). A feature
 made of several - Insights is `insights`, `insights_trends` and `insights_walk_up` - needs
 the newest of their releases and is available only with every one of their flags on.
 Registry rows that are not a feature a library looks for (who placed a request, the hold

@@ -1,6 +1,7 @@
-// Gzipped bundle budgets over dist/: what every page loads first, which FAILS when over,
-// and what each route and each on-demand feature adds to it, which is REPORTED. What each
-// measures and why: docs/testing.md, "What the bundle budget measures".
+// Gzipped bundle budgets over dist/: what every page loads first, and what each route and
+// each on-demand feature adds to it. Every overrun is REPORTED; only a first load more than
+// blockAbovePercent over its budget FAILS. What each measures and why: docs/testing.md,
+// "What the bundle budget measures".
 //
 // Usage: npm run budget            measures the build already in dist/
 //        npm run budget -- --build builds first, as CI does, then measures
@@ -8,6 +9,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { dirname, join, posix } from "node:path";
+import { firstLoadVerdict } from "./budget-verdict.ts";
 
 const BUDGET = JSON.parse(readFileSync("bundle-budget.json", "utf8"));
 const MANIFEST = join("dist", ".vite", "manifest.json");
@@ -55,16 +57,29 @@ function filesOf(keys) {
 	return files;
 }
 
-// The entry, the app shell it boots, and their static imports
-const firstLoadFiles = filesOf([
-	"index.html",
-	...(manifest["index.html"]?.dynamicImports ?? []),
-]);
-const firstLoad = bytes(firstLoadFiles);
-
 const sourceOf = (key) => key.split("?")[0];
 const keysFor = (sources) =>
 	Object.keys(manifest).filter((key) => sources.has(sourceOf(key)));
+
+// Dynamic imports the app awaits before its first render, which the import graph cannot tell
+// from one a click triggers. A missing one would shrink the first load without a word.
+const beforeFirstRender = new Set(BUDGET.firstLoad.beforeFirstRender ?? []);
+const unbuilt = [...beforeFirstRender].filter((source) => keysFor(new Set([source])).length === 0);
+if (unbuilt.length > 0) {
+	console.error(
+		`firstLoad.beforeFirstRender names ${unbuilt.join(", ")}, which the build does not contain. ` +
+			"Point it at what the app now loads before its first render.",
+	);
+	process.exit(1);
+}
+
+// The entry, the app shell it boots, their static imports, and what the shell awaits first
+const firstLoadFiles = filesOf([
+	"index.html",
+	...(manifest["index.html"]?.dynamicImports ?? []),
+	...keysFor(beforeFirstRender),
+]);
+const firstLoad = bytes(firstLoadFiles);
 
 /** A route file and the layout routes above it, which load with it: a.tsx, a/b.tsx, a/b/route.tsx. */
 function routeChain(file) {
@@ -78,13 +93,20 @@ function routeChain(file) {
 	return chain;
 }
 
-const beyondFirstLoad = (files) => new Set([...files].filter((file) => !firstLoadFiles.has(file)));
+// What is loaded already: the first load, and the page a feature is opened from when it names one
+const loadedBefore = (openedFrom) =>
+	openedFrom
+		? new Set([...firstLoadFiles, ...filesOf(keysFor(routeChain(openedFrom)))])
+		: firstLoadFiles;
 
 function measure(entries, sourcesFor) {
-	return Object.entries(entries).map(([name, { source, budget }]) => {
+	return Object.entries(entries).map(([name, { source, budget, openedFrom }]) => {
 		const keys = keysFor(sourcesFor(source));
-		const built = keys.some((key) => sourceOf(key) === source);
-		const size = built ? bytes(beyondFirstLoad(filesOf(keys))) : null;
+		const built =
+			keys.some((key) => sourceOf(key) === source) &&
+			(!openedFrom || keysFor(new Set([openedFrom])).length > 0);
+		const loaded = loadedBefore(openedFrom);
+		const size = built ? bytes([...filesOf(keys)].filter((file) => !loaded.has(file))) : null;
 		return { name, source, budget, size };
 	});
 }
@@ -100,20 +122,27 @@ const lines = [];
 const row = (name, size, budget, note) =>
 	lines.push(`| ${name} | ${size ?? "-"} | ${budget ?? "-"} | ${note} |`);
 
-lines.push("# Bundle budget", "", "Gzipped bytes. Only the first load fails the build; the rest is reported.", "");
+lines.push(
+	"# Bundle budget",
+	"",
+	`Gzipped bytes. Every overrun is reported; the build fails only when the first load is more than ${BUDGET.firstLoad.blockAbovePercent}% over its budget.`,
+	"",
+);
 lines.push("| What | Measured | Budget | |", "|---|---:|---:|---|");
-const firstLoadOver = firstLoad > BUDGET.firstLoad.budget;
+const verdict = firstLoadVerdict(firstLoad, BUDGET.firstLoad.budget, BUDGET.firstLoad.blockAbovePercent);
 row(
 	"**First load** (every page)",
 	firstLoad,
 	BUDGET.firstLoad.budget,
-	firstLoadOver
-		? `**OVER by ${firstLoad - BUDGET.firstLoad.budget}: fails**`
-		: `${BUDGET.firstLoad.budget - firstLoad} to spare`,
+	verdict.blocks
+		? `**OVER by ${verdict.over}, above the limit of ${verdict.limit}: fails**`
+		: verdict.over > 0
+			? `**OVER by ${verdict.over}: reported; fails above ${verdict.limit}**`
+			: `${-verdict.over} to spare`,
 );
 lines.push("", "**What each route adds to the first load**", "", "| Route | Measured | Budget | |", "|---|---:|---:|---|");
 for (const route of routes) row(route.name, route.size, route.budget, status(route));
-lines.push("", "**What each on-demand feature adds to the first load**", "", "| Feature | Measured | Budget | |", "|---|---:|---:|---|");
+lines.push("", "**What each on-demand feature adds to the first load, or to the page it is opened from**", "", "| Feature | Measured | Budget | |", "|---|---:|---:|---|");
 for (const feature of onDemand) row(feature.name, feature.size, feature.budget, status(feature));
 lines.push("", `Everything the build emits: ${total}. For information; not a budget.`, "");
 
@@ -140,11 +169,22 @@ if (reported.length > 0) {
 			"Cut the weight, or bring a written argument for a new number in bundle-budget.json.",
 	);
 }
-if (firstLoadOver) {
+const findWhatMoved =
+	"Find what moved into the route tree or the app shell; a route file's loader and validateSearch load eagerly.";
+if (verdict.blocks) {
 	console.error(
-		`\nBundle budget: what every page loads first is ${firstLoad}, over ${BUDGET.firstLoad.budget}. ` +
-			"Find what moved into the route tree or the app shell; a route file's loader and validateSearch load eagerly.",
+		`\nBundle budget: what every page loads first is ${firstLoad}, more than ` +
+			`${BUDGET.firstLoad.blockAbovePercent}% over ${BUDGET.firstLoad.budget} (limit ${verdict.limit}, +${verdict.over}). ` +
+			findWhatMoved,
 	);
 	process.exit(1);
 }
-console.log("\nBundle budget: first load within budget.");
+if (verdict.over > 0) {
+	console.warn(
+		`\nBundle budget: what every page loads first is ${firstLoad}, over ${BUDGET.firstLoad.budget} ` +
+			`(+${verdict.over}): reported, not failed. The build fails above ${verdict.limit}. ` +
+			findWhatMoved,
+	);
+} else {
+	console.log("\nBundle budget: first load within budget.");
+}

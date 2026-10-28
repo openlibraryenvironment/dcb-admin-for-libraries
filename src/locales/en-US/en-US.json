@@ -167,14 +167,7 @@
 	},
 	"release_highlights": {
 		"items": {
-			"home": {
-				"heading": "A personalized OpenRS summary for your library",
-				"body": "The Home page now shows a personalized summary of your library's OpenRS activity for today, the last 7 days or the last 30 days."
-			},
 			"accessibility": {
-				"body": "In Preferences, choose your color scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change, and Insights charts come with their numbers as a table."
-			},
-			"accessibility_read_only": {
 				"body": "In Preferences, choose your color scheme, including high contrast, and your text size, spacing, animation, typeface and the time zone dates are shown in. Screen readers are now told when a page or its results change."
 			}
 		}

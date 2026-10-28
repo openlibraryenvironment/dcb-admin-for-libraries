@@ -16,9 +16,12 @@ commit, which is what release notes are for. In `src/constants/releaseHighlights
 2. Set `HIGHLIGHTS` to the keys of three to five changes, in the order they are shown.
 3. Set `READ_ONLY_HIGHLIGHTS` to the ones a read-only user can use. They have Requesting
    and Preferences only: no Home, Insights, library pages or exports. Where an item is
-   true for them only in part, give it a key of its own, as `accessibility_read_only` is,
+   true for them only in part, give it a key of its own, as `views_read_only` is,
    rather than tell them about a page they cannot open.
-4. In `src/locales/en-GB/en-GB.json`, under `release_highlights.items`, give each key a
+4. Give an item `needs` when what it describes depends on the deployment: the features in
+   `src/helpers/libraryFeatures.ts` it is about, the same ones Preferences' Feature
+   availability table lists. See below.
+5. In `src/locales/en-GB/en-GB.json`, under `release_highlights.items`, give each key a
    `heading` (a few words) and a `body` (one or two sentences, in what the library sees,
    not in the code's terms). Remove the previous release's items, from
    `src/locales/en-US/en-US.json` too. Add an item to en-US only where the American
@@ -30,6 +33,27 @@ changes are not worth a dialog leaves the generation alone, and nobody is interr
 
 The generation is a number of its own rather than the version because the version is not
 known when the code is written: semantic-release chooses it from the commits as it releases.
+
+## A highlight this deployment does not have
+
+One release of this app runs against more than one dcb-service: 2.0 against 8.71.0 and
+9.2.0. An item with `needs` is shown only where every feature it names is switched on, read
+from the same flags that switch the feature itself on (`highlightsHere`, in
+`src/helpers/releaseHighlights.ts`). Elsewhere the dialog does not leave the reader to
+wonder: under **Not switched on here yet** it names each of those features that is off, by
+its Feature availability name, with the DCB service release it needs, and links to that
+table in Preferences, which says whether this service is too old or the feature is simply
+not switched on.
+
+The flags decide, not the version dcb-service reports, because the flags are what the
+reader will or will not see; telling a too-old service from a switch left off is the
+table's job. An item needing several features is held back when any one is off, and only
+the ones that are off are named.
+
+Keep what every deployment shows true without `needs`: a sentence about a gated feature
+inside an ungated item is the surprise this section exists to prevent. Five is the most any
+one reader is shown, counted over everything a fully switched-on deployment shows
+(`tests/releaseHighlights.test.ts`).
 
 ## Where the version comes from
 

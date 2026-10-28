@@ -3,7 +3,7 @@ import library from "./fixtures-data/library.json" with { type: "json" };
 import patronRequests from "./fixtures-data/patronRequests.json" with { type: "json" };
 import { homeCounts } from "./fixtures/home";
 
-/** Collecting here, behind VITE_FEATURE_PICKUP_REQUESTS: docs/pickup-requests.md. */
+/** Pickup requests, behind VITE_FEATURE_PICKUP_REQUESTS: docs/pickup-requests.md. */
 
 const LOCATIONS = {
 	agencies: {
@@ -14,7 +14,7 @@ const LOCATIONS = {
 
 const ON = ["VITE_FEATURE_PICKUP_REQUESTS", "VITE_FEATURE_AGENCY_SCOPED_REQUESTS"];
 
-test.describe("Collecting here", () => {
+test.describe("Pickup requests", () => {
 	test("is neither a tab nor an address while the service does not offer it", async ({ app, page }) => {
 		await app.signIn();
 		await app.mockGraphQL({ LoadLibrary: library, LoadAgencyLocationsForExport: LOCATIONS });
@@ -23,7 +23,7 @@ test.describe("Collecting here", () => {
 
 		await expect(page).toHaveURL((url) => url.pathname === "/");
 		await expect(page.getByRole("tab", { name: "Supplier requests" })).toBeVisible();
-		await expect(page.getByRole("tab", { name: "Collecting here" })).toHaveCount(0);
+		await expect(page.getByRole("tab", { name: "Pickup requests" })).toHaveCount(0);
 	});
 
 	test("lists other libraries' patrons' requests at the library's locations, and offers no clean up", async ({
@@ -44,10 +44,10 @@ test.describe("Collecting here", () => {
 		});
 
 		await page.goto("/");
-		await page.getByRole("tab", { name: "Collecting here" }).click();
+		await page.getByRole("tab", { name: "Pickup requests" }).click();
 
-		await expect(page.getByRole("heading", { level: 1, name: "Collecting here" })).toBeVisible();
-		await expect(page.getByRole("grid", { name: "Collecting here" })).toBeVisible();
+		await expect(page.getByRole("heading", { level: 1, name: "Pickup requests" })).toBeVisible();
+		await expect(page.getByRole("grid", { name: "Pickup requests" })).toBeVisible();
 		await expect.poll(() => queries.at(-1)).toBe(
 			'pickupLocationCode:("loc-1" OR "loc-2") AND NOT (patronAgencyCode:e2e-agency)',
 		);
@@ -96,7 +96,7 @@ test.describe("Collecting here", () => {
 
 		await page.goto("/");
 		const here = page.getByRole("region", { name: "Collecting at your locations for other libraries" });
-		await expect(here.getByText("Collecting here lists them.", { exact: false })).toBeVisible();
+		await expect(here.getByText("Pickup requests lists them.", { exact: false })).toBeVisible();
 		// A zero would open an empty list, so it is not a link
 		await expect(here.getByRole("link")).toHaveCount(1);
 		await here.getByRole("link", { name: /requests ready for other libraries' patrons to collect/ }).click();

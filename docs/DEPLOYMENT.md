@@ -72,7 +72,7 @@ does not show the feature.
 | `VITE_FEATURE_CONFIRM_ITEM_RETURNED` | **9.2.0** or later | "Confirm item is back" on a request the library supplied, once its item is waiting to come back to the library |
 | `VITE_FEATURE_REQUEST_TAGS` | **9.2.0** or later | Tags on a request's page: what the libraries involved applied, and for their administrators, applying and removing their own ([request-tags.md](request-tags.md)) |
 | `VITE_FEATURE_REQUEST_NOTES` | **9.2.0** or later | Notes on a request's page, written as a library and readable by every library involved ([request-notes.md](request-notes.md)) |
-| `VITE_FEATURE_PICKUP_REQUESTS` | **9.2.0** or later | **Collecting here**: other libraries' patrons' requests collected at the library's locations, and Home's collecting counts linked to it ([pickup-requests.md](pickup-requests.md)) |
+| `VITE_FEATURE_PICKUP_REQUESTS` | **9.2.0** or later | **Pickup requests**: other libraries' patrons' requests collected at the library's locations, and Home's collecting counts linked to it ([pickup-requests.md](pickup-requests.md)) |
 | `VITE_FEATURE_PLACED_BY_STAFF` | **9.2.0** or later | "Placed by" on a request's page: staff, the patron, or not recorded ([library-details.md](library-details.md)) |
 | `VITE_FEATURE_HOST_LMS_PROBES` | **9.2.0** or later | On Service, for administrators: DCB's last connection check of each of the library's systems. The name DCB Admin uses for the same release ([library-details.md](library-details.md)) |
 | `VITE_FEATURE_LOCAL_HOLDS` | **9.1.0** or later | On the library page, for administrators: the library system's hold limit per patron, beside DCB's maximum active requests. The name DCB Admin uses ([library-details.md](library-details.md)) |

@@ -27,5 +27,5 @@
 		"noEmit": true,
 		"jsx": "react-jsx"
 	},
-	"include": ["src", "src/vite-env.d.ts", "e2e", "e2e-base-path", "e2e-ki-bootstrap", "e2e-container", "tests", "pipeline-checks", "vitest.pipeline.config.ts", "scripts/release-report.ts"]
+	"include": ["src", "src/vite-env.d.ts", "e2e", "e2e-base-path", "e2e-ki-bootstrap", "e2e-container", "tests", "pipeline-checks", "vitest.pipeline.config.ts", "scripts/release-report.ts", "scripts/budget-verdict.ts"]
 }

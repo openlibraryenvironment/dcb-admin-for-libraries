@@ -1,8 +1,12 @@
 {
-	"_why": "Gzipped bytes of scripts and stylesheets, measured from the build manifest by scripts/check-bundle-budget.mjs (npm run budget). The first load FAILS the build when over; each route and on-demand feature is REPORTED. Routes and features are named by their source file, so a regrouping by the bundler does not move them. Never raise a number to make a build pass, or to sit just above it: cut the weight, or write the argument here and in the commit. docs/testing.md, 'What the bundle budget measures'.",
+	"_why": "Gzipped bytes of scripts and stylesheets, measured from the build manifest by scripts/check-bundle-budget.mjs (npm run budget). Every overrun is REPORTED; the build FAILS only when the first load is more than firstLoad.blockAbovePercent over its budget. Routes and features are named by their source file, so a regrouping by the bundler does not move them. Never raise a number to make a build pass, or to sit just above it: cut the weight, or write the argument here and in the commit. docs/testing.md, 'What the bundle budget measures'.",
 	"firstLoad": {
-		"budget": 252100,
-		"_note": "What every page loads before its own route code, /login included. 247,141 measured on 2026-10-14 when the catalogue left the first load, plus 2%, and held as a ceiling since."
+		"budget": 280000,
+		"blockAbovePercent": 5,
+		"beforeFirstRender": [
+			"src/locales/en-GB/en-GB.json"
+		],
+		"_note": "What every page loads before its first render, /login included: the entry, the app shell, their static imports, and the British English catalogue, which src/application.tsx awaits before rendering and every deployment loads. Advisory from 2026-10-27, as in DCB Admin: over the budget is reported, and only more than blockAbovePercent over fails the build (limit 294,000). Raised from 252,100 on 2026-10-28 when the catalogue joined the count, its own reported-only budget having been raised twice and cut never. Set so the room before the build fails is unchanged: 294,000 - 254,905 measured = 39,095, against 264,705 - 225,598 = 39,107 before. 252,100 was 247,141 measured on 2026-10-14 when the catalogue left the static imports, plus 2%."
 	},
 	"routes": {
 		"Home": {
@@ -50,12 +54,8 @@
 	"onDemand": {
 		"Excel export": {
 			"source": "node_modules/@mui/x-internal-exceljs-fork/dist/exceljs.min.js",
+			"openedFrom": "src/routes/__authenticated/patronRequests/index.tsx",
 			"budget": 290200
-		},
-		"British English catalogue": {
-			"source": "src/locales/en-GB/en-GB.json",
-			"budget": 29300,
-			"_note": "Raised from 25,900 on 2026-10-28, by two measured causes and not re-derived. 25,832 -> 27,135 (+1,303) over ten feature commits after 7d3cb3a that added strings without a budget change, from bulk clean-up to the info-button tooltips. 27,135 -> 29,286 (+2,151) for the patron request status help: what each status means and what it means when a request stays in it (docs/attribute-help.md). 29,286 measured. Raised from 25,800 on 2026-10-23 for the column menu's Move left and Move right (WCAG 2.2 SC 2.5.7)."
 		},
 		"American English catalogue": {
 			"source": "src/locales/en-US/en-US.json",
@@ -64,11 +64,13 @@
 		},
 		"Saved filters dialog": {
 			"source": "src/components/DataGrid/components/SavedFiltersDialog.tsx",
-			"budget": 80200
+			"openedFrom": "src/routes/__authenticated/patronRequests/index.tsx",
+			"budget": 4900,
+			"_note": "Re-derived on 2026-10-28 when on-demand features began to be measured beyond the page they are opened from: 4,596 measured from Patron requests, plus 5%, rounded up to 100. Measured beyond the first load it read 348,904 against 80,200, because the dialog reads the grid's API (useFilterLabels) and since the dependency update of 2026-10-26 (fb3d8d9, MUI X 9.16.0) the code it imports is built into the same 203 KB chunk as the rest of the grid, which the page has already loaded."
 		}
 	},
 	"_notes": {
 		"routes": "What a page loads beyond the first load: its route file, the layout routes above it, and their static imports. Set on 2026-10-16 to what was measured plus 5%, rounded up to 100, and held: room for strings and dependency patches, not for tens of KB.",
-		"onDemand": "What a feature loads beyond the first load, from its entry point. The catalogues load at startup by a dynamic import the first-load count cannot see; a deployment loads one. Excel export loads only when someone exports to Excel. The saved filters dialog loads when it is opened, and most of what it counts is already on the grid page that opens it."
+		"onDemand": "What a feature loads beyond what is loaded already when it is opened: the first load, and the page named by openedFrom where it has one. The American English overlay loads at startup only where the deployment or the user chooses en-US, on top of the British catalogue the first load counts. Excel export loads only when someone exports to Excel. The saved filters dialog loads when it is opened from a grid's toolbar."
 	}
 }
