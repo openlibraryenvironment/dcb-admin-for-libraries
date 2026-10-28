@@ -10,7 +10,7 @@ import {
 	isValidLogoUrl,
 	themeOptions,
 } from "@constants/discoveryBranding";
-import en from "../src/locales/en-US/en-US.json";
+import en from "../src/locales/en-GB/en-GB.json";
 
 /**
  * The brand logo URL becomes the `src` of an `<img>` in the chrome of every page of the

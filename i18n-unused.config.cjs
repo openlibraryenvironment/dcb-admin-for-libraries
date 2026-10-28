@@ -1,6 +1,6 @@
 /** @type {import('i18n-unused').RunOptions} */
 module.exports = {
-	localesPath: "src/locales/en-US",
+	localesPath: "src/locales/en-GB",
 	srcPath: "src",
 	translationKeyMatcher: /(?:[$ \t(,.{[](_|t|tc|i18nKey))\(.*?\)/gis,
 };

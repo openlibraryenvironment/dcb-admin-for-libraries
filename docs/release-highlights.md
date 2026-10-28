@@ -18,10 +18,12 @@ commit, which is what release notes are for. In `src/constants/releaseHighlights
    and Preferences only: no Home, Insights, library pages or exports. Where an item is
    true for them only in part, give it a key of its own, as `accessibility_read_only` is,
    rather than tell them about a page they cannot open.
-4. In `src/locales/en-GB/en-GB.json` and `src/locales/en-US/en-US.json`, under
-   `release_highlights.items`, give each key a `heading` (a few words) and a `body` (one or
-   two sentences, in what the library sees, not in the code's terms). Remove the previous
-   release's items. `tests/localeParity.test.ts` fails if the two files differ.
+4. In `src/locales/en-GB/en-GB.json`, under `release_highlights.items`, give each key a
+   `heading` (a few words) and a `body` (one or two sentences, in what the library sees,
+   not in the code's terms). Remove the previous release's items, from
+   `src/locales/en-US/en-US.json` too. Add an item to en-US only where the American
+   wording differs; `tests/localeParity.test.ts` fails on a British spelling left for an
+   American reader.
 
 Do this in the change that lands the feature, or just before the release. A release whose
 changes are not worth a dialog leaves the generation alone, and nobody is interrupted.

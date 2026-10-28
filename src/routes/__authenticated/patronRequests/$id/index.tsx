@@ -56,6 +56,7 @@ import Loading from "@components/Loading/Loading";
 import { DETAIL_COLUMNS, FULL_ROW, WRAPPED_PRE, DETAIL_ITEM } from "@constants/detailGrid";
 import { CustomLink } from "@components/CustomLink";
 import InfoTooltip from "@components/InfoTooltip/InfoTooltip";
+import AttributeHelp from "@components/HelpPopover/AttributeHelp";
 import { SourceRecord } from "@models/SourceRecord";
 import { queryKeys } from "@helpers/queryKeys";
 import { authHeaders } from "@helpers/auth";
@@ -769,7 +770,17 @@ function RouteComponent() {
 						</Grid>
 						<Grid size={DETAIL_ITEM}>
 							<Attribute label={t("patron_request.status")}>
-								<RenderAttribute attribute={dcbStatusLabel(patronRequest?.status, t)} />
+								<Box
+									component="span"
+									sx={{ display: "inline-flex", alignItems: "center", columnGap: 0.5 }}>
+									<RenderAttribute attribute={dcbStatusLabel(patronRequest?.status, t)} />
+									<AttributeHelp
+										topic="patron_request_status"
+										label={t("patron_request.status")}
+										value={patronRequest?.status}
+										valueLabel={dcbStatusLabel(patronRequest?.status, t)}
+									/>
+								</Box>
 							</Attribute>
 							{auth?.user?.profile?.roles?.includes("LIBRARY_ADMIN") ? (
 								<>

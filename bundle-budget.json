@@ -54,13 +54,13 @@
 		},
 		"British English catalogue": {
 			"source": "src/locales/en-GB/en-GB.json",
-			"budget": 25900,
-			"_note": "Raised from 25,800 on 2026-10-23 for the column menu's Move left and Move right, the keyboard alternative to dragging a column (WCAG 2.2 SC 2.5.7). 25,832 measured."
+			"budget": 29300,
+			"_note": "Raised from 25,900 on 2026-10-28, by two measured causes and not re-derived. 25,832 -> 27,135 (+1,303) over ten feature commits after 7d3cb3a that added strings without a budget change, from bulk clean-up to the info-button tooltips. 27,135 -> 29,286 (+2,151) for the patron request status help: what each status means and what it means when a request stays in it (docs/attribute-help.md). 29,286 measured. Raised from 25,800 on 2026-10-23 for the column menu's Move left and Move right (WCAG 2.2 SC 2.5.7)."
 		},
 		"American English catalogue": {
 			"source": "src/locales/en-US/en-US.json",
-			"budget": 25900,
-			"_note": "Raised from 25,800 on 2026-10-23 for the column menu's Move left and Move right, the keyboard alternative to dragging a column (WCAG 2.2 SC 2.5.7). 25,828 measured."
+			"budget": 4000,
+			"_note": "Lowered from 25,900 on 2026-10-28, when en-US became an overlay of the strings that differ from en-GB rather than a full copy (docs/theming.md, 8. Language). 3,908 measured. An en-US deployment now loads the British catalogue as well, so it downloads this much more than an en-GB one."
 		},
 		"Saved filters dialog": {
 			"source": "src/components/DataGrid/components/SavedFiltersDialog.tsx",
