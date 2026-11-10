@@ -1899,7 +1899,8 @@
 		"load_failed": "Your notices could not be loaded.",
 		"publish_failed": "The notice could not be published.",
 		"withdraw_failed": "The notice could not be taken down.",
-		"unavailable": "Announcements are not available on this deployment yet. They need a newer DCB service."
+		"unavailable": "Announcements are not available on this deployment yet. They need a newer DCB service.",
+		"unavailable_no_discovery": "Announcements are read by patrons in a discovery interface, and this deployment does not have one."
 	},
 	"home": {
 		"title": "Welcome to DCB Admin for {{library}}",

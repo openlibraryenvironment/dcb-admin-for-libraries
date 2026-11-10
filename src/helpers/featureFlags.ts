@@ -64,13 +64,14 @@ export const isLibraryBrandingEnabled = (): boolean =>
 	readFlag("VITE_FEATURE_LIBRARY_BRANDING");
 
 /**
- * Patron announcements - dcb-service 9.2.0 and later.
+ * Patron announcements - dcb-service 9.2.0 and later, and only where a discovery front end
+ * shows them to patrons, as DCB Admin gates its own.
  *
  * Asking a deployment that lacks them for `announcements` is a GraphQL validation error
  * that fails the whole operation, so this flag changes the DOCUMENT, not just what renders.
  */
 export const isAnnouncementsEnabled = (): boolean =>
-	readFlag("VITE_FEATURE_ANNOUNCEMENTS");
+	isDiscoveryActive() && readFlag("VITE_FEATURE_ANNOUNCEMENTS");
 
 /**
  * The library's patron support link - dcb-service 9.2.0 and later.

@@ -73,7 +73,7 @@ test("a publish that cannot reach the service is reported where it was made", as
 	app,
 	page,
 }) => {
-	await app.enableFeatures(["VITE_FEATURE_ANNOUNCEMENTS"]);
+	await app.enableFeatures(["VITE_DISCOVERY_ACTIVE", "VITE_FEATURE_ANNOUNCEMENTS"]);
 	await app.signIn();
 	// CreateAnnouncement is left unmocked, so it is aborted: "Failed to fetch".
 	await app.mockGraphQL({

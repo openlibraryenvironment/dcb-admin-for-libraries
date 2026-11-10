@@ -354,7 +354,9 @@ test.describe("Home's optional parts", () => {
 
 		const checklist = page.getByRole("region", { name: "Getting your library ready" });
 		await expect(checklist).toBeVisible();
-		await expect(checklist.getByRole("listitem")).toHaveCount(4);
+		// No discovery front end, so nothing the profile does not offer to edit
+		await expect(checklist.getByRole("listitem")).toHaveCount(3);
+		await expect(checklist).not.toContainText("Website for patrons");
 		await expect(
 			checklist.getByRole("link", { name: "Open your library's profile" }),
 		).toBeVisible();
@@ -368,6 +370,30 @@ test.describe("Home's optional parts", () => {
 		await expect(
 			page.getByRole("heading", { name: "Getting your library ready" }),
 		).toHaveCount(0);
+	});
+
+	test("with a discovery front end, the setup checklist asks for the patron links and logo too", async ({
+		app,
+		page,
+	}) => {
+		await app.enableFeatures([
+			"VITE_FEATURE_HOME_SETUP_CHECKLIST",
+			"VITE_DISCOVERY_ACTIVE",
+			"VITE_FEATURE_LIBRARY_BRANDING",
+			"VITE_FEATURE_LIBRARY_SUPPORT_URL",
+		]);
+		await app.signIn();
+		await app.mockGraphQL({
+			LoadLibrary: library,
+			LoadHomeHistory: homeCounts({ borrowed: 0, supplied: 0 }),
+		});
+		await page.goto("/");
+
+		const checklist = page.getByRole("region", { name: "Getting your library ready" });
+		await expect(checklist.getByRole("listitem")).toHaveCount(6);
+		for (const item of ["Website for patrons", "Logo", "Report a problem link"]) {
+			await expect(checklist).toContainText(item);
+		}
 	});
 
 	test("Insights tiles need both the home page flag and Insights", async ({ app, page }) => {
@@ -408,6 +434,7 @@ test.describe("Home's optional parts", () => {
 		});
 		await app.enableFeatures([
 			"VITE_FEATURE_HOME_ANNOUNCEMENTS",
+			"VITE_DISCOVERY_ACTIVE",
 			"VITE_FEATURE_ANNOUNCEMENTS",
 		]);
 		await app.signIn();

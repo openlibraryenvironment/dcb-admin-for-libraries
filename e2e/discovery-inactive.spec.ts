@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test";
+import { homeCounts } from "./fixtures/home";
 import library from "./fixtures-data/library.json" with { type: "json" };
 
 /**
@@ -132,5 +133,38 @@ test.describe("discovery is not deployed", () => {
 		await expect(page.getByText("E2E Test Library").first()).toBeVisible();
 
 		await app.expectNoAccessibilityViolations();
+	});
+
+	test("on 9.2.0, nothing asks for announcements or a patron field the profile does not offer", async ({
+		page,
+		app,
+	}) => {
+		await app.enableFeatures([
+			"VITE_FEATURE_ANNOUNCEMENTS",
+			"VITE_FEATURE_HOME_ANNOUNCEMENTS",
+			"VITE_FEATURE_HOME_SETUP_CHECKLIST",
+		]);
+		await app.mockGraphQL({
+			...mocks,
+			LoadHomeHistory: homeCounts({ borrowed: 0, supplied: 0 }),
+		});
+		const bodies = trackGraphQL(page);
+		await page.goto("/");
+
+		const checklist = page.getByRole("region", { name: "Getting your library ready" });
+		await expect(checklist.getByRole("listitem")).toHaveCount(3);
+		for (const item of ["Website for patrons", "Logo", "Report a problem link"]) {
+			await expect(checklist).not.toContainText(item);
+		}
+		await expect(page.getByRole("region", { name: "Notices to your patrons" })).toHaveCount(0);
+		expect(bodies.filter((body) => body.includes("LoadAnnouncements"))).toEqual([]);
+
+		await page.goto("/announcements");
+		await expect(
+			page.getByText(
+				"Announcements are read by patrons in a discovery interface, and this deployment does not have one.",
+			),
+		).toBeVisible();
+		await expect(page.getByText(/need a newer DCB service/)).toHaveCount(0);
 	});
 });

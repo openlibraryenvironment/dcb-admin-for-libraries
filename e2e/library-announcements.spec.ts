@@ -34,7 +34,7 @@ test.describe("Announcements", () => {
 	test.use({ timezoneId: "America/Chicago" });
 
 	test.beforeEach(async ({ app }) => {
-		await app.enableFeatures(["VITE_FEATURE_ANNOUNCEMENTS"]);
+		await app.enableFeatures(["VITE_DISCOVERY_ACTIVE", "VITE_FEATURE_ANNOUNCEMENTS"]);
 		await app.signIn();
 	});
 
@@ -199,6 +199,8 @@ test("explains itself, under a heading, when the flag is off", async ({
 	app,
 	page,
 }) => {
+	// A discovery front end, so the one thing missing is the service: e2e/discovery-inactive.spec.ts has the other
+	await app.enableFeatures(["VITE_DISCOVERY_ACTIVE"]);
 	await app.signIn();
 	await app.mockGraphQL({ LoadLibraryBasics: library });
 
@@ -214,7 +216,7 @@ test("says why nothing can be published when the library cannot be found", async
 	app,
 	page,
 }) => {
-	await app.enableFeatures(["VITE_FEATURE_ANNOUNCEMENTS"]);
+	await app.enableFeatures(["VITE_DISCOVERY_ACTIVE", "VITE_FEATURE_ANNOUNCEMENTS"]);
 	await app.signIn();
 	await app.mockGraphQL({
 		LoadLibrary: library,
